@@ -1,7 +1,11 @@
+'use strict';
+
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
+const http = require('http');
+const WebSocket = require('ws');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,149 +14,197 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// In-memory store (replace with Supabase in production)
-const users = new Map();
-const channels = new Map([
-  ['global-riyadh', { id: 'global-riyadh', name: 'global · الرياض', members: [] }],
-  ['global-jeddah', { id: 'global-jeddah', name: 'global · جدة', members: [] }],
-]);
-const messages = new Map();
+// ── In-memory state ───────────────────────────────────────────────────────────
+const connectedUsers = new Map();   // socketId → { id, pin, name, lat, lng, ws }
+let chatHistory = [];               // last 50 messages
+const MAX_HISTORY = 50;
 
+// ── PIN generator ─────────────────────────────────────────────────────────────
 function generatePIN() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const part1 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  const part2 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const rand = () => chars[Math.floor(Math.random() * chars.length)];
+  const part1 = Array.from({ length: 4 }, rand).join('');
+  const part2 = Array.from({ length: 4 }, rand).join('');
   return `VM-${part1}-${part2}`;
 }
 
-// ── Auth ──────────────────────────────────────────────
-app.post('/api/auth/register', (req, res) => {
-  const { provider, email, name, handle, city } = req.body;
-  if (!provider) return res.status(400).json({ error: 'provider required' });
+// ── Broadcast helpers ─────────────────────────────────────────────────────────
+function broadcast(data, excludeId = null) {
+  const msg = JSON.stringify(data);
+  connectedUsers.forEach((user) => {
+    if (user.id === excludeId) return;
+    if (user.ws && user.ws.readyState === WebSocket.OPEN) {
+      user.ws.send(msg);
+    }
+  });
+}
 
-  const id = uuidv4();
-  const pin = generatePIN();
-  const user = {
-    id,
-    pin,
-    name: name || 'مستخدم جديد',
-    handle: handle || `user_${id.slice(0, 6)}`,
-    city: city || 'الرياض',
-    email: email || null,
-    provider,
-    publicKey: `MIIBIjANBgkqhki...${id.slice(0, 8)}`,
-    createdAt: new Date().toISOString(),
-    stats: { interactions: 0, rating: 0, helpCount: 0 },
-  };
-  users.set(id, user);
-  res.json({ success: true, user: { ...user } });
-});
-
-app.get('/api/auth/user/:id', (req, res) => {
-  const user = users.get(req.params.id);
-  if (!user) return res.status(404).json({ error: 'not found' });
-  res.json(user);
-});
-
-// ── PIN ───────────────────────────────────────────────
-app.get('/api/pin/lookup/:pin', (req, res) => {
-  const found = [...users.values()].find(u => u.pin === req.params.pin);
-  if (!found) return res.status(404).json({ error: 'PIN not found' });
-  res.json({ id: found.id, name: found.name, handle: found.handle, city: found.city, pin: found.pin });
-});
-
-app.post('/api/pin/add-friend', (req, res) => {
-  const { userId, friendPin } = req.body;
-  const me = users.get(userId);
-  const friend = [...users.values()].find(u => u.pin === friendPin);
-  if (!me) return res.status(404).json({ error: 'user not found' });
-  if (!friend) return res.status(404).json({ error: 'friend PIN not found' });
-  if (!me.friends) me.friends = [];
-  if (!me.friends.includes(friend.id)) me.friends.push(friend.id);
-  res.json({ success: true, friend: { id: friend.id, name: friend.name, handle: friend.handle, pin: friend.pin } });
-});
-
-// ── Channels ──────────────────────────────────────────
-app.get('/api/channels', (req, res) => {
-  res.json([...channels.values()].map(c => ({ ...c, memberCount: c.members.length })));
-});
-
-app.post('/api/channels/:id/join', (req, res) => {
-  const { userId } = req.body;
-  const ch = channels.get(req.params.id);
-  if (!ch) return res.status(404).json({ error: 'channel not found' });
-  if (!ch.members.includes(userId)) ch.members.push(userId);
-  res.json({ success: true, channel: { ...ch, memberCount: ch.members.length } });
-});
-
-// ── Messages ──────────────────────────────────────────
-app.get('/api/channels/:id/messages', (req, res) => {
-  const msgs = messages.get(req.params.id) || [];
-  res.json(msgs.slice(-50));
-});
-
-app.post('/api/channels/:id/messages', (req, res) => {
-  const { userId, text, ttl } = req.body;
-  const user = users.get(userId);
-  if (!user) return res.status(404).json({ error: 'user not found' });
-
-  const msg = {
-    id: uuidv4(),
-    channelId: req.params.id,
-    userId,
-    userName: user.name,
-    userHandle: user.handle,
-    text,
-    ttl: ttl || 'auto',
-    encryptedNote: 'AES-256-GCM',
-    createdAt: new Date().toISOString(),
-  };
-
-  if (!messages.has(req.params.id)) messages.set(req.params.id, []);
-  messages.get(req.params.id).push(msg);
-
-  // TTL cleanup
-  if (ttl === 'auto' || ttl === '24h') {
-    const delay = ttl === '24h' ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000;
-    setTimeout(() => {
-      const list = messages.get(req.params.id) || [];
-      const idx = list.findIndex(m => m.id === msg.id);
-      if (idx !== -1) list.splice(idx, 1);
-    }, delay);
+function sendTo(userId, data) {
+  const user = connectedUsers.get(userId);
+  if (user && user.ws && user.ws.readyState === WebSocket.OPEN) {
+    user.ws.send(JSON.stringify(data));
   }
+}
 
-  res.json({ success: true, message: msg });
-});
+function getUserList() {
+  return [...connectedUsers.values()].map(u => ({
+    id: u.id,
+    name: u.name,
+    pin: u.pin,
+    lat: u.lat || null,
+    lng: u.lng || null,
+  }));
+}
 
-// ── PTT Sessions ──────────────────────────────────────
-const pttSessions = new Map();
-
-app.post('/api/ptt/start', (req, res) => {
-  const { userId, channelId } = req.body;
-  const session = { id: uuidv4(), userId, channelId, startedAt: new Date().toISOString() };
-  pttSessions.set(session.id, session);
-  res.json({ success: true, session });
-});
-
-app.post('/api/ptt/stop/:sessionId', (req, res) => {
-  const session = pttSessions.get(req.params.sessionId);
-  if (!session) return res.status(404).json({ error: 'session not found' });
-  session.endedAt = new Date().toISOString();
-  pttSessions.delete(req.params.sessionId);
-  res.json({ success: true, duration: Date.now() - new Date(session.startedAt).getTime() });
-});
-
-// ── Health ────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
+// ── REST endpoints ─────────────────────────────────────────────────────────────
+app.get('/api/status', (req, res) => {
   res.json({
-    status: 'ok',
+    online: connectedUsers.size,
     version: '5.0.0',
-    users: users.size,
-    channels: channels.size,
-    uptime: process.uptime(),
+    uptime: Math.floor(process.uptime()),
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`VibeMap AR v5.0 running on http://localhost:${PORT}`);
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', ts: Date.now() });
+});
+
+// ── HTTP + WebSocket server ───────────────────────────────────────────────────
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws) => {
+  const socketId = uuidv4();
+
+  ws.on('message', (raw) => {
+    let msg;
+    try { msg = JSON.parse(raw); } catch { return; }
+
+    switch (msg.type) {
+
+      // ── join ────────────────────────────────────────────────────────────────
+      case 'join': {
+        const userId = uuidv4();
+        const pin = generatePIN();
+        const name = (msg.name || 'مجهول').slice(0, 20);
+        const lat = msg.lat || null;
+        const lng = msg.lng || null;
+
+        const userEntry = { id: userId, pin, name, lat, lng, ws };
+        connectedUsers.set(socketId, userEntry);
+
+        // Send welcome to the joiner
+        ws.send(JSON.stringify({
+          type: 'welcome',
+          userId,
+          pin,
+          users: getUserList().filter(u => u.id !== userId),
+          history: chatHistory,
+        }));
+
+        // Notify everyone else
+        broadcast({
+          type: 'user_joined',
+          user: { id: userId, name, pin, lat, lng },
+        }, userId);
+
+        console.log(`[+] ${name} (${pin}) joined — ${connectedUsers.size} online`);
+        break;
+      }
+
+      // ── chat ────────────────────────────────────────────────────────────────
+      case 'chat': {
+        const sender = connectedUsers.get(socketId);
+        if (!sender) return;
+        const text = (msg.text || '').slice(0, 500);
+        if (!text.trim()) return;
+
+        const chatMsg = {
+          id: uuidv4(),
+          userId: sender.id,
+          name: sender.name,
+          text,
+          time: Date.now(),
+        };
+
+        chatHistory.push(chatMsg);
+        if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
+
+        // Broadcast to everyone including sender
+        const payload = JSON.stringify({ type: 'chat', ...chatMsg });
+        connectedUsers.forEach((u) => {
+          if (u.ws && u.ws.readyState === WebSocket.OPEN) u.ws.send(payload);
+        });
+        break;
+      }
+
+      // ── ptt_start ───────────────────────────────────────────────────────────
+      case 'ptt_start': {
+        const sender = connectedUsers.get(socketId);
+        if (!sender) return;
+        broadcast({
+          type: 'ptt_start',
+          userId: sender.id,
+          name: sender.name,
+        }, sender.id);
+        break;
+      }
+
+      // ── ptt_stop ────────────────────────────────────────────────────────────
+      case 'ptt_stop': {
+        const sender = connectedUsers.get(socketId);
+        if (!sender) return;
+        broadcast({
+          type: 'ptt_stop',
+          userId: sender.id,
+        }, sender.id);
+        break;
+      }
+
+      // ── location ────────────────────────────────────────────────────────────
+      case 'location': {
+        const sender = connectedUsers.get(socketId);
+        if (!sender) return;
+        sender.lat = msg.lat || null;
+        sender.lng = msg.lng || null;
+        broadcast({
+          type: 'location',
+          userId: sender.id,
+          lat: sender.lat,
+          lng: sender.lng,
+        }, sender.id);
+        break;
+      }
+    }
+  });
+
+  ws.on('close', () => {
+    const user = connectedUsers.get(socketId);
+    if (user) {
+      connectedUsers.delete(socketId);
+      broadcast({ type: 'user_left', userId: user.id });
+      console.log(`[-] ${user.name} left — ${connectedUsers.size} online`);
+    }
+  });
+
+  ws.on('error', (err) => {
+    console.error('WS error:', err.message);
+    const user = connectedUsers.get(socketId);
+    if (user) {
+      connectedUsers.delete(socketId);
+      broadcast({ type: 'user_left', userId: user.id });
+    }
+  });
+});
+
+// ── Glitch keep-alive ping ────────────────────────────────────────────────────
+if (process.env.PROJECT_DOMAIN) {
+  setInterval(() => {
+    const url = `https://${process.env.PROJECT_DOMAIN}.glitch.me/api/health`;
+    require('https').get(url).on('error', () => {});
+  }, 280000);
+}
+
+server.listen(PORT, () => {
+  console.log(`VibeMap AR v5.0 WebSocket server running on http://localhost:${PORT}`);
 });
