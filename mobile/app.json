@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "VibeMap AR",
+    "slug": "vibemap-ar",
+    "version": "5.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#03030D"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.vibemap.ar",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "VibeMap تحتاج الميكروفون لميزة PTT (Push to Talk)",
+        "NSLocationWhenInUseUsageDescription": "VibeMap تحتاج الموقع لعرض المستخدمين القريبين في وضع AR",
+        "NSLocationAlwaysUsageDescription": "VibeMap تحتاج الموقع في الخلفية لتتبع موقعك"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#03030D"
+      },
+      "package": "com.vibemap.ar",
+      "permissions": [
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "vibemap-ar-v5"
+      }
+    }
+  }
+}
