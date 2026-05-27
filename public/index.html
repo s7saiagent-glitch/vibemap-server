@@ -953,22 +953,17 @@ try {
 } catch(e){}
 
 // === SCREEN NAVIGATION ===
-var tabIdx = {ar:0,chat:1,id:2,profile:3,settings:4};
-
 function switchTab(tab) {
   if(currentScreen === tab) return;
-  var prevId = 'screen-' + currentScreen;
-  var nextId = 'screen-' + tab;
   var all = document.querySelectorAll('.screen');
-  all.forEach(function(s){ s.classList.remove('active','prev'); });
-  var prevEl = document.getElementById(prevId);
-  var nextEl = document.getElementById(nextId);
+  all.forEach(function(s){
+    s.classList.remove('active','prev');
+    s.style.transform = '';
+  });
+  var prevEl = document.getElementById('screen-' + currentScreen);
+  var nextEl = document.getElementById('screen-' + tab);
   if(prevEl) prevEl.classList.add('prev');
-  if(nextEl) {
-    nextEl.style.transform = 'translateX(100%)';
-    nextEl.offsetHeight; // force reflow
-    nextEl.classList.add('active');
-  }
+  if(nextEl) nextEl.classList.add('active');
   currentScreen = tab;
 }
 
@@ -982,7 +977,7 @@ function doLogin() {
     loginEl.classList.remove('active');
     loginEl.style.opacity = '';
     loginEl.style.transition = '';
-    arEl.style.transform = 'translateX(0)';
+    arEl.style.transform = '';
     arEl.classList.add('active');
     currentScreen = 'ar';
     try { localStorage.setItem('vm_loggedIn','1'); } catch(e){}
@@ -996,7 +991,7 @@ window.addEventListener('load', function() {
     if(localStorage.getItem('vm_loggedIn') === '1') {
       document.getElementById('screen-login').classList.remove('active');
       var ar = document.getElementById('screen-ar');
-      ar.style.transform = 'translateX(0)';
+      ar.style.transform = '';
       ar.classList.add('active');
       currentScreen = 'ar';
       startOrbs();
@@ -1135,9 +1130,8 @@ function triggerSOS() {
 // === SIGN OUT ===
 function doSignOut() {
   try { localStorage.removeItem('vm_loggedIn'); } catch(e){}
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active','prev'); });
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active','prev'); s.style.transform = ''; });
   var login = document.getElementById('screen-login');
-  login.style.transform = 'translateX(0)';
   login.classList.add('active');
   currentScreen = 'login';
 }
