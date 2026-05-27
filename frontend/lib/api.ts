@@ -1,0 +1,130 @@
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+
+const api = axios.create({
+  baseURL: API_URL,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 30000,
+})
+
+// Request interceptor: attach auth token
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('access_token')
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+// Response interceptor: handle 401
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      const refreshToken = localStorage.getItem('refresh_token')
+      if (refreshToken) {
+        try {
+          const res = await axios.post(`${API_URL}/auth/refresh`, {
+            refresh_token: refreshToken,
+          })
+          const newToken = res.data.access_token
+          localStorage.setItem('access_token', newToken)
+          if (error.config) {
+            error.config.headers.Authorization = `Bearer ${newToken}`
+            return api(error.config)
+          }
+        } catch {
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+          window.location.href = '/auth/login'
+        }
+      } else {
+        window.location.href = '/auth/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
+// Auth API
+export const authAPI = {
+  register: (data: Record<string, unknown>) => api.post('/auth/register', data),
+  login: (data: { email: string; password: string }) => api.post('/auth/login', data),
+  logout: (refreshToken: string) => api.post('/auth/logout', { refresh_token: refreshToken }),
+  getMe: () => api.get('/auth/me'),
+  updateProfile: (data: Record<string, unknown>) => api.put('/auth/me', data),
+  changePassword: (data: Record<string, unknown>) => api.post('/auth/change-password', data),
+  refreshToken: (token: string) => api.post('/auth/refresh', { refresh_token: token }),
+}
+
+// Academic API
+export const academicAPI = {
+  getFaculties: () => api.get('/academic/faculties'),
+  getPrograms: (params?: Record<string, unknown>) => api.get('/academic/programs', { params }),
+  getProgramDetail: (id: number) => api.get(`/academic/programs/${id}`),
+  getCourses: (params?: Record<string, unknown>) => api.get('/academic/courses', { params }),
+  getCourseDetail: (id: number) => api.get(`/academic/courses/${id}`),
+  getCalendar: () => api.get('/academic/calendar'),
+}
+
+// Student API
+export const studentAPI = {
+  getDashboard: () => api.get('/students/dashboard'),
+  getMyCourses: () => api.get('/students/my-courses'),
+  getTranscript: () => api.get('/students/transcript'),
+  getTwin: () => api.get('/students/twin'),
+  enroll: (sectionId: number) => api.post('/students/enroll', { section_id: sectionId }),
+  dropCourse: (sectionId: number) => api.delete(`/students/enroll/${sectionId}`),
+}
+
+// AI Professor API
+export const aiProfessorAPI = {
+  chat: (data: { section_id: number; message: string; conversation_id?: number; language?: string }) =>
+    api.post('/ai-professor/chat', data),
+  getConversations: () => api.get('/ai-professor/conversations'),
+  getConversation: (id: number) => api.get(`/ai-professor/conversations/${id}`),
+  generateQuiz: (data: Record<string, unknown>) => api.post('/ai-professor/generate-quiz', data),
+  explain: (data: Record<string, unknown>) => api.post('/ai-professor/explain', data),
+  getSectionProfessor: (sectionId: number) => api.get(`/ai-professor/section/${sectionId}`),
+}
+
+// Assessment API
+export const assessmentAPI = {
+  getSectionAssessments: (sectionId: number) => api.get(`/assessments/section/${sectionId}`),
+  getAssessment: (id: number) => api.get(`/assessments/${id}`),
+  submitAssessment: (id: number, data: Record<string, unknown>) => api.post(`/assessments/${id}/submit`, data),
+  getResults: (assessmentId: number, submissionId: number) =>
+    api.get(`/assessments/${assessmentId}/results/${submissionId}`),
+}
+
+// English API
+export const englishAPI = {
+  getCourses: () => api.get('/english/courses'),
+  getProgress: () => api.get('/english/my-progress'),
+  submitPlacementTest: (answers: Record<string, unknown>, timeSpent: number) =>
+    api.post('/english/placement-test', answers, { params: { time_spent_minutes: timeSpent } }),
+  chat: (message: string, level: string, history: unknown[]) =>
+    api.post('/english/chat', { message, level, conversation_history: history }),
+  getCourseUnits: (level: string) => api.get(`/english/courses/${level}/units`),
+  submitExercises: (unitId: number, answers: Record<string, unknown>) =>
+    api.post(`/english/exercises/${unitId}/submit`, answers),
+}
+
+// Admin API
+export const adminAPI = {
+  getDashboard: () => api.get('/admin/dashboard'),
+  getStudents: (params?: Record<string, unknown>) => api.get('/admin/students', { params }),
+  createFaculty: (data: Record<string, unknown>) => api.post('/admin/academic/faculties', data),
+  createCourse: (data: Record<string, unknown>) => api.post('/admin/courses', data),
+  createAIProfessor: (data: Record<string, unknown>) => api.post('/admin/ai-professors/create', data),
+  getAIProfessors: () => api.get('/admin/ai-professors'),
+  generateLecture: (data: Record<string, unknown>) => api.post('/admin/content/generate-lecture', data),
+}
+
+export default api
