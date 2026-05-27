@@ -2,1158 +2,767 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VibeMap</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>VibeMap AR</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#03030D;--cyan:#00D4FF;--purple:#7B2FFF;--green:#00FF9C;
-  --dark2:#0A0A1A;--dark3:#111128;--text:#E0E0FF;--muted:#5A5A8A;
-  --border:#1A1A3A;--red:#FF3366;
+  --bg:#090912;--bg2:#111122;--card:#16162a;
+  --accent:#7c3aed;--cyan:#06b6d4;--green:#10b981;--red:#ef4444;
+  --text:#e2e8f0;--text2:#94a3b8;--border:rgba(255,255,255,0.08);
+  --nav-h:64px;--safe-bot:env(safe-area-inset-bottom,0px)
 }
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Segoe UI',Tahoma,Arial,sans-serif;}
-#app{width:100vw;height:100vh;position:relative;overflow:hidden;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
 
-/* SCREEN SYSTEM */
+/* Screens */
 .screen{
-  position:absolute;top:0;left:0;width:100%;height:100%;
-  background:var(--bg);display:flex;flex-direction:column;
-  transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
-  overflow:hidden;
+  position:fixed;inset:0;bottom:var(--nav-h);
+  display:flex;flex-direction:column;background:var(--bg);
+  transform:translateX(100%);
+  transition:transform .32s cubic-bezier(.4,0,.2,1);
+  will-change:transform;overflow:hidden
 }
-.screen.active{transform:translateX(0);}
-.screen.prev{transform:translateX(-100%);}
+.screen.active{transform:translateX(0)}
+.screen.exit{transform:translateX(-100%)}
+#screen-login{bottom:0}
 
-/* ===== SCREEN 1: LOGIN ===== */
-#screen-login{
-  background:radial-gradient(ellipse at 50% 30%, #0D0D2B 0%, var(--bg) 70%);
-  align-items:center;justify-content:center;gap:0;
+/* Bottom nav */
+#nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--nav-h) + var(--safe-bot));
+  padding-bottom:var(--safe-bot);
+  background:rgba(9,9,18,.96);backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  display:none;align-items:stretch;z-index:100
 }
-.login-logo{
-  text-align:center;margin-bottom:48px;
+#nav.visible{display:flex}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;
+  border:none;background:none;color:var(--text2);cursor:pointer;
+  transition:color .2s;font-size:10px;font-weight:600;
+  letter-spacing:.4px;position:relative
 }
-.logo-circle{
-  width:90px;height:90px;border-radius:50%;
-  background:linear-gradient(135deg,var(--purple),var(--cyan));
+.nav-btn.active{color:var(--accent)}
+.nav-btn svg{width:22px;height:22px}
+.badge{
+  position:absolute;top:8px;right:calc(50% - 18px);
+  background:var(--red);color:#fff;font-size:9px;font-weight:700;
+  min-width:16px;height:16px;border-radius:8px;padding:0 4px;
+  display:none;align-items:center;justify-content:center
+}
+.badge.show{display:flex}
+
+/* Header */
+.hdr{
+  padding:14px 20px 10px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0
+}
+.hdr-title{font-size:18px;font-weight:700;flex:1}
+
+/* Login */
+#screen-login{align-items:center;justify-content:center;padding:32px 24px}
+.logo-icon{
+  width:76px;height:76px;border-radius:20px;
+  background:linear-gradient(135deg,var(--accent),var(--cyan));
   display:flex;align-items:center;justify-content:center;
-  margin:0 auto 16px;
-  box-shadow:0 0 40px rgba(0,212,255,.4),0 0 80px rgba(123,47,255,.2);
+  font-size:38px;margin-bottom:18px;
+  box-shadow:0 0 40px rgba(124,58,237,.4)
 }
-.logo-circle svg{width:48px;height:48px;}
-.logo-name{font-size:32px;font-weight:700;letter-spacing:2px;
-  background:linear-gradient(90deg,var(--cyan),var(--purple));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.logo-sub{color:var(--muted);font-size:13px;margin-top:6px;letter-spacing:1px;}
+.login-title{font-size:26px;font-weight:800;margin-bottom:5px}
+.login-sub{color:var(--text2);font-size:13px;margin-bottom:36px;text-align:center}
+.form-group{width:100%;margin-bottom:14px}
+.form-label{font-size:11px;color:var(--text2);font-weight:600;margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.5px}
+.form-input{
+  width:100%;padding:13px 15px;font-size:15px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;color:var(--text);outline:none;
+  direction:ltr;text-align:left;transition:border-color .2s;font-family:inherit
+}
+.form-input:focus{border-color:var(--accent)}
+.form-input.rtl-in{direction:rtl;text-align:right}
+.btn-primary{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--accent),#6d28d9);
+  border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:700;
+  cursor:pointer;margin-top:6px;
+  box-shadow:0 4px 20px rgba(124,58,237,.4);
+  transition:opacity .2s,transform .1s;font-family:inherit
+}
+.btn-primary:active{transform:scale(.97);opacity:.9}
+.server-hint{font-size:11px;color:var(--text2);margin-top:5px;text-align:center}
 
-.login-btns{width:100%;max-width:340px;padding:0 24px;display:flex;flex-direction:column;gap:14px;}
-.btn-social{
-  display:flex;align-items:center;justify-content:center;gap:12px;
-  padding:16px;border-radius:14px;border:1.5px solid var(--border);
-  background:rgba(255,255,255,.04);color:var(--text);font-size:15px;
-  cursor:pointer;transition:all .2s;letter-spacing:.5px;
+/* Radar */
+.radar-wrap{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#rc{display:block}
+.online-pill{
+  position:absolute;top:14px;right:14px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:5px 12px;
+  font-size:12px;font-weight:600;
+  display:flex;align-items:center;gap:6px
 }
-.btn-social:active{transform:scale(.97);background:rgba(255,255,255,.08);}
-.btn-social.google{border-color:#4285F4;color:#fff;}
-.btn-social.apple{border-color:#fff;color:#fff;}
-.btn-social.facebook{border-color:#1877F2;color:#fff;}
-.btn-social.email{border-color:var(--cyan);color:var(--cyan);}
-.btn-social svg{width:22px;height:22px;flex-shrink:0;}
+.dot-g{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.ptt-who{
+  position:absolute;top:14px;left:14px;
+  background:rgba(239,68,68,.12);border:1px solid var(--red);
+  border-radius:20px;padding:5px 12px;
+  font-size:12px;color:var(--red);font-weight:600;
+  display:none;align-items:center;gap:6px
+}
+.ptt-who.show{display:flex}
+.ptt-wrap{
+  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px
+}
+#ptt-lbl{font-size:11px;color:var(--text2)}
+#ptt-btn{
+  width:76px;height:76px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#6d28d9);
+  border:3px solid rgba(255,255,255,.2);color:#fff;
+  cursor:pointer;box-shadow:0 0 20px rgba(124,58,237,.5);
+  transition:transform .1s,box-shadow .1s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  user-select:none;-webkit-user-select:none;font-family:inherit
+}
+#ptt-btn.talking{
+  background:linear-gradient(135deg,var(--red),#dc2626);
+  box-shadow:0 0 40px rgba(239,68,68,.7);transform:scale(1.08)
+}
+#ptt-btn svg{width:26px;height:26px}
+#ptt-btn span{font-size:9px;font-weight:700}
 
-.login-footer{margin-top:32px;color:var(--muted);font-size:12px;text-align:center;}
-.login-footer a{color:var(--cyan);}
+/* Chat */
+.users-strip{
+  padding:7px 14px;display:flex;gap:7px;overflow-x:auto;
+  background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0
+}
+.users-strip::-webkit-scrollbar{display:none}
+.uchip{
+  display:flex;align-items:center;gap:5px;
+  background:var(--card);border-radius:20px;
+  padding:4px 10px 4px 7px;white-space:nowrap;flex-shrink:0
+}
+.uchip-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.uchip-name{font-size:11px;font-weight:500}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:7px}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.mwrap{display:flex;flex-direction:column;max-width:78%}
+.mwrap.mine{align-self:flex-end;align-items:flex-end}
+.mwrap.other{align-self:flex-start;align-items:flex-start}
+.mname{font-size:10px;color:var(--text2);margin-bottom:2px;font-weight:600}
+.mbub{padding:9px 13px;border-radius:16px;font-size:14px;line-height:1.5;word-break:break-word}
+.mwrap.mine .mbub{background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.mwrap.other .mbub{background:var(--card);border-bottom-left-radius:4px}
+.mtime{font-size:10px;color:var(--text2);margin-top:2px}
+.chat-bar{
+  padding:8px 10px calc(8px + var(--safe-bot));
+  background:var(--bg2);border-top:1px solid var(--border);
+  display:flex;gap:7px;align-items:flex-end;flex-shrink:0
+}
+#chat-inp{
+  flex:1;background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:9px 14px;color:var(--text);
+  font-size:15px;outline:none;font-family:inherit;resize:none;
+  max-height:90px;direction:rtl;transition:border-color .2s
+}
+#chat-inp:focus{border-color:var(--accent)}
+#chat-send{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  background:var(--accent);border:none;color:#fff;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:transform .1s;box-shadow:0 2px 10px rgba(124,58,237,.4)
+}
+#chat-send:active{transform:scale(.9)}
+#chat-send svg{width:17px;height:17px}
 
-/* ===== BOTTOM NAV ===== */
-.bottom-nav{
-  display:flex;align-items:center;
-  background:rgba(10,10,26,.95);border-top:1px solid var(--border);
-  padding:8px 0 env(safe-area-inset-bottom,8px);
-  flex-shrink:0;z-index:100;
-}
-.nav-tab{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:6px 2px;cursor:pointer;transition:all .2s;color:var(--muted);
-}
-.nav-tab.active{color:var(--cyan);}
-.nav-tab svg{width:22px;height:22px;}
-.nav-tab span{font-size:10px;letter-spacing:.3px;}
-
-/* ===== SCREEN 2: AR ===== */
-#screen-ar{background:var(--bg);}
-.ar-bg{
-  position:absolute;top:0;left:0;width:100%;height:100%;
-  background-image:
-    linear-gradient(rgba(0,212,255,.05) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,212,255,.05) 1px,transparent 1px);
-  background-size:40px 40px;
-}
-.ar-scan-ring{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);
-  width:220px;height:220px;border-radius:50%;
-  border:1.5px solid rgba(0,212,255,.15);
-  animation:scanPulse 3s ease-in-out infinite;
-}
-.ar-scan-ring::before{
-  content:'';position:absolute;top:10px;left:10px;right:10px;bottom:10px;
-  border-radius:50%;border:1px solid rgba(123,47,255,.1);
-}
-@keyframes scanPulse{0%,100%{transform:translate(-50%,-55%) scale(1);opacity:.6;}50%{transform:translate(-50%,-55%) scale(1.08);opacity:1;}}
-
-.ar-hud{
-  position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;background:rgba(3,3,13,.85);border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.hud-channel{display:flex;align-items:center;gap:8px;}
-.hud-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
-.hud-name{font-size:14px;font-weight:600;color:var(--text);}
-.hud-count{font-size:12px;color:var(--muted);}
-.e2e-badge{
-  display:flex;align-items:center;gap:4px;
-  background:rgba(0,255,156,.1);border:1px solid rgba(0,255,156,.3);
-  padding:4px 10px;border-radius:20px;
-}
-.e2e-badge span{font-size:10px;color:var(--green);letter-spacing:.5px;}
-
-.ar-content{position:relative;flex:1;overflow:hidden;}
-
-/* USER ORBS */
-.orb-container{position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;}
-.orb{
-  width:56px;height:56px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;position:relative;
-  animation:orbFloat 4s ease-in-out infinite;
-}
-.orb::before{
-  content:'';position:absolute;inset:-4px;border-radius:50%;
-  border:2px solid transparent;animation:orbRing 2s linear infinite;
-}
-.orb-1{background:linear-gradient(135deg,#1a3a5c,#2a5a8c);animation-delay:0s;}
-.orb-1::before{border-color:var(--cyan);box-shadow:0 0 16px rgba(0,212,255,.5);}
-.orb-2{background:linear-gradient(135deg,#3a1a5c,#5a2a8c);animation-delay:-1.5s;}
-.orb-2::before{border-color:var(--purple);box-shadow:0 0 16px rgba(123,47,255,.5);}
-.orb-3{background:linear-gradient(135deg,#1a4a2a,#2a6a3a);animation-delay:-3s;}
-.orb-3::before{border-color:var(--green);box-shadow:0 0 16px rgba(0,255,156,.5);}
-@keyframes orbFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
-@keyframes orbRing{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-.orb-label{font-size:11px;color:var(--text);text-align:center;white-space:nowrap;}
-.orb-dist{font-size:10px;color:var(--muted);}
-.orb-ping{
-  position:absolute;bottom:-2px;right:-2px;
-  width:14px;height:14px;border-radius:50%;
-  background:var(--green);border:2px solid var(--bg);font-size:7px;
-  display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;
-}
-
-/* AR CONTROLS */
-.ar-controls{
-  position:relative;z-index:10;
-  padding:16px 20px 8px;background:rgba(3,3,13,.9);border-top:1px solid var(--border);
-  flex-shrink:0;
-}
-.ar-btns-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
-.btn-ghost,.btn-sos{
-  width:52px;height:52px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .15s;flex-direction:column;gap:2px;
-}
-.btn-ghost{
-  background:rgba(123,47,255,.15);border:1.5px solid rgba(123,47,255,.4);
-}
-.btn-ghost:active{background:rgba(123,47,255,.35);transform:scale(.93);}
-.btn-sos{
-  background:rgba(255,51,102,.12);border:1.5px solid rgba(255,51,102,.4);
-}
-.btn-sos:active{background:rgba(255,51,102,.3);transform:scale(.93);}
-.btn-sos span,.btn-ghost span{font-size:9px;color:var(--muted);letter-spacing:.5px;}
-
-.btn-ptt{
-  width:80px;height:80px;border-radius:50%;
-  background:linear-gradient(135deg,var(--purple),var(--cyan));
-  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;
-  cursor:pointer;transition:all .15s;
-  box-shadow:0 0 24px rgba(123,47,255,.5),0 0 48px rgba(0,212,255,.2);
-  border:3px solid rgba(255,255,255,.15);
-}
-.btn-ptt.active{
-  background:linear-gradient(135deg,var(--red),var(--purple));
-  box-shadow:0 0 32px rgba(255,51,102,.6),0 0 64px rgba(123,47,255,.4);
-  transform:scale(1.08);
-  animation:pttPulse .6s ease-in-out infinite;
-}
-@keyframes pttPulse{0%,100%{box-shadow:0 0 32px rgba(255,51,102,.6),0 0 64px rgba(123,47,255,.4);}50%{box-shadow:0 0 48px rgba(255,51,102,.9),0 0 96px rgba(123,47,255,.6);}}
-.btn-ptt svg{width:28px;height:28px;}
-.btn-ptt span{font-size:9px;color:rgba(255,255,255,.8);letter-spacing:.5px;}
-.btn-ptt.active span{color:#fff;}
-.ptt-status{text-align:center;font-size:11px;color:var(--muted);height:16px;margin-top:6px;}
-.ptt-status.on{color:var(--red);}
-
-/* ===== SCREEN 3: CHAT ===== */
-#screen-chat{background:var(--bg);}
-.chat-header{
-  display:flex;align-items:center;gap:12px;padding:14px 16px;
-  background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;
-}
-.btn-back{
-  width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);
-  display:flex;align-items:center;justify-content:center;cursor:pointer;
-  border:1px solid var(--border);transition:all .2s;
-}
-.btn-back:active{background:rgba(255,255,255,.12);}
-.chat-title{flex:1;}
-.chat-title h2{font-size:15px;font-weight:600;}
-.chat-title p{font-size:11px;color:var(--muted);}
-
-.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
-.chat-messages::-webkit-scrollbar{width:3px;}
-.chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-
-.msg{display:flex;gap:10px;max-width:85%;}
-.msg.mine{align-self:flex-start;flex-direction:row-reverse;}
-.msg.other{align-self:flex-end;}
-.msg-avatar{
-  width:34px;height:34px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;font-size:14px;
-}
-.msg-body{}
-.msg-name{font-size:10px;color:var(--muted);margin-bottom:4px;}
-.msg-bubble{
-  padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.5;
-}
-.msg.other .msg-bubble{background:var(--dark3);border:1px solid var(--border);border-bottom-right-radius:4px;}
-.msg.mine .msg-bubble{background:linear-gradient(135deg,rgba(123,47,255,.4),rgba(0,212,255,.2));border:1px solid rgba(0,212,255,.2);border-bottom-left-radius:4px;}
-.msg-meta{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:10px;color:var(--muted);}
-.msg.mine .msg-meta{justify-content:flex-start;}
-.check-icon{color:var(--cyan);}
-
-.chat-input{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 14px;background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0;
-}
-.chat-input input{
-  flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
-  border-radius:24px;padding:10px 16px;color:var(--text);font-size:14px;
-  outline:none;text-align:right;direction:rtl;
-}
-.chat-input input::placeholder{color:var(--muted);}
-.chat-input input:focus{border-color:var(--cyan);}
-.btn-send{
-  width:42px;height:42px;border-radius:50%;
-  background:linear-gradient(135deg,var(--purple),var(--cyan));
-  display:flex;align-items:center;justify-content:center;cursor:pointer;
-  flex-shrink:0;transition:all .15s;
-}
-.btn-send:active{transform:scale(.9);}
-
-/* ===== SCREEN 4: ID CARD ===== */
-#screen-id{background:var(--bg);}
-.id-header{
-  padding:16px;display:flex;align-items:center;gap:12px;
-  background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;
-}
-.id-header h2{font-size:17px;font-weight:600;}
-.id-content{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:20px;}
-
+/* ID Card */
+#screen-card .inner{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;align-items:center;gap:14px}
 .id-card{
-  background:linear-gradient(135deg,#0D0D2B,#1A1A3A);
-  border:1px solid rgba(0,212,255,.25);border-radius:20px;padding:24px;
-  position:relative;overflow:hidden;
+  width:100%;max-width:340px;
+  background:linear-gradient(135deg,#1a1a3a,#16162a);
+  border:1px solid rgba(124,58,237,.3);border-radius:22px;
+  padding:26px 22px;box-shadow:0 6px 32px rgba(124,58,237,.2);
+  text-align:center;position:relative;overflow:hidden
 }
 .id-card::before{
-  content:'';position:absolute;top:-40px;right:-40px;
-  width:160px;height:160px;border-radius:50%;
-  background:radial-gradient(circle,rgba(123,47,255,.2),transparent 70%);
+  content:'';position:absolute;top:-50%;right:-30%;
+  width:200%;height:200%;
+  background:radial-gradient(circle,rgba(124,58,237,.1) 0%,transparent 60%);
+  pointer-events:none
 }
-.id-card::after{
-  content:'';position:absolute;bottom:-40px;left:-40px;
-  width:140px;height:140px;border-radius:50%;
-  background:radial-gradient(circle,rgba(0,212,255,.15),transparent 70%);
+.id-av{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--cyan));
+  display:flex;align-items:center;justify-content:center;
+  font-size:30px;margin:0 auto 10px
 }
-.id-top{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
-.id-avatar{
-  width:70px;height:70px;border-radius:50%;
-  background:linear-gradient(135deg,var(--purple),var(--cyan));
-  display:flex;align-items:center;justify-content:center;font-size:28px;
-  border:3px solid rgba(0,212,255,.3);flex-shrink:0;
-}
-.id-info h3{font-size:18px;font-weight:700;margin-bottom:4px;}
-.id-info p{font-size:12px;color:var(--muted);}
-.vm-badge{
-  display:inline-flex;align-items:center;gap:4px;margin-top:6px;
-  background:rgba(0,255,156,.1);border:1px solid rgba(0,255,156,.3);
-  padding:3px 10px;border-radius:12px;
-}
-.vm-badge span{font-size:10px;color:var(--green);}
-
-.id-pin-row{
-  display:flex;align-items:center;justify-content:space-between;
-  background:rgba(255,255,255,.04);border:1px solid var(--border);
-  border-radius:12px;padding:14px;position:relative;z-index:1;
-}
-.pin-label{font-size:11px;color:var(--muted);margin-bottom:4px;}
-.pin-value{font-size:20px;font-weight:700;letter-spacing:3px;color:var(--cyan);font-family:monospace;}
+.id-name{font-size:20px;font-weight:800;margin-bottom:3px}
+.id-stat{font-size:11px;color:var(--green);display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:18px}
+.id-plabel{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.id-pin{font-size:24px;font-weight:900;letter-spacing:4px;color:var(--cyan);font-family:'Courier New',monospace;direction:ltr;margin-bottom:14px}
 .btn-copy{
-  background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);
-  padding:8px 16px;border-radius:10px;color:var(--cyan);font-size:12px;cursor:pointer;
+  background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);
+  color:var(--cyan);padding:7px 18px;border-radius:20px;
+  font-size:13px;font-weight:600;cursor:pointer;font-family:inherit
 }
-.btn-copy:active{background:rgba(0,212,255,.25);}
+.btn-copy:active{background:rgba(6,182,212,.2)}
+.qr-box{width:100%;max-width:340px;background:var(--card);border-radius:14px;padding:18px;text-align:center}
+.qr-title{font-size:12px;color:var(--text2);margin-bottom:10px}
+#qr-canvas{display:block;margin:0 auto;image-rendering:pixelated}
+.share-btn{
+  width:100%;padding:11px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;color:var(--text);font-size:14px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit
+}
+.share-btn svg{width:17px;height:17px}
 
-.qr-box{
-  background:rgba(255,255,255,.04);border:1px solid var(--border);
-  border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px;
-}
-.qr-box h4{font-size:13px;color:var(--muted);}
-.qr-code{
-  width:140px;height:140px;position:relative;
-  background:#fff;padding:10px;border-radius:8px;
-}
-.qr-inner{
-  width:100%;height:100%;
-  background-image:
-    linear-gradient(#000 0,#000),
-    linear-gradient(#000 0,#000),
-    linear-gradient(#000 0,#000),
-    linear-gradient(#000 0,#000),
-    linear-gradient(#000 0,#000),
-    linear-gradient(#000 0,#000),
-    linear-gradient(#000 0,#000),
-    linear-gradient(#000 0,#000),
-    linear-gradient(#000 0,#000);
-  background-repeat:no-repeat;
-  background-size:
-    30% 30%, 30% 30%, 30% 30%,
-    10% 10%, 10% 10%, 10% 10%,
-    55% 4%, 4% 55%, 55% 4%;
-  background-position:
-    0 0, 70% 0, 0 70%,
-    9% 9%, 79% 9%, 9% 79%,
-    20% 20%, 20% 20%, 20% 68%;
-}
-.qr-dots{
-  position:absolute;top:10px;left:10px;right:10px;bottom:10px;
-  background-image:radial-gradient(circle,#000 45%,transparent 46%);
-  background-size:9% 9%;
-  opacity:.35;
-}
+/* Settings */
+#screen-settings{overflow-y:auto}
+.slist{padding:14px;display:flex;flex-direction:column;gap:10px}
+.stitle{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-weight:600;padding:0 4px 7px}
+.scard{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden}
+.srow{display:flex;align-items:center;padding:13px 15px;gap:11px;border-bottom:1px solid var(--border)}
+.srow:last-child{border-bottom:none}
+.sico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px}
+.slbl{flex:1}
+.slbl-t{font-size:14px;font-weight:500}
+.slbl-s{font-size:11px;color:var(--text2);margin-top:1px}
+.sinp{background:transparent;border:none;color:var(--text);font-size:13px;text-align:left;direction:ltr;outline:none;width:100%;font-family:inherit}
+.toggle{width:46px;height:26px;background:rgba(255,255,255,.1);border-radius:13px;position:relative;cursor:pointer;border:2px solid var(--border);transition:background .2s;flex-shrink:0;direction:ltr}
+.toggle.on{background:var(--accent);border-color:var(--accent)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle.on::after{transform:translateX(20px)}
+.btn-danger{width:100%;padding:14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:12px;color:var(--red);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-danger:active{background:rgba(239,68,68,.2)}
 
-.add-friend-box{
-  background:var(--dark2);border:1px solid var(--border);
-  border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;
-}
-.add-friend-box h4{font-size:14px;font-weight:600;}
-.add-friend-box p{font-size:12px;color:var(--muted);}
-.pin-input-row{display:flex;gap:10px;}
-.pin-input-row input{
-  flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
-  border-radius:12px;padding:12px 16px;color:var(--text);font-size:14px;
-  outline:none;text-align:center;letter-spacing:2px;direction:ltr;
-}
-.pin-input-row input:focus{border-color:var(--cyan);}
-.btn-add{
-  background:linear-gradient(135deg,var(--purple),var(--cyan));
-  border-radius:12px;padding:12px 20px;color:#fff;font-size:13px;
-  cursor:pointer;white-space:nowrap;transition:all .15s;border:none;
-}
-.btn-add:active{transform:scale(.95);}
+/* Overlay */
+#overlay{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#overlay.hidden{display:none}
+.spinner{width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#overlay-txt{font-size:15px;color:var(--text2)}
 
-/* ===== SCREEN 5: SETTINGS ===== */
-#screen-settings{background:var(--bg);}
-.settings-header{
-  padding:16px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;
-}
-.settings-header h2{font-size:17px;font-weight:600;}
-.settings-content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
-
-.settings-section{
-  background:var(--dark2);border:1px solid var(--border);border-radius:16px;overflow:hidden;
-}
-.settings-section-title{
-  font-size:11px;color:var(--muted);letter-spacing:1px;
-  padding:10px 16px 6px;text-transform:uppercase;
-}
-.settings-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;border-top:1px solid var(--border);
-}
-.settings-row:first-of-type{border-top:none;}
-.settings-row-left{display:flex;align-items:center;gap:12px;}
-.settings-icon{
-  width:36px;height:36px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;font-size:16px;
-}
-.settings-row h4{font-size:14px;font-weight:500;}
-.settings-row p{font-size:11px;color:var(--muted);margin-top:2px;}
-
-/* TOGGLE */
-.toggle{width:48px;height:26px;border-radius:13px;background:var(--border);position:relative;cursor:pointer;transition:background .25s;flex-shrink:0;}
-.toggle.on{background:var(--cyan);}
-.toggle::after{content:'';position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.4);}
-.toggle.on::after{transform:translateX(-22px);}
-
-.btn-signout{
-  background:rgba(255,51,102,.1);border:1.5px solid rgba(255,51,102,.3);
-  border-radius:14px;padding:16px;text-align:center;
-  color:var(--red);font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;
-  transition:all .2s;
-}
-.btn-signout:active{background:rgba(255,51,102,.25);}
-
-/* TOAST */
-.toast{
-  position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:rgba(20,20,40,.95);border:1px solid var(--cyan);
-  padding:10px 20px;border-radius:24px;font-size:13px;color:var(--cyan);
-  pointer-events:none;opacity:0;transition:all .3s;z-index:1000;white-space:nowrap;
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-/* PROFILE SCREEN */
-#screen-profile{background:var(--bg);}
-.profile-header{
-  padding:16px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;
-}
-.profile-header h2{font-size:17px;font-weight:600;}
-.profile-content{flex:1;overflow-y:auto;padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:20px;}
-.profile-avatar-big{
-  width:100px;height:100px;border-radius:50%;
-  background:linear-gradient(135deg,var(--purple),var(--cyan));
-  display:flex;align-items:center;justify-content:center;font-size:42px;
-  border:4px solid rgba(0,212,255,.3);
-  box-shadow:0 0 32px rgba(0,212,255,.3);
-}
-.profile-name{font-size:22px;font-weight:700;text-align:center;}
-.profile-sub{font-size:13px;color:var(--muted);text-align:center;}
-.profile-stats{
-  display:flex;gap:0;width:100%;
-  background:var(--dark2);border:1px solid var(--border);border-radius:16px;overflow:hidden;
-}
-.stat-item{
-  flex:1;padding:16px;text-align:center;border-left:1px solid var(--border);
-}
-.stat-item:last-child{border-left:none;}
-.stat-num{font-size:22px;font-weight:700;color:var(--cyan);}
-.stat-label{font-size:11px;color:var(--muted);margin-top:2px;}
-.profile-info-box{
-  width:100%;background:var(--dark2);border:1px solid var(--border);border-radius:16px;overflow:hidden;
-}
-.info-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;border-bottom:1px solid var(--border);
-}
-.info-row:last-child{border-bottom:none;}
-.info-label{font-size:12px;color:var(--muted);}
-.info-value{font-size:13px;color:var(--text);font-weight:500;}
+/* Toast */
+#toast{position:fixed;top:58px;left:50%;transform:translateX(-50%) translateY(-70px);background:#1e1e3a;border:1px solid var(--border);border-radius:12px;padding:9px 18px;font-size:13px;font-weight:500;white-space:nowrap;z-index:300;transition:transform .28s ease;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
-<div id="app">
 
-<!-- SCREEN 1: LOGIN -->
+<div id="overlay">
+  <div style="width:68px;height:68px;border-radius:18px;background:linear-gradient(135deg,#7c3aed,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 36px rgba(124,58,237,.4)">📡</div>
+  <div class="spinner"></div>
+  <div id="overlay-txt">جاري الاتصال...</div>
+</div>
+
+<!-- LOGIN -->
 <div class="screen active" id="screen-login">
-  <div class="login-logo">
-    <div class="logo-circle">
-      <svg viewBox="0 0 48 48" fill="none">
-        <circle cx="24" cy="24" r="20" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/>
-        <path d="M14 24 Q24 10 34 24 Q24 38 14 24Z" fill="rgba(0,212,255,.8)"/>
-        <circle cx="24" cy="24" r="5" fill="white"/>
-        <circle cx="18" cy="18" r="2.5" fill="rgba(123,47,255,.9)"/>
-        <circle cx="30" cy="18" r="2.5" fill="rgba(0,255,156,.9)"/>
-        <circle cx="24" cy="32" r="2.5" fill="rgba(255,51,102,.9)"/>
-      </svg>
-    </div>
-    <div class="logo-name">VibeMap</div>
-    <div class="logo-sub">تواصل. استكشف. اتحد.</div>
+  <div class="logo-icon">📡</div>
+  <div class="login-title">VibeMap AR</div>
+  <div class="login-sub">تواصل مع أصدقائك في الوقت الفعلي</div>
+  <div class="form-group" id="srv-grp">
+    <label class="form-label" for="inp-srv">رابط الخادم</label>
+    <input class="form-input" id="inp-srv" type="url" placeholder="https://yourapp.glitch.me" autocomplete="off" spellcheck="false">
+    <div class="server-hint" id="srv-hint"></div>
   </div>
-  <div class="login-btns">
-    <div class="btn-social google" onclick="doLogin()">
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-      </svg>
-      تسجيل الدخول بـ Google
-    </div>
-    <div class="btn-social apple" onclick="doLogin()">
-      <svg viewBox="0 0 24 24" fill="white">
-        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-      </svg>
-      تسجيل الدخول بـ Apple
-    </div>
-    <div class="btn-social facebook" onclick="doLogin()">
-      <svg viewBox="0 0 24 24" fill="#1877F2">
-        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-      </svg>
-      تسجيل الدخول بـ Facebook
-    </div>
-    <div class="btn-social email" onclick="doLogin()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="2" y="4" width="20" height="16" rx="3"/>
-        <path d="M2 8l10 6 10-6"/>
-      </svg>
-      تسجيل الدخول بالبريد الإلكتروني
-    </div>
+  <div class="form-group">
+    <label class="form-label" for="inp-name">اسمك</label>
+    <input class="form-input rtl-in" id="inp-name" type="text" placeholder="أدخل اسمك" maxlength="20" autocomplete="off">
   </div>
-  <div class="login-footer">
-    بتسجيل دخولك أنت توافق على <a href="#">شروط الاستخدام</a> و<a href="#">سياسة الخصوصية</a>
-  </div>
+  <button class="btn-primary" id="btn-join">دخول ←</button>
 </div>
 
-<!-- SCREEN 2: AR -->
-<div class="screen" id="screen-ar">
-  <div class="ar-bg"></div>
-  <div class="ar-scan-ring"></div>
-
-  <!-- HUD -->
-  <div class="ar-hud">
-    <div class="hud-channel">
-      <div class="hud-dot"></div>
-      <div>
-        <div class="hud-name"># القناة الرئيسية</div>
-        <div class="hud-count" id="hud-count">٧ متصلين الآن</div>
-      </div>
+<!-- RADAR -->
+<div class="screen" id="screen-radar">
+  <div class="hdr">
+    <div style="flex:1">
+      <div class="hdr-title">الرادار</div>
+      <div id="radar-sub" style="font-size:12px;color:var(--text2)">جاري البحث...</div>
     </div>
-    <div class="e2e-badge">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00FF9C" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <span>E2E</span>
-    </div>
+    <div class="online-pill"><div class="dot-g"></div><span id="cnt">0</span> متصل</div>
   </div>
-
-  <!-- AR CONTENT -->
-  <div class="ar-content" id="ar-content">
-    <div class="orb-container" style="top:18%;left:12%;" id="orb1">
-      <div class="orb orb-1">
-        &#x1F60A;
-        <div class="orb-ping">&#x25CF;</div>
-      </div>
-      <div class="orb-label">أحمد خالد</div>
-      <div class="orb-dist">٢٣م بعيد</div>
-    </div>
-    <div class="orb-container" style="top:35%;right:8%;" id="orb2">
-      <div class="orb orb-2">
-        &#x1F3AF;
-        <div class="orb-ping" style="background:var(--purple);">&#x25CF;</div>
-      </div>
-      <div class="orb-label">سارة محمد</div>
-      <div class="orb-dist">٤١م بعيد</div>
-    </div>
-    <div class="orb-container" style="top:55%;left:28%;" id="orb3">
-      <div class="orb orb-3">
-        &#x1F31F;
-        <div class="orb-ping" style="background:var(--green);">&#x25CF;</div>
-      </div>
-      <div class="orb-label">يوسف علي</div>
-      <div class="orb-dist">١٢م بعيد</div>
-    </div>
-
-    <!-- Compass -->
-    <div style="position:absolute;top:14px;right:16px;z-index:5;">
-      <div style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="var(--muted)" stroke-width="1"/>
-          <path d="M12 2 L14 10 L12 12 L10 10 Z" fill="var(--red)"/>
-          <path d="M12 22 L14 14 L12 12 L10 14 Z" fill="var(--muted)"/>
-        </svg>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTROLS -->
-  <div class="ar-controls">
-    <div class="ar-btns-row">
-      <div class="btn-ghost" onclick="showToast('وضع الخفاء مفعّل')">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2">
-          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-          <line x1="1" y1="1" x2="23" y2="23" stroke="var(--purple)" stroke-width="2"/>
-        </svg>
-        <span>خفي</span>
-      </div>
-
-      <div class="btn-ptt" id="btn-ptt"
-        ontouchstart="pttStart(event)" ontouchend="pttEnd(event)"
-        onmousedown="pttStart(event)" onmouseup="pttEnd(event)">
-        <svg viewBox="0 0 24 24" fill="white">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-          <line x1="12" y1="19" x2="12" y2="23" stroke="white" stroke-width="2"/>
-          <line x1="8" y1="23" x2="16" y2="23" stroke="white" stroke-width="2"/>
-        </svg>
-        <span id="ptt-label">اضغط للكلام</span>
-      </div>
-
-      <div class="btn-sos" onclick="triggerSOS()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span>طوارئ</span>
-      </div>
-    </div>
-    <div class="ptt-status" id="ptt-status"></div>
-  </div>
-
-  <!-- BOTTOM NAV -->
-  <div class="bottom-nav" id="nav-ar">
-    <div class="nav-tab active" onclick="switchTab('ar')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-      <span>AR</span>
-    </div>
-    <div class="nav-tab" onclick="switchTab('chat')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span>دردشة</span>
-    </div>
-    <div class="nav-tab" onclick="switchTab('id')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg>
-      <span>هويتي</span>
-    </div>
-    <div class="nav-tab" onclick="switchTab('profile')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span>الملف</span>
-    </div>
-    <div class="nav-tab" onclick="switchTab('settings')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      <span>إعدادات</span>
+  <div class="radar-wrap" id="rw">
+    <canvas id="rc"></canvas>
+    <div class="ptt-who" id="ptt-who">🎙 <span id="ptt-talker"></span> يتحدث</div>
+    <div class="ptt-wrap">
+      <div id="ptt-lbl">اضغط للتحدث</div>
+      <button id="ptt-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v6a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-7 9h2a5 5 0 0 0 10 0h2a7 7 0 0 1-6 6.92V21h2v2H9v-2h2v-2.08A7 7 0 0 1 5 12z"/></svg>
+        <span id="ptt-span">PTT</span>
+      </button>
     </div>
   </div>
 </div>
 
-<!-- SCREEN 3: CHAT -->
+<!-- CHAT -->
 <div class="screen" id="screen-chat">
-  <div class="chat-header">
-    <div class="btn-back" onclick="switchTab('ar')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l6-6-6-6"/></svg>
-    </div>
-    <div class="chat-title">
-      <h2># القناة الرئيسية</h2>
-      <p>٧ أعضاء &bull; محادثة مشفرة</p>
-    </div>
-    <div class="e2e-badge">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#00FF9C" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <span>E2E</span>
-    </div>
+  <div class="hdr">
+    <div class="hdr-title">الدردشة</div>
+    <div id="chat-cnt" style="font-size:12px;color:var(--text2)">0 متصل</div>
   </div>
-
-  <div class="chat-messages" id="chat-messages">
-    <div class="msg other">
-      <div class="msg-avatar" style="background:linear-gradient(135deg,#1a3a5c,#2a5a8c);">&#x1F60A;</div>
-      <div class="msg-body">
-        <div class="msg-name">أحمد خالد</div>
-        <div class="msg-bubble">السلام عليكم يا شباب، كيف الأحوال؟</div>
-        <div class="msg-meta"><span>٣:٢٤ م</span></div>
-      </div>
-    </div>
-    <div class="msg other">
-      <div class="msg-avatar" style="background:linear-gradient(135deg,#3a1a5c,#5a2a8c);">&#x1F3AF;</div>
-      <div class="msg-body">
-        <div class="msg-name">سارة محمد</div>
-        <div class="msg-bubble">وعليكم السلام! الحمد لله بخير. أين أنتم الآن؟</div>
-        <div class="msg-meta"><span>٣:٢٥ م</span></div>
-      </div>
-    </div>
-    <div class="msg mine">
-      <div class="msg-avatar" style="background:linear-gradient(135deg,var(--purple),var(--cyan));">&#x1F31F;</div>
-      <div class="msg-body">
-        <div class="msg-bubble">نحن في ميدان التحرير. تعالوا نجتمع هنا!</div>
-        <div class="msg-meta"><span>٣:٢٦ م</span><span class="check-icon">&#x2713;&#x2713;</span></div>
-      </div>
-    </div>
-    <div class="msg other">
-      <div class="msg-avatar" style="background:linear-gradient(135deg,#1a4a2a,#2a6a3a);">&#x1F60E;</div>
-      <div class="msg-body">
-        <div class="msg-name">يوسف علي</div>
-        <div class="msg-bubble">ممتاز! أنا على بعد ١٢ متر منكم. شاهدوني على الخريطة</div>
-        <div class="msg-meta"><span>٣:٢٧ م</span></div>
-      </div>
-    </div>
+  <div class="users-strip" id="ustrip"><div style="font-size:11px;color:var(--text2);padding:3px">لا يوجد أحد</div></div>
+  <div class="chat-msgs" id="chat-msgs">
+    <div id="no-msgs" style="text-align:center;color:var(--text2);font-size:13px;margin:auto;padding:40px 0">لا توجد رسائل بعد</div>
   </div>
-
-  <div class="chat-input">
-    <div class="btn-send" onclick="sendMessage()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
-    </div>
-    <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendMessage()">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
-  </div>
-
-  <div class="bottom-nav">
-    <div class="nav-tab" onclick="switchTab('ar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>AR</span></div>
-    <div class="nav-tab active" onclick="switchTab('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>دردشة</span></div>
-    <div class="nav-tab" onclick="switchTab('id')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg><span>هويتي</span></div>
-    <div class="nav-tab" onclick="switchTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>الملف</span></div>
-    <div class="nav-tab" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>إعدادات</span></div>
+  <div class="chat-bar">
+    <button id="chat-send" aria-label="إرسال">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+    <textarea id="chat-inp" placeholder="اكتب رسالة..." rows="1"></textarea>
   </div>
 </div>
 
-<!-- SCREEN 4: ID CARD -->
-<div class="screen" id="screen-id">
-  <div class="id-header">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg>
-    <h2>هويتي الرقمية</h2>
-  </div>
-  <div class="id-content">
+<!-- CARD -->
+<div class="screen" id="screen-card">
+  <div class="hdr"><div class="hdr-title">بطاقتي</div></div>
+  <div class="inner">
     <div class="id-card">
-      <div class="id-top">
-        <div class="id-avatar">&#x1F31F;</div>
-        <div class="id-info">
-          <h3 id="id-name">يوسف علي</h3>
-          <p>عضو منذ يناير ٢٠٢٥</p>
-          <div class="vm-badge">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#00FF9C" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>موثق VibeMap</span>
-          </div>
-        </div>
-      </div>
-      <div class="id-pin-row">
-        <div>
-          <div class="pin-label">رقم التعريف الشخصي (PIN)</div>
-          <div class="pin-value" id="user-pin">VM-4829-7X3K</div>
-        </div>
-        <div class="btn-copy" onclick="copyPIN()">نسخ</div>
-      </div>
+      <div class="id-av">👤</div>
+      <div class="id-name" id="c-name">—</div>
+      <div class="id-stat"><div class="dot-g"></div> متصل</div>
+      <div class="id-plabel">رمز التعريف الشخصي</div>
+      <div class="id-pin" id="c-pin">— — — —</div>
+      <button class="btn-copy" id="btn-cp">نسخ الرمز</button>
     </div>
-
     <div class="qr-box">
-      <h4>رمز QR الخاص بك</h4>
-      <div class="qr-code">
-        <div class="qr-inner"></div>
-        <div class="qr-dots"></div>
-        <div style="position:absolute;top:10px;left:10px;width:28px;height:28px;border:4px solid #000;border-radius:3px;"></div>
-        <div style="position:absolute;top:10px;right:10px;width:28px;height:28px;border:4px solid #000;border-radius:3px;"></div>
-        <div style="position:absolute;bottom:10px;left:10px;width:28px;height:28px;border:4px solid #000;border-radius:3px;"></div>
-        <div style="position:absolute;top:16px;left:16px;width:16px;height:16px;background:#000;border-radius:1px;"></div>
-        <div style="position:absolute;top:16px;right:16px;width:16px;height:16px;background:#000;border-radius:1px;"></div>
-        <div style="position:absolute;bottom:16px;left:16px;width:16px;height:16px;background:#000;border-radius:1px;"></div>
-      </div>
-      <p style="font-size:11px;color:var(--muted);text-align:center;">اطلب من صديقك مسح هذا الرمز لإضافتك</p>
+      <div class="qr-title">رمز QR للمشاركة</div>
+      <canvas id="qr-canvas" width="180" height="180"></canvas>
     </div>
-
-    <div class="add-friend-box">
-      <h4>إضافة صديق بالـ PIN</h4>
-      <p>أدخل رمز PIN الخاص بصديقك لإضافته</p>
-      <div class="pin-input-row">
-        <input type="text" id="friend-pin" placeholder="VM-XXXX-XXXX" maxlength="12">
-        <button class="btn-add" onclick="addFriend()">إضافة</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="bottom-nav">
-    <div class="nav-tab" onclick="switchTab('ar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>AR</span></div>
-    <div class="nav-tab" onclick="switchTab('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>دردشة</span></div>
-    <div class="nav-tab active" onclick="switchTab('id')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg><span>هويتي</span></div>
-    <div class="nav-tab" onclick="switchTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>الملف</span></div>
-    <div class="nav-tab" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>إعدادات</span></div>
+    <button class="share-btn" id="btn-share">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+      مشاركة بطاقتي
+    </button>
   </div>
 </div>
 
-<!-- SCREEN: PROFILE -->
-<div class="screen" id="screen-profile">
-  <div class="profile-header">
-    <h2>الملف الشخصي</h2>
-  </div>
-  <div class="profile-content">
-    <div class="profile-avatar-big">&#x1F31F;</div>
-    <div>
-      <div class="profile-name">يوسف علي</div>
-      <div class="profile-sub">@yousef_ali &bull; VibeMap Pro</div>
-    </div>
-    <div class="profile-stats">
-      <div class="stat-item">
-        <div class="stat-num">٤٢</div>
-        <div class="stat-label">أصدقاء</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">١٢٨</div>
-        <div class="stat-label">جلسة</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">٩٨٪</div>
-        <div class="stat-label">تقييم</div>
-      </div>
-    </div>
-    <div class="profile-info-box">
-      <div class="info-row">
-        <span class="info-label">الاسم الكامل</span>
-        <span class="info-value">يوسف علي حسن</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">البريد الإلكتروني</span>
-        <span class="info-value" style="direction:ltr;">yousef@vibemap.app</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">المدينة</span>
-        <span class="info-value">القاهرة، مصر</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">الحالة</span>
-        <span class="info-value" style="color:var(--green);">&#x25CF; متصل الآن</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">خطة الاشتراك</span>
-        <span class="info-value" style="color:var(--cyan);">VibeMap Pro</span>
-      </div>
-    </div>
-  </div>
-  <div class="bottom-nav">
-    <div class="nav-tab" onclick="switchTab('ar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>AR</span></div>
-    <div class="nav-tab" onclick="switchTab('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>دردشة</span></div>
-    <div class="nav-tab" onclick="switchTab('id')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg><span>هويتي</span></div>
-    <div class="nav-tab active" onclick="switchTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>الملف</span></div>
-    <div class="nav-tab" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>إعدادات</span></div>
-  </div>
-</div>
-
-<!-- SCREEN 5: SETTINGS -->
+<!-- SETTINGS -->
 <div class="screen" id="screen-settings">
-  <div class="settings-header">
-    <h2>الإعدادات</h2>
-  </div>
-  <div class="settings-content">
-
-    <div class="settings-section">
-      <div class="settings-section-title">المظهر والتخصيص</div>
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-icon" style="background:rgba(123,47,255,.15);">&#x1F3A8;</div>
-          <div>
-            <h4>الوضع الداكن</h4>
-            <p>مفعّل دائماً</p>
-          </div>
+  <div class="hdr"><div class="hdr-title">الإعدادات</div></div>
+  <div class="slist">
+    <div>
+      <div class="stitle">الحساب</div>
+      <div class="scard">
+        <div class="srow">
+          <div class="sico" style="background:rgba(124,58,237,.15)">👤</div>
+          <div class="slbl"><div class="slbl-t">الاسم</div><div class="slbl-s" id="s-name"></div></div>
         </div>
-        <div class="toggle on" id="toggle-dark" onclick="toggleSetting('dark')"></div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-icon" style="background:rgba(0,212,255,.12);">&#x1F310;</div>
-          <div>
-            <h4>اللغة</h4>
-            <p>العربية</p>
-          </div>
+        <div class="srow">
+          <div class="sico" style="background:rgba(6,182,212,.15)">🔑</div>
+          <div class="slbl"><div class="slbl-t">رمز PIN</div><div class="slbl-s" id="s-pin" style="font-family:monospace;direction:ltr"></div></div>
         </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </div>
     </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">الأمان والخصوصية</div>
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-icon" style="background:rgba(0,255,156,.12);">&#x1F512;</div>
-          <div>
-            <h4>تشفير E2E</h4>
-            <p>تشفير كامل للرسائل</p>
-          </div>
-        </div>
-        <div class="toggle on" id="toggle-e2e" onclick="toggleSetting('e2e')"></div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-icon" style="background:rgba(123,47,255,.15);">&#x1F47B;</div>
-          <div>
-            <h4>وضع الخفاء</h4>
-            <p>إخفاء موقعك الجغرافي</p>
-          </div>
-        </div>
-        <div class="toggle" id="toggle-ghost" onclick="toggleSetting('ghost')"></div>
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">الإشعارات</div>
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-icon" style="background:rgba(255,180,0,.12);">&#x1F514;</div>
-          <div>
-            <h4>إشعارات الرسائل</h4>
-            <p>تنبيهات الدردشة</p>
-          </div>
-        </div>
-        <div class="toggle on" id="toggle-notif" onclick="toggleSetting('notif')"></div>
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-icon" style="background:rgba(0,212,255,.12);">&#x1F4CD;</div>
-          <div>
-            <h4>إشعارات القرب</h4>
-            <p>عند اقتراب أحد منك</p>
-          </div>
-        </div>
-        <div class="toggle on" id="toggle-prox" onclick="toggleSetting('prox')"></div>
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">الحساب</div>
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-icon" style="background:rgba(0,212,255,.12);">&#x1F511;</div>
-          <div>
-            <h4>رمز PIN الخاص بك</h4>
-            <p style="font-size:13px;color:var(--cyan);letter-spacing:2px;" id="settings-pin">VM-4829-7X3K</p>
-          </div>
-        </div>
-        <div class="btn-copy" onclick="copyPIN()" style="font-size:11px;">نسخ</div>
-      </div>
-      <div class="settings-row" onclick="showToast('جاري تغيير كلمة المرور...')">
-        <div class="settings-row-left">
-          <div class="settings-icon" style="background:rgba(255,51,102,.12);">&#x1F510;</div>
-          <div>
-            <h4>تغيير كلمة المرور</h4>
-            <p>آخر تغيير: منذ ٣ أشهر</p>
-          </div>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">التطبيق</div>
-      <div class="settings-row">
-        <div class="settings-row-left">
-          <div class="settings-icon" style="background:rgba(100,100,255,.12);">&#x2139;&#xFE0F;</div>
-          <div>
-            <h4>الإصدار</h4>
-            <p>VibeMap v2.4.1</p>
+    <div>
+      <div class="stitle">الاتصال</div>
+      <div class="scard">
+        <div class="srow">
+          <div class="sico" style="background:rgba(16,185,129,.15)">🌐</div>
+          <div class="slbl">
+            <div class="slbl-t">رابط الخادم</div>
+            <input class="sinp" id="s-srv" placeholder="https://..." type="url">
           </div>
         </div>
       </div>
     </div>
-
-    <div class="btn-signout" onclick="doSignOut()">تسجيل الخروج</div>
-
-  </div>
-
-  <div class="bottom-nav">
-    <div class="nav-tab" onclick="switchTab('ar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>AR</span></div>
-    <div class="nav-tab" onclick="switchTab('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>دردشة</span></div>
-    <div class="nav-tab" onclick="switchTab('id')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg><span>هويتي</span></div>
-    <div class="nav-tab" onclick="switchTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>الملف</span></div>
-    <div class="nav-tab active" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>إعدادات</span></div>
+    <div>
+      <div class="stitle">التفضيلات</div>
+      <div class="scard">
+        <div class="srow">
+          <div class="sico" style="background:rgba(16,185,129,.15)">📍</div>
+          <div class="slbl"><div class="slbl-t">مشاركة الموقع</div><div class="slbl-s">أرسل موقعك للآخرين</div></div>
+          <div class="toggle on" id="tog-loc" onclick="togglePref('loc',this)"></div>
+        </div>
+        <div class="srow">
+          <div class="sico" style="background:rgba(124,58,237,.15)">🔔</div>
+          <div class="slbl"><div class="slbl-t">التنبيهات</div><div class="slbl-s">تنبيه عند انضمام أحد</div></div>
+          <div class="toggle on" id="tog-ntf" onclick="togglePref('ntf',this)"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="stitle">التطبيق</div>
+      <div class="scard">
+        <div class="srow" style="justify-content:center;color:var(--text2);font-size:12px">VibeMap AR v5.0</div>
+      </div>
+    </div>
+    <button class="btn-danger" id="btn-out">تسجيل الخروج</button>
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
-
+<!-- Bottom nav -->
+<div id="nav">
+  <button class="nav-btn active" id="nb-radar" onclick="go('radar')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+    رادار
+  </button>
+  <button class="nav-btn" id="nb-chat" onclick="go('chat')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <div class="badge" id="cbadge"></div>
+    دردشة
+  </button>
+  <button class="nav-btn" id="nb-card" onclick="go('card')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    بطاقتي
+  </button>
+  <button class="nav-btn" id="nb-settings" onclick="go('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>
+    الإعدادات
+  </button>
 </div>
+
+<div id="toast"></div>
 
 <script>
-// === STATE ===
-var currentScreen = 'login';
-var pttActive = false;
-var toastTimer = null;
-var settings = {dark:true,e2e:true,ghost:false,notif:true,prox:true};
+'use strict';
 
-try {
-  var s = localStorage.getItem('vm_settings');
-  if(s) settings = Object.assign(settings, JSON.parse(s));
-} catch(e){}
+const A = {
+  ws:null, connected:false,
+  uid:null, pin:null, name:'', server:'',
+  users:new Map(),
+  myLat:null, myLng:null,
+  tab:'login',
+  unread:0,
+  watchId:null,
+  prefs:{loc:true,ntf:true},
+  reconnTimer:null, reconnDelay:2000,
+  rafId:null
+};
 
-// === SCREEN NAVIGATION ===
-function switchTab(tab) {
-  if(currentScreen === tab) return;
-  var all = document.querySelectorAll('.screen');
-  all.forEach(function(s){
-    s.classList.remove('active','prev');
-    s.style.transform = '';
-  });
-  var prevEl = document.getElementById('screen-' + currentScreen);
-  var nextEl = document.getElementById('screen-' + tab);
-  if(prevEl) prevEl.classList.add('prev');
-  if(nextEl) nextEl.classList.add('active');
-  currentScreen = tab;
+const sv  = (k,v) => { try { localStorage.setItem('vm_'+k, JSON.stringify(v)); } catch {} };
+const ld  = (k,d) => { try { const v=localStorage.getItem('vm_'+k); return v!==null?JSON.parse(v):d; } catch { return d; } };
+
+// Init
+(function(){
+  A.name   = ld('name','');
+  A.server = ld('server','');
+  A.prefs  = ld('prefs',{loc:true,ntf:true});
+  if (!A.server && location.protocol !== 'file:') { A.server = location.origin; sv('server',A.server); }
+  document.getElementById('inp-srv').value  = A.server||'';
+  document.getElementById('inp-name').value = A.name||'';
+  if (A.server && location.protocol !== 'file:')
+    document.getElementById('srv-hint').textContent = 'تم الكشف: ' + A.server;
+  document.getElementById('tog-loc').className = 'toggle'+(A.prefs.loc?' on':'');
+  document.getElementById('tog-ntf').className = 'toggle'+(A.prefs.ntf?' on':'');
+  document.getElementById('s-srv').value = A.server||'';
+  document.getElementById('overlay').classList.add('hidden');
+})();
+
+// Navigation
+function go(tab) {
+  if (A.tab === tab) return;
+  const prev = A.tab;
+  const prevEl = document.getElementById('screen-'+prev);
+  const nextEl = document.getElementById('screen-'+tab);
+  if (!nextEl) return;
+  if (prevEl) {
+    prevEl.classList.remove('active');
+    prevEl.classList.add('exit');
+    setTimeout(()=>prevEl.classList.remove('exit'), 360);
+  }
+  nextEl.classList.remove('exit');
+  nextEl.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const nb = document.getElementById('nb-'+tab);
+  if (nb) nb.classList.add('active');
+  A.tab = tab;
+  if (tab==='chat')     { A.unread=0; updBadge(); scrollChat(); }
+  if (tab==='card')     { document.getElementById('c-name').textContent=A.name; document.getElementById('c-pin').textContent=A.pin||'——'; renderQR(); }
+  if (tab==='settings') { document.getElementById('s-name').textContent=A.name; document.getElementById('s-pin').textContent=A.pin||'—'; document.getElementById('s-srv').value=A.server||''; }
+  if (tab==='radar')    startRadar();
 }
 
-// === LOGIN ===
-function doLogin() {
-  var loginEl = document.getElementById('screen-login');
-  var arEl = document.getElementById('screen-ar');
-  loginEl.style.transition = 'opacity .35s';
-  loginEl.style.opacity = '0';
-  setTimeout(function(){
-    loginEl.classList.remove('active');
-    loginEl.style.opacity = '';
-    loginEl.style.transition = '';
-    arEl.style.transform = '';
-    arEl.classList.add('active');
-    currentScreen = 'ar';
-    try { localStorage.setItem('vm_loggedIn','1'); } catch(e){}
-    startOrbs();
-  }, 350);
-}
+// WebSocket
+function wsUrl(u){ return u.replace(/^https:/,'wss:').replace(/^http:/,'ws:'); }
 
-// === AUTO LOGIN ===
-window.addEventListener('load', function() {
-  try {
-    if(localStorage.getItem('vm_loggedIn') === '1') {
-      document.getElementById('screen-login').classList.remove('active');
-      var ar = document.getElementById('screen-ar');
-      ar.style.transform = '';
-      ar.classList.add('active');
-      currentScreen = 'ar';
-      startOrbs();
-    }
-  } catch(e){}
-  applySettings();
-});
-
-// === ORBS ===
-function startOrbs() {
-  setInterval(function(){
-    var n = Math.floor(Math.random()*4)+5;
-    var el = document.getElementById('hud-count');
-    if(el) el.textContent = n + ' متصلين الآن';
-  }, 7000);
-}
-
-// === PTT ===
-function pttStart(e) {
-  if(e) e.preventDefault();
-  if(pttActive) return;
-  pttActive = true;
-  var btn = document.getElementById('btn-ptt');
-  var lbl = document.getElementById('ptt-label');
-  var sts = document.getElementById('ptt-status');
-  if(btn) btn.classList.add('active');
-  if(lbl) lbl.textContent = 'جارٍ البث...';
-  if(sts) { sts.textContent = 'البث مفعّل | مستوى الصوت: 87%'; sts.className='ptt-status on'; }
-}
-
-function pttEnd(e) {
-  if(e) e.preventDefault();
-  if(!pttActive) return;
-  pttActive = false;
-  var btn = document.getElementById('btn-ptt');
-  var lbl = document.getElementById('ptt-label');
-  var sts = document.getElementById('ptt-status');
-  if(btn) btn.classList.remove('active');
-  if(lbl) lbl.textContent = 'اضغط للكلام';
-  if(sts) { sts.textContent = 'تم إرسال البث'; sts.className='ptt-status'; }
-  setTimeout(function(){ var s=document.getElementById('ptt-status'); if(s) s.textContent=''; }, 2000);
-}
-
-// === CHAT ===
-function sendMessage() {
-  var input = document.getElementById('chat-input');
-  if(!input) return;
-  var text = input.value.trim();
-  if(!text) return;
-  var now = new Date();
-  var h = now.getHours(), m = now.getMinutes();
-  var ap = h>=12?'م':'ص'; h = h%12||12;
-  var t = h+':'+(m<10?'0'+m:m)+' '+ap;
-  var msgs = document.getElementById('chat-messages');
-  var d = document.createElement('div');
-  d.className = 'msg mine';
-  d.innerHTML = '<div class="msg-avatar" style="background:linear-gradient(135deg,var(--purple),var(--cyan));">&#x1F31F;</div>' +
-    '<div class="msg-body"><div class="msg-bubble">'+escHtml(text)+'</div>' +
-    '<div class="msg-meta"><span>'+t+'</span><span class="check-icon">&#x2713;</span></div></div>';
-  msgs.appendChild(d);
-  msgs.scrollTop = msgs.scrollHeight;
-  input.value = '';
-  // Simulated reply
-  setTimeout(function(){
-    var replies=['رائع! شكراً على الرد','تم الاستلام، سنكون هناك قريباً','ممتاز! إلى اللقاء','حسناً، نتوجه إليكم الآن'];
-    var names=['أحمد خالد','سارة محمد','يوسف علي'];
-    var emojis=['&#x1F60A;','&#x1F3AF;','&#x1F60E;'];
-    var grads=['linear-gradient(135deg,#1a3a5c,#2a5a8c)','linear-gradient(135deg,#3a1a5c,#5a2a8c)','linear-gradient(135deg,#1a4a2a,#2a6a3a)'];
-    var i=Math.floor(Math.random()*3);
-    var now2=new Date(); var h2=now2.getHours(),m2=now2.getMinutes();
-    var ap2=h2>=12?'م':'ص'; h2=h2%12||12;
-    var t2=h2+':'+(m2<10?'0'+m2:m2)+' '+ap2;
-    var rd=document.createElement('div'); rd.className='msg other';
-    rd.innerHTML='<div class="msg-avatar" style="background:'+grads[i]+';">'+emojis[i]+'</div>' +
-      '<div class="msg-body"><div class="msg-name">'+names[i]+'</div>' +
-      '<div class="msg-bubble">'+replies[Math.floor(Math.random()*replies.length)]+'</div>' +
-      '<div class="msg-meta"><span>'+t2+'</span></div></div>';
-    msgs.appendChild(rd); msgs.scrollTop=msgs.scrollHeight;
-  }, 1000+Math.random()*1000);
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// === PIN ===
-function copyPIN() {
-  var pin = 'VM-4829-7X3K';
-  try {
-    if(navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(pin).catch(function(){});
-    }
-  } catch(e){}
-  showToast('تم نسخ الـ PIN بنجاح');
-}
-
-function addFriend() {
-  var input = document.getElementById('friend-pin');
-  if(!input) return;
-  var val = input.value.trim();
-  if(val.length < 5) { showToast('أدخل رمز PIN صحيح'); return; }
-  showToast('تم إرسال طلب الصداقة!');
-  input.value = '';
-}
-
-// === SETTINGS ===
-function toggleSetting(key) {
-  settings[key] = !settings[key];
-  var el = document.getElementById('toggle-'+key);
-  if(el) el.classList.toggle('on', settings[key]);
-  try { localStorage.setItem('vm_settings', JSON.stringify(settings)); } catch(e){}
-  var map = {
-    dark: settings.dark?'الوضع الداكن مفعّل':'الوضع الداكن معطّل',
-    e2e: settings.e2e?'تشفير E2E مفعّل':'تشفير E2E معطّل',
-    ghost: settings.ghost?'وضع الخفاء مفعّل':'وضع الخفاء معطّل',
-    notif: settings.notif?'الإشعارات مفعّلة':'الإشعارات معطّلة',
-    prox: settings.prox?'إشعارات القرب مفعّلة':'إشعارات القرب معطّلة'
+function connect() {
+  if (A.ws) { try{A.ws.close();}catch{} A.ws=null; }
+  A.connected = false;
+  const ov = document.getElementById('overlay');
+  ov.classList.remove('hidden');
+  document.getElementById('overlay-txt').textContent = 'جاري الاتصال...';
+  let ws;
+  try { ws = new WebSocket(wsUrl(A.server)); }
+  catch(e) { toast('خطأ: '+e.message); ov.classList.add('hidden'); return; }
+  A.ws = ws;
+  ws.onopen = () => {
+    A.connected=true; A.reconnDelay=2000;
+    if (A.reconnTimer) { clearTimeout(A.reconnTimer); A.reconnTimer=null; }
+    send({type:'join', name:A.name, lat:A.myLat, lng:A.myLng});
   };
-  showToast(map[key] || 'تم التحديث');
+  ws.onmessage = ev => { let m; try{m=JSON.parse(ev.data);}catch{return;} onMsg(m); };
+  ws.onclose = () => {
+    A.connected=false;
+    if (A.tab!=='login') { toast('انقطع الاتصال — جاري إعادة الاتصال...'); sched(); }
+  };
+  ws.onerror = () => { A.connected=false; document.getElementById('overlay').classList.add('hidden'); };
 }
 
-function applySettings() {
-  Object.keys(settings).forEach(function(k){
-    var el = document.getElementById('toggle-'+k);
-    if(el) el.classList.toggle('on', settings[k]);
-  });
+function sched() {
+  if (A.reconnTimer) return;
+  A.reconnTimer = setTimeout(()=>{ A.reconnTimer=null; if (!A.connected&&A.name&&A.server) connect(); }, A.reconnDelay);
+  A.reconnDelay = Math.min(A.reconnDelay*1.5,30000);
 }
 
-// === SOS ===
-function triggerSOS() {
-  showToast('تم إرسال إشارة الطوارئ!');
-  var btn = document.querySelector('.btn-sos');
-  if(btn){ btn.style.background='rgba(255,51,102,.45)'; setTimeout(function(){btn.style.background='';},1500); }
+function send(d) { if (A.ws && A.ws.readyState===WebSocket.OPEN) A.ws.send(JSON.stringify(d)); }
+
+// Messages
+function onMsg(m) {
+  switch(m.type) {
+    case 'welcome': {
+      A.uid=m.userId; A.pin=m.pin;
+      A.users.clear();
+      (m.users||[]).forEach(u=>A.users.set(u.id,u));
+      document.getElementById('chat-msgs').innerHTML='';
+      (m.history||[]).forEach(h=>addMsg(h,false));
+      document.getElementById('overlay').classList.add('hidden');
+      document.getElementById('nav').classList.add('visible');
+      // login → radar
+      const lg=document.getElementById('screen-login');
+      lg.classList.remove('active'); lg.classList.add('exit');
+      setTimeout(()=>lg.classList.remove('exit'),360);
+      document.getElementById('screen-radar').classList.add('active');
+      document.getElementById('nb-radar').classList.add('active');
+      A.tab='radar';
+      document.getElementById('c-name').textContent=A.name;
+      document.getElementById('c-pin').textContent=A.pin;
+      updUsers(); startRadar(); startGPS();
+      break;
+    }
+    case 'user_joined':
+      A.users.set(m.user.id,m.user); updUsers();
+      if (A.prefs.ntf) toast('📍 '+m.user.name+' انضم إلى الشبكة');
+      break;
+    case 'user_left':
+      A.users.delete(m.userId); updUsers();
+      break;
+    case 'location': {
+      const u=A.users.get(m.userId);
+      if (u){u.lat=m.lat;u.lng=m.lng;}
+      break;
+    }
+    case 'chat':
+      addMsg(m,true);
+      if (A.tab!=='chat' && m.userId!==A.uid) { A.unread++; updBadge(); if(A.prefs.ntf) toast('💬 '+m.name+': '+m.text.slice(0,28)); }
+      break;
+    case 'ptt_start':
+      document.getElementById('ptt-talker').textContent=m.name;
+      document.getElementById('ptt-who').classList.add('show');
+      break;
+    case 'ptt_stop':
+      document.getElementById('ptt-who').classList.remove('show');
+      break;
+  }
 }
 
-// === SIGN OUT ===
-function doSignOut() {
-  try { localStorage.removeItem('vm_loggedIn'); } catch(e){}
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active','prev'); s.style.transform = ''; });
-  var login = document.getElementById('screen-login');
-  login.classList.add('active');
-  currentScreen = 'login';
+// Users
+function updUsers() {
+  const n=A.users.size;
+  document.getElementById('cnt').textContent=n;
+  document.getElementById('chat-cnt').textContent=n+' متصل';
+  document.getElementById('radar-sub').textContent=n===0?'لا يوجد أحد متصل':n+' شخص متصل';
+  const strip=document.getElementById('ustrip');
+  strip.innerHTML='';
+  if (!n) { strip.innerHTML='<div style="font-size:11px;color:var(--text2);padding:3px">لا يوجد أحد</div>'; return; }
+  A.users.forEach(u=>{ const d=document.createElement('div'); d.className='uchip'; d.innerHTML='<div class="uchip-dot"></div><div class="uchip-name">'+esc(u.name)+'</div>'; strip.appendChild(d); });
 }
 
-// === TOAST ===
-function showToast(msg) {
-  var t = document.getElementById('toast');
-  if(!t) return;
-  t.textContent = msg;
-  t.classList.add('show');
-  if(toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+// Chat
+function addMsg(m,animate) {
+  const box=document.getElementById('chat-msgs');
+  const nm=document.getElementById('no-msgs');
+  if(nm) nm.remove();
+  const mine=m.userId===A.uid;
+  const w=document.createElement('div');
+  w.className='mwrap '+(mine?'mine':'other');
+  const t=new Date(m.time);
+  const ts=t.getHours()+':'+String(t.getMinutes()).padStart(2,'0');
+  w.innerHTML=(!mine?'<div class="mname">'+esc(m.name)+'</div>':'')+'<div class="mbub">'+esc(m.text)+'</div><div class="mtime">'+ts+'</div>';
+  if(animate){w.style.opacity='0';}
+  box.appendChild(w);
+  if(animate) requestAnimationFrame(()=>{w.style.transition='opacity .2s';w.style.opacity='1';});
+  scrollChat();
+}
+function scrollChat(){ const el=document.getElementById('chat-msgs'); setTimeout(()=>{el.scrollTop=el.scrollHeight;},50); }
+function updBadge(){ const b=document.getElementById('cbadge'); if(A.unread>0){b.textContent=A.unread>99?'99+':A.unread;b.classList.add('show');}else b.classList.remove('show'); }
+
+document.getElementById('chat-send').onclick = sendChat;
+document.getElementById('chat-inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
+document.getElementById('chat-inp').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px';});
+function sendChat(){ const inp=document.getElementById('chat-inp'); const text=inp.value.trim(); if(!text||!A.connected)return; send({type:'chat',text}); inp.value='';inp.style.height=''; }
+
+// Radar
+function startRadar() {
+  if (A.rafId) { cancelAnimationFrame(A.rafId); A.rafId=null; }
+  A.rafId = requestAnimationFrame(drawRadar);
 }
 
-// Prevent default gestures
-document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-document.addEventListener('dblclick', function(e){ e.preventDefault(); }, {passive:false});
-document.body.addEventListener('touchmove', function(e){
-  var t = e.target;
-  if(t.closest && t.closest('.chat-messages,.id-content,.settings-content,.profile-content')) return;
-  e.preventDefault();
-}, {passive:false});
+function drawRadar() {
+  if (A.tab !== 'radar') { A.rafId=null; return; }
+  const wrap=document.getElementById('rw'), canvas=document.getElementById('rc');
+  const sz=Math.min(wrap.clientWidth, wrap.clientHeight-110);
+  if (sz<10) { A.rafId=requestAnimationFrame(drawRadar); return; }
+  canvas.width=sz; canvas.height=sz;
+  const ctx=canvas.getContext('2d');
+  const cx=sz/2, cy=sz/2, R=sz/2-14;
+  ctx.clearRect(0,0,sz,sz);
+  // Rings
+  for(let i=1;i<=4;i++){ctx.beginPath();ctx.arc(cx,cy,(R/4)*i,0,Math.PI*2);ctx.strokeStyle='rgba(124,58,237,'+(0.07+0.04*i)+')';ctx.lineWidth=1;ctx.stroke();}
+  // Cross
+  ctx.strokeStyle='rgba(124,58,237,.1)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.stroke();
+  // Sweep
+  const ang=((Date.now()%3000)/3000)*Math.PI*2-Math.PI/2;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(ang);
+  const sg=ctx.createLinearGradient(0,0,R,0);
+  sg.addColorStop(0,'rgba(124,58,237,0)');sg.addColorStop(1,'rgba(124,58,237,.28)');
+  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,-0.45,0.45);ctx.closePath();
+  ctx.fillStyle=sg;ctx.fill();ctx.restore();
+  // Users
+  const users=[...A.users.values()];
+  const hasGPS=A.myLat!==null&&users.some(u=>u.lat);
+  if(!users.length){
+    ctx.font='14px system-ui';ctx.fillStyle='rgba(148,163,184,.5)';ctx.textAlign='center';
+    ctx.fillText('في انتظار الأصدقاء...',cx,cy-16);
+  } else {
+    users.forEach((u,i)=>{
+      let ux,uy;
+      if(hasGPS&&u.lat&&u.lng){
+        const dist=hav(A.myLat,A.myLng,u.lat,u.lng);
+        const bear=brng(A.myLat,A.myLng,u.lat,u.lng);
+        const dr=Math.min(dist/5000,.92)*R*.8;
+        ux=cx+Math.cos(bear-Math.PI/2)*dr;
+        uy=cy+Math.sin(bear-Math.PI/2)*dr;
+      } else {
+        const a=(i/users.length)*Math.PI*2-Math.PI/2;
+        ux=cx+Math.cos(a)*R*.52;
+        uy=cy+Math.sin(a)*R*.52;
+      }
+      const g=ctx.createRadialGradient(ux,uy,0,ux,uy,17);
+      g.addColorStop(0,'rgba(6,182,212,.35)');g.addColorStop(1,'rgba(6,182,212,0)');
+      ctx.beginPath();ctx.arc(ux,uy,17,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+      ctx.beginPath();ctx.arc(ux,uy,7,0,Math.PI*2);ctx.fillStyle='#06b6d4';ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.font='bold 11px system-ui';ctx.fillStyle='#e2e8f0';ctx.textAlign='center';
+      ctx.fillText(u.name.slice(0,8),ux,uy+20);
+      if(hasGPS&&u.lat&&u.lng){
+        const d=hav(A.myLat,A.myLng,u.lat,u.lng);
+        ctx.font='10px system-ui';ctx.fillStyle='rgba(148,163,184,.7)';
+        ctx.fillText(d<1000?Math.round(d)+'م':(d/1000).toFixed(1)+'كم',ux,uy+31);
+      }
+    });
+  }
+  // Me
+  ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle='#7c3aed';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2;ctx.stroke();
+  ctx.font='bold 9px system-ui';ctx.fillStyle='#e2e8f0';ctx.textAlign='center';
+  ctx.fillText('أنا',cx,cy-10);
+  A.rafId=requestAnimationFrame(drawRadar);
+}
+
+// PTT
+let pttOn=false;
+const pttBtn=document.getElementById('ptt-btn');
+function pttStart(){if(pttOn)return;pttOn=true;pttBtn.classList.add('talking');document.getElementById('ptt-span').textContent='يُبَث';document.getElementById('ptt-lbl').textContent='أنت تتحدث...';send({type:'ptt_start'});if(navigator.vibrate)navigator.vibrate(60);}
+function pttEnd(){if(!pttOn)return;pttOn=false;pttBtn.classList.remove('talking');document.getElementById('ptt-span').textContent='PTT';document.getElementById('ptt-lbl').textContent='اضغط للتحدث';send({type:'ptt_stop'});}
+pttBtn.addEventListener('mousedown',pttStart);
+pttBtn.addEventListener('mouseup',pttEnd);
+pttBtn.addEventListener('mouseleave',pttEnd);
+pttBtn.addEventListener('touchstart',e=>{e.preventDefault();pttStart();},{passive:false});
+pttBtn.addEventListener('touchend',e=>{e.preventDefault();pttEnd();},{passive:false});
+pttBtn.addEventListener('touchcancel',pttEnd);
+
+// GPS
+function startGPS(){
+  if(!A.prefs.loc||!navigator.geolocation||A.watchId!==null)return;
+  A.watchId=navigator.geolocation.watchPosition(p=>{A.myLat=p.coords.latitude;A.myLng=p.coords.longitude;send({type:'location',lat:A.myLat,lng:A.myLng});},()=>{},{enableHighAccuracy:true,timeout:10000,maximumAge:5000});
+}
+function stopGPS(){if(A.watchId!==null){navigator.geolocation.clearWatch(A.watchId);A.watchId=null;}}
+
+// Login
+document.getElementById('btn-join').onclick = doJoin;
+document.getElementById('inp-name').addEventListener('keydown',e=>{if(e.key==='Enter')doJoin();});
+function doJoin(){
+  let name=document.getElementById('inp-name').value.trim();
+  let srv=document.getElementById('inp-srv').value.trim()||A.server;
+  if(!srv&&location.protocol!=='file:') srv=location.origin;
+  if(!name){toast('أدخل اسمك أولاً');return;}
+  if(!srv){toast('أدخل رابط الخادم');return;}
+  srv=srv.replace(/\/$/,'');
+  if(!/^https?:\/\//i.test(srv)) srv='https://'+srv;
+  A.name=name; A.server=srv;
+  sv('name',A.name); sv('server',A.server);
+  connect();
+}
+
+// Settings
+function togglePref(k,el){
+  A.prefs[k]=!A.prefs[k];
+  el.className='toggle'+(A.prefs[k]?' on':'');
+  sv('prefs',A.prefs);
+  if(k==='loc'){if(A.prefs.loc)startGPS();else stopGPS();}
+}
+document.getElementById('s-srv').addEventListener('change',function(){A.server=this.value.trim().replace(/\/$/,'');sv('server',A.server);toast('تم حفظ الخادم');});
+document.getElementById('btn-out').onclick=()=>{
+  if(A.ws){try{A.ws.close();}catch{}A.ws=null;}
+  A.connected=false;A.uid=null;A.pin=null;A.users.clear();
+  stopGPS();if(A.rafId){cancelAnimationFrame(A.rafId);A.rafId=null;}
+  document.getElementById('nav').classList.remove('visible');
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active','exit'));
+  document.getElementById('screen-login').classList.add('active');
+  A.tab='login';A.unread=0;updBadge();
+};
+
+// ID Card
+document.getElementById('btn-cp').onclick=()=>{
+  if(!A.pin)return;
+  if(navigator.clipboard){navigator.clipboard.writeText(A.pin).then(()=>toast('تم نسخ الرمز ✓'));}
+  else{const ta=document.createElement('textarea');ta.value=A.pin;ta.style.position='fixed';ta.style.top='-999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('تم نسخ الرمز ✓');}
+};
+document.getElementById('btn-share').onclick=()=>{
+  const txt='انضم إليّ على VibeMap AR!\nالاسم: '+A.name+'\nرمز PIN: '+A.pin+'\nالخادم: '+A.server;
+  if(navigator.share){navigator.share({title:'VibeMap AR',text:txt});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>toast('تم نسخ بياناتي ✓'));}
+};
+
+// QR
+function renderQR(){
+  const canvas=document.getElementById('qr-canvas');
+  const text='VIBEMAP:'+(A.pin||'X')+':'+A.name;
+  const sz=180,cells=21,cs=sz/cells;
+  canvas.width=sz;canvas.height=sz;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#16162a';ctx.fillRect(0,0,sz,sz);
+  const finder=(x,y)=>{
+    ctx.fillStyle='#7c3aed';
+    for(let i=0;i<7;i++)for(let j=0;j<7;j++){if(i===0||i===6||j===0||j===6)ctx.fillRect((x+i)*cs,(y+j)*cs,cs,cs);}
+    for(let i=2;i<=4;i++)for(let j=2;j<=4;j++)ctx.fillRect((x+i)*cs,(y+j)*cs,cs,cs);
+  };
+  finder(0,0);finder(cells-7,0);finder(0,cells-7);
+  let seed=fhash(text);
+  for(let r=0;r<cells;r++)for(let c=0;c<cells;c++){
+    if((r<9&&c<9)||(r<9&&c>cells-9)||(r>cells-9&&c<9))continue;
+    seed=(seed*1664525+1013904223)>>>0;
+    if((seed>>16)&1){ctx.fillStyle='#7c3aed';ctx.fillRect(c*cs,r*cs,cs,cs);}
+  }
+  ctx.fillStyle='#16162a';ctx.fillRect(sz/2-28,sz/2-9,56,18);
+  ctx.font='bold 8px monospace';ctx.fillStyle='#06b6d4';ctx.textAlign='center';
+  ctx.fillText(A.pin?A.pin.slice(3):'',sz/2,sz/2+4);
+}
+function fhash(s){let h=0x811c9dc5>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return h;}
+
+// Toast
+let toastT=null;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');if(toastT)clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);}
+
+// Utils
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function hav(la1,lo1,la2,lo2){const R=6371000,dL=(la2-la1)*Math.PI/180,dO=(lo2-lo1)*Math.PI/180;const a=Math.sin(dL/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dO/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+function brng(la1,lo1,la2,lo2){const dO=(lo2-lo1)*Math.PI/180;return Math.atan2(Math.sin(dO)*Math.cos(la2*Math.PI/180),Math.cos(la1*Math.PI/180)*Math.sin(la2*Math.PI/180)-Math.sin(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.cos(dO));}
+window.addEventListener('resize',()=>{if(A.tab==='radar')drawRadar();});
 </script>
 </body>
 </html>
