@@ -2,1015 +2,1164 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VibeMap AR — v5.0</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VibeMap</title>
 <style>
-/* ══ THEME ══════════════════════════════════ */
-:root{--c:#00D4FF;--v:#7B2FFF;--m:#C840FF;--g:#00FF9C;--r:#FF4444;--y:#FFB347;--tl:#00FFD4;--o:#FF7A00}
-[data-theme="dark"]{
-  --bg:#03030D;--bg2:#06061A;--bg3:#0A0A24;
-  --card:#07071E;--card2:#0C0C2C;--card3:#101030;
-  --border:rgba(123,47,255,.22);--border2:rgba(123,47,255,.13);--border3:rgba(123,47,255,.07);
-  --t:#E8EAFF;--t2:#9AA0CC;--t3:#5A6090;--mu:#3A3A60;
-  --shadow:0 4px 24px rgba(0,0,0,.7);--glass:rgba(7,7,30,.78);--glass2:rgba(3,3,13,.92);
-  --ph:#040414;--ph-b:rgba(123,47,255,.35);
-  --topbar:rgba(3,3,13,.94);--inp:rgba(123,47,255,.1);--inp-b:rgba(123,47,255,.22);
-  --kk-bg:#0A0A20;--kk-b:rgba(0,212,255,.35);--kk-t:var(--c);
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+:root{
+  --bg:#03030D;--cyan:#00D4FF;--purple:#7B2FFF;--green:#00FF9C;
+  --dark2:#0A0A1A;--dark3:#111128;--text:#E0E0FF;--muted:#5A5A8A;
+  --border:#1A1A3A;--red:#FF3366;
 }
-[data-theme="light"]{
-  --bg:#F2F3FF;--bg2:#E8EAFF;--bg3:#DDE0FF;
-  --card:#FFFFFF;--card2:#F5F6FF;--card3:#EEF0FF;
-  --border:rgba(123,47,255,.22);--border2:rgba(123,47,255,.14);--border3:rgba(123,47,255,.08);
-  --t:#12143A;--t2:#3A3C70;--t3:#7878A8;--mu:#B8B8D8;
-  --shadow:0 4px 20px rgba(100,100,200,.1);--glass:rgba(255,255,255,.82);--glass2:rgba(242,243,255,.96);
-  --ph:#FFFFFF;--ph-b:rgba(123,47,255,.4);
-  --topbar:rgba(242,243,255,.96);--inp:rgba(123,47,255,.07);--inp-b:rgba(123,47,255,.2);
-  --kk-bg:#EEF0FF;--kk-b:rgba(123,47,255,.35);--kk-t:var(--v);
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Segoe UI',Tahoma,Arial,sans-serif;}
+#app{width:100vw;height:100vh;position:relative;overflow:hidden;}
+
+/* SCREEN SYSTEM */
+.screen{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:var(--bg);display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--t);font-family:'Tajawal',sans-serif;min-height:100vh;
-  transition:background .35s,color .35s;
-  background-image:radial-gradient(ellipse 150% 45% at 50% 0%,rgba(123,47,255,.06),transparent 65%);}
-[data-theme="dark"] body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(123,47,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(123,47,255,.035) 1px,transparent 1px);
-  background-size:38px 38px;}
-/* ══ TOPBAR ══ */
-.topbar{position:sticky;top:0;z-index:200;background:var(--topbar);border-bottom:1px solid var(--border2);
-  backdrop-filter:blur(18px);height:56px;display:flex;align-items:center;gap:10px;padding:0 18px;
-  transition:background .35s,border-color .35s;}
-.tb-logo{font-size:17px;font-weight:900;background:linear-gradient(135deg,var(--c),var(--v));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;flex-shrink:0;}
-.tb-ver{font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--t3);background:var(--card2);
-  border:1px solid var(--border2);border-radius:6px;padding:2px 7px;flex-shrink:0;}
-.tb-sp{flex:1}
-.cl-pill{display:flex;align-items:center;gap:5px;background:rgba(0,255,156,.07);
-  border:1px solid rgba(0,255,156,.2);border-radius:16px;padding:4px 12px;font-size:10px;
-  color:var(--g);cursor:pointer;transition:background .2s;white-space:nowrap;flex-shrink:0;}
-.cl-pill:hover{background:rgba(0,255,156,.14);}
-.cl-dot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:blink 1.5s ease infinite;flex-shrink:0;}
-.theme-row{display:flex;gap:3px;flex-shrink:0;}
-.th-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);background:none;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;
-  color:var(--t3);transition:all .2s;}
-.th-btn.on{background:rgba(123,47,255,.2);border-color:var(--v);color:var(--t);}
-/* ══ CHANGELOG ══ */
-.cl-panel{display:none;background:var(--card);border-bottom:1px solid var(--border2);
-  padding:16px 20px;animation:slideD .25s ease both;z-index:1;position:relative;}
-.cl-panel.open{display:block;}
-@keyframes slideD{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-.cl-hdr{font-size:11px;font-weight:700;color:var(--g);margin-bottom:12px;}
-.cl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;}
-.cl-v{display:flex;gap:10px;align-items:flex-start}
-.cl-vn{font-size:9.5px;font-family:'IBM Plex Mono',monospace;padding:3px 9px;border-radius:6px;
-  border:1px solid var(--border);background:var(--card2);white-space:nowrap;flex-shrink:0;color:var(--t2);}
-.cl-vn.cur{border-color:var(--g);color:var(--g);background:rgba(0,255,156,.06);}
-.cl-txt{font-size:11.5px;color:var(--t2);line-height:1.9;}
-.n-tag{display:inline-block;background:rgba(0,255,156,.12);border:1px solid rgba(0,255,156,.28);
-  border-radius:5px;padding:0 5px;font-size:8.5px;color:var(--g);margin-right:3px;vertical-align:middle;}
-/* ══ LAYOUT ══ */
-.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 14px 80px;}
-.hero{text-align:center;padding:44px 20px 32px;animation:fadeD .55s ease both;}
-.h-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(123,47,255,.12);
-  border:1px solid rgba(123,47,255,.35);border-radius:30px;padding:5px 18px;
-  font-size:10px;color:var(--m);letter-spacing:.15em;margin-bottom:16px;}
-.h-bd{width:5px;height:5px;border-radius:50%;background:var(--m);animation:blink 1.5s ease infinite;}
-.hero h1{font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.1;
-  background:linear-gradient(135deg,var(--c) 0%,var(--v) 50%,var(--m) 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:7px;}
-.hero-sub{color:var(--t2);font-size:13px;margin-bottom:24px;}
-.hs-row{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;}
-.hs{text-align:center;}
-.hs-n{font-size:24px;font-weight:900;background:linear-gradient(135deg,var(--c),var(--v));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.hs-l{font-size:9.5px;color:var(--t3);margin-top:2px;}
-/* ══ SECTION ══ */
-.sec-hdr{display:flex;align-items:center;gap:12px;margin:0 0 18px;}
-.sec-hdr h2{font-size:15px;font-weight:800;color:var(--t);white-space:nowrap;}
-.sec-line{flex:1;height:1px;background:var(--border3);}
-.sec-tag{font-size:9px;color:var(--t3);white-space:nowrap;}
-/* ══ PHONE ══ */
-.phones{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-bottom:36px;}
-.pw{display:flex;flex-direction:column;align-items:center;gap:10px;
-  animation:fadeUp .65s ease both;animation-fill-mode:both;}
-.pw:nth-child(1){animation-delay:.06s}.pw:nth-child(2){animation-delay:.12s}
-.pw:nth-child(3){animation-delay:.18s}.pw:nth-child(4){animation-delay:.24s}
-.pw:nth-child(5){animation-delay:.30s}.pw:nth-child(6){animation-delay:.36s}
-.pw:nth-child(7){animation-delay:.42s}.pw:nth-child(8){animation-delay:.48s}
-.pw:nth-child(9){animation-delay:.54s}
-.pw-lbl{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;}
-.pw-new{font-size:9px;color:var(--g);background:rgba(0,255,156,.1);
-  border:1px solid rgba(0,255,156,.22);border-radius:7px;padding:1px 7px;}
-.phone{width:192px;height:396px;background:var(--ph);border-radius:32px;
-  border:1.5px solid var(--ph-b);
-  box-shadow:0 0 0 1px rgba(0,0,0,.5),0 26px 60px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.06);
-  position:relative;overflow:hidden;transition:all .35s;}
-[data-theme="light"] .phone{box-shadow:0 0 0 1px rgba(180,160,240,.3),0 20px 50px rgba(100,80,180,.12),inset 0 1px 0 rgba(255,255,255,.9);}
-.phone::before{content:'';position:absolute;top:8px;left:50%;transform:translateX(-50%);
-  width:52px;height:14px;background:var(--ph);border-radius:8px;z-index:50;
-  box-shadow:0 2px 5px rgba(0,0,0,.6);transition:background .35s;}
-.pst{position:absolute;top:0;left:0;right:0;height:30px;display:flex;align-items:center;
-  justify-content:space-between;padding:0 14px;z-index:49;font-family:'IBM Plex Mono',monospace;
-  font-size:8px;color:var(--t3);transition:color .35s;}
-.pc{position:absolute;inset:0;overflow:hidden;}
-/* ══ AR BG ══ */
-.arbg{position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(4,4,15,.72) 0%,transparent 28%,transparent 63%,rgba(4,4,15,.9) 100%),
-    linear-gradient(135deg,#0C1828 0%,#180C2A 55%,#0C181A 100%);transition:all .35s;}
-[data-theme="light"] .arbg{
-  background:linear-gradient(180deg,rgba(200,210,255,.78) 0%,rgba(180,200,255,.2) 22%,transparent 50%,rgba(210,215,255,.72) 100%),
-    linear-gradient(135deg,#C4D4FF 0%,#D4C4FF 55%,#C4D4EE 100%);}
-.argrid{position:absolute;inset:0;pointer-events:none;
-  background-image:linear-gradient(rgba(0,212,255,.038) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,212,255,.038) 1px,transparent 1px);background-size:20px 20px;}
-[data-theme="light"] .argrid{background-image:linear-gradient(rgba(100,80,200,.055) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(100,80,200,.055) 1px,transparent 1px);}
-/* ══ HUD ══ */
-.hud{position:absolute;top:36px;left:8px;right:8px;display:flex;gap:4px;z-index:10;}
-.hc{background:var(--glass);border:1px solid rgba(123,47,255,.34);border-radius:13px;
-  padding:3px 7px;font-size:8px;color:var(--t);display:flex;align-items:center;gap:3px;
-  backdrop-filter:blur(8px);transition:all .35s;}
-[data-theme="light"] .hc{background:rgba(255,255,255,.82);border-color:rgba(123,47,255,.25);}
-.hdot{width:5px;height:5px;border-radius:50%;background:var(--g);box-shadow:0 0 5px var(--g);animation:blink 1.5s ease infinite;}
-.bgpill{background:rgba(0,255,156,.12);border:1px solid rgba(0,255,156,.35);border-radius:13px;
-  padding:3px 8px;font-size:7.5px;color:var(--g);display:flex;align-items:center;gap:3px;
-  backdrop-filter:blur(8px);margin-right:auto;animation:bgpulse 2s ease infinite;}
-@keyframes bgpulse{0%,100%{opacity:1}50%{opacity:.6}}
-/* ══ ORBS ══ */
-.orbs{position:absolute;inset:50px 0 108px 0;}
-.orb{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;}
-.or{width:38px;height:38px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;position:relative;}
-.or::before{content:'';position:absolute;inset:-6px;border-radius:50%;border:1px solid;opacity:.2;animation:opulse 2s ease infinite;}
-@keyframes opulse{0%,100%{transform:scale(1);opacity:.2}50%{transform:scale(1.18);opacity:.07}}
-.oi{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;}
-.on{font-size:7px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.9);}
-.od{font-size:6px;color:rgba(255,255,255,.42);}
-[data-theme="light"] .on{color:var(--t);text-shadow:none;}
-.ot .or{border-color:var(--c);box-shadow:0 0 12px rgba(0,212,255,.55);animation:otalk .5s ease infinite alternate;}
-.ot .or::before{border-color:var(--c);}
-.ot .oi{background:rgba(0,212,255,.16);}
-@keyframes otalk{from{box-shadow:0 0 10px rgba(0,212,255,.4)}to{box-shadow:0 0 26px rgba(0,212,255,.9),0 0 48px rgba(0,212,255,.24)}}
-.os .or{border-color:var(--v);box-shadow:0 0 10px rgba(123,47,255,.36);}
-.os .or::before{border-color:var(--v);}
-.os .oi{background:rgba(123,47,255,.15);}
-/* ══ CONTROLS ══ */
-.actrl{position:absolute;bottom:0;left:0;right:0;padding:8px 11px 17px;
-  background:linear-gradient(transparent,var(--glass2));transition:background .35s;}
-.pttrow{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;}
-.sbtn{width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(123,47,255,.4);
-  background:rgba(123,47,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;}
-[data-theme="light"] .sbtn{background:rgba(123,47,255,.08);}
-.pttbtn{width:52px;height:52px;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%,#9B5FFF,#5B1FDF);
-  border:2px solid rgba(200,160,255,.36);
-  box-shadow:0 0 0 5px rgba(123,47,255,.1),0 0 26px rgba(123,47,255,.5),inset 0 2px 0 rgba(255,255,255,.12);
-  display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;}
-.pttbtn::after{content:'PTT';position:absolute;bottom:-12px;font-size:6px;font-family:'IBM Plex Mono',monospace;color:rgba(200,160,255,.55);letter-spacing:.1em;}
-.sosbtn{width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(255,68,68,.4);background:rgba(255,68,68,.1);display:flex;align-items:center;justify-content:center;font-size:12px;}
-.chbar{display:flex;align-items:center;justify-content:center;gap:4px;font-size:7.5px;}
-.chdot{width:4px;height:4px;border-radius:50%;background:var(--g);box-shadow:0 0 4px var(--g);}
-.chn{color:rgba(0,212,255,.6);font-family:'IBM Plex Mono',monospace;}
-[data-theme="light"] .chn{color:rgba(0,100,180,.65);}
-.bnav{position:absolute;bottom:0;left:0;right:0;height:34px;background:var(--glass2);
-  border-top:1px solid var(--border2);display:flex;justify-content:space-around;align-items:center;transition:all .35s;}
-.bnb{font-size:14px;opacity:.35;cursor:pointer;transition:all .2s;}
-.bnb.a{opacity:1;filter:drop-shadow(0 0 5px var(--c));}
-[data-theme="light"] .bnb.a{filter:drop-shadow(0 0 4px var(--v));}
+.screen.active{transform:translateX(0);}
+.screen.prev{transform:translateX(-100%);}
 
-/* ══ SCREEN: LOGIN ══ */
-.login-scr{position:absolute;inset:0;display:flex;flex-direction:column;
-  background:linear-gradient(160deg,#04041A,#080828,#060614);}
-.login-logo{text-align:center;padding:40px 0 20px;}
-.ll-icon{font-size:36px;margin-bottom:6px;}
-.ll-name{font-size:18px;font-weight:900;background:linear-gradient(135deg,var(--c),var(--v));
+/* ===== SCREEN 1: LOGIN ===== */
+#screen-login{
+  background:radial-gradient(ellipse at 50% 30%, #0D0D2B 0%, var(--bg) 70%);
+  align-items:center;justify-content:center;gap:0;
+}
+.login-logo{
+  text-align:center;margin-bottom:48px;
+}
+.logo-circle{
+  width:90px;height:90px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+  box-shadow:0 0 40px rgba(0,212,255,.4),0 0 80px rgba(123,47,255,.2);
+}
+.logo-circle svg{width:48px;height:48px;}
+.logo-name{font-size:32px;font-weight:700;letter-spacing:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--purple));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.ll-sub{font-size:9px;color:rgba(255,255,255,.35);font-family:'IBM Plex Mono',monospace;margin-top:2px;}
-.login-body{flex:1;padding:0 14px;display:flex;flex-direction:column;gap:7px;}
-/* Social login buttons */
-.soc-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;
-  border:1px solid;cursor:pointer;transition:all .2s;}
-.soc-ic{font-size:16px;flex-shrink:0;}
-.soc-t{font-size:10px;font-weight:600;flex:1;}
-.soc-arr{font-size:10px;opacity:.5;}
-.sb-google{border-color:rgba(66,133,244,.4);background:rgba(66,133,244,.08);}
-.sb-apple{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.05);}
-.sb-facebook{border-color:rgba(66,103,178,.4);background:rgba(66,103,178,.08);}
-.sb-x{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.04);}
-.sb-email{border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.06);}
-.login-div{display:flex;align-items:center;gap:8px;margin:4px 0;}
-.ld-line{flex:1;height:1px;background:rgba(255,255,255,.08);}
-.ld-txt{font-size:9px;color:rgba(255,255,255,.3);}
-.encrypt-note{background:rgba(0,255,156,.06);border:1px solid rgba(0,255,156,.18);
-  border-radius:8px;padding:7px 10px;font-size:8.5px;color:rgba(0,255,156,.75);
-  display:flex;align-items:center;gap:5px;margin-top:4px;}
+.logo-sub{color:var(--muted);font-size:13px;margin-top:6px;letter-spacing:1px;}
 
-/* ══ SCREEN: PIN CARD ══ */
-.pin-scr{position:absolute;inset:0;background:var(--bg2);transition:background .35s;}
-.pin-header{padding:28px 12px 10px;background:var(--card);border-bottom:1px solid var(--border2);
-  display:flex;align-items:center;gap:7px;transition:all .35s;}
-.pin-body{padding:12px;}
-/* PIN display */
-.pin-card{background:linear-gradient(135deg,rgba(123,47,255,.2),rgba(0,212,255,.15));
-  border:1px solid rgba(123,47,255,.35);border-radius:14px;padding:16px 14px;margin-bottom:10px;
-  position:relative;overflow:hidden;}
-.pin-card::before{content:'';position:absolute;inset:0;
-  background:repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(255,255,255,.015) 12px,rgba(255,255,255,.015) 13px);}
-.pc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;position:relative;z-index:1;}
-.pc-app{font-size:12px;font-weight:900;background:linear-gradient(135deg,var(--c),var(--v));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.pc-ver{font-size:8px;color:rgba(255,255,255,.4);font-family:'IBM Plex Mono',monospace;}
-.pc-ava{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--v),var(--c));
-  border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:16px;
-  position:relative;z-index:1;}
-.pc-name{font-size:13px;font-weight:800;color:#fff;position:relative;z-index:1;margin-bottom:2px;}
-.pc-handle{font-size:8.5px;color:rgba(255,255,255,.45);font-family:'IBM Plex Mono',monospace;position:relative;z-index:1;}
-/* PIN number */
-.pin-display{text-align:center;margin:10px 0;position:relative;z-index:1;}
-.pin-label{font-size:8px;color:rgba(255,255,255,.45);margin-bottom:4px;font-family:'IBM Plex Mono',monospace;letter-spacing:.1em;}
-.pin-number{font-size:26px;font-weight:900;font-family:'IBM Plex Mono',monospace;
-  letter-spacing:3px;color:#fff;text-shadow:0 0 20px rgba(0,212,255,.5);}
-.pin-copy{display:inline-flex;align-items:center;gap:4px;margin-top:4px;
-  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
-  border-radius:7px;padding:3px 10px;font-size:8px;color:rgba(255,255,255,.7);cursor:pointer;}
-/* QR Code mock */
-.qr-section{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:12px;
-  text-align:center;margin-bottom:8px;}
-.qr-title{font-size:10px;font-weight:700;color:var(--t);margin-bottom:8px;}
-.qr-mock{width:80px;height:80px;margin:0 auto 8px;background:#fff;border-radius:8px;
-  padding:6px;position:relative;}
-.qr-inner{width:100%;height:100%;
+.login-btns{width:100%;max-width:340px;padding:0 24px;display:flex;flex-direction:column;gap:14px;}
+.btn-social{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:16px;border-radius:14px;border:1.5px solid var(--border);
+  background:rgba(255,255,255,.04);color:var(--text);font-size:15px;
+  cursor:pointer;transition:all .2s;letter-spacing:.5px;
+}
+.btn-social:active{transform:scale(.97);background:rgba(255,255,255,.08);}
+.btn-social.google{border-color:#4285F4;color:#fff;}
+.btn-social.apple{border-color:#fff;color:#fff;}
+.btn-social.facebook{border-color:#1877F2;color:#fff;}
+.btn-social.email{border-color:var(--cyan);color:var(--cyan);}
+.btn-social svg{width:22px;height:22px;flex-shrink:0;}
+
+.login-footer{margin-top:32px;color:var(--muted);font-size:12px;text-align:center;}
+.login-footer a{color:var(--cyan);}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav{
+  display:flex;align-items:center;
+  background:rgba(10,10,26,.95);border-top:1px solid var(--border);
+  padding:8px 0 env(safe-area-inset-bottom,8px);
+  flex-shrink:0;z-index:100;
+}
+.nav-tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:6px 2px;cursor:pointer;transition:all .2s;color:var(--muted);
+}
+.nav-tab.active{color:var(--cyan);}
+.nav-tab svg{width:22px;height:22px;}
+.nav-tab span{font-size:10px;letter-spacing:.3px;}
+
+/* ===== SCREEN 2: AR ===== */
+#screen-ar{background:var(--bg);}
+.ar-bg{
+  position:absolute;top:0;left:0;width:100%;height:100%;
   background-image:
-    repeating-linear-gradient(#000 0px,#000 4px,transparent 4px,transparent 8px),
-    repeating-linear-gradient(90deg,#000 0px,#000 4px,transparent 4px,transparent 8px);
-  background-size:8px 8px;opacity:.85;border-radius:2px;}
-.qr-corner{position:absolute;width:14px;height:14px;border:3px solid #000;}
-.qr-corner.tl{top:4px;left:4px;border-right:none;border-bottom:none;}
-.qr-corner.tr{top:4px;right:4px;border-left:none;border-bottom:none;}
-.qr-corner.bl{bottom:4px;left:4px;border-right:none;border-top:none;}
-.qr-sub{font-size:8px;color:var(--t3);}
-/* Share options */
-.share-row{display:flex;gap:6px;}
-.share-btn{flex:1;background:var(--card2);border:1px solid var(--border2);border-radius:8px;
-  padding:6px;text-align:center;font-size:8px;color:var(--t2);cursor:pointer;}
-.share-btn.primary{background:rgba(123,47,255,.18);border-color:rgba(123,47,255,.4);color:var(--t);}
-/* Add friend section */
-.add-friend{background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);
-  border-radius:10px;padding:10px 12px;}
-.af-title{font-size:10px;font-weight:700;color:var(--c);margin-bottom:6px;}
-.af-input{display:flex;gap:5px;}
-.af-field{flex:1;background:var(--inp);border:1px solid var(--inp-b);border-radius:7px;
-  padding:6px 9px;font-size:9px;color:var(--t2);}
-.af-btn{background:var(--c);border:none;border-radius:7px;padding:5px 10px;
-  font-size:9px;font-weight:700;color:#000;cursor:pointer;white-space:nowrap;}
-/* ══ SCREEN: ENCRYPTION ══ */
-.enc-scr{position:absolute;inset:0;background:var(--bg2);transition:background .35s;overflow:hidden;}
-.enc-header{padding:28px 12px 10px;background:var(--card);border-bottom:1px solid var(--border2);
-  display:flex;align-items:center;gap:7px;transition:all .35s;}
-.enc-body{padding:10px 12px;}
-.enc-status{background:rgba(0,255,156,.06);border:1px solid rgba(0,255,156,.2);
-  border-radius:12px;padding:10px 12px;margin-bottom:8px;}
-.es-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
-.es-icon{font-size:18px}
-.es-title{font-size:11px;font-weight:700;color:var(--g)}
-.es-badge{font-size:7.5px;background:rgba(0,255,156,.15);border:1px solid rgba(0,255,156,.3);
-  border-radius:6px;padding:1px 7px;color:var(--g);font-family:'IBM Plex Mono',monospace;margin-right:auto;
-  animation:bgpulse 2s ease infinite;}
-.es-desc{font-size:9px;color:var(--t2);line-height:1.6;}
-/* Encryption items */
-.enc-feat{background:var(--card);border:1px solid var(--border2);border-radius:11px;
-  margin-bottom:6px;overflow:hidden;}
-.ef-item{display:flex;align-items:center;gap:8px;padding:8px 11px;
-  border-bottom:1px solid var(--border3);}
-.ef-item:last-child{border-bottom:none;}
-.ef-ic{font-size:13px;flex-shrink:0;}
-.ef-info{flex:1}.ef-t{font-size:9.5px;font-weight:700;color:var(--t);}
-.ef-d{font-size:8px;color:var(--t3);margin-top:1px;}
-.ef-tag{font-size:7.5px;padding:1px 6px;border-radius:5px;font-family:'IBM Plex Mono',monospace;flex-shrink:0;}
-.et-g{background:rgba(0,255,156,.12);border:1px solid rgba(0,255,156,.25);color:var(--g);}
-.et-c{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.22);color:var(--c);}
-/* Key display */
-.key-display{background:rgba(123,47,255,.08);border:1px solid rgba(123,47,255,.2);
-  border-radius:8px;padding:7px 10px;margin-top:6px;}
-.kd-label{font-size:7.5px;color:var(--mu);font-family:'IBM Plex Mono',monospace;margin-bottom:3px;}
-.kd-key{font-size:9px;color:var(--v);font-family:'IBM Plex Mono',monospace;
-  word-break:break-all;line-height:1.5;opacity:.7;}
+    linear-gradient(rgba(0,212,255,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.05) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.ar-scan-ring{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);
+  width:220px;height:220px;border-radius:50%;
+  border:1.5px solid rgba(0,212,255,.15);
+  animation:scanPulse 3s ease-in-out infinite;
+}
+.ar-scan-ring::before{
+  content:'';position:absolute;top:10px;left:10px;right:10px;bottom:10px;
+  border-radius:50%;border:1px solid rgba(123,47,255,.1);
+}
+@keyframes scanPulse{0%,100%{transform:translate(-50%,-55%) scale(1);opacity:.6;}50%{transform:translate(-50%,-55%) scale(1.08);opacity:1;}}
 
-/* ══ SCREEN: CHAT ══ */
-.chat-scr{position:absolute;inset:0;background:var(--bg2);transition:background .35s;display:flex;flex-direction:column;}
-.ch-hdr{padding:28px 10px 9px;background:var(--card);border-bottom:1px solid var(--border2);
-  display:flex;align-items:center;gap:6px;flex-shrink:0;transition:all .35s;}
-.cha{width:27px;height:27px;border-radius:50%;background:rgba(0,212,255,.1);
-  border:1.5px solid rgba(0,212,255,.38);display:flex;align-items:center;justify-content:center;font-size:13px;}
-.chi{flex:1}.chn2{font-size:10px;font-weight:700;color:var(--t)}.chm{font-size:7.5px;color:var(--t3);}
-.enc-badge{font-size:7px;color:var(--g);background:rgba(0,255,156,.1);border:1px solid rgba(0,255,156,.22);
-  border-radius:6px;padding:1px 6px;font-family:'IBM Plex Mono',monospace;}
-.ttlb{font-size:7px;padding:2px 6px;border-radius:7px;border:1px solid rgba(255,68,68,.38);
-  color:var(--r);background:rgba(255,68,68,.07);}
-.chat-msgs{flex:1;overflow:hidden;padding:7px 9px;display:flex;flex-direction:column;gap:4px;justify-content:flex-end;}
-.msg{display:flex;gap:4px;align-items:flex-end;max-width:88%;}
-.msg.me{align-self:flex-end;flex-direction:row-reverse;}
-.mav{width:19px;height:19px;border-radius:50%;background:rgba(123,47,255,.18);
-  border:1px solid rgba(123,47,255,.32);display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;}
-.mb{border-radius:10px;padding:5px 8px;max-width:118px;position:relative;}
-.msg.them .mb{background:var(--card2);border:1px solid var(--border2);border-radius:10px 10px 10px 3px;}
-.msg.me .mb{background:rgba(123,47,255,.2);border:1px solid rgba(123,47,255,.36);border-radius:10px 10px 3px 10px;}
-[data-theme="light"] .msg.them .mb{background:#EEF0FF;border-color:rgba(123,47,255,.18);}
-.mt{font-size:9px;line-height:1.5;color:var(--t);}
-.mtime{font-size:6px;color:var(--t3);margin-top:1px;font-family:'IBM Plex Mono',monospace;}
-.menc{font-size:5.5px;color:var(--g);opacity:.7;}
-.burn{position:absolute;top:-7px;right:1px;font-size:9px;filter:drop-shadow(0 0 3px var(--r));}
-.cinp{padding:5px 9px 13px;background:var(--card);border-top:1px solid var(--border2);
-  display:flex;gap:5px;align-items:center;flex-shrink:0;transition:all .35s;}
-.cf{flex:1;background:var(--inp);border:1px solid var(--inp-b);border-radius:16px;padding:5px 10px;font-size:8.5px;color:var(--t3);}
-.cb{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;flex-shrink:0;}
-.ccam{background:rgba(0,212,255,.1);border:1.5px solid rgba(0,212,255,.28);}
-.csnd{background:rgba(123,47,255,.25);border:1.5px solid rgba(123,47,255,.45);}
+.ar-hud{
+  position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;background:rgba(3,3,13,.85);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.hud-channel{display:flex;align-items:center;gap:8px;}
+.hud-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.hud-name{font-size:14px;font-weight:600;color:var(--text);}
+.hud-count{font-size:12px;color:var(--muted);}
+.e2e-badge{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(0,255,156,.1);border:1px solid rgba(0,255,156,.3);
+  padding:4px 10px;border-radius:20px;
+}
+.e2e-badge span{font-size:10px;color:var(--green);letter-spacing:.5px;}
 
-/* ══ SCREEN: SHORTCUTS (iOS/Android) ══ */
-.kbd-scr{position:absolute;inset:0;background:var(--bg2);transition:background .35s;overflow:hidden;}
-.kbd-hdr{padding:28px 12px 10px;background:var(--card);border-bottom:1px solid var(--border2);
-  display:flex;align-items:center;gap:7px;transition:all .35s;}
-.kbd-body{padding:10px 12px;overflow:hidden;}
-.kbd-section-title{font-size:8px;font-weight:700;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;margin:8px 0 5px;}
-.kbdi{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--card);
-  border:1px solid var(--border2);border-radius:9px;margin-bottom:4px;transition:all .35s;}
-.ki-ic{font-size:14px;flex-shrink:0}
-.ki-inf{flex:1}.ki-nm{font-size:9.5px;font-weight:700;color:var(--t)}.ki-de{font-size:8px;color:var(--t3);margin-top:1px}
-.ki-keys{display:flex;gap:3px;align-items:center;flex-shrink:0}
-.kk{font-family:'IBM Plex Mono',monospace;font-size:8.5px;background:var(--kk-bg);
-  border:1px solid var(--kk-b);color:var(--kk-t);border-radius:5px;padding:2px 7px;
-  box-shadow:0 2px 0 rgba(0,0,0,.25);transition:all .35s;}
-[data-theme="light"] .kk{box-shadow:0 2px 0 rgba(80,60,180,.2);}
-.kplus{font-size:9px;color:var(--t3);font-family:'IBM Plex Mono',monospace;}
-.platform-tab{display:flex;gap:4px;margin-bottom:10px;}
-.ptab{flex:1;padding:5px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);
-  text-align:center;font-size:8.5px;cursor:pointer;transition:all .2s;color:var(--t3);}
-.ptab.sel{background:rgba(123,47,255,.18);border-color:rgba(123,47,255,.44);color:var(--t);font-weight:700;}
+.ar-content{position:relative;flex:1;overflow:hidden;}
 
-/* ══ SCREEN: SETTINGS ══ */
-.set-scr{position:absolute;inset:0;background:var(--bg2);transition:background .35s;padding:28px 12px 12px;overflow:hidden;}
-.set-title{font-size:14px;font-weight:900;color:var(--t);margin-bottom:12px;}
-.set-sec{margin-bottom:10px;}
-.set-sec-t{font-size:7.5px;font-weight:700;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border3);}
-.si{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--card);
-  border:1px solid var(--border2);border-radius:9px;margin-bottom:4px;cursor:pointer;transition:all .2s;}
-.si:hover{border-color:var(--border);}
-.si-ic{font-size:13px;flex-shrink:0}.si-inf{flex:1}
-.si-nm{font-size:9.5px;font-weight:700;color:var(--t)}.si-de{font-size:7.5px;color:var(--t3);margin-top:1px}
-.si-r{font-size:9px;color:var(--t3);font-family:'IBM Plex Mono',monospace;}
-.tog{width:28px;height:16px;border-radius:8px;background:rgba(123,47,255,.3);position:relative;
-  cursor:pointer;flex-shrink:0;transition:background .25s;}
-.tog.on{background:var(--g);}
-.tog::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
-  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s;}
-.tog.on::after{left:14px;}
-.theme-pick{display:flex;gap:4px;}
-.tp{flex:1;padding:5px;border-radius:7px;border:1px solid var(--border2);background:var(--card2);
-  text-align:center;font-size:8px;cursor:pointer;transition:all .2s;color:var(--t3);}
-.tp.sel{background:rgba(123,47,255,.18);border-color:rgba(123,47,255,.44);color:var(--t);font-weight:700;}
+/* USER ORBS */
+.orb-container{position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;}
+.orb{
+  width:56px;height:56px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;position:relative;
+  animation:orbFloat 4s ease-in-out infinite;
+}
+.orb::before{
+  content:'';position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid transparent;animation:orbRing 2s linear infinite;
+}
+.orb-1{background:linear-gradient(135deg,#1a3a5c,#2a5a8c);animation-delay:0s;}
+.orb-1::before{border-color:var(--cyan);box-shadow:0 0 16px rgba(0,212,255,.5);}
+.orb-2{background:linear-gradient(135deg,#3a1a5c,#5a2a8c);animation-delay:-1.5s;}
+.orb-2::before{border-color:var(--purple);box-shadow:0 0 16px rgba(123,47,255,.5);}
+.orb-3{background:linear-gradient(135deg,#1a4a2a,#2a6a3a);animation-delay:-3s;}
+.orb-3::before{border-color:var(--green);box-shadow:0 0 16px rgba(0,255,156,.5);}
+@keyframes orbFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+@keyframes orbRing{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+.orb-label{font-size:11px;color:var(--text);text-align:center;white-space:nowrap;}
+.orb-dist{font-size:10px;color:var(--muted);}
+.orb-ping{
+  position:absolute;bottom:-2px;right:-2px;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--green);border:2px solid var(--bg);font-size:7px;
+  display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;
+}
 
-/* ══ FEATURES GRID ══ */
-.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:32px;}
-.fc{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:18px 20px;
-  transition:all .22s;animation:fadeUp .65s ease both;animation-fill-mode:both;}
-.fc:hover{border-color:var(--border);transform:translateY(-2px);box-shadow:var(--shadow);}
-.fc:nth-child(1){animation-delay:.04s}.fc:nth-child(2){animation-delay:.09s}
-.fc:nth-child(3){animation-delay:.14s}.fc:nth-child(4){animation-delay:.19s}
-.fc:nth-child(5){animation-delay:.24s}.fc:nth-child(6){animation-delay:.29s}
-.fc:nth-child(7){animation-delay:.34s}.fc:nth-child(8){animation-delay:.39s}
-.fc:nth-child(9){animation-delay:.44s}.fc:nth-child(10){animation-delay:.49s}
-.fc-ic{font-size:24px;margin-bottom:9px}.fc-t{font-size:12.5px;font-weight:800;margin-bottom:4px;color:var(--t);}
-.fc-d{font-size:11.5px;color:var(--t2);line-height:1.72}
-.fc-tag{display:inline-block;font-size:8.5px;padding:2px 9px;border-radius:9px;margin-top:8px;}
-.tg-g{background:rgba(0,255,156,.08);border:1px solid rgba(0,255,156,.22);color:var(--g);}
-.tg-c{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.22);color:var(--c);}
-.tg-v{background:rgba(200,64,255,.1);border:1px solid rgba(200,64,255,.25);color:var(--m);}
-.tg-r{background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.22);color:var(--r);}
-.tg-y{background:rgba(255,179,71,.08);border:1px solid rgba(255,179,71,.22);color:var(--y);}
-.tg-t{background:rgba(0,255,212,.08);border:1px solid rgba(0,255,212,.22);color:var(--tl);}
-.tg-new{background:rgba(0,255,156,.15);border:1px solid rgba(0,255,156,.4);color:var(--g);font-weight:700;}
+/* AR CONTROLS */
+.ar-controls{
+  position:relative;z-index:10;
+  padding:16px 20px 8px;background:rgba(3,3,13,.9);border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+.ar-btns-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.btn-ghost,.btn-sos{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .15s;flex-direction:column;gap:2px;
+}
+.btn-ghost{
+  background:rgba(123,47,255,.15);border:1.5px solid rgba(123,47,255,.4);
+}
+.btn-ghost:active{background:rgba(123,47,255,.35);transform:scale(.93);}
+.btn-sos{
+  background:rgba(255,51,102,.12);border:1.5px solid rgba(255,51,102,.4);
+}
+.btn-sos:active{background:rgba(255,51,102,.3);transform:scale(.93);}
+.btn-sos span,.btn-ghost span{font-size:9px;color:var(--muted);letter-spacing:.5px;}
 
-/* ══ SHORTCUT TABLE ══ */
-.kbd-table{background:var(--card);border:1px solid var(--border2);border-radius:14px;overflow:hidden;margin-bottom:32px;}
-.kbt-hdr{background:rgba(0,212,255,.06);border-bottom:1px solid rgba(0,212,255,.12);
-  padding:11px 16px;font-size:11px;font-weight:700;color:var(--c);display:flex;justify-content:space-between;}
-.kbt-sec{background:var(--bg3);border-bottom:1px solid var(--border3);padding:7px 16px;
-  font-size:8px;font-weight:700;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;}
-.kbt-row{padding:10px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border3);transition:background .15s;}
-.kbt-row:last-child{border-bottom:none}.kbt-row:hover{background:rgba(123,47,255,.04);}
-.kbt-ic{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
-.kbt-i{flex:1}.kbt-nm{font-size:11px;font-weight:700;color:var(--t)}.kbt-de{font-size:9.5px;color:var(--mu);margin-top:1px}
-.kbt-keys{display:flex;gap:4px;align-items:center;flex-shrink:0}
-.kk2{font-family:'IBM Plex Mono',monospace;font-size:9.5px;background:var(--kk-bg);
-  border:1px solid var(--kk-b);color:var(--kk-t);border-radius:5px;padding:3px 9px;
-  box-shadow:0 2px 0 rgba(0,0,0,.25);transition:all .35s;}
-.kplus2{font-size:10px;color:var(--t3);font-family:'IBM Plex Mono',monospace;}
-.plat-badge{font-size:8px;padding:1px 7px;border-radius:5px;font-family:'IBM Plex Mono',monospace;}
-.pb-and{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);color:var(--c);}
-.pb-ios{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.65);}
-.pb-both{background:rgba(0,255,156,.1);border:1px solid rgba(0,255,156,.25);color:var(--g);}
+.btn-ptt{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;
+  cursor:pointer;transition:all .15s;
+  box-shadow:0 0 24px rgba(123,47,255,.5),0 0 48px rgba(0,212,255,.2);
+  border:3px solid rgba(255,255,255,.15);
+}
+.btn-ptt.active{
+  background:linear-gradient(135deg,var(--red),var(--purple));
+  box-shadow:0 0 32px rgba(255,51,102,.6),0 0 64px rgba(123,47,255,.4);
+  transform:scale(1.08);
+  animation:pttPulse .6s ease-in-out infinite;
+}
+@keyframes pttPulse{0%,100%{box-shadow:0 0 32px rgba(255,51,102,.6),0 0 64px rgba(123,47,255,.4);}50%{box-shadow:0 0 48px rgba(255,51,102,.9),0 0 96px rgba(123,47,255,.6);}}
+.btn-ptt svg{width:28px;height:28px;}
+.btn-ptt span{font-size:9px;color:rgba(255,255,255,.8);letter-spacing:.5px;}
+.btn-ptt.active span{color:#fff;}
+.ptt-status{text-align:center;font-size:11px;color:var(--muted);height:16px;margin-top:6px;}
+.ptt-status.on{color:var(--red);}
 
-/* ══ LEGEND ══ */
-.legend{text-align:center;margin-bottom:20px;}
-.leg-t{font-size:9px;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;}
-.leg-r{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
-.lg{display:flex;align-items:center;gap:4px;}
-.ld{width:9px;height:9px;border-radius:50%;}
-.ll{font-size:9.5px;color:var(--t2);font-family:'IBM Plex Mono',monospace;}
+/* ===== SCREEN 3: CHAT ===== */
+#screen-chat{background:var(--bg);}
+.chat-header{
+  display:flex;align-items:center;gap:12px;padding:14px 16px;
+  background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.btn-back{
+  width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  border:1px solid var(--border);transition:all .2s;
+}
+.btn-back:active{background:rgba(255,255,255,.12);}
+.chat-title{flex:1;}
+.chat-title h2{font-size:15px;font-weight:600;}
+.chat-title p{font-size:11px;color:var(--muted);}
 
-@keyframes fadeD{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:rgba(123,47,255,.3);border-radius:3px}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.chat-messages::-webkit-scrollbar{width:3px;}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+.msg{display:flex;gap:10px;max-width:85%;}
+.msg.mine{align-self:flex-start;flex-direction:row-reverse;}
+.msg.other{align-self:flex-end;}
+.msg-avatar{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.msg-body{}
+.msg-name{font-size:10px;color:var(--muted);margin-bottom:4px;}
+.msg-bubble{
+  padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.5;
+}
+.msg.other .msg-bubble{background:var(--dark3);border:1px solid var(--border);border-bottom-right-radius:4px;}
+.msg.mine .msg-bubble{background:linear-gradient(135deg,rgba(123,47,255,.4),rgba(0,212,255,.2));border:1px solid rgba(0,212,255,.2);border-bottom-left-radius:4px;}
+.msg-meta{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:10px;color:var(--muted);}
+.msg.mine .msg-meta{justify-content:flex-start;}
+.check-icon{color:var(--cyan);}
+
+.chat-input{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0;
+}
+.chat-input input{
+  flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:24px;padding:10px 16px;color:var(--text);font-size:14px;
+  outline:none;text-align:right;direction:rtl;
+}
+.chat-input input::placeholder{color:var(--muted);}
+.chat-input input:focus{border-color:var(--cyan);}
+.btn-send{
+  width:42px;height:42px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  flex-shrink:0;transition:all .15s;
+}
+.btn-send:active{transform:scale(.9);}
+
+/* ===== SCREEN 4: ID CARD ===== */
+#screen-id{background:var(--bg);}
+.id-header{
+  padding:16px;display:flex;align-items:center;gap:12px;
+  background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.id-header h2{font-size:17px;font-weight:600;}
+.id-content{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:20px;}
+
+.id-card{
+  background:linear-gradient(135deg,#0D0D2B,#1A1A3A);
+  border:1px solid rgba(0,212,255,.25);border-radius:20px;padding:24px;
+  position:relative;overflow:hidden;
+}
+.id-card::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,rgba(123,47,255,.2),transparent 70%);
+}
+.id-card::after{
+  content:'';position:absolute;bottom:-40px;left:-40px;
+  width:140px;height:140px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,212,255,.15),transparent 70%);
+}
+.id-top{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+.id-avatar{
+  width:70px;height:70px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+  border:3px solid rgba(0,212,255,.3);flex-shrink:0;
+}
+.id-info h3{font-size:18px;font-weight:700;margin-bottom:4px;}
+.id-info p{font-size:12px;color:var(--muted);}
+.vm-badge{
+  display:inline-flex;align-items:center;gap:4px;margin-top:6px;
+  background:rgba(0,255,156,.1);border:1px solid rgba(0,255,156,.3);
+  padding:3px 10px;border-radius:12px;
+}
+.vm-badge span{font-size:10px;color:var(--green);}
+
+.id-pin-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:12px;padding:14px;position:relative;z-index:1;
+}
+.pin-label{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.pin-value{font-size:20px;font-weight:700;letter-spacing:3px;color:var(--cyan);font-family:monospace;}
+.btn-copy{
+  background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);
+  padding:8px 16px;border-radius:10px;color:var(--cyan);font-size:12px;cursor:pointer;
+}
+.btn-copy:active{background:rgba(0,212,255,.25);}
+
+.qr-box{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px;
+}
+.qr-box h4{font-size:13px;color:var(--muted);}
+.qr-code{
+  width:140px;height:140px;position:relative;
+  background:#fff;padding:10px;border-radius:8px;
+}
+.qr-inner{
+  width:100%;height:100%;
+  background-image:
+    linear-gradient(#000 0,#000),
+    linear-gradient(#000 0,#000),
+    linear-gradient(#000 0,#000),
+    linear-gradient(#000 0,#000),
+    linear-gradient(#000 0,#000),
+    linear-gradient(#000 0,#000),
+    linear-gradient(#000 0,#000),
+    linear-gradient(#000 0,#000),
+    linear-gradient(#000 0,#000);
+  background-repeat:no-repeat;
+  background-size:
+    30% 30%, 30% 30%, 30% 30%,
+    10% 10%, 10% 10%, 10% 10%,
+    55% 4%, 4% 55%, 55% 4%;
+  background-position:
+    0 0, 70% 0, 0 70%,
+    9% 9%, 79% 9%, 9% 79%,
+    20% 20%, 20% 20%, 20% 68%;
+}
+.qr-dots{
+  position:absolute;top:10px;left:10px;right:10px;bottom:10px;
+  background-image:radial-gradient(circle,#000 45%,transparent 46%);
+  background-size:9% 9%;
+  opacity:.35;
+}
+
+.add-friend-box{
+  background:var(--dark2);border:1px solid var(--border);
+  border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;
+}
+.add-friend-box h4{font-size:14px;font-weight:600;}
+.add-friend-box p{font-size:12px;color:var(--muted);}
+.pin-input-row{display:flex;gap:10px;}
+.pin-input-row input{
+  flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;color:var(--text);font-size:14px;
+  outline:none;text-align:center;letter-spacing:2px;direction:ltr;
+}
+.pin-input-row input:focus{border-color:var(--cyan);}
+.btn-add{
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  border-radius:12px;padding:12px 20px;color:#fff;font-size:13px;
+  cursor:pointer;white-space:nowrap;transition:all .15s;border:none;
+}
+.btn-add:active{transform:scale(.95);}
+
+/* ===== SCREEN 5: SETTINGS ===== */
+#screen-settings{background:var(--bg);}
+.settings-header{
+  padding:16px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.settings-header h2{font-size:17px;font-weight:600;}
+.settings-content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+
+.settings-section{
+  background:var(--dark2);border:1px solid var(--border);border-radius:16px;overflow:hidden;
+}
+.settings-section-title{
+  font-size:11px;color:var(--muted);letter-spacing:1px;
+  padding:10px 16px 6px;text-transform:uppercase;
+}
+.settings-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-top:1px solid var(--border);
+}
+.settings-row:first-of-type{border-top:none;}
+.settings-row-left{display:flex;align-items:center;gap:12px;}
+.settings-icon{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.settings-row h4{font-size:14px;font-weight:500;}
+.settings-row p{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* TOGGLE */
+.toggle{width:48px;height:26px;border-radius:13px;background:var(--border);position:relative;cursor:pointer;transition:background .25s;flex-shrink:0;}
+.toggle.on{background:var(--cyan);}
+.toggle::after{content:'';position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.4);}
+.toggle.on::after{transform:translateX(-22px);}
+
+.btn-signout{
+  background:rgba(255,51,102,.1);border:1.5px solid rgba(255,51,102,.3);
+  border-radius:14px;padding:16px;text-align:center;
+  color:var(--red);font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;
+  transition:all .2s;
+}
+.btn-signout:active{background:rgba(255,51,102,.25);}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(20,20,40,.95);border:1px solid var(--cyan);
+  padding:10px 20px;border-radius:24px;font-size:13px;color:var(--cyan);
+  pointer-events:none;opacity:0;transition:all .3s;z-index:1000;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* PROFILE SCREEN */
+#screen-profile{background:var(--bg);}
+.profile-header{
+  padding:16px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.profile-header h2{font-size:17px;font-weight:600;}
+.profile-content{flex:1;overflow-y:auto;padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.profile-avatar-big{
+  width:100px;height:100px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-size:42px;
+  border:4px solid rgba(0,212,255,.3);
+  box-shadow:0 0 32px rgba(0,212,255,.3);
+}
+.profile-name{font-size:22px;font-weight:700;text-align:center;}
+.profile-sub{font-size:13px;color:var(--muted);text-align:center;}
+.profile-stats{
+  display:flex;gap:0;width:100%;
+  background:var(--dark2);border:1px solid var(--border);border-radius:16px;overflow:hidden;
+}
+.stat-item{
+  flex:1;padding:16px;text-align:center;border-left:1px solid var(--border);
+}
+.stat-item:last-child{border-left:none;}
+.stat-num{font-size:22px;font-weight:700;color:var(--cyan);}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px;}
+.profile-info-box{
+  width:100%;background:var(--dark2);border:1px solid var(--border);border-radius:16px;overflow:hidden;
+}
+.info-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+}
+.info-row:last-child{border-bottom:none;}
+.info-label{font-size:12px;color:var(--muted);}
+.info-value{font-size:13px;color:var(--text);font-weight:500;}
 </style>
 </head>
-<body data-theme="dark">
+<body>
+<div id="app">
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <div class="tb-logo">VibeMap</div>
-  <div class="tb-ver">v5.0</div>
-  <div class="tb-sp"></div>
-  <div class="cl-pill" onclick="toggleCL()"><div class="cl-dot"></div><span>Changelog</span></div>
-  <div class="theme-row">
-    <button class="th-btn on" id="btn-dark"   onclick="setTheme('dark')"   title="داكن">🌙</button>
-    <button class="th-btn"   id="btn-light"  onclick="setTheme('light')"  title="فاتح">☀️</button>
-    <button class="th-btn"   id="btn-system" onclick="setTheme('system')" title="النظام">⚙️</button>
+<!-- SCREEN 1: LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="login-logo">
+    <div class="logo-circle">
+      <svg viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="20" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/>
+        <path d="M14 24 Q24 10 34 24 Q24 38 14 24Z" fill="rgba(0,212,255,.8)"/>
+        <circle cx="24" cy="24" r="5" fill="white"/>
+        <circle cx="18" cy="18" r="2.5" fill="rgba(123,47,255,.9)"/>
+        <circle cx="30" cy="18" r="2.5" fill="rgba(0,255,156,.9)"/>
+        <circle cx="24" cy="32" r="2.5" fill="rgba(255,51,102,.9)"/>
+      </svg>
+    </div>
+    <div class="logo-name">VibeMap</div>
+    <div class="logo-sub">تواصل. استكشف. اتحد.</div>
+  </div>
+  <div class="login-btns">
+    <div class="btn-social google" onclick="doLogin()">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      تسجيل الدخول بـ Google
+    </div>
+    <div class="btn-social apple" onclick="doLogin()">
+      <svg viewBox="0 0 24 24" fill="white">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+      </svg>
+      تسجيل الدخول بـ Apple
+    </div>
+    <div class="btn-social facebook" onclick="doLogin()">
+      <svg viewBox="0 0 24 24" fill="#1877F2">
+        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+      </svg>
+      تسجيل الدخول بـ Facebook
+    </div>
+    <div class="btn-social email" onclick="doLogin()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="4" width="20" height="16" rx="3"/>
+        <path d="M2 8l10 6 10-6"/>
+      </svg>
+      تسجيل الدخول بالبريد الإلكتروني
+    </div>
+  </div>
+  <div class="login-footer">
+    بتسجيل دخولك أنت توافق على <a href="#">شروط الاستخدام</a> و<a href="#">سياسة الخصوصية</a>
   </div>
 </div>
 
-<!-- CHANGELOG -->
-<div class="cl-panel" id="cl-panel">
-  <div class="cl-hdr">📋 Changelog — VibeMap</div>
-  <div class="cl-grid">
-    <div class="cl-v"><div class="cl-vn cur">v5.0 ← الآن</div><div class="cl-txt">
-      ✦ رقم PIN خاص لكل مستخدم <span class="n-tag">NEW</span><br>
-      ✦ QR Code لمشاركة الـ PIN <span class="n-tag">NEW</span><br>
-      ✦ تسجيل دخول بـ Google/Apple/Facebook/X/إيميل <span class="n-tag">NEW</span><br>
-      ✦ تشفير E2E للرسائل والصوت <span class="n-tag">NEW</span><br>
-      ✦ اختصارات iOS (Control Center) وAndroid (Quick Settings) <span class="n-tag">NEW</span><br>
-      ✦ إصلاح مشاكل اليوزرات في قاعدة البيانات
-    </div></div>
-    <div class="cl-v"><div class="cl-vn">v4.0</div><div class="cl-txt">خلفية ذكية · إشعارات تفاعلية · 12 اختصار · Lock Screen PTT</div></div>
-    <div class="cl-v"><div class="cl-vn">v3.0</div><div class="cl-txt">تقييم ثلاثي · ملف شخصي · وضع داكن/فاتح/نظام</div></div>
-    <div class="cl-v"><div class="cl-vn">v2.0</div><div class="cl-txt">دردشة · صور · TTL أوضاع الحذف</div></div>
+<!-- SCREEN 2: AR -->
+<div class="screen" id="screen-ar">
+  <div class="ar-bg"></div>
+  <div class="ar-scan-ring"></div>
+
+  <!-- HUD -->
+  <div class="ar-hud">
+    <div class="hud-channel">
+      <div class="hud-dot"></div>
+      <div>
+        <div class="hud-name"># القناة الرئيسية</div>
+        <div class="hud-count" id="hud-count">٧ متصلين الآن</div>
+      </div>
+    </div>
+    <div class="e2e-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00FF9C" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>E2E</span>
+    </div>
+  </div>
+
+  <!-- AR CONTENT -->
+  <div class="ar-content" id="ar-content">
+    <div class="orb-container" style="top:18%;left:12%;" id="orb1">
+      <div class="orb orb-1">
+        &#x1F60A;
+        <div class="orb-ping">&#x25CF;</div>
+      </div>
+      <div class="orb-label">أحمد خالد</div>
+      <div class="orb-dist">٢٣م بعيد</div>
+    </div>
+    <div class="orb-container" style="top:35%;right:8%;" id="orb2">
+      <div class="orb orb-2">
+        &#x1F3AF;
+        <div class="orb-ping" style="background:var(--purple);">&#x25CF;</div>
+      </div>
+      <div class="orb-label">سارة محمد</div>
+      <div class="orb-dist">٤١م بعيد</div>
+    </div>
+    <div class="orb-container" style="top:55%;left:28%;" id="orb3">
+      <div class="orb orb-3">
+        &#x1F31F;
+        <div class="orb-ping" style="background:var(--green);">&#x25CF;</div>
+      </div>
+      <div class="orb-label">يوسف علي</div>
+      <div class="orb-dist">١٢م بعيد</div>
+    </div>
+
+    <!-- Compass -->
+    <div style="position:absolute;top:14px;right:16px;z-index:5;">
+      <div style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="var(--muted)" stroke-width="1"/>
+          <path d="M12 2 L14 10 L12 12 L10 10 Z" fill="var(--red)"/>
+          <path d="M12 22 L14 14 L12 12 L10 14 Z" fill="var(--muted)"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="ar-controls">
+    <div class="ar-btns-row">
+      <div class="btn-ghost" onclick="showToast('وضع الخفاء مفعّل')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+          <line x1="1" y1="1" x2="23" y2="23" stroke="var(--purple)" stroke-width="2"/>
+        </svg>
+        <span>خفي</span>
+      </div>
+
+      <div class="btn-ptt" id="btn-ptt"
+        ontouchstart="pttStart(event)" ontouchend="pttEnd(event)"
+        onmousedown="pttStart(event)" onmouseup="pttEnd(event)">
+        <svg viewBox="0 0 24 24" fill="white">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23" stroke="white" stroke-width="2"/>
+          <line x1="8" y1="23" x2="16" y2="23" stroke="white" stroke-width="2"/>
+        </svg>
+        <span id="ptt-label">اضغط للكلام</span>
+      </div>
+
+      <div class="btn-sos" onclick="triggerSOS()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>طوارئ</span>
+      </div>
+    </div>
+    <div class="ptt-status" id="ptt-status"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="nav-ar">
+    <div class="nav-tab active" onclick="switchTab('ar')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      <span>AR</span>
+    </div>
+    <div class="nav-tab" onclick="switchTab('chat')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>دردشة</span>
+    </div>
+    <div class="nav-tab" onclick="switchTab('id')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg>
+      <span>هويتي</span>
+    </div>
+    <div class="nav-tab" onclick="switchTab('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>الملف</span>
+    </div>
+    <div class="nav-tab" onclick="switchTab('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>إعدادات</span>
+    </div>
   </div>
 </div>
 
-<div class="wrap">
-<!-- HERO -->
-<div class="hero">
-  <div class="h-badge"><div class="h-bd"></div>v5.0 · التطبيق الكامل</div>
-  <h1>VibeMap AR</h1>
-  <div class="hero-sub">PIN · QR · تسجيل دخول اجتماعي · تشفير E2E · اختصارات iOS & Android</div>
-  <div class="hs-row">
-    <div class="hs"><div class="hs-n">9</div><div class="hs-l">شاشات</div></div>
-    <div class="hs"><div class="hs-n">5</div><div class="hs-l">طرق دخول</div></div>
-    <div class="hs"><div class="hs-n">E2E</div><div class="hs-l">تشفير</div></div>
-    <div class="hs"><div class="hs-n">0</div><div class="hs-l">ريال/شهر</div></div>
+<!-- SCREEN 3: CHAT -->
+<div class="screen" id="screen-chat">
+  <div class="chat-header">
+    <div class="btn-back" onclick="switchTab('ar')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l6-6-6-6"/></svg>
+    </div>
+    <div class="chat-title">
+      <h2># القناة الرئيسية</h2>
+      <p>٧ أعضاء &bull; محادثة مشفرة</p>
+    </div>
+    <div class="e2e-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#00FF9C" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>E2E</span>
+    </div>
+  </div>
+
+  <div class="chat-messages" id="chat-messages">
+    <div class="msg other">
+      <div class="msg-avatar" style="background:linear-gradient(135deg,#1a3a5c,#2a5a8c);">&#x1F60A;</div>
+      <div class="msg-body">
+        <div class="msg-name">أحمد خالد</div>
+        <div class="msg-bubble">السلام عليكم يا شباب، كيف الأحوال؟</div>
+        <div class="msg-meta"><span>٣:٢٤ م</span></div>
+      </div>
+    </div>
+    <div class="msg other">
+      <div class="msg-avatar" style="background:linear-gradient(135deg,#3a1a5c,#5a2a8c);">&#x1F3AF;</div>
+      <div class="msg-body">
+        <div class="msg-name">سارة محمد</div>
+        <div class="msg-bubble">وعليكم السلام! الحمد لله بخير. أين أنتم الآن؟</div>
+        <div class="msg-meta"><span>٣:٢٥ م</span></div>
+      </div>
+    </div>
+    <div class="msg mine">
+      <div class="msg-avatar" style="background:linear-gradient(135deg,var(--purple),var(--cyan));">&#x1F31F;</div>
+      <div class="msg-body">
+        <div class="msg-bubble">نحن في ميدان التحرير. تعالوا نجتمع هنا!</div>
+        <div class="msg-meta"><span>٣:٢٦ م</span><span class="check-icon">&#x2713;&#x2713;</span></div>
+      </div>
+    </div>
+    <div class="msg other">
+      <div class="msg-avatar" style="background:linear-gradient(135deg,#1a4a2a,#2a6a3a);">&#x1F60E;</div>
+      <div class="msg-body">
+        <div class="msg-name">يوسف علي</div>
+        <div class="msg-bubble">ممتاز! أنا على بعد ١٢ متر منكم. شاهدوني على الخريطة</div>
+        <div class="msg-meta"><span>٣:٢٧ م</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-input">
+    <div class="btn-send" onclick="sendMessage()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+    </div>
+    <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter')sendMessage()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-tab" onclick="switchTab('ar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>AR</span></div>
+    <div class="nav-tab active" onclick="switchTab('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>دردشة</span></div>
+    <div class="nav-tab" onclick="switchTab('id')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg><span>هويتي</span></div>
+    <div class="nav-tab" onclick="switchTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>الملف</span></div>
+    <div class="nav-tab" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>إعدادات</span></div>
   </div>
 </div>
 
-<!-- PHONES -->
-<div class="sec-hdr">
-  <h2>📱 شاشات v5.0</h2>
-  <div class="sec-line"></div>
-  <span class="sec-tag">غيّر الوضع من الأعلى</span>
-</div>
-<div class="phones">
-
-  <!-- S1: LOGIN -->
-  <div class="pw"><div class="pw-lbl">تسجيل الدخول</div><div class="pw-new">✦ v5 جديد</div>
-  <div class="phone">
-    <div class="pst"><span>9:41</span><span>5G</span><span>🔋</span></div>
-    <div class="pc">
-      <div class="login-scr">
-        <div class="login-logo">
-          <div class="ll-icon">📡</div>
-          <div class="ll-name">VibeMap</div>
-          <div class="ll-sub">AR Walkie-Talkie</div>
-        </div>
-        <div class="login-body">
-          <div class="soc-btn sb-google">
-            <div class="soc-ic">🔵</div>
-            <div class="soc-t" style="color:#E8EAFF">المتابعة بـ Google</div>
-            <div class="soc-arr">›</div>
-          </div>
-          <div class="soc-btn sb-apple">
-            <div class="soc-ic">🍎</div>
-            <div class="soc-t" style="color:#E8EAFF">المتابعة بـ Apple</div>
-            <div class="soc-arr">›</div>
-          </div>
-          <div class="soc-btn sb-facebook">
-            <div class="soc-ic">📘</div>
-            <div class="soc-t" style="color:#E8EAFF">المتابعة بـ Facebook</div>
-            <div class="soc-arr">›</div>
-          </div>
-          <div class="soc-btn sb-x">
-            <div class="soc-ic">✕</div>
-            <div class="soc-t" style="color:#E8EAFF">المتابعة بـ X</div>
-            <div class="soc-arr">›</div>
-          </div>
-          <div class="login-div"><div class="ld-line"></div><div class="ld-txt">أو</div><div class="ld-line"></div></div>
-          <div class="soc-btn sb-email">
-            <div class="soc-ic">📧</div>
-            <div class="soc-t" style="color:#00D4FF">بريد إلكتروني</div>
-            <div class="soc-arr">›</div>
-          </div>
-          <div class="encrypt-note">
-            <span>🔒</span>
-            <span>كل بياناتك مشفّرة بـ E2E — لا أحد يقرأها</span>
+<!-- SCREEN 4: ID CARD -->
+<div class="screen" id="screen-id">
+  <div class="id-header">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg>
+    <h2>هويتي الرقمية</h2>
+  </div>
+  <div class="id-content">
+    <div class="id-card">
+      <div class="id-top">
+        <div class="id-avatar">&#x1F31F;</div>
+        <div class="id-info">
+          <h3 id="id-name">يوسف علي</h3>
+          <p>عضو منذ يناير ٢٠٢٥</p>
+          <div class="vm-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#00FF9C" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>موثق VibeMap</span>
           </div>
         </div>
+      </div>
+      <div class="id-pin-row">
+        <div>
+          <div class="pin-label">رقم التعريف الشخصي (PIN)</div>
+          <div class="pin-value" id="user-pin">VM-4829-7X3K</div>
+        </div>
+        <div class="btn-copy" onclick="copyPIN()">نسخ</div>
       </div>
     </div>
-  </div></div>
 
-  <!-- S2: AR MAIN -->
-  <div class="pw"><div class="pw-lbl">AR الرئيسية</div>
-  <div class="phone">
-    <div class="pst"><span>9:41</span><span>5G</span><span>🔋</span></div>
-    <div class="pc">
-      <div class="arbg"></div><div class="argrid"></div>
-      <div class="hud">
-        <div class="hc"><div class="hdot"></div><span>AR</span></div>
-        <div class="bgpill">⬤ خلفية</div>
-        <div class="hc">👥 3</div>
-        <div class="hc" style="border-color:rgba(0,255,156,.4)">🔒 E2E</div>
+    <div class="qr-box">
+      <h4>رمز QR الخاص بك</h4>
+      <div class="qr-code">
+        <div class="qr-inner"></div>
+        <div class="qr-dots"></div>
+        <div style="position:absolute;top:10px;left:10px;width:28px;height:28px;border:4px solid #000;border-radius:3px;"></div>
+        <div style="position:absolute;top:10px;right:10px;width:28px;height:28px;border:4px solid #000;border-radius:3px;"></div>
+        <div style="position:absolute;bottom:10px;left:10px;width:28px;height:28px;border:4px solid #000;border-radius:3px;"></div>
+        <div style="position:absolute;top:16px;left:16px;width:16px;height:16px;background:#000;border-radius:1px;"></div>
+        <div style="position:absolute;top:16px;right:16px;width:16px;height:16px;background:#000;border-radius:1px;"></div>
+        <div style="position:absolute;bottom:16px;left:16px;width:16px;height:16px;background:#000;border-radius:1px;"></div>
       </div>
-      <div class="orbs">
-        <div class="orb ot" style="left:18px;top:34px"><div class="or"><div class="oi">👤</div></div><div class="on">أحمد</div><div class="od">120م</div></div>
-        <div class="orb os" style="right:18px;top:68px"><div class="or"><div class="oi">👤</div></div><div class="on">سارة</div><div class="od">250م</div></div>
-        <div class="orb os" style="left:50%;top:110px;transform:translateX(-50%)"><div class="or"><div class="oi">👤</div></div><div class="on">خالد</div><div class="od">380م</div></div>
-      </div>
-      <div class="actrl">
-        <div class="pttrow"><div class="sbtn">👻</div><div class="pttbtn">🎙️</div><div class="sosbtn">🆘</div></div>
-        <div class="chbar"><div class="chdot"></div><div class="chn">global · الرياض</div></div>
-      </div>
-      <div class="bnav">
-        <div class="bnb a">📡</div><div class="bnb">💬</div>
-        <div class="bnb">🪪</div><div class="bnb">👤</div><div class="bnb">⚙️</div>
+      <p style="font-size:11px;color:var(--muted);text-align:center;">اطلب من صديقك مسح هذا الرمز لإضافتك</p>
+    </div>
+
+    <div class="add-friend-box">
+      <h4>إضافة صديق بالـ PIN</h4>
+      <p>أدخل رمز PIN الخاص بصديقك لإضافته</p>
+      <div class="pin-input-row">
+        <input type="text" id="friend-pin" placeholder="VM-XXXX-XXXX" maxlength="12">
+        <button class="btn-add" onclick="addFriend()">إضافة</button>
       </div>
     </div>
-  </div></div>
+  </div>
 
-  <!-- S3: PIN CARD -->
-  <div class="pw"><div class="pw-lbl">بطاقة PIN + QR</div><div class="pw-new">✦ v5 جديد</div>
-  <div class="phone">
-    <div class="pst"><span>9:41</span><span>5G</span><span>🔋</span></div>
-    <div class="pc">
-      <div class="pin-scr">
-        <div class="pin-header">
-          <span style="font-size:14px;color:var(--t)">‹</span>
-          <span style="font-size:12px;font-weight:800;flex:1;color:var(--t)">🪪 رقمي التعريفي</span>
-        </div>
-        <div class="pin-body">
-          <!-- PIN Card -->
-          <div class="pin-card">
-            <div class="pc-top">
-              <div>
-                <div class="pc-app">VibeMap</div>
-                <div class="pc-ver">v5.0 · AR</div>
-              </div>
-              <div class="pc-ava">🧑</div>
-            </div>
-            <div class="pc-name">أحمد العمري</div>
-            <div class="pc-handle">@ahmed_ar · الرياض</div>
-            <div class="pin-display">
-              <div class="pin-label">رقم التعريف الشخصي</div>
-              <div class="pin-number">VM-4829-7X3K</div>
-              <div class="pin-copy">📋 نسخ الرقم</div>
-            </div>
-          </div>
-          <!-- QR -->
-          <div class="qr-section">
-            <div class="qr-title">QR للإضافة السريعة</div>
-            <div class="qr-mock">
-              <div class="qr-inner"></div>
-              <div class="qr-corner tl"></div>
-              <div class="qr-corner tr"></div>
-              <div class="qr-corner bl"></div>
-            </div>
-            <div class="qr-sub">امسحه بكاميرا الجوال للإضافة فوراً</div>
-          </div>
-          <!-- Share -->
-          <div class="share-row">
-            <div class="share-btn primary">📤 مشاركة</div>
-            <div class="share-btn">📷 مسح QR</div>
-            <div class="share-btn">🔗 رابط</div>
-          </div>
-          <!-- Add friend -->
-          <div class="add-friend" style="margin-top:8px">
-            <div class="af-title">➕ إضافة صديق برقمه</div>
-            <div class="af-input">
-              <div class="af-field">VM-XXXX-XXXX</div>
-              <div class="af-btn">إضافة</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div></div>
-
-  <!-- S4: ENCRYPTION -->
-  <div class="pw"><div class="pw-lbl">التشفير E2E</div><div class="pw-new">✦ v5 جديد</div>
-  <div class="phone">
-    <div class="pst"><span>9:41</span><span>5G</span><span>🔋</span></div>
-    <div class="pc">
-      <div class="enc-scr">
-        <div class="enc-header">
-          <span style="font-size:14px;color:var(--t)">‹</span>
-          <span style="font-size:12px;font-weight:800;flex:1;color:var(--t)">🔒 التشفير</span>
-        </div>
-        <div class="enc-body">
-          <div class="enc-status">
-            <div class="es-row">
-              <div class="es-icon">🛡️</div>
-              <div class="es-title">مشفّر بالكامل</div>
-              <div class="es-badge">E2E Active</div>
-            </div>
-            <div class="es-desc">كل رسالة وصوت مشفّر من جهازك إلى جهاز المستلم. لا السيرفر يقرأها.</div>
-          </div>
-          <div class="enc-feat">
-            <div class="ef-item">
-              <div class="ef-ic">💬</div>
-              <div class="ef-info"><div class="ef-t">رسائل الدردشة</div><div class="ef-d">AES-256-GCM</div></div>
-              <div class="ef-tag et-g">مشفّر</div>
-            </div>
-            <div class="ef-item">
-              <div class="ef-ic">🎙️</div>
-              <div class="ef-info"><div class="ef-t">صوت PTT</div><div class="ef-d">SRTP + DTLS</div></div>
-              <div class="ef-tag et-g">مشفّر</div>
-            </div>
-            <div class="ef-item">
-              <div class="ef-ic">📸</div>
-              <div class="ef-info"><div class="ef-t">الصور المُرسَلة</div><div class="ef-d">RSA-2048 key exchange</div></div>
-              <div class="ef-tag et-g">مشفّر</div>
-            </div>
-            <div class="ef-item">
-              <div class="ef-ic">🗺️</div>
-              <div class="ef-info"><div class="ef-t">بيانات الموقع</div><div class="ef-d">TLS 1.3 فقط</div></div>
-              <div class="ef-tag et-c">آمن</div>
-            </div>
-            <div class="ef-item">
-              <div class="ef-ic">🔑</div>
-              <div class="ef-info"><div class="ef-t">مفاتيح التشفير</div><div class="ef-d">مخزّنة على جهازك فقط</div></div>
-              <div class="ef-tag et-g">محلي</div>
-            </div>
-          </div>
-          <div class="key-display">
-            <div class="kd-label">مفتاحك العام (Public Key)</div>
-            <div class="kd-key">MIIBIjANBgkqhki...<br>G9w+4yM3xR...</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div></div>
-
-  <!-- S5: CHAT encrypted -->
-  <div class="pw"><div class="pw-lbl">دردشة مشفّرة</div>
-  <div class="phone">
-    <div class="pst"><span>9:41</span><span>5G</span><span>🔋</span></div>
-    <div class="pc">
-      <div class="chat-scr">
-        <div class="ch-hdr">
-          <span style="font-size:14px;cursor:pointer;color:var(--t)">‹</span>
-          <div class="cha">🌍</div>
-          <div class="chi"><div class="chn2">Global · الرياض</div><div class="chm">14 متصل</div></div>
-          <div class="enc-badge">🔒 E2E</div>
-          <div class="ttlb">🔥 Auto</div>
-        </div>
-        <div class="chat-msgs">
-          <div style="text-align:center;font-size:7px;color:var(--t3);background:var(--card2);border-radius:7px;padding:3px 8px;align-self:center">
-            🔒 المحادثة مشفّرة — لا أحد يطّلع عليها
-          </div>
-          <div class="msg" style="flex-direction:row">
-            <div class="mav">👤</div>
-            <div style="position:relative">
-              <div class="mb"><div class="mt">وين أنتم الحين؟ 📍</div><div class="mtime">9:38</div><div class="menc">🔒 e2e</div></div>
-              <div class="burn">🔥</div>
-            </div>
-          </div>
-          <div class="msg me">
-            <div class="mav" style="background:rgba(123,47,255,.18);border-color:var(--v)">🙋</div>
-            <div class="mb"><div class="mt">قريب — 2 دقيقة</div><div class="mtime">9:40 ✓✓</div><div class="menc">🔒 e2e</div></div>
-          </div>
-          <div class="msg" style="flex-direction:row">
-            <div class="mav">👤</div>
-            <div class="mb"><div class="mt">نقابل عند الكافيه 🟣</div><div class="mtime">9:41</div><div class="menc">🔒 e2e</div></div>
-          </div>
-        </div>
-        <div class="cinp">
-          <div class="cb ccam">📷</div>
-          <div class="cf">اكتب... <span style="font-size:7px;opacity:.5">(Enter للإرسال)</span></div>
-          <div class="cb csnd">➤</div>
-        </div>
-      </div>
-    </div>
-  </div></div>
-
-  <!-- S6: iOS Shortcuts -->
-  <div class="pw"><div class="pw-lbl">اختصارات iOS</div><div class="pw-new">✦ v5 جديد</div>
-  <div class="phone">
-    <div class="pst"><span>9:41</span><span>5G</span><span>🔋</span></div>
-    <div class="pc">
-      <div class="kbd-scr">
-        <div class="kbd-hdr">
-          <span style="font-size:14px;color:var(--t)">‹</span>
-          <span style="font-size:12px;font-weight:800;flex:1;color:var(--t)">⌨️ اختصارات iOS</span>
-        </div>
-        <div class="kbd-body">
-          <div class="platform-tab">
-            <div class="ptab sel">🍎 iOS</div>
-            <div class="ptab">🤖 Android</div>
-          </div>
-          <div class="kbd-section-title">Control Center</div>
-          <div class="kbdi">
-            <div class="ki-ic">🎙️</div>
-            <div class="ki-inf"><div class="ki-nm">زر PTT</div><div class="ki-de">في Control Center مباشرة</div></div>
-            <div class="ki-keys"><div class="kk">CC Widget</div></div>
-          </div>
-          <div class="kbdi">
-            <div class="ki-ic">🆘</div>
-            <div class="ki-inf"><div class="ki-nm">SOS سريع</div><div class="ki-de">Side Button × 5</div></div>
-            <div class="ki-keys"><div class="kk">×5 ضغط</div></div>
-          </div>
-          <div class="kbd-section-title">Siri Shortcuts</div>
-          <div class="kbdi">
-            <div class="ki-ic">🗣️</div>
-            <div class="ki-inf"><div class="ki-nm">"VibeMap تكلم"</div><div class="ki-de">يبدأ PTT بالصوت</div></div>
-            <div class="ki-keys"><div class="kk">Siri</div></div>
-          </div>
-          <div class="kbdi">
-            <div class="ki-ic">🔒</div>
-            <div class="ki-inf"><div class="ki-nm">PTT من شاشة الإغلاق</div><div class="ki-de">ضغط مطوّل زر رفع الصوت</div></div>
-            <div class="ki-keys"><div class="kk">Vol+</div></div>
-          </div>
-          <div class="kbd-section-title">Back Tap</div>
-          <div class="kbdi">
-            <div class="ki-ic">👆</div>
-            <div class="ki-inf"><div class="ki-nm">ضربتان على ظهر الجوال</div><div class="ki-de">فتح VibeMap AR</div></div>
-            <div class="ki-keys"><div class="kk">2 ضربات</div></div>
-          </div>
-          <div class="kbdi">
-            <div class="ki-ic">✋</div>
-            <div class="ki-inf"><div class="ki-nm">ثلاث ضربات</div><div class="ki-de">بدء PTT مباشرة</div></div>
-            <div class="ki-keys"><div class="kk">3 ضربات</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div></div>
-
-  <!-- S7: Android Shortcuts -->
-  <div class="pw"><div class="pw-lbl">اختصارات Android</div><div class="pw-new">✦ v5 جديد</div>
-  <div class="phone">
-    <div class="pst"><span>9:41</span><span>5G</span><span>🔋</span></div>
-    <div class="pc">
-      <div class="kbd-scr">
-        <div class="kbd-hdr">
-          <span style="font-size:14px;color:var(--t)">‹</span>
-          <span style="font-size:12px;font-weight:800;flex:1;color:var(--t)">⌨️ اختصارات Android</span>
-        </div>
-        <div class="kbd-body">
-          <div class="platform-tab">
-            <div class="ptab">🍎 iOS</div>
-            <div class="ptab sel">🤖 Android</div>
-          </div>
-          <div class="kbd-section-title">Quick Settings</div>
-          <div class="kbdi">
-            <div class="ki-ic">🎙️</div>
-            <div class="ki-inf"><div class="ki-nm">Tile PTT</div><div class="ki-de">في Quick Settings درج الإشعارات</div></div>
-            <div class="ki-keys"><div class="kk">QS Tile</div></div>
-          </div>
-          <div class="kbdi">
-            <div class="ki-ic">🆘</div>
-            <div class="ki-inf"><div class="ki-nm">SOS طارئ</div><div class="ki-de">Power × 5 ضغطات</div></div>
-            <div class="ki-keys"><div class="kk">×5 Power</div></div>
-          </div>
-          <div class="kbd-section-title">زر الصوت في الخلفية</div>
-          <div class="kbdi">
-            <div class="ki-ic">🔒</div>
-            <div class="ki-inf"><div class="ki-nm">PTT من شاشة الإغلاق</div><div class="ki-de">ضغط مطوّل زر خفض الصوت</div></div>
-            <div class="ki-keys"><div class="kk">Vol− طويل</div></div>
-          </div>
-          <div class="kbd-section-title">Widget الشاشة الرئيسية</div>
-          <div class="kbdi">
-            <div class="ki-ic">📡</div>
-            <div class="ki-inf"><div class="ki-nm">Widget VibeMap</div><div class="ki-de">عدد المتصلين + PTT</div></div>
-            <div class="ki-keys"><div class="kk">4×2 Widget</div></div>
-          </div>
-          <div class="kbdi">
-            <div class="ki-ic">🎧</div>
-            <div class="ki-inf"><div class="ki-nm">سماعة بلوتوث</div><div class="ki-de">زر الإجابة = PTT</div></div>
-            <div class="ki-keys"><div class="kk">BT Button</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div></div>
-
-  <!-- S8: Settings v5 -->
-  <div class="pw"><div class="pw-lbl">الإعدادات</div>
-  <div class="phone">
-    <div class="pst"><span>9:41</span><span>5G</span><span>🔋</span></div>
-    <div class="pc">
-      <div class="set-scr">
-        <div class="set-title">⚙️ الإعدادات</div>
-        <div class="set-sec">
-          <div class="set-sec-t">الحساب</div>
-          <div class="si">
-            <div class="si-ic">🪪</div>
-            <div class="si-inf"><div class="si-nm">رقم PIN الخاص</div><div class="si-de">VM-4829-7X3K</div></div>
-            <div class="si-r">نسخ</div>
-          </div>
-          <div class="si">
-            <div class="si-ic">📷</div>
-            <div class="si-inf"><div class="si-nm">QR الشخصي</div><div class="si-de">مشاركة بطاقتي</div></div>
-            <div class="si-r">›</div>
-          </div>
-        </div>
-        <div class="set-sec">
-          <div class="set-sec-t">المظهر</div>
-          <div class="si" style="display:block;padding:8px 10px">
-            <div class="si-nm" style="margin-bottom:5px">وضع العرض</div>
-            <div class="theme-pick">
-              <div class="tp">🌙 داكن</div>
-              <div class="tp sel">☀️ فاتح</div>
-              <div class="tp">⚙️ نظام</div>
-            </div>
-          </div>
-        </div>
-        <div class="set-sec">
-          <div class="set-sec-t">الأمان والتشفير</div>
-          <div class="si">
-            <div class="si-ic">🔒</div>
-            <div class="si-inf"><div class="si-nm">تشفير E2E</div><div class="si-de">AES-256 + RSA-2048</div></div>
-            <div class="tog on"></div>
-          </div>
-          <div class="si">
-            <div class="si-ic">🔑</div>
-            <div class="si-inf"><div class="si-nm">تجديد مفاتيح التشفير</div></div>
-            <div class="si-r">›</div>
-          </div>
-        </div>
-        <div class="set-sec">
-          <div class="set-sec-t">الخلفية والاختصارات</div>
-          <div class="si">
-            <div class="si-ic">⚡</div>
-            <div class="si-inf"><div class="si-nm">تشغيل في الخلفية</div><div class="si-de">GPS + إشعارات</div></div>
-            <div class="tog on"></div>
-          </div>
-          <div class="si">
-            <div class="si-ic">⌨️</div>
-            <div class="si-inf"><div class="si-nm">تخصيص الاختصارات</div></div>
-            <div class="si-r">›</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div></div>
-
-  <!-- S9: Profile with PIN -->
-  <div class="pw"><div class="pw-lbl">الملف الشخصي</div>
-  <div class="phone">
-    <div class="pst"><span>9:41</span><span>5G</span><span>🔋</span></div>
-    <div class="pc">
-      <div style="position:absolute;inset:0;background:var(--bg2);transition:background .35s;overflow:hidden">
-        <div style="height:70px;background:linear-gradient(135deg,rgba(123,47,255,.5),rgba(0,212,255,.3));position:relative;overflow:hidden">
-          <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.02) 10px,rgba(255,255,255,.02) 11px)"></div>
-        </div>
-        <div style="padding:0 12px;margin-top:-22px;display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:7px">
-          <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--v),var(--c));border:2px solid var(--bg2);display:flex;align-items:center;justify-content:center;font-size:20px;position:relative">
-            🧑
-            <div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:var(--g);border:1.5px solid var(--bg2);box-shadow:0 0 5px var(--g)"></div>
-          </div>
-          <div style="font-size:8px;color:var(--c);border:1px solid rgba(0,212,255,.3);background:rgba(0,212,255,.08);border-radius:8px;padding:3px 9px;cursor:pointer">تعديل</div>
-        </div>
-        <div style="padding:0 12px 8px">
-          <div style="font-size:13px;font-weight:900;color:var(--t)">أحمد العمري</div>
-          <div style="font-size:8px;color:var(--mu);font-family:'IBM Plex Mono',monospace">@ahmed_ar · الرياض</div>
-          <!-- PIN badge on profile -->
-          <div style="display:flex;align-items:center;gap:5px;margin-top:5px;background:rgba(123,47,255,.1);border:1px solid rgba(123,47,255,.25);border-radius:8px;padding:4px 8px">
-            <span style="font-size:11px">🪪</span>
-            <span style="font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--t2)">VM-4829-7X3K</span>
-            <span style="font-size:8px;color:var(--c);margin-right:auto;cursor:pointer">نسخ</span>
-          </div>
-        </div>
-        <!-- Stats -->
-        <div style="display:flex;margin:0 12px 8px;background:var(--card);border:1px solid var(--border2);border-radius:10px;overflow:hidden">
-          <div style="flex:1;padding:7px 4px;text-align:center;border-left:1px solid var(--border2)">
-            <div style="font-size:13px;font-weight:900;color:var(--c)">142</div>
-            <div style="font-size:7.5px;color:var(--mu)">تفاعل</div>
-          </div>
-          <div style="flex:1;padding:7px 4px;text-align:center;border-left:1px solid var(--border2)">
-            <div style="font-size:13px;font-weight:900;color:var(--g)">4.8</div>
-            <div style="font-size:7.5px;color:var(--mu)">تقييم</div>
-          </div>
-          <div style="flex:1;padding:7px 4px;text-align:center">
-            <div style="font-size:13px;font-weight:900;color:var(--m)">38</div>
-            <div style="font-size:7.5px;color:var(--mu)">مساعدة</div>
-          </div>
-        </div>
-        <!-- Ratings -->
-        <div style="padding:0 12px">
-          <div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">التقييم الثلاثي</div>
-          <div style="background:var(--card);border:1px solid rgba(0,255,156,.2);border-radius:9px;padding:8px 10px;margin-bottom:4px">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-              <span style="font-size:13px">🛡️</span>
-              <span style="font-size:9.5px;font-weight:700;color:var(--t)">المصداقية</span>
-              <span style="font-size:12px;font-weight:900;color:var(--g);font-family:'IBM Plex Mono',monospace;margin-right:auto">4.9</span>
-            </div>
-            <div style="height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden">
-              <div style="width:96%;height:100%;background:linear-gradient(90deg,var(--g),#00BBFF);border-radius:2px"></div>
-            </div>
-          </div>
-        </div>
-        <div class="bnav">
-          <div class="bnb">📡</div><div class="bnb">💬</div>
-          <div class="bnb">🪪</div><div class="bnb a">👤</div><div class="bnb">⚙️</div>
-        </div>
-      </div>
-    </div>
-  </div></div>
-
-</div><!-- /phones -->
-
-<!-- FEATURES -->
-<div class="sec-hdr"><h2>⚡ مميزات v5.0</h2><div class="sec-line"></div></div>
-<div class="feat-grid">
-  <div class="fc"><div class="fc-ic">🪪</div><div class="fc-t">رقم PIN خاص لكل مستخدم</div><div class="fc-d">كل مستخدم يحصل على رقم فريد مثل VM-4829-7X3K — سهل المشاركة وصعب التزوير. لا تحتاج لمعرفة اسم المستخدم.</div><div class="fc-tag tg-new">NEW v5</div></div>
-  <div class="fc"><div class="fc-ic">📷</div><div class="fc-t">QR Code للإضافة السريعة</div><div class="fc-d">كل مستخدم لديه QR خاص — امسحه بالكاميرا لإضافة الصديق فوراً بدون كتابة أي شيء.</div><div class="fc-tag tg-new">NEW v5</div></div>
-  <div class="fc"><div class="fc-ic">🔐</div><div class="fc-t">تسجيل دخول اجتماعي</div><div class="fc-d">5 طرق: Google · Apple · Facebook · X · إيميل. لا تحتاج كلمة مرور جديدة. Supabase Auth يدير كل شيء.</div><div class="fc-tag tg-new">NEW v5</div></div>
-  <div class="fc"><div class="fc-ic">🔒</div><div class="fc-t">تشفير E2E كامل</div><div class="fc-d">AES-256-GCM للرسائل · SRTP+DTLS للصوت · RSA-2048 لتبادل المفاتيح. لا السيرفر يقرأ أي شيء.</div><div class="fc-tag tg-new">NEW v5</div></div>
-  <div class="fc"><div class="fc-ic">🍎</div><div class="fc-t">اختصارات iOS</div><div class="fc-d">Control Center Widget + Siri Shortcuts + Back Tap + Lock Screen. PTT من أي مكان بدون فتح التطبيق.</div><div class="fc-tag tg-new">NEW v5</div></div>
-  <div class="fc"><div class="fc-ic">🤖</div><div class="fc-t">اختصارات Android</div><div class="fc-d">Quick Settings Tile + Widget + Lock Screen + سماعة BT. PTT من شاشة الإغلاق بضغطة واحدة.</div><div class="fc-tag tg-new">NEW v5</div></div>
-  <div class="fc"><div class="fc-ic">📡</div><div class="fc-t">AR Walkie-Talkie + PTT</div><div class="fc-d">كرات ضوئية بـ GPS حقيقي. Space للكلام. يعمل في الخلفية حتى مع قفل الشاشة.</div><div class="fc-tag tg-c">v1+</div></div>
-  <div class="fc"><div class="fc-ic">💬</div><div class="fc-t">دردشة + TTL + صور</div><div class="fc-d">رسائل نصية وصور مشفّرة. 3 أوضاع حذف: Auto · 24h · دائم. Enter للإرسال.</div><div class="fc-tag tg-y">v2+</div></div>
-  <div class="fc"><div class="fc-ic">🛡️</div><div class="fc-t">تقييم ثلاثي + ملف شخصي</div><div class="fc-d">مصداقية + تفاعل + مساعدة. يبنيه المجتمع. الـ PIN يظهر على الملف الشخصي.</div><div class="fc-tag tg-v">v3+</div></div>
-  <div class="fc"><div class="fc-ic">⚡</div><div class="fc-t">خلفية ذكية + إشعارات</div><div class="fc-d">GPS في الخلفية. إشعارات PTT مع رد سريع. SOS يخترق وضع الصمت.</div><div class="fc-tag tg-g">v4+</div></div>
-</div>
-
-<!-- SHORTCUTS TABLE -->
-<div class="sec-hdr"><h2>⌨️ جدول الاختصارات الكامل</h2><div class="sec-line"></div><span class="sec-tag">iOS + Android</span></div>
-<div class="kbd-table">
-  <div class="kbt-hdr"><span>الوظيفة</span><span>الاختصار</span></div>
-  <div class="kbt-sec">🎙️ الصوت — مشترك</div>
-  <div class="kbt-row"><div class="kbt-ic">🎙️</div><div class="kbt-i"><div class="kbt-nm">Push to Talk</div><div class="kbt-de">ضغط مطوّل — ارفع للإيقاف</div></div><div class="kbt-keys"><div class="kk2">Space</div><span class="kplus2">/</span><div class="kk2">Vol−</div><div class="plat-badge pb-both">كلاهما</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">🔇</div><div class="kbt-i"><div class="kbt-nm">كتم الميكروفون</div></div><div class="kbt-keys"><div class="kk2">M</div><div class="plat-badge pb-both">كلاهما</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">🆘</div><div class="kbt-i"><div class="kbt-nm">SOS طارئ</div></div><div class="kbt-keys"><div class="kk2">Power</div><span class="kplus2">×5</span><div class="plat-badge pb-both">كلاهما</div></div></div>
-  <div class="kbt-sec">🍎 iOS فقط</div>
-  <div class="kbt-row"><div class="kbt-ic">📡</div><div class="kbt-i"><div class="kbt-nm">Control Center Widget</div><div class="kbt-de">زر PTT في درج التحكم</div></div><div class="kbt-keys"><div class="kk2">CC Widget</div><div class="plat-badge pb-ios">iOS</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">🗣️</div><div class="kbt-i"><div class="kbt-nm">Siri: VibeMap تكلم</div><div class="kbt-de">يبدأ PTT بأمر صوتي</div></div><div class="kbt-keys"><div class="kk2">Siri</div><div class="plat-badge pb-ios">iOS</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">👆</div><div class="kbt-i"><div class="kbt-nm">Back Tap — ضربتان</div><div class="kbt-de">فتح VibeMap</div></div><div class="kbt-keys"><div class="kk2">×2 Back</div><div class="plat-badge pb-ios">iOS</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">✋</div><div class="kbt-i"><div class="kbt-nm">Back Tap — ثلاث</div><div class="kbt-de">بدء PTT مباشرة</div></div><div class="kbt-keys"><div class="kk2">×3 Back</div><div class="plat-badge pb-ios">iOS</div></div></div>
-  <div class="kbt-sec">🤖 Android فقط</div>
-  <div class="kbt-row"><div class="kbt-ic">📡</div><div class="kbt-i"><div class="kbt-nm">Quick Settings Tile</div><div class="kbt-de">درج الإشعارات</div></div><div class="kbt-keys"><div class="kk2">QS Tile</div><div class="plat-badge pb-and">Android</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">📱</div><div class="kbt-i"><div class="kbt-nm">Widget 4×2</div><div class="kbt-de">الشاشة الرئيسية</div></div><div class="kbt-keys"><div class="kk2">Widget</div><div class="plat-badge pb-and">Android</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">🎧</div><div class="kbt-i"><div class="kbt-nm">زر إجابة BT</div><div class="kbt-de">سماعة بلوتوث</div></div><div class="kbt-keys"><div class="kk2">BT Button</div><div class="plat-badge pb-and">Android</div></div></div>
-  <div class="kbt-sec">💬 الرسائل — مشترك</div>
-  <div class="kbt-row"><div class="kbt-ic">💬</div><div class="kbt-i"><div class="kbt-nm">إرسال رسالة</div></div><div class="kbt-keys"><div class="kk2">Enter</div><div class="plat-badge pb-both">كلاهما</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">↩️</div><div class="kbt-i"><div class="kbt-nm">رد سريع</div><div class="kbt-de">من الإشعار</div></div><div class="kbt-keys"><div class="kk2">Alt</div><span class="kplus2">+</span><div class="kk2">R</div><div class="plat-badge pb-both">كلاهما</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">🔥</div><div class="kbt-i"><div class="kbt-nm">تبديل TTL</div><div class="kbt-de">Auto → 24h → Keep</div></div><div class="kbt-keys"><div class="kk2">Alt</div><span class="kplus2">+</span><div class="kk2">T</div><div class="plat-badge pb-both">كلاهما</div></div></div>
-  <div class="kbt-sec">🔧 تطبيق</div>
-  <div class="kbt-row"><div class="kbt-ic">🌙</div><div class="kbt-i"><div class="kbt-nm">تبديل الوضع داكن/فاتح</div></div><div class="kbt-keys"><div class="kk2">Ctrl</div><span class="kplus2">+</span><div class="kk2">D</div><div class="plat-badge pb-both">كلاهما</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">⚡</div><div class="kbt-i"><div class="kbt-nm">تشغيل/إيقاف الخلفية</div></div><div class="kbt-keys"><div class="kk2">Ctrl</div><span class="kplus2">+</span><div class="kk2">B</div><div class="plat-badge pb-both">كلاهما</div></div></div>
-  <div class="kbt-row"><div class="kbt-ic">🛡️</div><div class="kbt-i"><div class="kbt-nm">تفعيل/إيقاف تشفير E2E</div></div><div class="kbt-keys"><div class="kk2">Ctrl</div><span class="kplus2">+</span><div class="kk2">E</div><div class="plat-badge pb-both">كلاهما</div></div></div>
-</div>
-
-<!-- LEGEND -->
-<div class="legend">
-  <div class="leg-t">Brand Colors v5</div>
-  <div class="leg-r">
-    <div class="lg"><div class="ld" style="background:#00D4FF;box-shadow:0 0 7px #00D4FF"></div><div class="ll">Talking</div></div>
-    <div class="lg"><div class="ld" style="background:#7B2FFF;box-shadow:0 0 7px #7B2FFF"></div><div class="ll">Social</div></div>
-    <div class="lg"><div class="ld" style="background:#C840FF;box-shadow:0 0 7px #C840FF"></div><div class="ll">Gradient</div></div>
-    <div class="lg"><div class="ld" style="background:#00FF9C;box-shadow:0 0 7px #00FF9C"></div><div class="ll">Online/BG</div></div>
-    <div class="lg"><div class="ld" style="background:#FF4444;box-shadow:0 0 7px #FF4444"></div><div class="ll">SOS</div></div>
-    <div class="lg"><div class="ld" style="background:#00FFD4;box-shadow:0 0 6px #00FFD4"></div><div class="ll">E2E/BT</div></div>
+  <div class="bottom-nav">
+    <div class="nav-tab" onclick="switchTab('ar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>AR</span></div>
+    <div class="nav-tab" onclick="switchTab('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>دردشة</span></div>
+    <div class="nav-tab active" onclick="switchTab('id')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg><span>هويتي</span></div>
+    <div class="nav-tab" onclick="switchTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>الملف</span></div>
+    <div class="nav-tab" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>إعدادات</span></div>
   </div>
 </div>
+
+<!-- SCREEN: PROFILE -->
+<div class="screen" id="screen-profile">
+  <div class="profile-header">
+    <h2>الملف الشخصي</h2>
+  </div>
+  <div class="profile-content">
+    <div class="profile-avatar-big">&#x1F31F;</div>
+    <div>
+      <div class="profile-name">يوسف علي</div>
+      <div class="profile-sub">@yousef_ali &bull; VibeMap Pro</div>
+    </div>
+    <div class="profile-stats">
+      <div class="stat-item">
+        <div class="stat-num">٤٢</div>
+        <div class="stat-label">أصدقاء</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">١٢٨</div>
+        <div class="stat-label">جلسة</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">٩٨٪</div>
+        <div class="stat-label">تقييم</div>
+      </div>
+    </div>
+    <div class="profile-info-box">
+      <div class="info-row">
+        <span class="info-label">الاسم الكامل</span>
+        <span class="info-value">يوسف علي حسن</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">البريد الإلكتروني</span>
+        <span class="info-value" style="direction:ltr;">yousef@vibemap.app</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">المدينة</span>
+        <span class="info-value">القاهرة، مصر</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">الحالة</span>
+        <span class="info-value" style="color:var(--green);">&#x25CF; متصل الآن</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">خطة الاشتراك</span>
+        <span class="info-value" style="color:var(--cyan);">VibeMap Pro</span>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-tab" onclick="switchTab('ar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>AR</span></div>
+    <div class="nav-tab" onclick="switchTab('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>دردشة</span></div>
+    <div class="nav-tab" onclick="switchTab('id')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg><span>هويتي</span></div>
+    <div class="nav-tab active" onclick="switchTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>الملف</span></div>
+    <div class="nav-tab" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>إعدادات</span></div>
+  </div>
+</div>
+
+<!-- SCREEN 5: SETTINGS -->
+<div class="screen" id="screen-settings">
+  <div class="settings-header">
+    <h2>الإعدادات</h2>
+  </div>
+  <div class="settings-content">
+
+    <div class="settings-section">
+      <div class="settings-section-title">المظهر والتخصيص</div>
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-icon" style="background:rgba(123,47,255,.15);">&#x1F3A8;</div>
+          <div>
+            <h4>الوضع الداكن</h4>
+            <p>مفعّل دائماً</p>
+          </div>
+        </div>
+        <div class="toggle on" id="toggle-dark" onclick="toggleSetting('dark')"></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-icon" style="background:rgba(0,212,255,.12);">&#x1F310;</div>
+          <div>
+            <h4>اللغة</h4>
+            <p>العربية</p>
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">الأمان والخصوصية</div>
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-icon" style="background:rgba(0,255,156,.12);">&#x1F512;</div>
+          <div>
+            <h4>تشفير E2E</h4>
+            <p>تشفير كامل للرسائل</p>
+          </div>
+        </div>
+        <div class="toggle on" id="toggle-e2e" onclick="toggleSetting('e2e')"></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-icon" style="background:rgba(123,47,255,.15);">&#x1F47B;</div>
+          <div>
+            <h4>وضع الخفاء</h4>
+            <p>إخفاء موقعك الجغرافي</p>
+          </div>
+        </div>
+        <div class="toggle" id="toggle-ghost" onclick="toggleSetting('ghost')"></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">الإشعارات</div>
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-icon" style="background:rgba(255,180,0,.12);">&#x1F514;</div>
+          <div>
+            <h4>إشعارات الرسائل</h4>
+            <p>تنبيهات الدردشة</p>
+          </div>
+        </div>
+        <div class="toggle on" id="toggle-notif" onclick="toggleSetting('notif')"></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-icon" style="background:rgba(0,212,255,.12);">&#x1F4CD;</div>
+          <div>
+            <h4>إشعارات القرب</h4>
+            <p>عند اقتراب أحد منك</p>
+          </div>
+        </div>
+        <div class="toggle on" id="toggle-prox" onclick="toggleSetting('prox')"></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">الحساب</div>
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-icon" style="background:rgba(0,212,255,.12);">&#x1F511;</div>
+          <div>
+            <h4>رمز PIN الخاص بك</h4>
+            <p style="font-size:13px;color:var(--cyan);letter-spacing:2px;" id="settings-pin">VM-4829-7X3K</p>
+          </div>
+        </div>
+        <div class="btn-copy" onclick="copyPIN()" style="font-size:11px;">نسخ</div>
+      </div>
+      <div class="settings-row" onclick="showToast('جاري تغيير كلمة المرور...')">
+        <div class="settings-row-left">
+          <div class="settings-icon" style="background:rgba(255,51,102,.12);">&#x1F510;</div>
+          <div>
+            <h4>تغيير كلمة المرور</h4>
+            <p>آخر تغيير: منذ ٣ أشهر</p>
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">التطبيق</div>
+      <div class="settings-row">
+        <div class="settings-row-left">
+          <div class="settings-icon" style="background:rgba(100,100,255,.12);">&#x2139;&#xFE0F;</div>
+          <div>
+            <h4>الإصدار</h4>
+            <p>VibeMap v2.4.1</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-signout" onclick="doSignOut()">تسجيل الخروج</div>
+
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-tab" onclick="switchTab('ar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg><span>AR</span></div>
+    <div class="nav-tab" onclick="switchTab('chat')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>دردشة</span></div>
+    <div class="nav-tab" onclick="switchTab('id')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="10" r="3"/><path d="M15 8h3M15 12h3M6 16h12"/></svg><span>هويتي</span></div>
+    <div class="nav-tab" onclick="switchTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>الملف</span></div>
+    <div class="nav-tab active" onclick="switchTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>إعدادات</span></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
 </div>
 
 <script>
-const stored = localStorage.getItem('vbTheme') || 'dark';
-let curTheme = stored;
-function setTheme(t){
-  curTheme=t;localStorage.setItem('vbTheme',t);
-  const body=document.body;
-  if(t==='system'){body.setAttribute('data-theme',window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');}
-  else body.setAttribute('data-theme',t);
-  ['dark','light','system'].forEach(x=>document.getElementById('btn-'+x)?.classList.toggle('on',x===t));
+// === STATE ===
+var currentScreen = 'login';
+var pttActive = false;
+var toastTimer = null;
+var settings = {dark:true,e2e:true,ghost:false,notif:true,prox:true};
+
+try {
+  var s = localStorage.getItem('vm_settings');
+  if(s) settings = Object.assign(settings, JSON.parse(s));
+} catch(e){}
+
+// === SCREEN NAVIGATION ===
+var tabIdx = {ar:0,chat:1,id:2,profile:3,settings:4};
+
+function switchTab(tab) {
+  if(currentScreen === tab) return;
+  var prevId = 'screen-' + currentScreen;
+  var nextId = 'screen-' + tab;
+  var all = document.querySelectorAll('.screen');
+  all.forEach(function(s){ s.classList.remove('active','prev'); });
+  var prevEl = document.getElementById(prevId);
+  var nextEl = document.getElementById(nextId);
+  if(prevEl) prevEl.classList.add('prev');
+  if(nextEl) {
+    nextEl.style.transform = 'translateX(100%)';
+    nextEl.offsetHeight; // force reflow
+    nextEl.classList.add('active');
+  }
+  currentScreen = tab;
 }
-function toggleCL(){document.getElementById('cl-panel').classList.toggle('open');}
-window.matchMedia('(prefers-color-scheme: light)').addEventListener('change',e=>{if(curTheme==='system')setTheme('system');});
-document.addEventListener('keydown',e=>{
-  if(e.ctrlKey&&e.key==='d'){e.preventDefault();setTheme(curTheme==='dark'?'light':'dark');}
+
+// === LOGIN ===
+function doLogin() {
+  var loginEl = document.getElementById('screen-login');
+  var arEl = document.getElementById('screen-ar');
+  loginEl.style.transition = 'opacity .35s';
+  loginEl.style.opacity = '0';
+  setTimeout(function(){
+    loginEl.classList.remove('active');
+    loginEl.style.opacity = '';
+    loginEl.style.transition = '';
+    arEl.style.transform = 'translateX(0)';
+    arEl.classList.add('active');
+    currentScreen = 'ar';
+    try { localStorage.setItem('vm_loggedIn','1'); } catch(e){}
+    startOrbs();
+  }, 350);
+}
+
+// === AUTO LOGIN ===
+window.addEventListener('load', function() {
+  try {
+    if(localStorage.getItem('vm_loggedIn') === '1') {
+      document.getElementById('screen-login').classList.remove('active');
+      var ar = document.getElementById('screen-ar');
+      ar.style.transform = 'translateX(0)';
+      ar.classList.add('active');
+      currentScreen = 'ar';
+      startOrbs();
+    }
+  } catch(e){}
+  applySettings();
 });
-setTheme(curTheme);
+
+// === ORBS ===
+function startOrbs() {
+  setInterval(function(){
+    var n = Math.floor(Math.random()*4)+5;
+    var el = document.getElementById('hud-count');
+    if(el) el.textContent = n + ' متصلين الآن';
+  }, 7000);
+}
+
+// === PTT ===
+function pttStart(e) {
+  if(e) e.preventDefault();
+  if(pttActive) return;
+  pttActive = true;
+  var btn = document.getElementById('btn-ptt');
+  var lbl = document.getElementById('ptt-label');
+  var sts = document.getElementById('ptt-status');
+  if(btn) btn.classList.add('active');
+  if(lbl) lbl.textContent = 'جارٍ البث...';
+  if(sts) { sts.textContent = 'البث مفعّل | مستوى الصوت: 87%'; sts.className='ptt-status on'; }
+}
+
+function pttEnd(e) {
+  if(e) e.preventDefault();
+  if(!pttActive) return;
+  pttActive = false;
+  var btn = document.getElementById('btn-ptt');
+  var lbl = document.getElementById('ptt-label');
+  var sts = document.getElementById('ptt-status');
+  if(btn) btn.classList.remove('active');
+  if(lbl) lbl.textContent = 'اضغط للكلام';
+  if(sts) { sts.textContent = 'تم إرسال البث'; sts.className='ptt-status'; }
+  setTimeout(function(){ var s=document.getElementById('ptt-status'); if(s) s.textContent=''; }, 2000);
+}
+
+// === CHAT ===
+function sendMessage() {
+  var input = document.getElementById('chat-input');
+  if(!input) return;
+  var text = input.value.trim();
+  if(!text) return;
+  var now = new Date();
+  var h = now.getHours(), m = now.getMinutes();
+  var ap = h>=12?'م':'ص'; h = h%12||12;
+  var t = h+':'+(m<10?'0'+m:m)+' '+ap;
+  var msgs = document.getElementById('chat-messages');
+  var d = document.createElement('div');
+  d.className = 'msg mine';
+  d.innerHTML = '<div class="msg-avatar" style="background:linear-gradient(135deg,var(--purple),var(--cyan));">&#x1F31F;</div>' +
+    '<div class="msg-body"><div class="msg-bubble">'+escHtml(text)+'</div>' +
+    '<div class="msg-meta"><span>'+t+'</span><span class="check-icon">&#x2713;</span></div></div>';
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+  input.value = '';
+  // Simulated reply
+  setTimeout(function(){
+    var replies=['رائع! شكراً على الرد','تم الاستلام، سنكون هناك قريباً','ممتاز! إلى اللقاء','حسناً، نتوجه إليكم الآن'];
+    var names=['أحمد خالد','سارة محمد','يوسف علي'];
+    var emojis=['&#x1F60A;','&#x1F3AF;','&#x1F60E;'];
+    var grads=['linear-gradient(135deg,#1a3a5c,#2a5a8c)','linear-gradient(135deg,#3a1a5c,#5a2a8c)','linear-gradient(135deg,#1a4a2a,#2a6a3a)'];
+    var i=Math.floor(Math.random()*3);
+    var now2=new Date(); var h2=now2.getHours(),m2=now2.getMinutes();
+    var ap2=h2>=12?'م':'ص'; h2=h2%12||12;
+    var t2=h2+':'+(m2<10?'0'+m2:m2)+' '+ap2;
+    var rd=document.createElement('div'); rd.className='msg other';
+    rd.innerHTML='<div class="msg-avatar" style="background:'+grads[i]+';">'+emojis[i]+'</div>' +
+      '<div class="msg-body"><div class="msg-name">'+names[i]+'</div>' +
+      '<div class="msg-bubble">'+replies[Math.floor(Math.random()*replies.length)]+'</div>' +
+      '<div class="msg-meta"><span>'+t2+'</span></div></div>';
+    msgs.appendChild(rd); msgs.scrollTop=msgs.scrollHeight;
+  }, 1000+Math.random()*1000);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// === PIN ===
+function copyPIN() {
+  var pin = 'VM-4829-7X3K';
+  try {
+    if(navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(pin).catch(function(){});
+    }
+  } catch(e){}
+  showToast('تم نسخ الـ PIN بنجاح');
+}
+
+function addFriend() {
+  var input = document.getElementById('friend-pin');
+  if(!input) return;
+  var val = input.value.trim();
+  if(val.length < 5) { showToast('أدخل رمز PIN صحيح'); return; }
+  showToast('تم إرسال طلب الصداقة!');
+  input.value = '';
+}
+
+// === SETTINGS ===
+function toggleSetting(key) {
+  settings[key] = !settings[key];
+  var el = document.getElementById('toggle-'+key);
+  if(el) el.classList.toggle('on', settings[key]);
+  try { localStorage.setItem('vm_settings', JSON.stringify(settings)); } catch(e){}
+  var map = {
+    dark: settings.dark?'الوضع الداكن مفعّل':'الوضع الداكن معطّل',
+    e2e: settings.e2e?'تشفير E2E مفعّل':'تشفير E2E معطّل',
+    ghost: settings.ghost?'وضع الخفاء مفعّل':'وضع الخفاء معطّل',
+    notif: settings.notif?'الإشعارات مفعّلة':'الإشعارات معطّلة',
+    prox: settings.prox?'إشعارات القرب مفعّلة':'إشعارات القرب معطّلة'
+  };
+  showToast(map[key] || 'تم التحديث');
+}
+
+function applySettings() {
+  Object.keys(settings).forEach(function(k){
+    var el = document.getElementById('toggle-'+k);
+    if(el) el.classList.toggle('on', settings[k]);
+  });
+}
+
+// === SOS ===
+function triggerSOS() {
+  showToast('تم إرسال إشارة الطوارئ!');
+  var btn = document.querySelector('.btn-sos');
+  if(btn){ btn.style.background='rgba(255,51,102,.45)'; setTimeout(function(){btn.style.background='';},1500); }
+}
+
+// === SIGN OUT ===
+function doSignOut() {
+  try { localStorage.removeItem('vm_loggedIn'); } catch(e){}
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active','prev'); });
+  var login = document.getElementById('screen-login');
+  login.style.transform = 'translateX(0)';
+  login.classList.add('active');
+  currentScreen = 'login';
+}
+
+// === TOAST ===
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+// Prevent default gestures
+document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+document.addEventListener('dblclick', function(e){ e.preventDefault(); }, {passive:false});
+document.body.addEventListener('touchmove', function(e){
+  var t = e.target;
+  if(t.closest && t.closest('.chat-messages,.id-content,.settings-content,.profile-content')) return;
+  e.preventDefault();
+}, {passive:false});
 </script>
 </body>
 </html>
