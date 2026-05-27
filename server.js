@@ -39,11 +39,13 @@ function broadcast(data, excludeId = null) {
   });
 }
 
-function sendTo(userId, data) {
-  const user = connectedUsers.get(userId);
-  if (user && user.ws && user.ws.readyState === WebSocket.OPEN) {
-    user.ws.send(JSON.stringify(data));
-  }
+function broadcastAll(data) {
+  const msg = JSON.stringify(data);
+  connectedUsers.forEach((user) => {
+    if (user.ws && user.ws.readyState === WebSocket.OPEN) {
+      user.ws.send(msg);
+    }
+  });
 }
 
 function getUserList() {
@@ -131,10 +133,7 @@ wss.on('connection', (ws) => {
         if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
 
         // Broadcast to everyone including sender
-        const payload = JSON.stringify({ type: 'chat', ...chatMsg });
-        connectedUsers.forEach((u) => {
-          if (u.ws && u.ws.readyState === WebSocket.OPEN) u.ws.send(payload);
-        });
+        broadcastAll({ type: 'chat', ...chatMsg });
         break;
       }
 
