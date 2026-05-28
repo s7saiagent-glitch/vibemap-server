@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from app.core.database import get_db
 from app.core.security import (
     verify_password, get_password_hash,
@@ -62,9 +62,7 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     refresh_token = RefreshToken(
         user_id=user.id,
         token=refresh_token_str,
-        expires_at=datetime.now(timezone.utc).replace(
-            day=datetime.now(timezone.utc).day + settings.REFRESH_TOKEN_EXPIRE_DAYS
-        ),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
     )
     db.add(refresh_token)
     await db.commit()
@@ -99,7 +97,7 @@ async def login(credentials: LoginRequest, db: AsyncSession = Depends(get_db)):
     refresh_token = RefreshToken(
         user_id=user.id,
         token=refresh_token_str,
-        expires_at=datetime.now(timezone.utc),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
     )
     db.add(refresh_token)
     await db.commit()

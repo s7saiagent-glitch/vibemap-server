@@ -79,7 +79,7 @@ class Message(Base):
     content = Column(Text, nullable=False)
     tokens_used = Column(Integer, default=0)
     model_used = Column(String(100))
-    metadata = Column(JSON, default=dict)
+    extra_data = Column(JSON, default=dict)
 
     conversation = relationship("Conversation", back_populates="messages")
 

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from app.core.database import get_db
 from app.models.academic import Faculty, Department, Program, Course, CourseSection, AcademicCalendar
@@ -14,17 +15,21 @@ router = APIRouter(prefix="/academic", tags=["الهيكل الأكاديمي"])
 
 @router.get("/faculties", response_model=List[FacultyWithDepartments])
 async def get_faculties(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Faculty).where(Faculty.is_active == True))
+    result = await db.execute(
+        select(Faculty)
+        .where(Faculty.is_active == True)
+        .options(selectinload(Faculty.departments))
+    )
     faculties = result.scalars().all()
 
     response = []
     for faculty in faculties:
-        dept_result = await db.execute(
-            select(Department).where(Department.faculty_id == faculty.id, Department.is_active == True)
-        )
-        departments = dept_result.scalars().all()
         fac_data = FacultyWithDepartments.model_validate(faculty)
-        fac_data.departments = [DepartmentResponse.model_validate(d) for d in departments]
+        fac_data.departments = [
+            DepartmentResponse.model_validate(d)
+            for d in faculty.departments
+            if d.is_active
+        ]
         response.append(fac_data)
 
     return response

@@ -2,9 +2,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.security import decode_token
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, StudentProfile
+from app.models.ai_agents import StudentAcademicTwin
 
 bearer_scheme = HTTPBearer()
 
@@ -22,7 +24,14 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     user_id = payload.get("sub")
-    result = await db.execute(select(User).where(User.id == int(user_id)))
+    result = await db.execute(
+        select(User)
+        .where(User.id == int(user_id))
+        .options(
+            selectinload(User.student_profile).selectinload(StudentProfile.academic_twin),
+            selectinload(User.admin_profile),
+        )
+    )
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="المستخدم غير موجود")

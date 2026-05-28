@@ -12,7 +12,7 @@ import remarkGfm from 'remark-gfm'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { aiProfessorAPI } from '@/lib/api'
 import { useChatStore } from '@/lib/store'
-import { nanoid } from 'crypto'
+const nanoid = () => Math.random().toString(36).slice(2, 11)
 
 const QUICK_ACTIONS = [
   { icon: BookOpen, label: 'اشرح لي المفهوم', prompt: 'شرح مفصل للمفهوم الأساسي في هذه المادة' },

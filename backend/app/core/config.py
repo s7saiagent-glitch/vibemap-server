@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     PASSING_GRADE: float = 60.0
     MAX_CREDIT_HOURS_PER_SEMESTER: int = 21
 
-    model_config = {"env_file": ".env", "case_sensitive": True}
+    model_config = {"env_file": ".env", "case_sensitive": True, "extra": "ignore"}
 
 
 settings = Settings()

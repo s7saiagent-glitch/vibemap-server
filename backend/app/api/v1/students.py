@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from sqlalchemy.orm import selectinload
 from datetime import datetime, timezone
 from typing import List
 from app.core.database import get_db
@@ -25,17 +26,21 @@ async def get_student_dashboard(
 
     profile = current_user.student_profile
 
+    section_options = selectinload(Enrollment.section).selectinload(CourseSection.course)
+
     enrollments_result = await db.execute(
-        select(Enrollment).where(
+        select(Enrollment)
+        .where(
             Enrollment.student_id == profile.id,
             Enrollment.status == EnrollmentStatus.ENROLLED,
         )
+        .options(section_options)
     )
     current_enrollments = enrollments_result.scalars().all()
 
     upcoming_assessments = []
     for enrollment in current_enrollments:
-        if enrollment.section:
+        if enrollment.section_id:
             assess_result = await db.execute(
                 select(Assessment).where(
                     Assessment.section_id == enrollment.section_id,
@@ -47,10 +52,14 @@ async def get_student_dashboard(
 
     recent_grades = []
     completed_result = await db.execute(
-        select(Enrollment).where(
+        select(Enrollment)
+        .where(
             Enrollment.student_id == profile.id,
             Enrollment.total_grade != None,
-        ).order_by(Enrollment.updated_at.desc()).limit(5)
+        )
+        .options(section_options)
+        .order_by(Enrollment.updated_at.desc())
+        .limit(5)
     )
     completed_enrollments = completed_result.scalars().all()
     for e in completed_enrollments:
@@ -106,7 +115,14 @@ async def get_my_courses(
         raise HTTPException(status_code=404, detail="ملف الطالب غير موجود")
 
     result = await db.execute(
-        select(Enrollment).where(Enrollment.student_id == profile.id)
+        select(Enrollment)
+        .where(Enrollment.student_id == profile.id)
+        .options(
+            selectinload(Enrollment.section)
+            .selectinload(CourseSection.course),
+            selectinload(Enrollment.section)
+            .selectinload(CourseSection.ai_professor),
+        )
         .order_by(Enrollment.enrolled_at.desc())
     )
     enrollments = result.scalars().all()
@@ -147,10 +163,15 @@ async def get_transcript(
         raise HTTPException(status_code=404, detail="ملف الطالب غير موجود")
 
     result = await db.execute(
-        select(Enrollment).where(
+        select(Enrollment)
+        .where(
             Enrollment.student_id == profile.id,
             Enrollment.status.in_([EnrollmentStatus.COMPLETED, EnrollmentStatus.FAILED]),
-        ).order_by(Enrollment.completed_at.desc())
+        )
+        .options(
+            selectinload(Enrollment.section).selectinload(CourseSection.course)
+        )
+        .order_by(Enrollment.completed_at.desc())
     )
     enrollments = result.scalars().all()
 
@@ -233,11 +254,15 @@ async def get_academic_twin(
     if not profile:
         raise HTTPException(status_code=404, detail="ملف الطالب غير موجود")
 
-    twin = profile.academic_twin
+    twin_result = await db.execute(
+        select(StudentAcademicTwin).where(StudentAcademicTwin.student_id == profile.id)
+    )
+    twin = twin_result.scalar_one_or_none()
     if not twin:
         twin = StudentAcademicTwin(student_id=profile.id)
         db.add(twin)
         await db.commit()
+        await db.refresh(twin)
 
     return {
         "learning_style": twin.learning_style.value,
