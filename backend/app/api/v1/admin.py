@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
+from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from app.core.database import get_db
 from app.core.deps import get_current_admin
@@ -94,7 +95,8 @@ async def get_students(
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar_one()
 
-    query = query.offset((page - 1) * per_page).limit(per_page).order_by(User.created_at.desc())
+    query = query.offset((page - 1) * per_page).limit(per_page).order_by(User.created_at.desc()) \
+        .options(selectinload(User.student_profile))
     result = await db.execute(query)
     students = result.scalars().all()
 
