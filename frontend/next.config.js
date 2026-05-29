@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   images: {
-    domains: ['localhost', 'api.university.io'],
+    domains: ['localhost', 'api.university.io', 's7sai.cloud'],
   },
   async rewrites() {
     return [
