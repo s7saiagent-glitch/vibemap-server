@@ -1,6 +1,13 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+const getApiUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}/api/v1`
+  }
+  return 'http://backend:8000/api/v1'
+}
+const API_URL = getApiUrl()
 
 const api = axios.create({
   baseURL: API_URL,
