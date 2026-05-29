@@ -1,14 +1,15 @@
 'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
-  Brain, GraduationCap, Users, BookOpen, Star, Award,
-  ChevronLeft, Code2, BarChart3, Globe, Shield, Zap,
-  MessageSquare, Play, CheckCircle
+  Brain, GraduationCap, Users, BookOpen, Award,
+  ChevronLeft, BarChart3, Globe, Shield,
+  Play, CheckCircle, Menu, X
 } from 'lucide-react'
 
 const STATS = [
-  { value: '90%', label: 'ذكاء اصطناعي', icon: Brain },
+  { value: 'AI', label: 'مدعوم بالذكاء الاصطناعي', icon: Brain },
   { value: '20+', label: 'تخصص أكاديمي', icon: GraduationCap },
   { value: '6', label: 'مستويات إنجليزية', icon: Globe },
   { value: '24/7', label: 'أساتذة متاحون', icon: Users },
@@ -56,18 +57,24 @@ const HOW_IT_WORKS = [
 ]
 
 export default function LandingPage() {
+  const [mobileMenu, setMobileMenu] = useState(false)
+
   return (
     <div className="min-h-screen bg-uni-dark overflow-x-hidden" dir="rtl">
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-uni-border/50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gold-gradient flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-gold-gradient flex items-center justify-center flex-shrink-0">
               <GraduationCap className="w-5 h-5 text-uni-dark" />
             </div>
-            <span className="font-bold text-lg text-uni-gold">مملكة الأرض الجامعية</span>
+            <span className="font-bold text-base md:text-lg text-uni-gold">مملكة الأرض الجامعية</span>
           </div>
-          <div className="flex items-center gap-3">
+          {/* Desktop nav */}
+          <div className="hidden sm:flex items-center gap-3">
+            <button className="text-uni-muted hover:text-uni-gold text-xs border border-uni-border/30 rounded-lg px-2 py-1 hover:border-uni-gold/30 flex items-center gap-1">
+              <Globe className="w-3.5 h-3.5" /> AR
+            </button>
             <Link href="/auth/login" className="btn-ghost-gold px-5 py-2 rounded-lg text-sm font-semibold">
               تسجيل الدخول
             </Link>
@@ -75,7 +82,22 @@ export default function LandingPage() {
               ابدأ مجاناً
             </Link>
           </div>
+          {/* Mobile menu button */}
+          <button onClick={() => setMobileMenu(!mobileMenu)} className="sm:hidden text-uni-muted hover:text-uni-gold p-1">
+            {mobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
+        {/* Mobile menu */}
+        {mobileMenu && (
+          <div className="sm:hidden border-t border-uni-border/30 px-4 py-4 flex flex-col gap-3 glass">
+            <Link href="/auth/login" onClick={() => setMobileMenu(false)} className="btn-ghost-gold px-5 py-3 rounded-lg text-sm font-semibold text-center">
+              تسجيل الدخول
+            </Link>
+            <Link href="/auth/register" onClick={() => setMobileMenu(false)} className="btn-gold px-5 py-3 rounded-lg text-sm font-semibold text-center">
+              ابدأ مجاناً
+            </Link>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -126,7 +148,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="text-xl text-uni-muted mb-10 max-w-2xl mx-auto leading-relaxed"
           >
-            منظومة جامعية متكاملة تعمل بنسبة 90% ذكاء اصطناعي — تدريس، تقييم، إرشاد،
+            منظومة جامعية متكاملة مدعومة بالذكاء الاصطناعي — تدريس، تقييم، إرشاد،
             وشهادات أكاديمية معتمدة في بيئة رقمية مستقبلية
           </motion.p>
 
@@ -340,7 +362,7 @@ export default function LandingPage() {
           <span className="font-bold text-uni-gold">جامعة مملكة الأرض الافتراضية</span>
         </div>
         <p className="text-uni-subtle text-sm">
-          © 2025 Virtual Earth Kingdom University · مدعوم بالذكاء الاصطناعي 90%
+          © 2025 Virtual Earth Kingdom University · مدعوم بالذكاء الاصطناعي
         </p>
       </footer>
     </div>
