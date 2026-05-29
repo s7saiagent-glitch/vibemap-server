@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: university
+      POSTGRES_PASSWORD: UnivDB2025
+      POSTGRES_DB: university_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - university-net
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - university-net
+
+  backend:
+    build: ./backend
+    env_file: ./backend/.env
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - university-net
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      - "traefik.http.routers.uni-api-http.rule=Host(`s7sai.cloud`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.uni-api-http.entrypoints=http"
+      - "traefik.http.routers.uni-api-http.service=uni-api-svc"
+      - "traefik.http.routers.uni-api-https.rule=Host(`s7sai.cloud`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.uni-api-https.entrypoints=https"
+      - "traefik.http.routers.uni-api-https.tls=true"
+      - "traefik.http.routers.uni-api-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.uni-api-https.service=uni-api-svc"
+      - "traefik.http.services.uni-api-svc.loadbalancer.server.port=8000"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    networks:
+      - university-net
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=coolify"
+      - "traefik.http.routers.uni-front-http.rule=Host(`s7sai.cloud`)"
+      - "traefik.http.routers.uni-front-http.entrypoints=http"
+      - "traefik.http.routers.uni-front-http.service=uni-front-svc"
+      - "traefik.http.routers.uni-front-https.rule=Host(`s7sai.cloud`)"
+      - "traefik.http.routers.uni-front-https.entrypoints=https"
+      - "traefik.http.routers.uni-front-https.tls=true"
+      - "traefik.http.routers.uni-front-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.uni-front-https.service=uni-front-svc"
+      - "traefik.http.services.uni-front-svc.loadbalancer.server.port=3000"
+
+volumes:
+  pgdata:
+
+networks:
+  university-net:
+    driver: bridge
+  coolify:
+    external: true
