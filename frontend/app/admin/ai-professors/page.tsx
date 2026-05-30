@@ -153,7 +153,7 @@ export default function AdminAIProfessorsPage() {
                         <Zap className="w-3 h-3 inline ml-1" />{prof.teaching_style as string}
                       </span>
                     </div>
-                    {prof.subject_expertise && (
+                    {!!(prof.subject_expertise as string) && (
                       <div className="flex items-center gap-1 mt-2 text-xs text-uni-muted">
                         <BookOpen className="w-3 h-3" />
                         <span>{prof.subject_expertise as string}</span>
