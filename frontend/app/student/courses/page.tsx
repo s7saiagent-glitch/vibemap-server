@@ -72,7 +72,7 @@ export default function MyCoursesPage() {
                   <span className="truncate">{course.professor_name as string}</span>
                 </div>
 
-                {course.section_id && (
+                {!!(course.section_id as number) && (
                   <Link
                     href={`/student/ai-professor/${course.section_id}`}
                     className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-uni-gold/10 border border-uni-gold/20 text-uni-gold text-xs font-semibold hover:bg-uni-gold/20 transition-all"

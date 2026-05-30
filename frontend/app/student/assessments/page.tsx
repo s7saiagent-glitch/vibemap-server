@@ -53,7 +53,7 @@ export default function AssessmentsPage() {
                     <h3 className="font-bold text-uni-text truncate">{a.title as string}</h3>
                     <div className="flex items-center gap-3 mt-1 text-xs text-uni-muted">
                       <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{a.duration_minutes as number} دقيقة</span>
-                      {a.end_datetime && (
+                      {!!(a.end_datetime as string) && (
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           {new Date(a.end_datetime as string).toLocaleDateString('ar-SA')}
