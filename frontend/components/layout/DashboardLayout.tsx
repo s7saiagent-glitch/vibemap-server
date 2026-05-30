@@ -24,6 +24,8 @@ const STUDENT_NAV: NavItem[] = [
   { href: '/student/assessments', icon: FileText, label: 'الاختبارات والواجبات' },
   { href: '/student/grades', icon: BarChart3, label: 'درجاتي ومعدلي' },
   { href: '/student/english', icon: Languages, label: 'اللغة الإنجليزية' },
+  { href: '/academic/plans', icon: Award, label: 'الخطط الدراسية' },
+  { href: '/roadmap', icon: Globe, label: 'خريطة التطوير' },
   { href: '/student/profile', icon: User, label: 'ملفي الشخصي' },
 ]
 

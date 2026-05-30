@@ -77,6 +77,8 @@ export default function LandingPage() {
           </div>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3">
+            <Link href="/roadmap" className="text-uni-muted hover:text-uni-gold text-sm transition-colors">خريطة التطوير</Link>
+            <Link href="/academic/plans" className="text-uni-muted hover:text-uni-gold text-sm transition-colors">الخطط الدراسية</Link>
             <button className="text-uni-muted hover:text-uni-gold text-xs border border-uni-border/30 rounded-lg px-2 py-1 hover:border-uni-gold/30 flex items-center gap-1">
               <Globe className="w-3.5 h-3.5" /> AR
             </button>
@@ -106,6 +108,8 @@ export default function LandingPage() {
         {/* Mobile menu */}
         {mobileMenu && (
           <div className="sm:hidden border-t border-uni-border/30 px-4 py-4 flex flex-col gap-3 glass">
+            <Link href="/roadmap" onClick={() => setMobileMenu(false)} className="text-uni-muted hover:text-uni-gold text-sm py-1">خريطة التطوير</Link>
+            <Link href="/academic/plans" onClick={() => setMobileMenu(false)} className="text-uni-muted hover:text-uni-gold text-sm py-1">الخطط الدراسية</Link>
             {isAuthenticated ? (
               <button
                 onClick={() => { setMobileMenu(false); router.push(isAdmin ? '/admin/dashboard' : '/student/dashboard') }}
