@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
-import { GraduationCap, User, Mail, Lock, Phone, ChevronLeft, ChevronRight, CheckCircle, Loader2 } from 'lucide-react'
+import { GraduationCap, User, Mail, Lock, Phone, ChevronLeft, ChevronRight, CheckCircle, Loader2, ArrowRight } from 'lucide-react'
 import { authAPI, academicAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 import { useQuery } from '@tanstack/react-query'
@@ -65,22 +65,31 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-uni-dark flex items-center justify-center p-6 relative overflow-hidden" dir="rtl">
+    <div className="min-h-screen bg-uni-dark flex items-center justify-center p-4 relative overflow-hidden" dir="rtl">
       <div className="absolute inset-0 bg-hero-gradient" />
       <div className="absolute inset-0 bg-glow-gold opacity-20" />
+
+      {/* Back to home */}
+      <Link
+        href="/"
+        className="absolute top-5 right-5 z-20 flex items-center gap-2 text-uni-muted hover:text-uni-gold transition-colors text-sm"
+      >
+        <ArrowRight className="w-4 h-4" />
+        الصفحة الرئيسية
+      </Link>
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 w-full max-w-lg"
       >
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gold-gradient mb-3 shadow-gold">
+        {/* Logo — clickable */}
+        <Link href="/" className="block text-center mb-6 group">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gold-gradient mb-3 shadow-gold group-hover:scale-105 transition-transform">
             <GraduationCap className="w-8 h-8 text-uni-dark" />
           </div>
-          <h1 className="text-xl font-black text-gold-gradient">مملكة الأرض الجامعية</h1>
-        </div>
+          <h1 className="text-xl font-black text-gold-gradient group-hover:opacity-80 transition-opacity">مملكة الأرض الجامعية</h1>
+        </Link>
 
         {/* Progress Steps */}
         <div className="flex items-center justify-center gap-4 mb-6">

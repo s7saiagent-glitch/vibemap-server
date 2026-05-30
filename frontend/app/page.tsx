@@ -1,7 +1,9 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { useAuthStore } from '@/lib/store'
 import {
   Brain, GraduationCap, Users, BookOpen, Award,
   ChevronLeft, BarChart3, Globe, Shield,
@@ -58,6 +60,9 @@ const HOW_IT_WORKS = [
 
 export default function LandingPage() {
   const [mobileMenu, setMobileMenu] = useState(false)
+  const { user, isAuthenticated } = useAuthStore()
+  const router = useRouter()
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
 
   return (
     <div className="min-h-screen bg-uni-dark overflow-x-hidden" dir="rtl">
@@ -75,12 +80,23 @@ export default function LandingPage() {
             <button className="text-uni-muted hover:text-uni-gold text-xs border border-uni-border/30 rounded-lg px-2 py-1 hover:border-uni-gold/30 flex items-center gap-1">
               <Globe className="w-3.5 h-3.5" /> AR
             </button>
-            <Link href="/auth/login" className="btn-ghost-gold px-5 py-2 rounded-lg text-sm font-semibold">
-              تسجيل الدخول
-            </Link>
-            <Link href="/auth/register" className="btn-gold px-5 py-2 rounded-lg text-sm font-semibold">
-              ابدأ مجاناً
-            </Link>
+            {isAuthenticated ? (
+              <button
+                onClick={() => router.push(isAdmin ? '/admin/dashboard' : '/student/dashboard')}
+                className="btn-gold px-5 py-2 rounded-lg text-sm font-semibold"
+              >
+                لوحة التحكم
+              </button>
+            ) : (
+              <>
+                <Link href="/auth/login" className="btn-ghost-gold px-5 py-2 rounded-lg text-sm font-semibold">
+                  تسجيل الدخول
+                </Link>
+                <Link href="/auth/register" className="btn-gold px-5 py-2 rounded-lg text-sm font-semibold">
+                  ابدأ مجاناً
+                </Link>
+              </>
+            )}
           </div>
           {/* Mobile menu button */}
           <button onClick={() => setMobileMenu(!mobileMenu)} className="sm:hidden text-uni-muted hover:text-uni-gold p-1">
@@ -90,12 +106,23 @@ export default function LandingPage() {
         {/* Mobile menu */}
         {mobileMenu && (
           <div className="sm:hidden border-t border-uni-border/30 px-4 py-4 flex flex-col gap-3 glass">
-            <Link href="/auth/login" onClick={() => setMobileMenu(false)} className="btn-ghost-gold px-5 py-3 rounded-lg text-sm font-semibold text-center">
-              تسجيل الدخول
-            </Link>
-            <Link href="/auth/register" onClick={() => setMobileMenu(false)} className="btn-gold px-5 py-3 rounded-lg text-sm font-semibold text-center">
-              ابدأ مجاناً
-            </Link>
+            {isAuthenticated ? (
+              <button
+                onClick={() => { setMobileMenu(false); router.push(isAdmin ? '/admin/dashboard' : '/student/dashboard') }}
+                className="btn-gold px-5 py-3 rounded-lg text-sm font-semibold text-center"
+              >
+                لوحة التحكم
+              </button>
+            ) : (
+              <>
+                <Link href="/auth/login" onClick={() => setMobileMenu(false)} className="btn-ghost-gold px-5 py-3 rounded-lg text-sm font-semibold text-center">
+                  تسجيل الدخول
+                </Link>
+                <Link href="/auth/register" onClick={() => setMobileMenu(false)} className="btn-gold px-5 py-3 rounded-lg text-sm font-semibold text-center">
+                  ابدأ مجاناً
+                </Link>
+              </>
+            )}
           </div>
         )}
       </nav>
