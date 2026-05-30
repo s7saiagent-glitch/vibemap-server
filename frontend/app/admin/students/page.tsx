@@ -68,11 +68,11 @@ export default function AdminStudentsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-uni-text">
                     {student.first_name_ar as string} {student.last_name_ar as string}
-                    {student.first_name && <span className="text-uni-muted text-xs mr-2">({student.first_name as string} {student.last_name as string})</span>}
+                    {!!(student.first_name as string) && <span className="text-uni-muted text-xs mr-2">({student.first_name as string} {student.last_name as string})</span>}
                   </div>
                   <div className="flex items-center gap-3 text-xs text-uni-muted mt-0.5">
                     <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{student.email as string}</span>
-                    {student.created_at && (
+                    {!!(student.created_at as string) && (
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {new Date(student.created_at as string).toLocaleDateString('ar-SA')}

@@ -74,7 +74,7 @@ export default function AdminProgramsPage() {
                         {program.degree_level === 'bachelor' ? 'بكالوريوس' : program.degree_level as string}
                       </span>
                     </div>
-                    {program.description_ar && (
+                    {!!(program.description_ar as string) && (
                       <p className="text-uni-muted text-xs mt-2 leading-relaxed line-clamp-2">{program.description_ar as string}</p>
                     )}
                   </div>
