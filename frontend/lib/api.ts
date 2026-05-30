@@ -92,6 +92,11 @@ export const studentAPI = {
   getNotifications: () => api.get('/students/notifications'),
   getAnalytics: () => api.get('/students/analytics'),
   getSectionMaterials: (sectionId: number) => api.get(`/students/materials/${sectionId}`),
+  getLectures: (sectionId: number) => api.get(`/lectures/section/${sectionId}`),
+  getLecture: (lectureId: number) => api.get(`/lectures/${lectureId}`),
+  saveLectureProgress: (lectureId: number, params: Record<string, unknown>) => api.post(`/lectures/${lectureId}/progress`, null, { params }),
+  getGamification: () => api.get('/gamification/me'),
+  awardPoints: (points: number, reason: string, category?: string) => api.post('/gamification/award-points', null, { params: { points, reason, category: category || 'general' } }),
 }
 
 // AI Professor API
@@ -103,6 +108,20 @@ export const aiProfessorAPI = {
   generateQuiz: (data: Record<string, unknown>) => api.post('/ai-professor/generate-quiz', data),
   explain: (data: Record<string, unknown>) => api.post('/ai-professor/explain', data),
   getSectionProfessor: (sectionId: number) => api.get(`/ai-professor/section/${sectionId}`),
+}
+
+// Forum API
+export const forumAPI = {
+  getPosts: (sectionId: number) => api.get(`/forum/section/${sectionId}`),
+  getPost: (postId: number) => api.get(`/forum/post/${postId}`),
+  createPost: (sectionId: number, data: { title: string; content: string }) => api.post(`/forum/section/${sectionId}`, data),
+  addReply: (postId: number, data: { content: string }) => api.post(`/forum/post/${postId}/reply`, data),
+  upvote: (postId: number) => api.post(`/forum/post/${postId}/upvote`),
+}
+
+// Search API
+export const searchAPI = {
+  search: (q: string) => api.get('/search', { params: { q } }),
 }
 
 // Assessment API
@@ -142,6 +161,9 @@ export const adminAPI = {
   getSections: () => api.get('/admin/sections'),
   addMaterial: (params: Record<string, unknown>) => api.post('/admin/materials', null, { params }),
   getMaterials: (params?: Record<string, unknown>) => api.get('/admin/materials', { params }),
+  createLecture: (params: Record<string, unknown>) => api.post('/admin/lectures', null, { params }),
+  getSectionLectures: (sectionId: number) => api.get(`/admin/lectures/${sectionId}`),
+  publishLecture: (lectureId: number, publish: boolean) => api.patch(`/admin/lectures/${lectureId}/publish`, null, { params: { publish } }),
 }
 
 export default api

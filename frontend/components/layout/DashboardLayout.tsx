@@ -6,10 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, BookOpen, Brain, FileText, BarChart3,
   Languages, User, Settings, LogOut, GraduationCap, Menu, X,
-  Users, Layers, Award, Bell, Globe, ChevronDown, TrendingUp
+  Users, Layers, Award, Bell, Globe, ChevronDown, TrendingUp, Search
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
-import { authAPI, studentAPI } from '@/lib/api'
+import { authAPI, studentAPI, searchAPI } from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
 
 interface NavItem {
@@ -24,6 +24,7 @@ const STUDENT_NAV: NavItem[] = [
   { href: '/student/courses', icon: BookOpen, label: 'موادي الدراسية' },
   { href: '/student/assessments', icon: FileText, label: 'الاختبارات والواجبات' },
   { href: '/student/analytics', icon: TrendingUp, label: 'تحليلاتي الأكاديمية' },
+  { href: '/student/badges', icon: Award, label: 'إنجازاتي' },
   { href: '/student/english', icon: Languages, label: 'اللغة الإنجليزية' },
   { href: '/academic/plans', icon: Award, label: 'الخطط الدراسية' },
   { href: '/roadmap', icon: Globe, label: 'خريطة التطوير' },
@@ -36,6 +37,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/courses', icon: BookOpen, label: 'إدارة المواد' },
   { href: '/admin/assessments', icon: FileText, label: 'إدارة الاختبارات' },
   { href: '/admin/materials', icon: BookOpen, label: 'المواد التعليمية' },
+  { href: '/admin/lectures', icon: BookOpen, label: 'إدارة المحاضرات' },
   { href: '/admin/programs', icon: Layers, label: 'التخصصات' },
   { href: '/admin/ai-professors', icon: Brain, label: 'الأساتذة الذكاء' },
   { href: '/admin/analytics', icon: BarChart3, label: 'التحليلات' },
@@ -59,6 +61,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [lang, setLang] = useState<'ar' | 'en'>('ar')
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchResults, setSearchResults] = useState<Record<string, unknown>[]>([])
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuthStore()
@@ -101,6 +106,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [pathname, isMobile])
 
   const navItems = isAdmin ? ADMIN_NAV : STUDENT_NAV
+
+  const handleSearch = async (q: string) => {
+    setSearchQuery(q)
+    if (q.length >= 2) {
+      try {
+        const res = await searchAPI.search(q)
+        setSearchResults(res.data?.results || [])
+      } catch { setSearchResults([]) }
+    } else {
+      setSearchResults([])
+    }
+  }
 
   const handleLogout = async () => {
     const refreshToken = localStorage.getItem('refresh_token')
@@ -222,6 +239,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className="text-uni-muted text-sm truncate hidden sm:block">
               {navItems.find(n => pathname === n.href || pathname.startsWith(n.href + '/'))?.label || ''}
             </span>
+          </div>
+
+          {/* Search */}
+          <div className="relative hidden md:block">
+            <div className="flex items-center gap-2 bg-uni-card border border-uni-border/30 rounded-xl px-3 py-1.5 focus-within:border-uni-gold/40 transition-all w-48">
+              <Search className="w-3.5 h-3.5 text-uni-muted flex-shrink-0" />
+              <input
+                value={searchQuery}
+                onChange={e => handleSearch(e.target.value)}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
+                placeholder="بحث..."
+                className="bg-transparent text-xs text-uni-text placeholder:text-uni-muted outline-none w-full"
+              />
+            </div>
+            <AnimatePresence>
+              {searchOpen && searchResults.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="absolute top-10 right-0 w-72 glass rounded-2xl border border-uni-border/40 shadow-2xl z-50 overflow-hidden"
+                >
+                  {searchResults.map((r, i) => (
+                    <Link
+                      key={i}
+                      href={r.url as string}
+                      onClick={() => { setSearchOpen(false); setSearchQuery('') }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-uni-gold/5 transition-colors border-b border-uni-border/20 last:border-0"
+                    >
+                      <span className="text-xl">{r.icon as string}</span>
+                      <div>
+                        <div className="text-sm text-uni-text font-medium">{r.title as string}</div>
+                        <div className="text-xs text-uni-muted">{r.subtitle as string}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Language toggle */}

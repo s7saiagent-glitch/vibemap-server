@@ -430,3 +430,90 @@ async def list_materials(
         }
         for m in materials
     ]
+
+
+@router.post("/lectures")
+async def create_lecture(
+    section_id: int,
+    title_ar: str,
+    content: str,
+    duration_minutes: int = 60,
+    order_index: int = 0,
+    learning_objectives: str = "",
+    key_concepts: str = "",
+    publish: bool = False,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    from app.models.content import Lecture
+    import json
+
+    section_result = await db.execute(select(CourseSection).where(CourseSection.id == section_id))
+    if not section_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="الشعبة غير موجودة")
+
+    objectives = [o.strip() for o in learning_objectives.split("\n") if o.strip()] if learning_objectives else []
+    concepts = [c.strip() for c in key_concepts.split(",") if c.strip()] if key_concepts else []
+
+    lecture = Lecture(
+        section_id=section_id,
+        title_ar=title_ar,
+        title=title_ar,
+        content=content,
+        duration_minutes=duration_minutes,
+        order_index=order_index,
+        learning_objectives=objectives,
+        key_concepts=concepts,
+        is_published=publish,
+    )
+    db.add(lecture)
+    await db.commit()
+    await db.refresh(lecture)
+    return {
+        "id": lecture.id,
+        "title": lecture.title_ar,
+        "section_id": lecture.section_id,
+        "is_published": lecture.is_published,
+        "message": "تم إنشاء المحاضرة بنجاح",
+    }
+
+
+@router.get("/lectures/{section_id}")
+async def list_section_lectures(
+    section_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    from app.models.content import Lecture
+    result = await db.execute(
+        select(Lecture).where(Lecture.section_id == section_id).order_by(Lecture.order_index)
+    )
+    lectures = result.scalars().all()
+    return [
+        {
+            "id": l.id,
+            "title": l.title_ar or l.title,
+            "duration_minutes": l.duration_minutes,
+            "order_index": l.order_index,
+            "is_published": l.is_published,
+            "view_count": l.view_count,
+        }
+        for l in lectures
+    ]
+
+
+@router.patch("/lectures/{lecture_id}/publish")
+async def publish_lecture(
+    lecture_id: int,
+    publish: bool = True,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    from app.models.content import Lecture
+    result = await db.execute(select(Lecture).where(Lecture.id == lecture_id))
+    lecture = result.scalar_one_or_none()
+    if not lecture:
+        raise HTTPException(status_code=404, detail="المحاضرة غير موجودة")
+    lecture.is_published = publish
+    await db.commit()
+    return {"message": "تم التحديث", "is_published": publish}

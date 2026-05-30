@@ -1,10 +1,11 @@
 'use client'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, Mail, Phone, GraduationCap, Shield, Edit3, Save, X, BookOpen, Hash } from 'lucide-react'
+import { User, Mail, Phone, GraduationCap, Shield, Edit3, Save, X, BookOpen, Hash, Trophy } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuthStore } from '@/lib/store'
-import { authAPI } from '@/lib/api'
+import { authAPI, studentAPI } from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore()
@@ -32,6 +33,11 @@ export default function ProfilePage() {
     }
     setSaving(false)
   }
+
+  const { data: gamData } = useQuery({
+    queryKey: ['gamification-profile'],
+    queryFn: () => studentAPI.getGamification().then(r => r.data),
+  })
 
   const roleLabel: Record<string, string> = {
     student: 'طالب',
@@ -175,6 +181,37 @@ export default function ProfilePage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Achievements Summary */}
+        {gamData && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="card-uni">
+            <h3 className="font-bold text-uni-text mb-4 flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-uni-gold" /> إنجازاتي
+            </h3>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="text-center">
+                <div className="text-2xl font-black text-gold-gradient">{(gamData as Record<string, unknown>).total_points as number}</div>
+                <div className="text-xs text-uni-muted">نقطة</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-black text-uni-text">المستوى {(gamData as Record<string, unknown>).level as number}</div>
+                <div className="text-xs text-uni-muted">{(gamData as Record<string, unknown>).level_name as string}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-black text-uni-text">{(gamData as Record<string, unknown>).earned_badges_count as number}</div>
+                <div className="text-xs text-uni-muted">شارة</div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {((gamData as Record<string, unknown>).badges as Record<string, unknown>[])?.filter(b => b.earned).map((b, i) => (
+                <div key={i} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-uni-gold/10 border border-uni-gold/20">
+                  <span className="text-sm">{b.icon as string}</span>
+                  <span className="text-xs text-uni-gold font-medium">{b.name as string}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
     </DashboardLayout>
   )

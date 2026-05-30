@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useState } from 'react'
-import { BookOpen, Brain, Clock, Award, Play, ChevronLeft, Loader2, CheckCircle, Lock, Star, FileText, Users } from 'lucide-react'
+import { BookOpen, Brain, Clock, Award, Play, ChevronLeft, Loader2, CheckCircle, Lock, Star, FileText, Users, MessageSquare } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { studentAPI, academicAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
@@ -166,6 +166,14 @@ export default function MyCoursesPage() {
                             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-uni-gold text-uni-dark text-xs font-bold hover:bg-uni-gold-light transition-all"
                           >
                             <Play className="w-3 h-3" /> ابدأ الدراسة
+                          </Link>
+                        )}
+                        {!!(course.section_id as number) && (
+                          <Link
+                            href={`/student/forum/${course.section_id}`}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-uni-muted border border-uni-border/30 hover:border-uni-gold/20 hover:text-uni-text transition-all"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" /> المنتدى
                           </Link>
                         )}
                         <button
