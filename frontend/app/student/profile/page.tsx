@@ -7,7 +7,7 @@ import { useAuthStore } from '@/lib/store'
 import { authAPI } from '@/lib/api'
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuthStore()
+  const { user, updateUser } = useAuthStore()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
@@ -23,7 +23,7 @@ export default function ProfilePage() {
     setSaving(true)
     try {
       const res = await authAPI.updateProfile(form)
-      setUser(res.data)
+      updateUser(res.data)
       setEditing(false)
       setMsg('تم حفظ التغييرات بنجاح')
       setTimeout(() => setMsg(''), 3000)

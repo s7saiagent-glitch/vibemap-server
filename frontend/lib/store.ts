@@ -9,6 +9,7 @@ interface User {
   last_name: string
   first_name_ar?: string
   last_name_ar?: string
+  phone?: string
   avatar_url?: string
 }
 
