@@ -25,10 +25,12 @@ const STUDENT_NAV: NavItem[] = [
   { href: '/student/assessments', icon: FileText, label: 'الاختبارات والواجبات' },
   { href: '/student/analytics', icon: TrendingUp, label: 'تحليلاتي الأكاديمية' },
   { href: '/student/badges', icon: Award, label: 'إنجازاتي' },
+  { href: '/student/twin', icon: Brain, label: 'توأمي الأكاديمي' },
   { href: '/student/english', icon: Languages, label: 'اللغة الإنجليزية' },
   { href: '/academic/plans', icon: Award, label: 'الخطط الدراسية' },
   { href: '/roadmap', icon: Globe, label: 'خريطة التطوير' },
   { href: '/student/profile', icon: User, label: 'ملفي الشخصي' },
+  { href: '/student/certificates', icon: Award, label: 'شهاداتي' },
 ]
 
 const ADMIN_NAV: NavItem[] = [

@@ -56,7 +56,51 @@ async def get_admin_dashboard(
     )
     recent = recent_students.scalars().all()
 
+    # Grade distribution from submissions
+    from app.models.assessment import StudentSubmission as Sub
+    grade_dist_result = await db.execute(select(Sub.percentage).where(Sub.is_graded == True))
+    percentages = [float(p) for p in grade_dist_result.scalars().all() if p is not None]
+    grade_distribution = {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0}
+    for p in percentages:
+        if p >= 90: grade_distribution["A"] += 1
+        elif p >= 80: grade_distribution["B"] += 1
+        elif p >= 70: grade_distribution["C"] += 1
+        elif p >= 60: grade_distribution["D"] += 1
+        else: grade_distribution["F"] += 1
+
+    # Top courses by enrollment
+    top_courses_result = await db.execute(
+        select(Course.name_ar, func.count(Enrollment.id).label("cnt"))
+        .join(CourseSection, Course.id == CourseSection.course_id)
+        .join(Enrollment, CourseSection.id == Enrollment.section_id)
+        .group_by(Course.id, Course.name_ar)
+        .order_by(func.count(Enrollment.id).desc())
+        .limit(6)
+    )
+    top_courses = [{"name": row[0], "enrollments": row[1]} for row in top_courses_result.all()]
+
+    # Faculty count (users with faculty/staff role or from faculty table)
+    faculty_count_result = await db.execute(select(func.count(Faculty.id)))
+    total_faculty = faculty_count_result.scalar_one()
+
     return {
+        # Flat fields for analytics page
+        "total_students": total_students,
+        "active_sections": total_active_sections,
+        "total_enrollments": total_enrollments,
+        "total_faculty": total_faculty,
+        "grade_distribution": grade_distribution,
+        "enrollment_trend": [],
+        "top_courses": top_courses,
+        "recent_activities": [
+            {
+                "icon": "👤",
+                "title": f"طالب جديد: {u.full_name_ar or u.full_name or u.email}",
+                "time": u.created_at.strftime("%Y-%m-%d") if u.created_at else "",
+            }
+            for u in recent
+        ],
+        # Legacy nested format
         "stats": {
             "total_students": total_students,
             "active_sections": total_active_sections,

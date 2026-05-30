@@ -97,6 +97,7 @@ export const studentAPI = {
   saveLectureProgress: (lectureId: number, params: Record<string, unknown>) => api.post(`/lectures/${lectureId}/progress`, null, { params }),
   getGamification: () => api.get('/gamification/me'),
   awardPoints: (points: number, reason: string, category?: string) => api.post('/gamification/award-points', null, { params: { points, reason, category: category || 'general' } }),
+  activateTwin: () => api.post('/students/twin/activate'),
 }
 
 // AI Professor API

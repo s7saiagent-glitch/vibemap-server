@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { studentAPI, assessmentAPI } from '@/lib/api'
+import { useProctoring } from '@/lib/useProctoring'
 import toast from 'react-hot-toast'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -474,6 +475,25 @@ function AssessmentCard({ assessment, courseName, onStart }: {
 export default function AssessmentsPage() {
   const [activeExam, setActiveExam] = useState<Assessment | null>(null)
   const [loadingExamId, setLoadingExamId] = useState<number | null>(null)
+  const [violations, setViolations] = useState(0)
+  const [proctoringWarning, setProctoringWarning] = useState('')
+  const isTestActive = !!activeExam
+
+  useProctoring({
+    enabled: isTestActive,
+    onViolation: (type, count) => {
+      setViolations(count)
+      const messages: Record<string, string> = {
+        tab_switch: 'تحذير: لا تغادر صفحة الاختبار!',
+        copy: 'تحذير: النسخ غير مسموح أثناء الاختبار!',
+        paste: 'تحذير: اللصق غير مسموح أثناء الاختبار!',
+        right_click: 'تحذير: النقر الأيمن غير مسموح أثناء الاختبار!',
+        devtools: 'تحذير: لا يُسمح بفتح أدوات المطور!',
+      }
+      setProctoringWarning(messages[type] || 'تحذير: سلوك مشبوه اكتُشف!')
+      setTimeout(() => setProctoringWarning(''), 3000)
+    },
+  })
 
   const { data: myCoursesData } = useQuery({
     queryKey: ['my-courses'],
@@ -524,6 +544,17 @@ export default function AssessmentsPage() {
 
   return (
     <>
+      {proctoringWarning && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-uni-red text-white px-6 py-3 rounded-xl shadow-2xl text-sm font-bold flex items-center gap-2 animate-pulse">
+          ⚠️ {proctoringWarning}
+        </div>
+      )}
+      {violations >= 3 && isTestActive && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-uni-red/90 text-white px-6 py-3 rounded-xl shadow-2xl text-sm text-center max-w-sm">
+          <div className="font-bold mb-1">⛔ تحذير أخير</div>
+          <div>تم تسجيل {violations} مخالفات. سيتم إرسال تقرير للأستاذ عند الإنهاء.</div>
+        </div>
+      )}
       <DashboardLayout>
         <div className="space-y-6 max-w-5xl">
           <div>
