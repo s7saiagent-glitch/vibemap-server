@@ -319,15 +319,22 @@ export default function AIProfessorChatPage() {
         section_id: sectionId,
         num_questions: 5,
         difficulty: 'medium',
+        topic: 'المفاهيم الأساسية للمادة',
       })
       const quizData = res.data
-      const questions: QuizQuestion[] = (quizData.questions || []).map((q: Record<string, unknown>) => ({
-        question: (q.question as string) || (q.content as string) || '',
-        options: (q.options as string[]) || [],
-        correct_answer: (q.correct_answer as string) || '',
-        explanation: q.explanation as string,
-        difficulty: q.difficulty as string,
-      }))
+      const questions: QuizQuestion[] = (quizData.questions || []).map((q: Record<string, unknown>) => {
+        const opts = (q.options as string[]) || []
+        // Backend returns `correct` as a letter (e.g. "أ"), find matching full option
+        const correctLetter = (q.correct as string) || (q.correct_answer as string) || ''
+        const correctFull = opts.find(o => o.startsWith(correctLetter)) || correctLetter
+        return {
+          question: (q.question as string) || (q.content as string) || '',
+          options: opts,
+          correct_answer: correctFull,
+          explanation: q.explanation as string,
+          difficulty: q.difficulty as string,
+        }
+      })
       if (questions.length > 0) {
         setLocalMessages(prev => [...prev, {
           id: 'quiz-' + Date.now(),
@@ -563,9 +570,9 @@ export default function AIProfessorChatPage() {
                       <span className="text-2xl flex-shrink-0">{MATERIAL_ICONS[m.material_type as string] || '📚'}</span>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-uni-text text-sm">{m.title as string}</div>
-                        {m.description && <p className="text-xs text-uni-muted mt-0.5 line-clamp-2">{m.description as string}</p>}
-                        {m.content && <p className="text-xs text-uni-muted mt-1 line-clamp-3 whitespace-pre-wrap">{m.content as string}</p>}
-                        {m.file_url && (
+                        {!!(m.description) && <p className="text-xs text-uni-muted mt-0.5 line-clamp-2">{m.description as string}</p>}
+                        {!!(m.content) && <p className="text-xs text-uni-muted mt-1 line-clamp-3 whitespace-pre-wrap">{m.content as string}</p>}
+                        {!!(m.file_url) && (
                           <a
                             href={m.file_url as string}
                             target="_blank"

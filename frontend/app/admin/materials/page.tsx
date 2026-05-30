@@ -219,10 +219,10 @@ export default function AdminMaterialsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-uni-text text-sm">{m.title as string}</div>
-                      {m.description && <p className="text-xs text-uni-muted mt-0.5 truncate">{m.description as string}</p>}
+                      {!!(m.description) && <p className="text-xs text-uni-muted mt-0.5 truncate">{m.description as string}</p>}
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="badge-gold text-xs">{MATERIAL_TYPES.find(t => t.value === m.material_type)?.label || m.material_type as string}</span>
-                        {m.file_url && (
+                        <span className="badge-gold text-xs">{MATERIAL_TYPES.find(t => t.value === m.material_type)?.label || String(m.material_type)}</span>
+                        {!!(m.file_url) && (
                           <a href={m.file_url as string} target="_blank" rel="noopener noreferrer"
                             className="text-xs text-uni-blue hover:underline truncate max-w-32">
                             فتح الرابط ↗

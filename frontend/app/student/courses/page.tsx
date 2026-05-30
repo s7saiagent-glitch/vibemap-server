@@ -218,7 +218,7 @@ export default function MyCoursesPage() {
                                 <div className="flex-1 min-w-0">
                                   <div className="font-semibold text-uni-text text-sm truncate">{course.name_ar as string || course.name as string}</div>
                                   <div className="text-xs text-uni-muted mt-0.5">{course.code as string} · {course.credits as number} ساعات</div>
-                                  {course.description_ar && (
+                                  {!!(course.description_ar) && (
                                     <div className="text-xs text-uni-muted mt-1 line-clamp-2">{course.description_ar as string}</div>
                                   )}
                                 </div>
@@ -299,7 +299,7 @@ export default function MyCoursesPage() {
               </div>
               <div className="flex gap-3 mt-5">
                 <button onClick={() => setSelectedCourse(null)} className="flex-1 py-2 rounded-xl border border-uni-border/40 text-uni-muted text-sm hover:text-uni-text transition-all">إغلاق</button>
-                {selectedCourse.section_id && (
+                {!!(selectedCourse.section_id) && (
                   <Link href={`/student/ai-professor/${selectedCourse.section_id}`} className="flex-1 py-2 rounded-xl bg-uni-gold text-uni-dark text-sm font-bold text-center hover:bg-uni-gold-light transition-all">
                     ابدأ الدراسة
                   </Link>

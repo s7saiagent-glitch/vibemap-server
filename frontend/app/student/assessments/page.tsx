@@ -481,9 +481,9 @@ export default function AssessmentsPage() {
   })
 
   const courses: Record<string, unknown>[] = myCoursesData?.courses || []
-  const sectionIds: number[] = [...new Set(
+  const sectionIds: number[] = Array.from(new Set(
     courses.map(c => c.section_id as number).filter(Boolean)
-  )]
+  ))
 
   const { data: allAssessments, isLoading } = useQuery({
     queryKey: ['all-assessments', sectionIds.join(',')],

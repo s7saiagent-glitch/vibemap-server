@@ -275,7 +275,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <div className="text-xs font-medium text-uni-text truncate">{n.title as string}</div>
                                 <div className="text-xs text-uni-muted mt-0.5 line-clamp-2">{n.body as string}</div>
                               </div>
-                              {n.is_urgent && <span className="text-[10px] text-uni-red border border-uni-red/30 rounded px-1 flex-shrink-0">عاجل</span>}
+                              {!!(n.is_urgent) && <span className="text-[10px] text-uni-red border border-uni-red/30 rounded px-1 flex-shrink-0">عاجل</span>}
                             </div>
                           </div>
                         ))}
