@@ -11,6 +11,9 @@ interface User {
   last_name_ar?: string
   phone?: string
   avatar_url?: string
+  program_name?: string
+  program_id?: number
+  student_id?: string
 }
 
 interface AuthState {

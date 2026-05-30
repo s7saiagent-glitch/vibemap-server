@@ -48,6 +48,24 @@ export default function LoginPage() {
     }
   }
 
+  const handleGoogleLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    if (!clientId) {
+      toast('Google OAuth غير مفعّل بعد - يرجى إضافة GOOGLE_CLIENT_ID', { icon: '⚙️' })
+      return
+    }
+    const redirectUri = `${window.location.origin}/auth/callback/google`
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'openid email profile',
+      access_type: 'offline',
+      prompt: 'select_account',
+    })
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
+  }
+
   const handleSocialLogin = (provider: string) => {
     toast('قريباً سيتوفر تسجيل الدخول عبر ' + provider, { icon: '🔜' })
   }
@@ -77,7 +95,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gold-gradient mb-4 shadow-gold-lg animate-glow-pulse group-hover:scale-105 transition-transform">
             <GraduationCap className="w-9 h-9 text-uni-dark" />
           </div>
-          <h1 className="text-2xl font-black text-gold-gradient group-hover:opacity-80 transition-opacity">مملكة الأرض الجامعية</h1>
+          <h1 className="text-2xl font-black text-gold-gradient group-hover:opacity-80 transition-opacity">مملكة الأرض الافتراضية</h1>
           <p className="text-uni-muted text-sm mt-1">Virtual Earth Kingdom University</p>
         </Link>
 
@@ -88,7 +106,7 @@ export default function LoginPage() {
           {/* Social Login Buttons */}
           <div className="grid grid-cols-3 gap-3 mb-6">
             <button
-              onClick={() => handleSocialLogin('Google')}
+              onClick={handleGoogleLogin}
               className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-uni-border hover:border-uni-gold/30 hover:bg-uni-border/20 transition-all text-sm text-uni-muted hover:text-uni-text"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">

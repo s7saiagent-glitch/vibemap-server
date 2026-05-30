@@ -68,6 +68,7 @@ export const authAPI = {
   updateProfile: (data: Record<string, unknown>) => api.put('/auth/me', data),
   changePassword: (data: Record<string, unknown>) => api.post('/auth/change-password', data),
   refreshToken: (token: string) => api.post('/auth/refresh', { refresh_token: token }),
+  googleAuth: (code: string, redirectUri: string) => api.post('/auth/google', { code, redirect_uri: redirectUri }),
 }
 
 // Academic API

@@ -88,7 +88,7 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gold-gradient mb-3 shadow-gold group-hover:scale-105 transition-transform">
             <GraduationCap className="w-8 h-8 text-uni-dark" />
           </div>
-          <h1 className="text-xl font-black text-gold-gradient group-hover:opacity-80 transition-opacity">مملكة الأرض الجامعية</h1>
+          <h1 className="text-xl font-black text-gold-gradient group-hover:opacity-80 transition-opacity">مملكة الأرض الافتراضية</h1>
         </Link>
 
         {/* Progress Steps */}

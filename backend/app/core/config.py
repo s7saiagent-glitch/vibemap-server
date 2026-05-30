@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:3001"]
 
+    # Google OAuth
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+
     # Academic
     GPA_SCALE: float = 4.0
     PASSING_GRADE: float = 60.0

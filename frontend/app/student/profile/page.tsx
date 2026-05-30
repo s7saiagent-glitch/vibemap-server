@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, Mail, Phone, GraduationCap, Shield, Edit3, Save, X } from 'lucide-react'
+import { User, Mail, Phone, GraduationCap, Shield, Edit3, Save, X, BookOpen, Hash } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuthStore } from '@/lib/store'
 import { authAPI } from '@/lib/api'
@@ -149,6 +149,24 @@ export default function ProfilePage() {
               <div className="text-sm text-uni-text">{roleLabel[user?.role || 'student']}</div>
             </div>
           </div>
+          {user?.program_name && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-uni-card/50 border border-uni-border/30">
+              <BookOpen className="w-4 h-4 text-uni-muted" />
+              <div>
+                <div className="text-xs text-uni-muted">التخصص</div>
+                <div className="text-sm text-uni-text">{user.program_name}</div>
+              </div>
+            </div>
+          )}
+          {user?.student_id && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-uni-card/50 border border-uni-border/30">
+              <Hash className="w-4 h-4 text-uni-muted" />
+              <div>
+                <div className="text-xs text-uni-muted">الرقم الجامعي</div>
+                <div className="text-sm text-uni-text font-mono">{user.student_id}</div>
+              </div>
+            </div>
+          )}
           <div className="flex items-center gap-3 p-3 rounded-xl bg-uni-card/50 border border-uni-border/30">
             <Shield className="w-4 h-4 text-uni-muted" />
             <div>

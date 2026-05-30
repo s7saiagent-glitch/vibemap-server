@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, BookOpen, Brain, FileText, BarChart3,
   Languages, User, Settings, LogOut, GraduationCap, Menu, X,
-  Users, Layers, Award, Bell, Globe
+  Users, Layers, Award, Bell, Globe, ChevronDown
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
 import { authAPI } from '@/lib/api'
@@ -51,9 +51,17 @@ function useIsMobile() {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile()
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [lang, setLang] = useState<'ar' | 'en'>('ar')
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuthStore()
+
+  const toggleLang = () => {
+    const next = lang === 'ar' ? 'en' : 'ar'
+    setLang(next)
+    document.documentElement.lang = next
+    document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr'
+  }
 
   useEffect(() => {
     if (isMobile) setSidebarOpen(false)
@@ -192,11 +200,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Language toggle */}
           <button
+            onClick={toggleLang}
             className="text-uni-muted hover:text-uni-gold transition-colors flex items-center gap-1 text-xs border border-uni-border/30 rounded-lg px-2 py-1 hover:border-uni-gold/30"
-            title="تغيير اللغة / Change Language"
           >
             <Globe className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">AR</span>
+            <span>{lang.toUpperCase()}</span>
           </button>
 
           <button className="relative text-uni-muted hover:text-uni-text transition-colors">
@@ -204,16 +212,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-uni-gold text-uni-dark text-[10px] flex items-center justify-center font-bold">3</span>
           </button>
 
-          <Link href={isAdmin ? '/admin/dashboard' : '/student/profile'} className="flex items-center gap-2">
+          <button
+            onClick={() => router.push(isAdmin ? '/admin/dashboard' : '/student/profile')}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+          >
             <div className="w-8 h-8 rounded-full bg-uni-gold/20 border border-uni-gold/30 flex items-center justify-center">
-              <span className="text-xs font-bold text-uni-gold">
-                {(user?.first_name_ar || user?.first_name || '?').charAt(0)}
-              </span>
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt="avatar" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <span className="text-xs font-bold text-uni-gold">
+                  {(user?.first_name_ar || user?.first_name || '?').charAt(0)}
+                </span>
+              )}
             </div>
-            <span className="text-sm font-medium text-uni-text hidden md:block">
-              {user?.first_name_ar || user?.first_name}
-            </span>
-          </Link>
+            <div className="hidden md:flex flex-col items-start">
+              <span className="text-sm font-medium text-uni-text leading-tight">
+                {user?.first_name_ar || user?.first_name}
+              </span>
+              {user?.program_name && (
+                <span className="text-xs text-uni-muted leading-tight truncate max-w-32">{user.program_name}</span>
+              )}
+            </div>
+            <ChevronDown className="w-3 h-3 text-uni-muted hidden md:block" />
+          </button>
         </header>
 
         {/* Content */}

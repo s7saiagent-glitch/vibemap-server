@@ -73,7 +73,7 @@ export default function LandingPage() {
             <div className="w-9 h-9 rounded-lg bg-gold-gradient flex items-center justify-center flex-shrink-0">
               <GraduationCap className="w-5 h-5 text-uni-dark" />
             </div>
-            <span className="font-bold text-base md:text-lg text-uni-gold">مملكة الأرض الجامعية</span>
+            <span className="font-bold text-base md:text-lg text-uni-gold">مملكة الأرض الافتراضية</span>
           </div>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3">
@@ -185,13 +185,23 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Link
-              href="/auth/register"
-              className="btn-gold px-10 py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-2 group"
-            >
-              ابدأ رحلتك التعليمية
-              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            </Link>
+            {isAuthenticated ? (
+              <button
+                onClick={() => router.push(isAdmin ? '/admin/dashboard' : '/student/dashboard')}
+                className="btn-gold px-10 py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-2 group"
+              >
+                انتقل للوحتك الدراسية
+                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              </button>
+            ) : (
+              <Link
+                href="/auth/register"
+                className="btn-gold px-10 py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-2 group"
+              >
+                ابدأ رحلتك التعليمية
+                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              </Link>
+            )}
             <Link
               href="#programs"
               className="btn-ghost-gold px-10 py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-2"
@@ -372,13 +382,23 @@ export default function LandingPage() {
           <p className="text-uni-muted mb-8 text-lg">
             انضم إلى جيل جديد من الطلاب يتعلمون بأحدث تقنيات الذكاء الاصطناعي
           </p>
-          <Link
-            href="/auth/register"
-            className="btn-gold px-12 py-4 rounded-xl text-xl font-bold inline-flex items-center gap-2"
-          >
-            سجّل الآن مجاناً
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
+          {isAuthenticated ? (
+            <button
+              onClick={() => router.push(isAdmin ? '/admin/dashboard' : '/student/dashboard')}
+              className="btn-gold px-12 py-4 rounded-xl text-xl font-bold inline-flex items-center gap-2"
+            >
+              انتقل للوحتك الدراسية
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          ) : (
+            <Link
+              href="/auth/register"
+              className="btn-gold px-12 py-4 rounded-xl text-xl font-bold inline-flex items-center gap-2"
+            >
+              سجّل الآن مجاناً
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+          )}
         </motion.div>
       </section>
 

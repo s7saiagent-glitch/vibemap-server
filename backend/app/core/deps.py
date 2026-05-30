@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User, UserRole, StudentProfile
 from app.models.ai_agents import StudentAcademicTwin
+from app.models.academic import Program
 
 bearer_scheme = HTTPBearer()
 
@@ -28,7 +29,10 @@ async def get_current_user(
         select(User)
         .where(User.id == int(user_id))
         .options(
-            selectinload(User.student_profile).selectinload(StudentProfile.academic_twin),
+            selectinload(User.student_profile)
+            .selectinload(StudentProfile.academic_twin),
+            selectinload(User.student_profile)
+            .selectinload(StudentProfile.program),
             selectinload(User.admin_profile),
         )
     )
