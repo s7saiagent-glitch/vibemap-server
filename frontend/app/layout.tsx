@@ -25,6 +25,11 @@ export default function RootLayout({
         <title>جامعة مملكة الأرض الافتراضية</title>
         <meta name="description" content="أول جامعة ذكاء اصطناعي عربية عالمية - Virtual Earth Kingdom University" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#d4a017" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="مملكة الأرض" />
+        <link rel="manifest" href="/manifest.json" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -33,6 +38,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-uni-dark text-uni-text font-arabic antialiased" style={{ direction: 'rtl' }}>
+        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}` }} />
         <QueryClientProvider client={queryClient}>
           {children}
           <Toaster

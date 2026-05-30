@@ -176,6 +176,12 @@ export default function MyCoursesPage() {
                             <MessageSquare className="w-3.5 h-3.5" /> المنتدى
                           </Link>
                         )}
+                        {!!(course.section_id as number) && (
+                          <Link href={`/student/syllabus/${course.section_id || course.id}`}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border border-uni-border/30 hover:border-uni-blue/30 hover:text-uni-blue text-uni-muted transition-all">
+                            <FileText className="w-3 h-3" /> المقرر
+                          </Link>
+                        )}
                         <button
                           onClick={() => setSelectedCourse(course)}
                           className="px-3 py-2 rounded-xl border border-uni-border/40 text-uni-muted hover:text-uni-text hover:border-uni-border text-xs transition-all"
