@@ -1,12 +1,12 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { GraduationCap, Loader2, AlertCircle } from 'lucide-react'
 import { authAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 import toast from 'react-hot-toast'
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { setAuth } = useAuthStore()
@@ -64,5 +64,17 @@ export default function GoogleCallbackPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-uni-dark flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-uni-gold animate-spin" />
+      </div>
+    }>
+      <GoogleCallbackInner />
+    </Suspense>
   )
 }
