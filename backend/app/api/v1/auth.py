@@ -12,6 +12,8 @@ from app.core.security import (
 from app.core.deps import get_current_active_user
 from app.core.config import settings
 from app.models.user import User, UserRole, StudentProfile, RefreshToken
+from app.models.academic import Course, CourseSection, SemesterType
+from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.schemas.user import (
     UserCreate, LoginRequest, TokenResponse, UserResponse,
     RefreshTokenRequest, UserUpdate, PasswordChangeRequest
@@ -25,6 +27,64 @@ router = APIRouter(prefix="/auth", tags=["المصادقة"])
 class GoogleAuthRequest(BaseModel):
     code: str
     redirect_uri: str
+
+
+async def _auto_enroll_in_program(db: AsyncSession, student_profile: StudentProfile, program_id: int):
+    """Enroll student in all level-1 active courses of their program, creating sections if needed."""
+    courses_result = await db.execute(
+        select(Course).where(
+            Course.program_id == program_id,
+            Course.is_active == True,
+            Course.level == 1,
+        )
+    )
+    courses = courses_result.scalars().all()
+
+    current_year = "2025-2026"
+    current_semester = SemesterType.FALL
+
+    for course in courses:
+        section_result = await db.execute(
+            select(CourseSection).where(
+                CourseSection.course_id == course.id,
+                CourseSection.academic_year == current_year,
+                CourseSection.semester == current_semester,
+                CourseSection.is_active == True,
+            )
+        )
+        section = section_result.scalar_one_or_none()
+
+        if not section:
+            section = CourseSection(
+                course_id=course.id,
+                academic_year=current_year,
+                semester=current_semester,
+                section_number=1,
+                capacity=100,
+                enrolled_count=0,
+                is_active=True,
+                start_date=datetime(2025, 9, 1, tzinfo=timezone.utc),
+                end_date=datetime(2026, 1, 31, tzinfo=timezone.utc),
+            )
+            db.add(section)
+            await db.flush()
+
+        existing_result = await db.execute(
+            select(Enrollment).where(
+                Enrollment.student_id == student_profile.id,
+                Enrollment.section_id == section.id,
+            )
+        )
+        if not existing_result.scalar_one_or_none():
+            enrollment = Enrollment(
+                student_id=student_profile.id,
+                section_id=section.id,
+                enrolled_at=datetime.now(timezone.utc),
+                status=EnrollmentStatus.ENROLLED,
+                attempt_number=1,
+            )
+            db.add(enrollment)
+            section.enrolled_count = (section.enrolled_count or 0) + 1
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
@@ -61,6 +121,11 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
         academic_standing="good",
     )
     db.add(student_profile)
+    await db.flush()
+
+    if user_data.program_id:
+        await _auto_enroll_in_program(db, student_profile, user_data.program_id)
+
     await db.commit()
     await db.refresh(user)
 

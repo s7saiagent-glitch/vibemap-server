@@ -87,7 +87,7 @@ export const studentAPI = {
   getMyCourses: () => api.get('/students/my-courses'),
   getTranscript: () => api.get('/students/transcript'),
   getTwin: () => api.get('/students/twin'),
-  enroll: (sectionId: number) => api.post('/students/enroll', { section_id: sectionId }),
+  enroll: (sectionId: number) => api.post('/students/enroll', null, { params: { section_id: sectionId } }),
   dropCourse: (sectionId: number) => api.delete(`/students/enroll/${sectionId}`),
 }
 
