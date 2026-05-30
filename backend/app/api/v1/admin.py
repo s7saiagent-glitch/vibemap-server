@@ -9,9 +9,12 @@ from app.models.user import User, UserRole, StudentProfile
 from app.models.academic import Faculty, Department, Program, Course, CourseSection
 from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.models.ai_agents import AIProfessor, AIInteractionLog
-from app.models.assessment import StudentSubmission
+from app.models.assessment import StudentSubmission, Assessment, Question, AssessmentType as AssessmentTypeModel, DifficultyLevel
+from app.models.content import StudyMaterial, MaterialType
 from app.schemas.academic import FacultyResponse, ProgramResponse, CourseResponse
+from app.schemas.assessment import AssessmentCreate
 from app.services.ai.content_generator import ContentGeneratorService
+from datetime import datetime
 
 router = APIRouter(prefix="/admin", tags=["الإدارة"])
 
@@ -242,3 +245,188 @@ async def generate_lecture_content(
     generator = ContentGeneratorService()
     lecture_data = await generator.generate_lecture(course, topic, duration_minutes)
     return lecture_data
+
+
+@router.post("/assessments")
+async def create_assessment(
+    data: AssessmentCreate,
+    publish: bool = False,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    section_result = await db.execute(select(CourseSection).where(CourseSection.id == data.section_id))
+    section = section_result.scalar_one_or_none()
+    if not section:
+        raise HTTPException(status_code=404, detail="الشعبة غير موجودة")
+
+    assessment = Assessment(
+        section_id=data.section_id,
+        title=data.title,
+        title_ar=data.title_ar or data.title,
+        assessment_type=data.assessment_type,
+        description=data.description,
+        instructions=data.instructions,
+        total_points=data.total_points,
+        passing_score=data.passing_score,
+        duration_minutes=data.duration_minutes,
+        attempts_allowed=data.attempts_allowed,
+        start_datetime=data.start_datetime,
+        end_datetime=data.end_datetime,
+        is_randomized=data.is_randomized,
+        anti_cheat_enabled=data.anti_cheat_enabled,
+        weight_percent=data.weight_percent,
+        is_published=publish,
+    )
+    db.add(assessment)
+    await db.flush()
+
+    for i, q_data in enumerate(data.questions):
+        question = Question(
+            assessment_id=assessment.id,
+            question_type=q_data.question_type,
+            content=q_data.content,
+            content_ar=q_data.content_ar or q_data.content,
+            options=q_data.options or [],
+            correct_answer=q_data.correct_answer,
+            explanation=q_data.explanation,
+            points=q_data.points,
+            difficulty=q_data.difficulty,
+            order_index=i,
+            topic_tag=q_data.topic_tag,
+        )
+        db.add(question)
+
+    await db.commit()
+    await db.refresh(assessment)
+    return {
+        "id": assessment.id,
+        "title": assessment.title_ar or assessment.title,
+        "section_id": assessment.section_id,
+        "is_published": assessment.is_published,
+        "question_count": len(data.questions),
+        "message": "تم إنشاء الاختبار بنجاح",
+    }
+
+
+@router.get("/assessments")
+async def list_assessments(
+    section_id: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    query = select(Assessment).options(selectinload(Assessment.section).selectinload(CourseSection.course))
+    if section_id:
+        query = query.where(Assessment.section_id == section_id)
+    query = query.order_by(Assessment.id.desc())
+    result = await db.execute(query)
+    assessments = result.scalars().all()
+    return [
+        {
+            "id": a.id,
+            "title": a.title_ar or a.title,
+            "assessment_type": a.assessment_type.value,
+            "section_id": a.section_id,
+            "course_name": a.section.course.name_ar if a.section and a.section.course else None,
+            "total_points": a.total_points,
+            "duration_minutes": a.duration_minutes,
+            "is_published": a.is_published,
+            "start_datetime": a.start_datetime.isoformat() if a.start_datetime else None,
+            "end_datetime": a.end_datetime.isoformat() if a.end_datetime else None,
+        }
+        for a in assessments
+    ]
+
+
+@router.patch("/assessments/{assessment_id}/publish")
+async def toggle_assessment_publish(
+    assessment_id: int,
+    publish: bool = True,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    result = await db.execute(select(Assessment).where(Assessment.id == assessment_id))
+    assessment = result.scalar_one_or_none()
+    if not assessment:
+        raise HTTPException(status_code=404, detail="الاختبار غير موجود")
+    assessment.is_published = publish
+    await db.commit()
+    return {"message": "تم تحديث حالة النشر", "is_published": publish}
+
+
+@router.get("/sections")
+async def list_sections(
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    result = await db.execute(
+        select(CourseSection)
+        .where(CourseSection.is_active == True)
+        .options(selectinload(CourseSection.course))
+        .order_by(CourseSection.id)
+    )
+    sections = result.scalars().all()
+    return [
+        {
+            "id": s.id,
+            "course_name": s.course.name_ar if s.course else None,
+            "course_code": s.course.code if s.course else None,
+            "academic_year": s.academic_year,
+            "semester": s.semester.value,
+        }
+        for s in sections
+    ]
+
+
+@router.post("/materials")
+async def add_study_material(
+    course_id: int,
+    title: str,
+    material_type: MaterialType,
+    description: str = None,
+    file_url: str = None,
+    content: str = None,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    course_result = await db.execute(select(Course).where(Course.id == course_id))
+    if not course_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="المادة غير موجودة")
+
+    material = StudyMaterial(
+        course_id=course_id,
+        material_type=material_type,
+        title=title,
+        description=description,
+        file_url=file_url,
+        content=content,
+    )
+    db.add(material)
+    await db.commit()
+    await db.refresh(material)
+    return {"id": material.id, "title": material.title, "message": "تم إضافة المادة التعليمية بنجاح"}
+
+
+@router.get("/materials")
+async def list_materials(
+    course_id: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    query = select(StudyMaterial)
+    if course_id:
+        query = query.where(StudyMaterial.course_id == course_id)
+    result = await db.execute(query.order_by(StudyMaterial.id.desc()))
+    materials = result.scalars().all()
+    return [
+        {
+            "id": m.id,
+            "title": m.title,
+            "material_type": m.material_type.value,
+            "course_id": m.course_id,
+            "description": m.description,
+            "file_url": m.file_url,
+            "content": m.content,
+            "download_count": m.download_count,
+        }
+        for m in materials
+    ]

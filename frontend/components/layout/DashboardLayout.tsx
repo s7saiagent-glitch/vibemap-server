@@ -1,15 +1,16 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, BookOpen, Brain, FileText, BarChart3,
   Languages, User, Settings, LogOut, GraduationCap, Menu, X,
-  Users, Layers, Award, Bell, Globe, ChevronDown
+  Users, Layers, Award, Bell, Globe, ChevronDown, TrendingUp
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
-import { authAPI } from '@/lib/api'
+import { authAPI, studentAPI } from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
 
 interface NavItem {
   href: string
@@ -22,7 +23,7 @@ const STUDENT_NAV: NavItem[] = [
   { href: '/student/dashboard', icon: LayoutDashboard, label: 'لوحة التحكم' },
   { href: '/student/courses', icon: BookOpen, label: 'موادي الدراسية' },
   { href: '/student/assessments', icon: FileText, label: 'الاختبارات والواجبات' },
-  { href: '/student/grades', icon: BarChart3, label: 'درجاتي ومعدلي' },
+  { href: '/student/analytics', icon: TrendingUp, label: 'تحليلاتي الأكاديمية' },
   { href: '/student/english', icon: Languages, label: 'اللغة الإنجليزية' },
   { href: '/academic/plans', icon: Award, label: 'الخطط الدراسية' },
   { href: '/roadmap', icon: Globe, label: 'خريطة التطوير' },
@@ -33,6 +34,8 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'لوحة الإدارة' },
   { href: '/admin/students', icon: Users, label: 'إدارة الطلاب' },
   { href: '/admin/courses', icon: BookOpen, label: 'إدارة المواد' },
+  { href: '/admin/assessments', icon: FileText, label: 'إدارة الاختبارات' },
+  { href: '/admin/materials', icon: BookOpen, label: 'المواد التعليمية' },
   { href: '/admin/programs', icon: Layers, label: 'التخصصات' },
   { href: '/admin/ai-professors', icon: Brain, label: 'الأساتذة الذكاء' },
   { href: '/admin/analytics', icon: BarChart3, label: 'التحليلات' },
@@ -54,9 +57,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isMobile = useIsMobile()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [lang, setLang] = useState<'ar' | 'en'>('ar')
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuthStore()
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
+
+  const { data: notifData } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => studentAPI.getNotifications().then(r => r.data),
+    enabled: !isAdmin,
+    refetchInterval: 60000,
+  })
+  const notifications: Record<string, unknown>[] = notifData?.notifications || []
+  const urgentCount = notifications.filter(n => n.is_urgent).length
+  const notifCount = Math.min(9, notifications.length)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const toggleLang = () => {
     const next = lang === 'ar' ? 'en' : 'ar'
@@ -70,12 +96,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     else setSidebarOpen(true)
   }, [isMobile])
 
-  // Close sidebar on mobile when navigating
   useEffect(() => {
     if (isMobile) setSidebarOpen(false)
   }, [pathname, isMobile])
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
   const navItems = isAdmin ? ADMIN_NAV : STUDENT_NAV
 
   const handleLogout = async () => {
@@ -209,10 +233,59 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span>{lang.toUpperCase()}</span>
           </button>
 
-          <button className="relative text-uni-muted hover:text-uni-text transition-colors">
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-uni-gold text-uni-dark text-[10px] flex items-center justify-center font-bold">3</span>
-          </button>
+          {/* Notifications */}
+          <div ref={notifRef} className="relative">
+            <button
+              onClick={() => setNotifOpen(!notifOpen)}
+              className="relative text-uni-muted hover:text-uni-text transition-colors"
+            >
+              <Bell className="w-5 h-5" />
+              {notifCount > 0 && (
+                <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-uni-dark text-[10px] flex items-center justify-center font-bold ${urgentCount > 0 ? 'bg-uni-red' : 'bg-uni-gold'}`}>
+                  {notifCount}
+                </span>
+              )}
+            </button>
+            <AnimatePresence>
+              {notifOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 top-8 w-80 glass rounded-2xl border border-uni-border/40 shadow-2xl z-50 overflow-hidden"
+                >
+                  <div className="px-4 py-3 border-b border-uni-border/30 flex items-center justify-between">
+                    <span className="font-bold text-uni-text text-sm">الإشعارات</span>
+                    {notifCount > 0 && <span className="badge-gold text-xs">{notifCount} جديد</span>}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Bell className="w-8 h-8 text-uni-muted mx-auto mb-2" />
+                        <p className="text-xs text-uni-muted">لا توجد إشعارات</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-uni-border/20">
+                        {notifications.map((n, i) => (
+                          <div key={i} className={`px-4 py-3 hover:bg-uni-gold/5 transition-colors ${n.is_urgent ? 'border-r-2 border-uni-red' : ''}`}>
+                            <div className="flex items-start gap-3">
+                              <span className="text-lg flex-shrink-0">{n.icon as string || '🔔'}</span>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-medium text-uni-text truncate">{n.title as string}</div>
+                                <div className="text-xs text-uni-muted mt-0.5 line-clamp-2">{n.body as string}</div>
+                              </div>
+                              {n.is_urgent && <span className="text-[10px] text-uni-red border border-uni-red/30 rounded px-1 flex-shrink-0">عاجل</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           <button
             onClick={() => router.push(isAdmin ? '/admin/dashboard' : '/student/profile')}

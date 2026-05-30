@@ -10,6 +10,7 @@ from app.models.user import User, StudentProfile
 from app.models.academic import CourseSection, Course, AcademicCalendar
 from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.models.assessment import Assessment, StudentSubmission
+from app.models.content import StudyMaterial, Announcement
 from app.models.ai_agents import StudentAcademicTwin
 from app.services.academic_service import calculate_letter_grade
 
@@ -274,3 +275,191 @@ async def get_academic_twin(
         "knowledge_map": twin.knowledge_map or {},
         "interaction_count": twin.interaction_count,
     }
+
+
+@router.delete("/enroll/{section_id}")
+async def drop_course(
+    section_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_student),
+):
+    profile = current_user.student_profile
+    if not profile:
+        raise HTTPException(status_code=404, detail="ملف الطالب غير موجود")
+
+    result = await db.execute(
+        select(Enrollment).where(
+            Enrollment.student_id == profile.id,
+            Enrollment.section_id == section_id,
+        )
+    )
+    enrollment = result.scalar_one_or_none()
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="التسجيل غير موجود")
+
+    enrollment.status = EnrollmentStatus.DROPPED
+    await db.commit()
+    return {"message": "تم إلغاء تسجيل المادة"}
+
+
+@router.get("/notifications")
+async def get_notifications(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_student),
+):
+    profile = current_user.student_profile
+    if not profile:
+        return {"notifications": [], "total": 0}
+
+    enrollments_result = await db.execute(
+        select(Enrollment)
+        .where(Enrollment.student_id == profile.id, Enrollment.status == EnrollmentStatus.ENROLLED)
+    )
+    enrollments = enrollments_result.scalars().all()
+    section_ids = [e.section_id for e in enrollments if e.section_id]
+
+    notifications = []
+    now = datetime.now(timezone.utc)
+
+    # Upcoming assessments as notifications
+    if section_ids:
+        assess_result = await db.execute(
+            select(Assessment)
+            .where(
+                Assessment.section_id.in_(section_ids),
+                Assessment.is_published == True,
+                Assessment.end_datetime > now,
+            )
+            .options(selectinload(Assessment.section).selectinload(CourseSection.course))
+            .order_by(Assessment.end_datetime)
+            .limit(10)
+        )
+        assessments = assess_result.scalars().all()
+        for a in assessments:
+            course_name = a.section.course.name_ar if a.section and a.section.course else "مادة"
+            days_left = (a.end_datetime - now).days if a.end_datetime else 0
+            notifications.append({
+                "id": f"assess_{a.id}",
+                "type": "assessment",
+                "title": f"موعد اختبار: {a.title_ar or a.title}",
+                "body": f"{course_name} · {days_left} يوم متبقي",
+                "icon": "📝",
+                "is_urgent": days_left <= 2,
+                "created_at": a.start_datetime.isoformat() if a.start_datetime else now.isoformat(),
+            })
+
+        # Announcements
+        ann_result = await db.execute(
+            select(Announcement)
+            .where(Announcement.section_id.in_(section_ids))
+            .order_by(Announcement.id.desc())
+            .limit(5)
+        )
+        announcements = ann_result.scalars().all()
+        for ann in announcements:
+            notifications.append({
+                "id": f"ann_{ann.id}",
+                "type": "announcement",
+                "title": ann.title,
+                "body": (ann.content or "")[:100],
+                "icon": "📢",
+                "is_urgent": ann.priority.value == "urgent" if ann.priority else False,
+                "created_at": now.isoformat(),
+            })
+
+    return {"notifications": notifications[:15], "total": len(notifications)}
+
+
+@router.get("/analytics")
+async def get_analytics(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_student),
+):
+    profile = current_user.student_profile
+    if not profile:
+        raise HTTPException(status_code=404, detail="ملف الطالب غير موجود")
+
+    enrollments_result = await db.execute(
+        select(Enrollment)
+        .where(Enrollment.student_id == profile.id)
+        .options(selectinload(Enrollment.section).selectinload(CourseSection.course))
+        .order_by(Enrollment.enrolled_at)
+    )
+    enrollments = enrollments_result.scalars().all()
+
+    course_grades = []
+    total_credits_attempted = 0
+    for e in enrollments:
+        if e.section and e.section.course:
+            course_grades.append({
+                "course_name": e.section.course.name_ar or e.section.course.code,
+                "credits": e.section.course.credits,
+                "grade": e.total_grade or 0,
+                "letter_grade": e.letter_grade or "—",
+                "semester": e.section.academic_year + " " + e.section.semester.value,
+                "status": e.status.value,
+            })
+            total_credits_attempted += e.section.course.credits
+
+    # Submissions for performance
+    submissions_result = await db.execute(
+        select(StudentSubmission)
+        .where(
+            StudentSubmission.student_id == current_user.id,
+            StudentSubmission.is_graded == True,
+        )
+        .order_by(StudentSubmission.submitted_at)
+        .limit(20)
+    )
+    submissions = submissions_result.scalars().all()
+    performance_trend = [
+        {
+            "date": s.submitted_at.strftime("%Y-%m-%d") if s.submitted_at else "—",
+            "score": s.percentage or 0,
+            "label": s.letter_grade or "—",
+        }
+        for s in submissions
+    ]
+
+    return {
+        "gpa": profile.cumulative_gpa or "0.00",
+        "total_credits_earned": profile.total_credits_earned or 0,
+        "total_credits_attempted": total_credits_attempted,
+        "credits_to_graduate": max(0, 132 - (profile.total_credits_earned or 0)),
+        "academic_standing": profile.academic_standing or "good",
+        "course_grades": course_grades,
+        "performance_trend": performance_trend,
+        "current_courses": len([e for e in enrollments if e.status.value == "enrolled"]),
+        "completed_courses": len([e for e in enrollments if e.status.value == "completed"]),
+    }
+
+
+@router.get("/materials/{section_id}")
+async def get_section_materials(
+    section_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_student),
+):
+    section_result = await db.execute(
+        select(CourseSection).where(CourseSection.id == section_id)
+    )
+    section = section_result.scalar_one_or_none()
+    if not section:
+        raise HTTPException(status_code=404, detail="الشعبة غير موجودة")
+
+    materials_result = await db.execute(
+        select(StudyMaterial).where(StudyMaterial.course_id == section.course_id)
+    )
+    materials = materials_result.scalars().all()
+    return [
+        {
+            "id": m.id,
+            "title": m.title,
+            "material_type": m.material_type.value,
+            "description": m.description,
+            "file_url": m.file_url,
+            "content": m.content,
+            "is_required": m.is_required,
+        }
+        for m in materials
+    ]

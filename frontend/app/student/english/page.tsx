@@ -339,6 +339,14 @@ export default function EnglishProgramPage() {
       })
     })
     setProgress(stored)
+
+    // Load current level from backend
+    englishAPI.getProgress().then(r => {
+      const data = r.data
+      if (data?.current_level && LEVELS[data.current_level]) {
+        setActiveLevel(data.current_level)
+      }
+    }).catch(() => {})
   }, [])
 
   const markComplete = (level: string, idx: number) => {
@@ -362,8 +370,17 @@ export default function EnglishProgramPage() {
 
   const handlePtAnswer = (ans: number) => {
     const next = [...ptAnswers, ans]
-    if (ptQuestion < PLACEMENT_QUESTIONS.length - 1) { setPtAnswers(next); setPtQuestion(q => q + 1) }
-    else { const score = next.filter((a, i) => a === PLACEMENT_QUESTIONS[i].correct).length; setPtResult(getLevelFromScore(score)) }
+    if (ptQuestion < PLACEMENT_QUESTIONS.length - 1) {
+      setPtAnswers(next); setPtQuestion(q => q + 1)
+    } else {
+      const score = next.filter((a, i) => a === PLACEMENT_QUESTIONS[i].correct).length
+      const level = getLevelFromScore(score)
+      setPtResult(level)
+      // Submit to backend
+      const answersObj: Record<string, number> = {}
+      next.forEach((a, i) => { answersObj[String(i)] = a })
+      englishAPI.submitPlacementTest(answersObj, 10).catch(() => {})
+    }
   }
 
   const sendChat = async () => {

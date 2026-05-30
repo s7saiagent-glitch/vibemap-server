@@ -89,6 +89,9 @@ export const studentAPI = {
   getTwin: () => api.get('/students/twin'),
   enroll: (sectionId: number) => api.post('/students/enroll', null, { params: { section_id: sectionId } }),
   dropCourse: (sectionId: number) => api.delete(`/students/enroll/${sectionId}`),
+  getNotifications: () => api.get('/students/notifications'),
+  getAnalytics: () => api.get('/students/analytics'),
+  getSectionMaterials: (sectionId: number) => api.get(`/students/materials/${sectionId}`),
 }
 
 // AI Professor API
@@ -133,6 +136,12 @@ export const adminAPI = {
   createAIProfessor: (data: Record<string, unknown>) => api.post('/admin/ai-professors/create', data),
   getAIProfessors: () => api.get('/admin/ai-professors'),
   generateLecture: (data: Record<string, unknown>) => api.post('/admin/content/generate-lecture', data),
+  getAssessments: (params?: Record<string, unknown>) => api.get('/admin/assessments', { params }),
+  createAssessment: (data: Record<string, unknown>, publish?: boolean) => api.post('/admin/assessments', data, { params: { publish: publish || false } }),
+  publishAssessment: (id: number, publish: boolean) => api.patch(`/admin/assessments/${id}/publish`, null, { params: { publish } }),
+  getSections: () => api.get('/admin/sections'),
+  addMaterial: (params: Record<string, unknown>) => api.post('/admin/materials', null, { params }),
+  getMaterials: (params?: Record<string, unknown>) => api.get('/admin/materials', { params }),
 }
 
 export default api
