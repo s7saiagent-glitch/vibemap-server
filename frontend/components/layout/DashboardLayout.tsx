@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, BookOpen, Brain, FileText, BarChart3,
   Languages, User, Settings, LogOut, GraduationCap, Menu, X,
-  Users, Layers, Award, Bell, Globe, ChevronDown, TrendingUp, Search
+  Users, Layers, Award, Bell, Globe, ChevronDown, TrendingUp, Search,
+  Calendar, CreditCard, MessageSquare, Clock
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
 import { authAPI, studentAPI, searchAPI } from '@/lib/api'
@@ -26,11 +27,16 @@ const STUDENT_NAV: NavItem[] = [
   { href: '/student/analytics', icon: TrendingUp, label: 'تحليلاتي الأكاديمية' },
   { href: '/student/badges', icon: Award, label: 'إنجازاتي' },
   { href: '/student/twin', icon: Brain, label: 'توأمي الأكاديمي' },
+  { href: '/student/announcements', icon: Bell, label: 'الإشعارات' },
+  { href: '/student/schedule', icon: Calendar, label: 'جدولي الدراسي' },
+  { href: '/student/study-timer', icon: Clock, label: 'مؤقت الدراسة' },
   { href: '/student/english', icon: Languages, label: 'اللغة الإنجليزية' },
   { href: '/academic/plans', icon: Award, label: 'الخطط الدراسية' },
   { href: '/roadmap', icon: Globe, label: 'خريطة التطوير' },
   { href: '/student/profile', icon: User, label: 'ملفي الشخصي' },
   { href: '/student/certificates', icon: Award, label: 'شهاداتي' },
+  { href: '/student/id-card', icon: CreditCard, label: 'بطاقتي الجامعية' },
+  { href: '/student/grade-appeal', icon: MessageSquare, label: 'تظلمات الدرجات' },
 ]
 
 const ADMIN_NAV: NavItem[] = [
