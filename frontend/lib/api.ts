@@ -98,6 +98,7 @@ export const studentAPI = {
   getGamification: () => api.get('/gamification/me'),
   awardPoints: (points: number, reason: string, category?: string) => api.post('/gamification/award-points', null, { params: { points, reason, category: category || 'general' } }),
   activateTwin: () => api.post('/students/twin/activate'),
+  getMySubmissions: () => api.get('/students/my-submissions'),
 }
 
 // AI Professor API
@@ -147,6 +148,13 @@ export const englishAPI = {
     api.post(`/english/exercises/${unitId}/submit`, answers),
 }
 
+// Attendance API
+export const attendanceAPI = {
+  getMyAttendance: (sectionId?: number) => api.get('/attendance/my-attendance', { params: sectionId ? { section_id: sectionId } : {} }),
+  getSectionAttendance: (sectionId: number) => api.get(`/attendance/section/${sectionId}`),
+  recordAttendance: (params: Record<string, unknown>) => api.post('/attendance/record', null, { params }),
+}
+
 // Admin API
 export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
@@ -160,6 +168,8 @@ export const adminAPI = {
   createAssessment: (data: Record<string, unknown>, publish?: boolean) => api.post('/admin/assessments', data, { params: { publish: publish || false } }),
   publishAssessment: (id: number, publish: boolean) => api.patch(`/admin/assessments/${id}/publish`, null, { params: { publish } }),
   getSections: () => api.get('/admin/sections'),
+  createSection: (params: Record<string, unknown>) => api.post('/admin/sections', null, { params }),
+  updateSection: (id: number, params: Record<string, unknown>) => api.patch(`/admin/sections/${id}`, null, { params }),
   addMaterial: (params: Record<string, unknown>) => api.post('/admin/materials', null, { params }),
   getMaterials: (params?: Record<string, unknown>) => api.get('/admin/materials', { params }),
   createLecture: (params: Record<string, unknown>) => api.post('/admin/lectures', null, { params }),

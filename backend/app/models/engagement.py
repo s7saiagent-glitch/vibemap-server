@@ -1,5 +1,6 @@
 import enum
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Float, DateTime
+from datetime import datetime, timezone
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Float, DateTime, JSON
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -64,3 +65,16 @@ class ForumReply(Base):
     is_ai_answer = Column(Boolean, default=False)
 
     post = relationship("ForumPost", back_populates="replies")
+
+
+class AttendanceRecord(Base):
+    __tablename__ = "attendance_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    section_id = Column(Integer, ForeignKey("course_sections.id"), nullable=False)
+    date = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    status = Column(String(20), default="present")  # present, absent, late, excused
+    notes = Column(Text, nullable=True)
+    recorded_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

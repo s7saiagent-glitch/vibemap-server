@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.api.v1 import auth, academic, students, ai_professor, assessments, english, admin
 from app.api.v1 import lectures, gamification, forum, search
+from app.api.v1.attendance import router as attendance_router
 
 api_router = APIRouter()
 
@@ -15,3 +16,4 @@ api_router.include_router(lectures.router)
 api_router.include_router(gamification.router)
 api_router.include_router(forum.router)
 api_router.include_router(search.router)
+api_router.include_router(attendance_router)

@@ -421,6 +421,78 @@ async def list_sections(
     ]
 
 
+@router.post("/sections")
+async def create_section(
+    course_id: int = Query(...),
+    section_number: str = Query(...),
+    semester: str = Query(...),
+    academic_year: str = Query(...),
+    capacity: int = Query(30),
+    ai_professor_id: Optional[int] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    """Create a new course section."""
+    # Verify course exists
+    course_result = await db.execute(select(Course).where(Course.id == course_id))
+    course = course_result.scalar_one_or_none()
+    if not course:
+        raise HTTPException(status_code=404, detail="المادة الدراسية غير موجودة")
+
+    # Create section
+    section = CourseSection(
+        course_id=course_id,
+        section_number=section_number,
+        semester=semester,
+        academic_year=academic_year,
+        capacity=capacity,
+        is_active=True,
+    )
+    if ai_professor_id:
+        section.ai_professor_id = ai_professor_id
+
+    db.add(section)
+    await db.commit()
+    await db.refresh(section)
+
+    return {
+        "id": section.id,
+        "course_id": section.course_id,
+        "course_name": course.name_ar,
+        "section_number": section.section_number,
+        "semester": section.semester,
+        "academic_year": section.academic_year,
+        "capacity": section.capacity,
+        "is_active": section.is_active,
+    }
+
+
+@router.patch("/sections/{section_id}")
+async def update_section(
+    section_id: int,
+    capacity: Optional[int] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    semester: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    """Update a course section."""
+    result = await db.execute(select(CourseSection).where(CourseSection.id == section_id))
+    section = result.scalar_one_or_none()
+    if not section:
+        raise HTTPException(status_code=404, detail="الشعبة غير موجودة")
+
+    if capacity is not None:
+        section.capacity = capacity
+    if is_active is not None:
+        section.is_active = is_active
+    if semester is not None:
+        section.semester = semester
+
+    await db.commit()
+    return {"message": "تم تحديث الشعبة بنجاح", "id": section_id}
+
+
 @router.post("/materials")
 async def add_study_material(
     course_id: int,

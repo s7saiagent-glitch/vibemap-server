@@ -543,3 +543,38 @@ async def get_section_materials(
         }
         for m in materials
     ]
+
+
+@router.get("/my-submissions")
+async def get_my_submissions(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_student),
+):
+    """Get all past assessment submissions for the student."""
+    from app.models.assessment import StudentSubmission, Assessment
+
+    submissions_result = await db.execute(
+        select(StudentSubmission, Assessment)
+        .join(Assessment, StudentSubmission.assessment_id == Assessment.id)
+        .where(StudentSubmission.student_id == current_user.id)
+        .where(StudentSubmission.is_graded == True)
+        .order_by(StudentSubmission.submitted_at.desc())
+    )
+    rows = submissions_result.all()
+
+    return [
+        {
+            "submission_id": sub.id,
+            "assessment_id": assess.id,
+            "assessment_title": assess.title_ar or assess.title,
+            "assessment_type": assess.assessment_type.value if assess.assessment_type else "quiz",
+            "submitted_at": sub.submitted_at.isoformat() if sub.submitted_at else None,
+            "percentage": sub.percentage or 0,
+            "letter_grade": sub.letter_grade or "F",
+            "passed": sub.passed or False,
+            "total_score": sub.total_score or 0,
+            "max_score": sum(q.points for q in assess.questions) if assess.questions else 0,
+            "time_spent_minutes": sub.time_spent_minutes or 0,
+        }
+        for sub, assess in rows
+    ]

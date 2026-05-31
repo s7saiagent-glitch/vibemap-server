@@ -7,7 +7,7 @@ import {
   LayoutDashboard, BookOpen, Brain, FileText, BarChart3,
   Languages, User, Settings, LogOut, GraduationCap, Menu, X,
   Users, Layers, Award, Bell, Globe, ChevronDown, TrendingUp, Search,
-  Calendar, CreditCard, MessageSquare, Clock
+  Calendar, CreditCard, MessageSquare, Clock, CheckCircle
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
 import { authAPI, studentAPI, searchAPI } from '@/lib/api'
@@ -23,12 +23,16 @@ interface NavItem {
 const STUDENT_NAV: NavItem[] = [
   { href: '/student/dashboard', icon: LayoutDashboard, label: 'لوحة التحكم' },
   { href: '/student/courses', icon: BookOpen, label: 'موادي الدراسية' },
-  { href: '/student/assessments', icon: FileText, label: 'الاختبارات والواجبات' },
+  { href: '/student/assessments', icon: FileText, label: 'الاختبارات' },
+  { href: '/student/results-history', icon: FileText, label: 'سجل نتائجي' },
+  { href: '/student/grades', icon: BarChart3, label: 'درجاتي ومعدلي' },
   { href: '/student/analytics', icon: TrendingUp, label: 'تحليلاتي الأكاديمية' },
   { href: '/student/badges', icon: Award, label: 'إنجازاتي' },
   { href: '/student/twin', icon: Brain, label: 'توأمي الأكاديمي' },
   { href: '/student/announcements', icon: Bell, label: 'الإشعارات' },
   { href: '/student/schedule', icon: Calendar, label: 'جدولي الدراسي' },
+  { href: '/student/attendance', icon: CheckCircle, label: 'الحضور والغياب' },
+  { href: '/student/calendar', icon: Calendar, label: 'التقويم الأكاديمي' },
   { href: '/student/study-timer', icon: Clock, label: 'مؤقت الدراسة' },
   { href: '/student/english', icon: Languages, label: 'اللغة الإنجليزية' },
   { href: '/academic/plans', icon: Award, label: 'الخطط الدراسية' },
@@ -43,6 +47,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'لوحة الإدارة' },
   { href: '/admin/students', icon: Users, label: 'إدارة الطلاب' },
   { href: '/admin/courses', icon: BookOpen, label: 'إدارة المواد' },
+  { href: '/admin/sections', icon: Layers, label: 'الشُعب الدراسية' },
   { href: '/admin/assessments', icon: FileText, label: 'إدارة الاختبارات' },
   { href: '/admin/materials', icon: BookOpen, label: 'المواد التعليمية' },
   { href: '/admin/lectures', icon: BookOpen, label: 'إدارة المحاضرات' },
