@@ -3,6 +3,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BookOpen, Plus, X, CheckCircle, AlertCircle, Search, Clock, Users } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { useQuery } from '@tanstack/react-query'
+import { academicAPI } from '@/lib/api'
 
 interface Course {
   code: string
@@ -14,24 +16,47 @@ interface Course {
   department: string
 }
 
-const AVAILABLE_COURSES: Course[] = [
-  { code: 'CS101', name: 'مبادئ البرمجة', credits: 3, instructor: 'د. أحمد الشمري', time: 'الأحد / الثلاثاء 8:00 - 9:30', seats: 12, department: 'علوم الحاسب' },
-  { code: 'CS202', name: 'هياكل البيانات', credits: 3, instructor: 'د. سارة العتيبي', time: 'الأحد / الثلاثاء 10:00 - 11:30', seats: 5, department: 'علوم الحاسب' },
-  { code: 'CS305', name: 'قواعد البيانات', credits: 3, instructor: 'د. محمد القحطاني', time: 'الاثنين / الأربعاء 8:00 - 9:30', seats: 20, department: 'علوم الحاسب' },
-  { code: 'CS410', name: 'الذكاء الاصطناعي', credits: 3, instructor: 'د. فاطمة الدوسري', time: 'الاثنين / الأربعاء 12:00 - 13:30', seats: 8, department: 'علوم الحاسب' },
-  { code: 'MATH201', name: 'التفاضل والتكامل 2', credits: 4, instructor: 'د. خالد الزهراني', time: 'الأحد / الثلاثاء / الخميس 9:00 - 10:00', seats: 30, department: 'الرياضيات' },
-  { code: 'MATH310', name: 'الجبر الخطي', credits: 3, instructor: 'د. نورة السبيعي', time: 'الاثنين / الأربعاء 10:00 - 11:30', seats: 15, department: 'الرياضيات' },
-  { code: 'ENG201', name: 'الكتابة الأكاديمية', credits: 2, instructor: 'د. ريم الحربي', time: 'الخميس 10:00 - 12:00', seats: 25, department: 'اللغة الإنجليزية' },
-  { code: 'PHY201', name: 'الفيزياء العامة 2', credits: 4, instructor: 'د. عبدالله المطيري', time: 'الأحد / الثلاثاء 14:00 - 15:30', seats: 0, department: 'الفيزياء' },
-  { code: 'STAT301', name: 'الإحصاء التطبيقي', credits: 3, instructor: 'د. هند العنزي', time: 'الاثنين / الأربعاء 14:00 - 15:30', seats: 18, department: 'الإحصاء' },
-  { code: 'NET401', name: 'أمن الشبكات', credits: 3, instructor: 'د. سلطان الغامدي', time: 'الخميس 8:00 - 11:00', seats: 10, department: 'علوم الحاسب' },
-]
+interface ApiCourse {
+  id: number
+  code: string
+  name: string
+  name_ar?: string
+  credits: number
+  instructor_name?: string
+  instructor_name_ar?: string
+  schedule?: string
+  available_seats?: number
+  capacity?: number
+  enrolled_count?: number
+  department?: string
+  department_name?: string
+  department_name_ar?: string
+}
 
 const MAX_CREDITS = 18
 
 export default function RegistrationPage() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Course[]>([])
+
+  const { data: coursesData, isLoading } = useQuery({
+    queryKey: ['available-courses'],
+    queryFn: () => academicAPI.getCourses().then(r => r.data),
+  })
+
+  const rawCourses: ApiCourse[] = Array.isArray(coursesData)
+    ? coursesData
+    : coursesData?.courses ?? coursesData?.results ?? []
+
+  const AVAILABLE_COURSES: Course[] = rawCourses.map((c: ApiCourse) => ({
+    code: c.code,
+    name: c.name_ar || c.name,
+    credits: c.credits,
+    instructor: c.instructor_name_ar || c.instructor_name || '',
+    time: c.schedule || '',
+    seats: c.available_seats ?? (c.capacity != null && c.enrolled_count != null ? c.capacity - c.enrolled_count : 999),
+    department: c.department_name_ar || c.department_name || c.department || '',
+  }))
 
   const totalCredits = selected.reduce((sum, c) => sum + c.credits, 0)
   const overLimit = totalCredits > MAX_CREDITS
@@ -114,8 +139,18 @@ export default function RegistrationPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Available Courses (2/3) */}
           <div className="lg:col-span-2 space-y-3">
-            <h2 className="text-sm font-bold text-uni-muted uppercase tracking-wider">المقررات المتاحة ({filtered.length})</h2>
-            {filtered.length === 0 ? (
+            <h2 className="text-sm font-bold text-uni-muted uppercase tracking-wider">المقررات المتاحة ({isLoading ? '...' : filtered.length})</h2>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="card-uni animate-pulse">
+                    <div className="h-4 bg-uni-border/40 rounded w-1/4 mb-2" />
+                    <div className="h-5 bg-uni-border/30 rounded w-1/2 mb-2" />
+                    <div className="h-3 bg-uni-border/20 rounded w-3/4" />
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="card-uni text-center py-12">
                 <Search className="w-10 h-10 mx-auto mb-3 text-uni-muted opacity-30" />
                 <p className="text-uni-muted text-sm">لا توجد مقررات مطابقة للبحث</p>
@@ -137,21 +172,25 @@ export default function RegistrationPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="badge-blue text-xs font-mono">{course.code}</span>
                           <span className="badge-gold text-xs">{course.credits} ساعات</span>
-                          <span className="text-xs text-uni-muted">{course.department}</span>
+                          {course.department && <span className="text-xs text-uni-muted">{course.department}</span>}
                         </div>
                         <h3 className="text-uni-text font-bold mt-1">{course.name}</h3>
                         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-uni-muted">
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3.5 h-3.5" />
-                            {course.instructor}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
-                            {course.time}
-                          </span>
+                          {course.instructor && (
+                            <span className="flex items-center gap-1">
+                              <Users className="w-3.5 h-3.5" />
+                              {course.instructor}
+                            </span>
+                          )}
+                          {course.time && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              {course.time}
+                            </span>
+                          )}
                           <span className={`flex items-center gap-1 font-medium ${noSeats ? 'text-uni-red' : course.seats <= 5 ? 'text-uni-gold' : 'text-uni-green'}`}>
                             <Users className="w-3.5 h-3.5" />
-                            {noSeats ? 'مكتمل' : `${course.seats} مقعد متاح`}
+                            {noSeats ? 'مكتمل' : course.seats === 999 ? 'متاح' : `${course.seats} مقعد متاح`}
                           </span>
                         </div>
                       </div>
