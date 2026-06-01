@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
 from sqlalchemy.orm import selectinload
@@ -577,4 +577,58 @@ async def get_my_submissions(
             "time_spent_minutes": sub.time_spent_minutes or 0,
         }
         for sub, assess in rows
+    ]
+
+
+@router.post("/grade-appeals")
+async def submit_grade_appeal(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_student),
+    course_name: str = Body(...),
+    reason: str = Body(...),
+    current_grade: str = Body(default=""),
+    expected_grade: str = Body(default=""),
+    details: str = Body(default=""),
+):
+    from app.models.engagement import GradeAppeal
+    appeal = GradeAppeal(
+        student_id=current_user.id,
+        course_name=course_name,
+        current_grade=current_grade,
+        expected_grade=expected_grade,
+        reason=reason,
+        details=details,
+        status="pending",
+    )
+    db.add(appeal)
+    await db.commit()
+    await db.refresh(appeal)
+    return {
+        "id": appeal.id,
+        "status": appeal.status,
+        "created_at": appeal.created_at.isoformat(),
+        "message": "تم تقديم التظلم بنجاح",
+    }
+
+
+@router.get("/grade-appeals")
+async def get_grade_appeals(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_student),
+):
+    from app.models.engagement import GradeAppeal
+    result = await db.execute(
+        select(GradeAppeal).where(GradeAppeal.student_id == current_user.id).order_by(GradeAppeal.created_at.desc())
+    )
+    appeals = result.scalars().all()
+    return [
+        {
+            "id": a.id,
+            "course": a.course_name,
+            "grade": a.current_grade,
+            "reason": a.reason,
+            "status": a.status,
+            "submittedAt": a.created_at.strftime("%Y/%m/%d"),
+        }
+        for a in appeals
     ]

@@ -99,6 +99,9 @@ export const studentAPI = {
   awardPoints: (points: number, reason: string, category?: string) => api.post('/gamification/award-points', null, { params: { points, reason, category: category || 'general' } }),
   activateTwin: () => api.post('/students/twin/activate'),
   getMySubmissions: () => api.get('/students/my-submissions'),
+  submitGradeAppeal: (data: { course_name: string; reason: string; current_grade?: string; expected_grade?: string; details?: string }) =>
+    api.post('/students/grade-appeals', data),
+  getGradeAppeals: () => api.get('/students/grade-appeals'),
 }
 
 // AI Professor API
@@ -175,6 +178,7 @@ export const adminAPI = {
   createLecture: (params: Record<string, unknown>) => api.post('/admin/lectures', null, { params }),
   getSectionLectures: (sectionId: number) => api.get(`/admin/lectures/${sectionId}`),
   publishLecture: (lectureId: number, publish: boolean) => api.patch(`/admin/lectures/${lectureId}/publish`, null, { params: { publish } }),
+  updateStudent: (id: number, data: Record<string, unknown>) => api.patch(`/admin/students/${id}`, data),
 }
 
 export default api

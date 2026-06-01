@@ -78,3 +78,19 @@ class AttendanceRecord(Base):
     notes = Column(Text, nullable=True)
     recorded_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class GradeAppeal(Base):
+    __tablename__ = "grade_appeals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    course_name = Column(String(200), nullable=False)
+    current_grade = Column(String(10), nullable=True)
+    expected_grade = Column(String(10), nullable=True)
+    reason = Column(String(200), nullable=False)
+    details = Column(Text, nullable=True)
+    status = Column(String(20), default="pending")  # pending, reviewing, resolved, rejected
+    admin_notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

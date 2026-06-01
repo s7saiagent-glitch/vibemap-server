@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
+from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.deps import get_current_admin
 from app.models.user import User, UserRole, StudentProfile
@@ -168,6 +169,49 @@ async def get_students(
         "page": page,
         "pages": (total + per_page - 1) // per_page,
     }
+
+
+class StudentUpdateRequest(BaseModel):
+    first_name_ar: Optional[str] = None
+    last_name_ar: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    is_active: Optional[bool] = None
+    enrollment_status: Optional[str] = None
+    academic_standing: Optional[str] = None
+
+
+@router.patch("/students/{student_id}", response_model=dict)
+async def update_student(
+    student_id: int,
+    data: StudentUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    result = await db.execute(select(User).where(User.id == student_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="الطالب غير موجود")
+
+    for field in ["first_name_ar", "last_name_ar", "first_name", "last_name", "phone", "is_active"]:
+        val = getattr(data, field)
+        if val is not None:
+            setattr(user, field, val)
+
+    if data.enrollment_status or data.academic_standing:
+        prof_result = await db.execute(
+            select(StudentProfile).where(StudentProfile.user_id == student_id)
+        )
+        profile = prof_result.scalar_one_or_none()
+        if profile:
+            if data.enrollment_status:
+                profile.enrollment_status = data.enrollment_status
+            if data.academic_standing:
+                profile.academic_standing = data.academic_standing
+
+    await db.commit()
+    return {"message": "تم تحديث بيانات الطالب بنجاح", "student_id": student_id}
 
 
 @router.post("/academic/faculties", response_model=FacultyResponse)
