@@ -23,6 +23,7 @@ interface NavItem {
 const STUDENT_NAV: NavItem[] = [
   { href: '/student/dashboard', icon: LayoutDashboard, label: 'لوحة التحكم' },
   { href: '/student/courses', icon: BookOpen, label: 'موادي الدراسية' },
+  { href: '/student/registration', icon: BookOpen, label: 'تسجيل المقررات' },
   { href: '/student/assessments', icon: FileText, label: 'الاختبارات' },
   { href: '/student/results-history', icon: FileText, label: 'سجل نتائجي' },
   { href: '/student/grades', icon: BarChart3, label: 'درجاتي ومعدلي' },
@@ -41,11 +42,13 @@ const STUDENT_NAV: NavItem[] = [
   { href: '/student/certificates', icon: Award, label: 'شهاداتي' },
   { href: '/student/id-card', icon: CreditCard, label: 'بطاقتي الجامعية' },
   { href: '/student/grade-appeal', icon: MessageSquare, label: 'تظلمات الدرجات' },
+  { href: '/student/financial', icon: CreditCard, label: 'حسابي المالي' },
 ]
 
 const ADMIN_NAV: NavItem[] = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'لوحة الإدارة' },
   { href: '/admin/students', icon: Users, label: 'إدارة الطلاب' },
+  { href: '/admin/grades', icon: BarChart3, label: 'إدارة الدرجات' },
   { href: '/admin/courses', icon: BookOpen, label: 'إدارة المواد' },
   { href: '/admin/sections', icon: Layers, label: 'الشُعب الدراسية' },
   { href: '/admin/assessments', icon: FileText, label: 'إدارة الاختبارات' },
