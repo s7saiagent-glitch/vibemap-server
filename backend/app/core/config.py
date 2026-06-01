@@ -50,7 +50,12 @@ class Settings(BaseSettings):
 
     # Frontend
     FRONTEND_URL: str = "http://localhost:3000"
-    CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost:3001"]
+    CORS_ORIGINS: list = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://s7sai.cloud",
+        "http://s7sai.cloud",
+    ]
 
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
