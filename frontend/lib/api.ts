@@ -181,6 +181,9 @@ export const adminAPI = {
   getSectionLectures: (sectionId: number) => api.get(`/admin/lectures/${sectionId}`),
   publishLecture: (lectureId: number, publish: boolean) => api.patch(`/admin/lectures/${lectureId}/publish`, null, { params: { publish } }),
   updateStudent: (id: number, data: Record<string, unknown>) => api.patch(`/admin/students/${id}`, data),
+  uploadFile: (formData: FormData) => api.post('/admin/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
 }
 
 export default api

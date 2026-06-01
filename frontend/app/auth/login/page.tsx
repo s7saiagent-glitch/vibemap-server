@@ -178,6 +178,11 @@ export default function LoginPage() {
                 </button>
               </div>
               {errors.password && <p className="text-uni-red text-xs mt-1">{errors.password.message}</p>}
+              <div className="flex justify-start mt-1">
+                <Link href="/auth/forgot-password" className="text-xs text-uni-muted hover:text-uni-gold transition-colors">
+                  نسيت كلمة المرور؟
+                </Link>
+              </div>
             </div>
 
             <button

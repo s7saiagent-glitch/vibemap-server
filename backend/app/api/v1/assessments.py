@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, func
 from datetime import datetime, timezone
 from typing import List
 import json
@@ -103,18 +103,21 @@ async def submit_assessment(
     if not assessment:
         raise HTTPException(status_code=404, detail="الاختبار غير موجود")
 
-    existing = await db.execute(
-        select(StudentSubmission).where(
-            StudentSubmission.student_id == current_user.id,
+    # Count existing attempts for this student+assessment
+    attempts_result = await db.execute(
+        select(func.count(StudentSubmission.id)).where(
             StudentSubmission.assessment_id == assessment_id,
+            StudentSubmission.student_id == current_user.id,
         )
     )
-    existing_submission = existing.scalar_one_or_none()
-    attempt_number = 1
-    if existing_submission:
-        if attempt_number >= assessment.attempts_allowed:
-            raise HTTPException(status_code=400, detail="استنفدت جميع محاولاتك")
-        attempt_number = existing_submission.attempt_number + 1
+    existing_attempts = attempts_result.scalar() or 0
+    attempt_number = existing_attempts + 1
+
+    if existing_attempts >= (assessment.attempts_allowed or 1):
+        raise HTTPException(
+            status_code=400,
+            detail=f"لقد استنفدت جميع محاولاتك ({assessment.attempts_allowed} محاولة)"
+        )
 
     submission = StudentSubmission(
         student_id=current_user.id,

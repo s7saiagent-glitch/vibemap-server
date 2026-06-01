@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { BookOpen, Plus, Eye, EyeOff, X, Clock, Users } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { adminAPI } from '@/lib/api'
+import FileUpload from '@/components/ui/FileUpload'
 
 export default function AdminLecturesPage() {
   const qc = useQueryClient()
@@ -18,6 +19,7 @@ export default function AdminLecturesPage() {
     order_index: 0,
     learning_objectives: '',
     key_concepts: '',
+    file_url: '',
   })
 
   const { data: sections } = useQuery({
@@ -41,7 +43,7 @@ export default function AdminLecturesPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-lectures', selectedSection] })
       setShowForm(false)
-      setForm({ title_ar: '', content: '', duration_minutes: 60, order_index: 0, learning_objectives: '', key_concepts: '' })
+      setForm({ title_ar: '', content: '', duration_minutes: 60, order_index: 0, learning_objectives: '', key_concepts: '', file_url: '' })
       setMsg('تم إنشاء المحاضرة بنجاح')
       setTimeout(() => setMsg(''), 3000)
     },

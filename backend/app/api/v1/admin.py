@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+import os, uuid
+from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from sqlalchemy.orm import selectinload
@@ -18,6 +20,47 @@ from app.services.ai.content_generator import ContentGeneratorService
 from datetime import datetime
 
 router = APIRouter(prefix="/admin", tags=["الإدارة"])
+
+UPLOAD_DIR = Path("/app/uploads")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+ALLOWED_TYPES = {
+    "application/pdf": ".pdf",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/gif": ".gif",
+    "application/vnd.ms-powerpoint": ".ppt",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+}
+
+@router.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    _: User = Depends(get_current_admin),
+):
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(status_code=400, detail=f"نوع الملف غير مسموح: {file.content_type}")
+
+    max_size = 100 * 1024 * 1024  # 100 MB
+    content = await file.read()
+    if len(content) > max_size:
+        raise HTTPException(status_code=400, detail="حجم الملف يتجاوز الحد المسموح (100 ميغابايت)")
+
+    ext = ALLOWED_TYPES[file.content_type]
+    filename = f"{uuid.uuid4().hex}{ext}"
+    file_path = UPLOAD_DIR / filename
+    file_path.write_bytes(content)
+
+    # Return a URL path the frontend can use
+    file_url = f"/uploads/{filename}"
+    return {
+        "url": file_url,
+        "filename": file.filename,
+        "size": len(content),
+        "content_type": file.content_type,
+    }
 
 
 @router.get("/dashboard")
