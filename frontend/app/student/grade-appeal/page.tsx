@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { MessageSquare, Send, Clock, CheckCircle, AlertCircle, Info, X } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { studentAPI } from '@/lib/api'
 
 type AppealStatus = 'pending' | 'reviewing' | 'resolved' | 'rejected'
@@ -17,6 +17,18 @@ interface Appeal {
   submittedAt: string
 }
 
+interface ApiAppeal {
+  id: number
+  course_name?: string
+  course?: string
+  current_grade?: string
+  grade?: string
+  reason?: string
+  status?: string
+  created_at?: string
+  submitted_at?: string
+}
+
 const STATUS_CONFIG: Record<AppealStatus, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: 'في الانتظار', color: 'text-uni-gold', icon: Clock },
   reviewing: { label: 'قيد المراجعة', color: 'text-uni-blue', icon: Info },
@@ -24,33 +36,67 @@ const STATUS_CONFIG: Record<AppealStatus, { label: string; color: string; icon: 
   rejected: { label: 'مرفوض', color: 'text-uni-red', icon: AlertCircle },
 }
 
+function normalizeStatus(raw?: string): AppealStatus {
+  if (raw === 'reviewing' || raw === 'resolved' || raw === 'rejected') return raw
+  return 'pending'
+}
+
 export default function GradeAppealPage() {
+  const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [form, setForm] = useState({ course: '', currentGrade: '', expectedGrade: '', reason: '', details: '' })
-  const [appeals, setAppeals] = useState<Appeal[]>([])
 
   const { data: transcriptData } = useQuery({
     queryKey: ['transcript-appeal'],
     queryFn: () => studentAPI.getTranscript().then(r => r.data),
   })
 
+  const { data: appealsData } = useQuery({
+    queryKey: ['grade-appeals'],
+    queryFn: () => studentAPI.getGradeAppeals().then(r => r.data),
+  })
+
   const transcript: Record<string, unknown>[] = transcriptData?.transcript || transcriptData || []
+
+  const rawAppeals: ApiAppeal[] = Array.isArray(appealsData)
+    ? appealsData
+    : appealsData?.appeals ?? appealsData?.results ?? []
+
+  const appeals: Appeal[] = rawAppeals.map((a: ApiAppeal) => ({
+    id: a.id,
+    course: a.course_name || a.course || '',
+    grade: a.current_grade || a.grade || '',
+    reason: a.reason || '',
+    status: normalizeStatus(a.status),
+    submittedAt: a.created_at
+      ? new Date(a.created_at).toLocaleDateString('ar-SA')
+      : a.submitted_at
+      ? new Date(a.submitted_at).toLocaleDateString('ar-SA')
+      : '',
+  }))
+
+  const submitMutation = useMutation({
+    mutationFn: () =>
+      studentAPI.submitGradeAppeal({
+        course_name: form.course,
+        reason: form.reason,
+        current_grade: form.currentGrade || undefined,
+        expected_grade: form.expectedGrade || undefined,
+        details: form.details || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['grade-appeals'] })
+      setForm({ course: '', currentGrade: '', expectedGrade: '', reason: '', details: '' })
+      setShowForm(false)
+      setSubmitted(true)
+      setTimeout(() => setSubmitted(false), 4000)
+    },
+  })
 
   const handleSubmit = () => {
     if (!form.course || !form.reason) return
-    setAppeals(prev => [{
-      id: Date.now(),
-      course: form.course,
-      grade: form.currentGrade,
-      reason: form.reason,
-      status: 'pending' as AppealStatus,
-      submittedAt: new Date().toLocaleDateString('ar-SA'),
-    }, ...prev])
-    setForm({ course: '', currentGrade: '', expectedGrade: '', reason: '', details: '' })
-    setShowForm(false)
-    setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 4000)
+    submitMutation.mutate()
   }
 
   return (
@@ -73,6 +119,13 @@ export default function GradeAppealPage() {
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
             className="p-4 rounded-xl bg-uni-green/10 border border-uni-green/30 text-uni-green text-sm font-bold flex items-center gap-2">
             <CheckCircle className="w-4 h-4" /> تم تقديم تظلمك — سيُراجَع خلال 3 أيام عمل
+          </motion.div>
+        )}
+
+        {submitMutation.isError && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-xl bg-uni-red/10 border border-uni-red/30 text-uni-red text-sm font-bold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" /> حدث خطأ أثناء تقديم التظلم. يرجى المحاولة مجدداً.
           </motion.div>
         )}
 
@@ -133,9 +186,9 @@ export default function GradeAppealPage() {
               </div>
             </div>
             <div className="flex gap-3 mt-4">
-              <button onClick={handleSubmit} disabled={!form.course || !form.reason}
+              <button onClick={handleSubmit} disabled={!form.course || !form.reason || submitMutation.isPending}
                 className="btn-gold px-6 py-2 rounded-xl text-sm font-bold disabled:opacity-50 flex items-center gap-2">
-                <Send className="w-4 h-4" /> تقديم التظلم
+                <Send className="w-4 h-4" /> {submitMutation.isPending ? 'جارٍ الإرسال...' : 'تقديم التظلم'}
               </button>
               <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-uni-muted border border-uni-border rounded-xl hover:border-uni-gold/30 transition-all">
                 إلغاء
