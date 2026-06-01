@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timezone, timedelta
 from typing import Optional
+import secrets
 import httpx
 from app.core.database import get_db
 from app.core.security import (
@@ -11,7 +12,8 @@ from app.core.security import (
 )
 from app.core.deps import get_current_active_user
 from app.core.config import settings
-from app.models.user import User, UserRole, StudentProfile, RefreshToken
+from app.models.user import User, UserRole, StudentProfile, RefreshToken, PasswordResetToken
+from app.services.email_service import send_password_reset_email
 from app.models.academic import Course, CourseSection, SemesterType
 from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.schemas.user import (
@@ -139,6 +141,14 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     )
     db.add(refresh_token)
     await db.commit()
+
+    from app.services.email_service import send_welcome_email
+    student_id_str = student_profile.student_id if student_profile else ""
+    name = user.first_name_ar or user.first_name or "طالب"
+    try:
+        await send_welcome_email(user.email, name, student_id_str)
+    except Exception:
+        pass  # Don't fail registration if email fails
 
     return TokenResponse(
         access_token=access_token,
@@ -333,6 +343,61 @@ async def google_auth(request: GoogleAuthRequest, db: AsyncSession = Depends(get
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         user=UserResponse.model_validate(user),
     )
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    email: str = Body(..., embed=True),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    # Always return success to prevent email enumeration
+    if not user:
+        return {"message": "إذا كان البريد مسجلاً، ستصلك رسالة خلال دقائق"}
+
+    token = secrets.token_urlsafe(32)
+    reset_token = PasswordResetToken(
+        user_id=user.id,
+        token=token,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
+    )
+    db.add(reset_token)
+    await db.commit()
+
+    name = user.first_name_ar or user.first_name or "طالب"
+    await send_password_reset_email(user.email, name, token)
+    return {"message": "إذا كان البريد مسجلاً، ستصلك رسالة خلال دقائق"}
+
+
+@router.post("/reset-password")
+async def reset_password(
+    token: str = Body(..., embed=True),
+    new_password: str = Body(..., embed=True),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token == token,
+            PasswordResetToken.is_used == False,
+        )
+    )
+    reset_token = result.scalar_one_or_none()
+    if not reset_token or reset_token.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="الرابط غير صالح أو منتهي الصلاحية")
+
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="كلمة المرور يجب أن تكون 8 أحرف على الأقل")
+
+    result = await db.execute(select(User).where(User.id == reset_token.user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+
+    user.password_hash = get_password_hash(new_password)
+    reset_token.is_used = True
+    await db.commit()
+    return {"message": "تم تغيير كلمة المرور بنجاح — يمكنك تسجيل الدخول الآن"}
 
 
 @router.post("/change-password")
