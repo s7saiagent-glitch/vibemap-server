@@ -135,6 +135,17 @@ export default function AdminLecturesPage() {
                   rows={8} placeholder="اكتب محتوى المحاضرة هنا... يدعم Markdown"
                   className="w-full bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none resize-none font-mono" />
               </div>
+              <div className="col-span-2">
+                <label className="text-xs text-uni-muted mb-1 block">ملف المحاضرة (PDF، فيديو، صورة)</label>
+                <FileUpload
+                  accept=".pdf,.mp4,.webm,.jpg,.jpeg,.png,.ppt,.pptx"
+                  label="اسحب ملف المحاضرة أو اضغط للرفع"
+                  onUploaded={(url) => setForm(f => ({ ...f, file_url: url }))}
+                />
+                {form.file_url && (
+                  <p className="text-xs text-uni-muted mt-1">رابط الملف: <span className="text-uni-gold">{form.file_url}</span></p>
+                )}
+              </div>
             </div>
             <div className="flex gap-3 mt-4">
               <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending || !form.title_ar}
