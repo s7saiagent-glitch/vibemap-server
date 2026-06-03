@@ -186,4 +186,20 @@ export const adminAPI = {
   }),
 }
 
+export const paymentAPI = {
+  getPrices: () => api.get('/payments/prices'),
+  checkAccess: (product_type: string, product_id: string) =>
+    api.post('/payments/check-access', { product_type, product_id }),
+  validatePromo: (code: string, product_key: string) =>
+    api.post('/payments/validate-promo', { code, product_key }),
+  createSession: (data: {
+    product_key: string
+    product_id: string
+    promo_code?: string
+    success_url?: string
+    cancel_url?: string
+  }) => api.post('/payments/create-session', data),
+  getMyPayments: () => api.get('/payments/my-payments'),
+}
+
 export default api

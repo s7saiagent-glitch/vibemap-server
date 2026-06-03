@@ -6,6 +6,7 @@ from app.models.content import Lecture, StudyMaterial, Announcement, StudentNote
 from app.models.ai_agents import AIProfessor, Conversation, Message, StudentAcademicTwin, AIInteractionLog
 from app.models.english import EnglishCourse, EnglishUnit, EnglishStudentProgress, PlacementTest
 from app.models.engagement import LectureProgress, StudentPoints, StudentBadge, ForumPost, ForumReply, AttendanceRecord
+from app.models.payment import PaymentRecord, PromoCode, UserEntitlement
 
 __all__ = [
     "User", "StudentProfile", "AdminProfile", "RefreshToken",
@@ -16,4 +17,5 @@ __all__ = [
     "AIProfessor", "Conversation", "Message", "StudentAcademicTwin", "AIInteractionLog",
     "EnglishCourse", "EnglishUnit", "EnglishStudentProgress", "PlacementTest",
     "LectureProgress", "StudentPoints", "StudentBadge", "ForumPost", "ForumReply", "AttendanceRecord",
+    "PaymentRecord", "PromoCode", "UserEntitlement",
 ]
