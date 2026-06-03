@@ -57,6 +57,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: '/admin/programs', icon: Layers, label: 'التخصصات' },
   { href: '/admin/ai-professors', icon: Brain, label: 'الأساتذة الذكاء' },
   { href: '/admin/analytics', icon: BarChart3, label: 'التحليلات' },
+  { href: '/admin/payments', icon: CreditCard, label: 'المدفوعات والكوبونات' },
   { href: '/admin/settings', icon: Settings, label: 'الإعدادات' },
 ]
 
