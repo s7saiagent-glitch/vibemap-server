@@ -1,11 +1,12 @@
 'use client'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, Mail, Phone, GraduationCap, Shield, Edit3, Save, X, BookOpen, Hash, Trophy } from 'lucide-react'
+import { User, Mail, Phone, GraduationCap, Shield, Edit3, Save, X, BookOpen, Hash, Trophy, Camera } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuthStore } from '@/lib/store'
-import { authAPI, studentAPI } from '@/lib/api'
+import api, { authAPI, studentAPI } from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore()
@@ -32,6 +33,23 @@ export default function ProfilePage() {
       setMsg('حدث خطأ أثناء الحفظ')
     }
     setSaving(false)
+  }
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const formData = new FormData()
+    formData.append('file', file)
+    try {
+      const res = await api.post('/auth/upload-avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      toast.success('تم تحديث الصورة الشخصية')
+      const url = res.data.avatar_url
+      if (url) {
+        // Force re-render by updating a local state or refetching
+      }
+    } catch {
+      toast.error('فشل رفع الصورة')
+    }
   }
 
   const { data: gamData } = useQuery({
@@ -88,6 +106,11 @@ export default function ProfilePage() {
           <h2 className="text-xl font-black text-uni-text">{user?.first_name_ar} {user?.last_name_ar}</h2>
           <p className="text-uni-muted text-sm">{user?.email}</p>
           <span className="badge-gold mt-2 inline-block">{roleLabel[user?.role || 'student']}</span>
+          <label className="cursor-pointer text-xs text-uni-gold hover:underline flex items-center gap-1 justify-center mt-2">
+            <Camera className="w-3 h-3" />
+            تغيير الصورة
+            <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+          </label>
         </motion.div>
 
         {/* Info Fields */}

@@ -611,6 +611,52 @@ async def submit_grade_appeal(
     }
 
 
+@router.get("/certificates")
+async def get_my_certificates(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_student),
+):
+    profile_result = await db.execute(
+        select(StudentProfile).where(StudentProfile.user_id == current_user.id)
+    )
+    profile = profile_result.scalar_one_or_none()
+
+    student_profile_id = profile.id if profile else -1
+
+    result = await db.execute(
+        select(Enrollment)
+        .where(
+            Enrollment.student_id == student_profile_id,
+            Enrollment.final_grade >= 60,
+        )
+        .options(
+            selectinload(Enrollment.section).selectinload(CourseSection.course)
+        )
+        .order_by(Enrollment.enrolled_at.desc())
+    )
+    enrollments = result.scalars().all()
+
+    certificates = []
+    for enr in enrollments:
+        if enr.section and enr.section.course and enr.final_grade:
+            grade = enr.final_grade
+            letter = "A+" if grade >= 95 else "A" if grade >= 90 else "B+" if grade >= 85 else "B" if grade >= 80 else "C+" if grade >= 75 else "C" if grade >= 70 else "D"
+            certificates.append({
+                "id": enr.id,
+                "course_name": enr.section.course.name_ar or enr.section.course.name,
+                "course_code": enr.section.course.code,
+                "grade": grade,
+                "letter_grade": letter,
+                "student_name": f"{current_user.first_name_ar or current_user.first_name} {current_user.last_name_ar or current_user.last_name}",
+                "student_id": profile.student_id if profile else "",
+                "academic_year": enr.section.academic_year if enr.section else "2024-2025",
+                "cert_number": f"CERT-{current_user.id:04d}-{enr.id:06d}",
+                "issued_at": enr.enrolled_at.strftime("%Y-%m-%d") if enr.enrolled_at else "",
+            })
+
+    return certificates
+
+
 @router.get("/grade-appeals")
 async def get_grade_appeals(
     db: AsyncSession = Depends(get_db),

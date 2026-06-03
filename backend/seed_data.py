@@ -330,6 +330,18 @@ async def seed():
                 )
                 db.add(unit)
 
+        # ==================== PROMO CODES ====================
+        from app.models.payment import PromoCode
+        promo_list = [
+            PromoCode(code="WELCOME50", discount_percent=50, max_uses=500, description="خصم 50% للطلاب الجدد", is_active=True),
+            PromoCode(code="RAMADAN30", discount_percent=30, max_uses=1000, description="عرض رمضان 30% خصم", is_active=True),
+            PromoCode(code="ENGLISH99", discount_percent=100, max_uses=50, description="دورة إنجليزي مجانية - عرض محدود", is_active=True),
+            PromoCode(code="STUDY2025", discount_percent=20, max_uses=200, description="خصم 20% على جميع المنتجات", is_active=True),
+        ]
+        for p in promo_list:
+            db.add(p)
+        await db.flush()
+
         await db.commit()
         print("✅ تم إدراج البيانات الأولية بنجاح!")
         print("=" * 50)

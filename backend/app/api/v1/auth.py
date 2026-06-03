@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timezone, timedelta
@@ -398,6 +398,35 @@ async def reset_password(
     reset_token.is_used = True
     await db.commit()
     return {"message": "تم تغيير كلمة المرور بنجاح — يمكنك تسجيل الدخول الآن"}
+
+
+@router.post("/upload-avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    import uuid
+    from pathlib import Path
+
+    allowed = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+    if file.content_type not in allowed:
+        raise HTTPException(status_code=400, detail="يُسمح فقط بصور JPEG أو PNG أو GIF")
+
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:  # 5MB max
+        raise HTTPException(status_code=400, detail="حجم الصورة يتجاوز 5 ميغابايت")
+
+    upload_dir = Path("/app/uploads/avatars")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    ext = file.content_type.split("/")[1].replace("jpeg", "jpg")
+    filename = f"avatar_{current_user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+    (upload_dir / filename).write_bytes(content)
+
+    avatar_url = f"/uploads/avatars/{filename}"
+    current_user.avatar_url = avatar_url
+    await db.commit()
+    return {"avatar_url": avatar_url, "message": "تم تحديث الصورة الشخصية"}
 
 
 @router.post("/change-password")

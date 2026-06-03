@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText, Clock, CheckCircle, XCircle, AlertCircle,
   Play, ChevronRight, ChevronLeft, Send, Award,
-  BookOpen, Brain, Timer, AlertTriangle, Star, X
+  BookOpen, Brain, Timer, AlertTriangle, Star, X, Lock
 } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { studentAPI, assessmentAPI } from '@/lib/api'
+import { studentAPI, assessmentAPI, paymentAPI } from '@/lib/api'
 import { useProctoring } from '@/lib/useProctoring'
 import toast from 'react-hot-toast'
 
@@ -530,7 +530,23 @@ export default function AssessmentsPage() {
   const upcoming = assessments.filter(a => !a.end_datetime || new Date(a.end_datetime) > now)
   const past = assessments.filter(a => a.end_datetime && new Date(a.end_datetime) <= now)
 
+  const [paymentModalAssessment, setPaymentModalAssessment] = useState<Assessment | null>(null)
+
   const handleStartExam = async (a: Assessment) => {
+    // Check payment access for this exam's section
+    if (a._sectionId) {
+      try {
+        const accessRes = await paymentAPI.checkAccess('exam', String(a._sectionId))
+        const hasAccess = accessRes.data?.has_access ?? true
+        if (!hasAccess) {
+          setPaymentModalAssessment(a)
+          return
+        }
+      } catch {
+        // If check fails (no payment system for this exam), proceed normally
+      }
+    }
+
     setLoadingExamId(a.id)
     try {
       const res = await assessmentAPI.getAssessment(a.id)
@@ -618,6 +634,32 @@ export default function AssessmentsPage() {
         {activeExam && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <ExamModal assessment={activeExam} onClose={() => setActiveExam(null)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Payment Required Modal */}
+      <AnimatePresence>
+        {paymentModalAssessment && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+            onClick={e => e.target === e.currentTarget && setPaymentModalAssessment(null)}>
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+              className="bg-uni-card border border-uni-gold/40 rounded-2xl p-6 max-w-sm w-full text-center" dir="rtl">
+              <Lock className="w-12 h-12 text-uni-gold mx-auto mb-3" />
+              <h3 className="text-lg font-black text-uni-text mb-2">يلزم دفع رسوم الاختبار</h3>
+              <p className="text-uni-muted text-sm mb-1">{paymentModalAssessment.title_ar || paymentModalAssessment.title}</p>
+              <p className="text-uni-gold font-bold text-sm mb-5">يلزم دفع رسوم الاختبار $15 — اضغط للدفع</p>
+              <div className="flex gap-3">
+                <button onClick={() => setPaymentModalAssessment(null)}
+                  className="flex-1 py-2.5 rounded-xl border border-uni-border/40 text-uni-muted text-sm hover:text-uni-text transition-all">
+                  إلغاء
+                </button>
+                <a href="/pricing" className="flex-1 py-2.5 rounded-xl bg-uni-gold text-uni-dark text-sm font-bold hover:bg-uni-gold-light transition-all flex items-center justify-center">
+                  الدفع الآن
+                </a>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

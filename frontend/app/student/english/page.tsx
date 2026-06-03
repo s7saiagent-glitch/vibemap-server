@@ -504,25 +504,53 @@ export default function EnglishProgramPage() {
           </motion.div>
 
           {/* Units Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {lv.units.map((unit: Unit, i: number) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                onClick={() => openUnitModal(activeLevel, i)}
-                className={`card-uni cursor-pointer hover:border-uni-gold/30 transition-all group border ${isComplete(activeLevel, i) ? 'border-green-500/30 bg-green-500/5' : 'border-uni-border/30'}`}>
-                <div className="flex items-start justify-between mb-2">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${lv.color} ${lv.text} border ${lv.border}`}>{i + 1}</div>
-                  {isComplete(activeLevel, i) && <CheckCircle className="w-4 h-4 text-green-400" />}
+          {PAID_LEVELS.includes(activeLevel) && !hasLevelAccess(activeLevel) ? (
+            /* Locked level — show lock overlay over all units */
+            <div className="relative">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 pointer-events-none select-none opacity-40">
+                {lv.units.map((unit: Unit, i: number) => (
+                  <div key={i} className="card-uni border border-uni-border/30">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${lv.color} ${lv.text} border ${lv.border}`}>{i + 1}</div>
+                    </div>
+                    <div className="font-bold text-uni-text text-sm mb-0.5">{unit.titleAr}</div>
+                    <div className="text-uni-muted text-xs mb-2">{unit.titleEn}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 rounded-xl">
+                <div className="bg-uni-dark/90 border border-uni-gold/40 rounded-2xl px-8 py-6 text-center shadow-2xl">
+                  <Lock className="w-10 h-10 text-uni-gold mx-auto mb-3" />
+                  <h3 className="text-uni-text font-black text-lg mb-1">مستوى {activeLevel} مدفوع</h3>
+                  <p className="text-uni-muted text-sm mb-4">هذا المستوى يتطلب اشتراكاً مدفوعاً — ابدأ من $29 فقط</p>
+                  <button onClick={() => router.push(`/pricing?level=${activeLevel}`)}
+                    className="px-6 py-2.5 rounded-xl bg-uni-gold text-uni-dark text-sm font-black hover:bg-uni-gold-light transition-all">
+                    فعّل المستوى الآن
+                  </button>
                 </div>
-                <div className="font-bold text-uni-text text-sm mb-0.5">{unit.titleAr}</div>
-                <div className="text-uni-muted text-xs mb-2">{unit.titleEn}</div>
-                <div className="flex flex-wrap gap-1">
-                  {['مفردات', 'قواعد', 'قراءة', 'تمارين'].map(t => (
-                    <span key={t} className="badge-gold text-xs px-2 py-0.5 text-uni-gold border border-uni-gold/20 rounded-full">{t}</span>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {lv.units.map((unit: Unit, i: number) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                  onClick={() => handleLevelCardClick(activeLevel, i)}
+                  className={`card-uni cursor-pointer hover:border-uni-gold/30 transition-all group border ${isComplete(activeLevel, i) ? 'border-green-500/30 bg-green-500/5' : 'border-uni-border/30'}`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${lv.color} ${lv.text} border ${lv.border}`}>{i + 1}</div>
+                    {isComplete(activeLevel, i) && <CheckCircle className="w-4 h-4 text-green-400" />}
+                  </div>
+                  <div className="font-bold text-uni-text text-sm mb-0.5">{unit.titleAr}</div>
+                  <div className="text-uni-muted text-xs mb-2">{unit.titleEn}</div>
+                  <div className="flex flex-wrap gap-1">
+                    {['مفردات', 'قواعد', 'قراءة', 'تمارين'].map(t => (
+                      <span key={t} className="badge-gold text-xs px-2 py-0.5 text-uni-gold border border-uni-gold/20 rounded-full">{t}</span>
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           {/* AI Chat Panel */}
           <AnimatePresence>
