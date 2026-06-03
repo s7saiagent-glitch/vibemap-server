@@ -1,10 +1,12 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Languages, Send, Loader2, Award, Download, X, BookOpen, Brain, CheckCircle, ChevronRight, RotateCcw } from 'lucide-react'
+import { Languages, Send, Loader2, Award, Download, X, BookOpen, Brain, CheckCircle, ChevronRight, RotateCcw, Lock } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { englishAPI } from '@/lib/api'
+import { englishAPI, paymentAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -305,9 +307,12 @@ function getLevelFromScore(s: number): string {
   if (s <= 5) return 'B2'; if (s <= 6) return 'C1'; return 'C2'
 }
 
+const PAID_LEVELS = ['B1', 'B2', 'C1', 'C2']
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function EnglishProgramPage() {
   const { user } = useAuthStore()
+  const router = useRouter()
   const [activeLevel, setActiveLevel] = useState('A1')
   const [openUnit, setOpenUnit] = useState<{ level: string; idx: number } | null>(null)
   const [unitTab, setUnitTab] = useState<'vocab' | 'grammar' | 'reading' | 'exercises'>('vocab')
@@ -326,6 +331,34 @@ export default function EnglishProgramPage() {
   const [showChat, setShowChat] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const userName = (user?.first_name_ar || user?.first_name || 'الطالب') as string
+
+  // Fetch user's paid entitlements once
+  const { data: myPayments } = useQuery({
+    queryKey: ['my-payments'],
+    queryFn: () => paymentAPI.getMyPayments().then(r => r.data),
+    retry: false,
+  })
+
+  const hasLevelAccess = (level: string): boolean => {
+    if (!PAID_LEVELS.includes(level)) return true // A1, A2 are free
+    if (!myPayments) return false
+    const payments = Array.isArray(myPayments) ? myPayments : (myPayments as { payments?: unknown[] }).payments || []
+    return payments.some((p: unknown) => {
+      const pay = p as { product_type?: string; product_id?: string; status?: string }
+      return (
+        (pay.product_type === 'english_level' && pay.product_id === level && pay.status === 'completed') ||
+        (pay.product_type === 'full_access' && pay.status === 'completed')
+      )
+    })
+  }
+
+  const handleLevelCardClick = (level: string, idx: number) => {
+    if (PAID_LEVELS.includes(level) && !hasLevelAccess(level)) {
+      router.push(`/pricing?level=${level}`)
+      return
+    }
+    openUnitModal(level, idx)
+  }
 
   useEffect(() => {
     const stored: Record<string, boolean> = {}
@@ -431,6 +464,17 @@ export default function EnglishProgramPage() {
 
         {/* Main Content */}
         <div className="flex-1 space-y-4">
+          {/* Pricing Banner */}
+          <div className="card-uni border border-uni-gold/30 bg-uni-gold/5 flex items-center justify-between gap-3 flex-wrap py-3 px-4">
+            <span className="text-uni-text text-sm font-medium">
+              <span className="text-uni-gold font-bold">مستويا A1 و A2 مجانيان تماماً</span> — المستويات المتقدمة من $29 فقط
+            </span>
+            <button onClick={() => router.push('/pricing')}
+              className="flex-shrink-0 px-4 py-1.5 rounded-lg bg-uni-gold text-uni-dark text-xs font-bold hover:bg-uni-gold-light transition-all">
+              عرض الأسعار
+            </button>
+          </div>
+
           {/* Level Header */}
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
             className={`card-uni ${lv.color} ${lv.border} border`}>
