@@ -6,6 +6,7 @@ from app.core.database import Base
 
 class EnrollmentStatus(str, enum.Enum):
     ENROLLED = "enrolled"
+    PENDING_APPROVAL = "pending_approval"
     DROPPED = "dropped"
     COMPLETED = "completed"
     FAILED = "failed"

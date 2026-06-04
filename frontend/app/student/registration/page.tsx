@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { BookOpen, Plus, X, CheckCircle, AlertCircle, Search, Clock, Users } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useQuery } from '@tanstack/react-query'
-import { academicAPI } from '@/lib/api'
+import { academicAPI, studentAPI } from '@/lib/api'
+import toast from 'react-hot-toast'
 
 interface Course {
+  id: number
   code: string
   name: string
   credits: number
@@ -49,6 +51,7 @@ export default function RegistrationPage() {
     : coursesData?.courses ?? coursesData?.results ?? []
 
   const AVAILABLE_COURSES: Course[] = rawCourses.map((c: ApiCourse) => ({
+    id: c.id,
     code: c.code,
     name: c.name_ar || c.name,
     credits: c.credits,
@@ -80,9 +83,26 @@ export default function RegistrationPage() {
     setSelected(prev => prev.filter(c => c.code !== code))
   }
 
-  const handleSubmit = () => {
-    if (selected.length === 0 || overLimit) return
-    alert('تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قِبَل الإدارة الأكاديمية.')
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async () => {
+    if (selected.length === 0 || overLimit || submitting) return
+    setSubmitting(true)
+    const results = await Promise.allSettled(
+      selected.map(course => studentAPI.enrollInCourse(course.id))
+    )
+    const succeeded = results.filter(r => r.status === 'fulfilled').length
+    const failed = results.filter(r => r.status === 'rejected').length
+    setSubmitting(false)
+    if (succeeded > 0) {
+      toast.success(`تم تقديم ${succeeded} طلب تسجيل — في انتظار موافقة الإدارة`)
+      setSelected([])
+    }
+    if (failed > 0) {
+      const firstError = (results.find(r => r.status === 'rejected') as PromiseRejectedResult)?.reason
+      const detail = firstError?.response?.data?.detail || 'حدث خطأ في التسجيل'
+      toast.error(detail)
+    }
   }
 
   return (
@@ -266,14 +286,16 @@ export default function RegistrationPage() {
 
               <button
                 onClick={handleSubmit}
-                disabled={selected.length === 0 || overLimit}
+                disabled={selected.length === 0 || overLimit || submitting}
                 className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
-                  selected.length === 0 || overLimit
+                  selected.length === 0 || overLimit || submitting
                     ? 'bg-uni-border/30 text-uni-muted cursor-not-allowed'
                     : 'btn-gold'
                 }`}
               >
-                {selected.length === 0
+                {submitting
+                  ? 'جارٍ التقديم...'
+                  : selected.length === 0
                   ? 'اختر مقرراً أولاً'
                   : overLimit
                   ? 'تجاوزت الحد المسموح'

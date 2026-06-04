@@ -720,3 +720,70 @@ async def publish_lecture(
     lecture.is_published = publish
     await db.commit()
     return {"message": "تم التحديث", "is_published": publish}
+
+
+@router.get("/enrollments/pending")
+async def get_pending_enrollments(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    from app.models.enrollment import Enrollment, EnrollmentStatus
+    from app.models.academic import CourseSection, Course
+    from app.models.user import StudentProfile
+    from sqlalchemy.orm import selectinload
+
+    result = await db.execute(
+        select(Enrollment)
+        .where(Enrollment.status == EnrollmentStatus.PENDING_APPROVAL)
+        .options(
+            selectinload(Enrollment.student).selectinload(StudentProfile.user),
+            selectinload(Enrollment.section).selectinload(CourseSection.course),
+        )
+        .order_by(Enrollment.enrolled_at.desc())
+    )
+    enrollments = result.scalars().all()
+
+    return [
+        {
+            "id": e.id,
+            "student_name": f"{e.student.user.first_name_ar or e.student.user.first_name} {e.student.user.last_name_ar or e.student.user.last_name}" if e.student and e.student.user else "غير معروف",
+            "student_id": e.student.student_id if e.student else "",
+            "course_name": e.section.course.name_ar or e.section.course.name if e.section and e.section.course else "غير معروف",
+            "course_code": e.section.course.code if e.section and e.section.course else "",
+            "section_id": e.section_id,
+            "enrolled_at": e.enrolled_at.strftime("%Y/%m/%d %H:%M") if e.enrolled_at else "",
+        }
+        for e in enrollments
+    ]
+
+
+@router.patch("/enrollments/{enrollment_id}/approve")
+async def approve_enrollment(
+    enrollment_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    from app.models.enrollment import Enrollment, EnrollmentStatus
+    result = await db.execute(select(Enrollment).where(Enrollment.id == enrollment_id))
+    enrollment = result.scalar_one_or_none()
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    enrollment.status = EnrollmentStatus.ENROLLED
+    await db.commit()
+    return {"message": "تمت الموافقة على التسجيل"}
+
+
+@router.patch("/enrollments/{enrollment_id}/reject")
+async def reject_enrollment(
+    enrollment_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    from app.models.enrollment import Enrollment, EnrollmentStatus
+    result = await db.execute(select(Enrollment).where(Enrollment.id == enrollment_id))
+    enrollment = result.scalar_one_or_none()
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    enrollment.status = EnrollmentStatus.DROPPED
+    await db.commit()
+    return {"message": "تم رفض طلب التسجيل"}

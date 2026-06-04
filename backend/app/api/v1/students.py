@@ -357,6 +357,52 @@ async def activate_academic_twin(
     return twin_data
 
 
+@router.post("/enroll/{section_id}")
+async def enroll_in_course_pending(
+    section_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_student),
+):
+    from app.models.enrollment import Enrollment, EnrollmentStatus
+    from app.models.academic import CourseSection
+
+    # Get student profile
+    profile_result = await db.execute(
+        select(StudentProfile).where(StudentProfile.user_id == current_user.id)
+    )
+    profile = profile_result.scalar_one_or_none()
+    if not profile:
+        raise HTTPException(status_code=404, detail="الملف الشخصي غير موجود")
+
+    # Check section exists
+    section_result = await db.execute(
+        select(CourseSection).where(CourseSection.id == section_id, CourseSection.is_active == True)
+    )
+    section = section_result.scalar_one_or_none()
+    if not section:
+        raise HTTPException(status_code=404, detail="الشعبة غير موجودة")
+
+    # Check already enrolled
+    existing = await db.execute(
+        select(Enrollment).where(
+            Enrollment.student_id == profile.id,
+            Enrollment.section_id == section_id,
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="أنت مسجّل في هذه المادة مسبقاً")
+
+    enrollment = Enrollment(
+        student_id=profile.id,
+        section_id=section_id,
+        enrolled_at=datetime.now(timezone.utc),
+        status=EnrollmentStatus.PENDING_APPROVAL,
+    )
+    db.add(enrollment)
+    await db.commit()
+    return {"message": "تم تقديم طلب التسجيل — في انتظار موافقة الإدارة", "status": "pending_approval"}
+
+
 @router.delete("/enroll/{section_id}")
 async def drop_course(
     section_id: int,

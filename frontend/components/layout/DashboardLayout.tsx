@@ -12,6 +12,7 @@ import {
 import { useAuthStore } from '@/lib/store'
 import { authAPI, studentAPI, searchAPI } from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 
 interface NavItem {
   href: string
@@ -48,6 +49,7 @@ const STUDENT_NAV: NavItem[] = [
 const ADMIN_NAV: NavItem[] = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'لوحة الإدارة' },
   { href: '/admin/students', icon: Users, label: 'إدارة الطلاب' },
+  { href: '/admin/enrollments', icon: Users, label: 'طلبات التسجيل' },
   { href: '/admin/grades', icon: BarChart3, label: 'إدارة الدرجات' },
   { href: '/admin/courses', icon: BookOpen, label: 'إدارة المواد' },
   { href: '/admin/sections', icon: Layers, label: 'الشُعب الدراسية' },
@@ -106,11 +108,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const toggleLang = () => {
-    const next = lang === 'ar' ? 'en' : 'ar'
-    setLang(next)
-    document.documentElement.lang = next
-    document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr'
+  const handleLanguageToggle = () => {
+    toast('اللغة الإنجليزية قيد التطوير — قريباً!', { icon: '🔜' })
   }
 
   useEffect(() => {
@@ -300,7 +299,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Language toggle */}
           <button
-            onClick={toggleLang}
+            onClick={handleLanguageToggle}
             className="text-uni-muted hover:text-uni-gold transition-colors flex items-center gap-1 text-xs border border-uni-border/30 rounded-lg px-2 py-1 hover:border-uni-gold/30"
           >
             <Globe className="w-3.5 h-3.5" />

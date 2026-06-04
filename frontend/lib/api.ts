@@ -90,6 +90,7 @@ export const studentAPI = {
   getTranscript: () => api.get('/students/transcript'),
   getTwin: () => api.get('/students/twin'),
   enroll: (sectionId: number) => api.post('/students/enroll', null, { params: { section_id: sectionId } }),
+  enrollInCourse: (sectionId: number) => api.post(`/students/enroll/${sectionId}`),
   dropCourse: (sectionId: number) => api.delete(`/students/enroll/${sectionId}`),
   getNotifications: () => api.get('/students/notifications'),
   getAnalytics: () => api.get('/students/analytics'),
