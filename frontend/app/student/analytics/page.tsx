@@ -30,7 +30,7 @@ const GRADE_COLORS: Record<string, string> = {
 }
 
 export default function StudentAnalyticsPage() {
-  const { t, lang } = useT()
+  const { t } = useT()
   const { data, isLoading } = useQuery({
     queryKey: ['student-analytics'],
     queryFn: () => studentAPI.getAnalytics().then(r => r.data),
