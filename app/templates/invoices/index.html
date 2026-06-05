@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Pending Invoices') }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .status-pending    { background: #fef3c7; color: #92400e; }
+  .status-resolved   { background: #d1fae5; color: #065f46; }
+  .status-in_progress{ background: #dbeafe; color: #1e40af; }
+  .status-cancelled  { background: #f3f4f6; color: #6b7280; }
+  .status-badge {
+    display: inline-block; padding: .2rem .55rem;
+    border-radius: 99px; font-size: .72rem; font-weight: 700;
+  }
+  .invoice-row:hover { background: #f8fafc; cursor: default; }
+  .notes-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #dbeafe; color: #1e40af;
+    font-size: .7rem; font-weight: 700;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-receipt-cutoff text-warning me-2"></i>
+      {{ _('Pending Invoices') }} / الفواتير المعلقة
+    </h1>
+    <p class="text-muted small mb-0">
+      {{ _('Track and manage open invoices by employee, date, and status') }}
+    </p>
+  </div>
+</div>
+
+<!-- Summary KPIs -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="h4 fw-bold text-warning mb-0">{{ total_pending }}</div>
+      <div class="small text-muted">{{ _('Open Invoices') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="h4 fw-bold text-danger mb-0 font-monospace" style="font-size:1.2rem;">
+        {{ '{:,.0f}'.format(total_net) }}
+      </div>
+      <div class="small text-muted">{{ _('Total Net (SAR)') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="h4 fw-bold text-primary mb-0">{{ invoices.total }}</div>
+      <div class="small text-muted">{{ _('Filtered Results') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="h4 fw-bold text-secondary mb-0">{{ invoices.pages }}</div>
+      <div class="small text-muted">{{ _('Pages') }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4 no-print">
+  <div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold small">
+          {{ _('Employee') }} / الموظف
+        </label>
+        <select name="employee_id" class="form-select form-select-sm">
+          <option value="">{{ _('All Employees') }}</option>
+          {% for emp in employees %}
+            <option value="{{ emp.id }}" {% if employee_filter == emp.id %}selected{% endif %}>
+              {{ emp.name }}{% if emp.name_ar %} — {{ emp.name_ar }}{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label fw-semibold small">{{ _('From') }}</label>
+        <input type="date" name="date_from" class="form-control form-control-sm"
+               value="{{ date_from or '' }}">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label fw-semibold small">{{ _('To') }}</label>
+        <input type="date" name="date_to" class="form-control form-control-sm"
+               value="{{ date_to or '' }}">
+      </div>
+      <div class="col-12 col-md-2">
+        <label class="form-label fw-semibold small">{{ _('Status') }}</label>
+        <select name="status" class="form-select form-select-sm">
+          <option value="">{{ _('Pending (default)') }}</option>
+          <option value="pending"     {% if status_filter == 'pending'     %}selected{% endif %}>{{ _('Pending') }}</option>
+          <option value="resolved"    {% if status_filter == 'resolved'    %}selected{% endif %}>{{ _('Resolved') }}</option>
+          <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>{{ _('In Progress') }}</option>
+          <option value="cancelled"   {% if status_filter == 'cancelled'   %}selected{% endif %}>{{ _('Cancelled') }}</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-2">
+        <label class="form-label fw-semibold small">{{ _('Search') }}</label>
+        <input type="text" name="search" class="form-control form-control-sm"
+               placeholder="{{ _('Invoice / customer…') }}"
+               value="{{ search or '' }}">
+      </div>
+      <div class="col-12 col-md-1 d-flex gap-1">
+        <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+          <i class="bi bi-search"></i>
+        </button>
+        <a href="{{ url_for('invoices.index') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-x-circle"></i>
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Invoices Table -->
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between py-3">
+    <span><i class="bi bi-table me-2 text-warning"></i>{{ _('Invoice List') }}</span>
+    <span class="badge bg-secondary">{{ invoices.total }} {{ _('records') }}</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead>
+          <tr>
+            <th>{{ _('Invoice No') }}</th>
+            <th>{{ _('Date') }}</th>
+            <th>{{ _('Employee') }}</th>
+            <th>{{ _('Customer') }}</th>
+            <th>{{ _('Description') }}</th>
+            <th class="text-end">{{ _('Net (SAR)') }}</th>
+            <th class="text-center">{{ _('Status') }}</th>
+            <th class="text-center">{{ _('Notes') }}</th>
+            <th class="text-center no-print">{{ _('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if invoices.items %}
+            {% for inv in invoices.items %}
+            <tr class="invoice-row" id="inv-row-{{ inv.id }}">
+              <td>
+                <a href="{{ url_for('invoices.detail', invoice_id=inv.id) }}"
+                   class="fw-semibold font-monospace text-decoration-none">
+                  {{ inv.invoice_no or '—' }}
+                </a>
+              </td>
+              <td class="text-muted">
+                {{ inv.invoice_date.strftime('%Y-%m-%d') if inv.invoice_date else '—' }}
+              </td>
+              <td>
+                {% if inv.employee %}
+                  <span title="{{ inv.employee.name_ar or '' }}">{{ inv.employee.name }}</span>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="text-truncate" style="max-width:130px;" title="{{ inv.customer_name or '' }}">
+                {{ inv.customer_name or '—' }}
+              </td>
+              <td class="text-truncate" style="max-width:150px;" title="{{ inv.description or '' }}">
+                {{ inv.description or '—' }}
+              </td>
+              <td class="text-end font-monospace fw-semibold">
+                {{ '{:,.2f}'.format(inv.net) }}
+              </td>
+              <td class="text-center">
+                <span class="status-badge status-{{ inv.status or 'pending' }}">
+                  {% if inv.status == 'resolved' %}
+                    <i class="bi bi-check-circle-fill me-1"></i>{{ _('Resolved') }}
+                  {% elif inv.status == 'in_progress' %}
+                    <i class="bi bi-hourglass-split me-1"></i>{{ _('In Progress') }}
+                  {% elif inv.status == 'cancelled' %}
+                    <i class="bi bi-x-circle me-1"></i>{{ _('Cancelled') }}
+                  {% else %}
+                    <i class="bi bi-clock-fill me-1"></i>{{ _('Pending') }}
+                  {% endif %}
+                </span>
+              </td>
+              <td class="text-center">
+                {% set n = inv.notes | length %}
+                {% if n > 0 %}
+                  <span class="notes-count" title="{{ n }} {{ _('notes') }}">{{ n }}</span>
+                {% else %}
+                  <span class="text-muted">0</span>
+                {% endif %}
+              </td>
+              <td class="text-center no-print">
+                <button class="btn btn-sm btn-outline-info py-0 px-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#noteModal"
+                        data-inv-id="{{ inv.id }}"
+                        data-inv-no="{{ inv.invoice_no or '' }}"
+                        title="{{ _('Add Note') }}">
+                  <i class="bi bi-chat-left-text"></i>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="9" class="text-center py-5 text-muted">
+                <i class="bi bi-receipt fs-2 d-block mb-2"></i>
+                {{ _('No invoices found.') }}
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if invoices.pages > 1 %}
+  <div class="card-footer d-flex justify-content-center no-print">
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        {% if invoices.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('invoices.index',
+                page=invoices.prev_num,
+                employee_id=employee_filter,
+                date_from=date_from,
+                date_to=date_to,
+                status=status_filter,
+                search=search) }}">
+              &laquo;
+            </a>
+          </li>
+        {% endif %}
+        {% for p in invoices.iter_pages() %}
+          {% if p %}
+            <li class="page-item {% if p == invoices.page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for('invoices.index',
+                  page=p,
+                  employee_id=employee_filter,
+                  date_from=date_from,
+                  date_to=date_to,
+                  status=status_filter,
+                  search=search) }}">{{ p }}</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+        {% if invoices.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('invoices.index',
+                page=invoices.next_num,
+                employee_id=employee_filter,
+                date_from=date_from,
+                date_to=date_to,
+                status=status_filter,
+                search=search) }}">
+              &raquo;
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="noteModalLabel">
+          <i class="bi bi-chat-left-text me-2 text-info"></i>
+          {{ _('Add Note') }} / إضافة ملاحظة
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" id="noteForm" action="#">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="invoice_id" id="modalInvoiceId">
+        <div class="modal-body">
+          <div class="mb-3 p-2 bg-light rounded">
+            <span class="text-muted small">{{ _('Invoice') }}:</span>
+            <strong id="modalInvoiceNo" class="font-monospace"></strong>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">{{ _('Reason') }} / السبب</label>
+            <select name="reason_code" class="form-select">
+              <option value="">— {{ _('Select reason') }} —</option>
+              {% for code, label in reason_codes %}
+                <option value="{{ code }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              {{ _('Note') }} / الملاحظة <span class="text-danger">*</span>
+            </label>
+            <textarea name="note" class="form-control" rows="4"
+                      placeholder="{{ _('Enter note details…') }}" required></textarea>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label fw-semibold small">{{ _('Update Status') }}</label>
+            <select name="status" class="form-select form-select-sm">
+              <option value="">— {{ _('Keep current') }} —</option>
+              <option value="pending">{{ _('Pending') }}</option>
+              <option value="in_progress">{{ _('In Progress') }}</option>
+              <option value="resolved">{{ _('Resolved') }}</option>
+              <option value="cancelled">{{ _('Cancelled') }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            {{ _('Cancel') }}
+          </button>
+          <button type="submit" class="btn btn-info text-white">
+            <i class="bi bi-check-lg me-1"></i>{{ _('Save Note') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const noteModal = document.getElementById('noteModal');
+  noteModal?.addEventListener('show.bs.modal', function (e) {
+    const btn = e.relatedTarget;
+    document.getElementById('modalInvoiceId').value = btn.dataset.invId || '';
+    document.getElementById('modalInvoiceNo').textContent = btn.dataset.invNo || '—';
+    document.getElementById('noteForm').action = `/invoices/${btn.dataset.invId}/note`;
+    // Reset note textarea on open
+    noteModal.querySelector('textarea[name="note"]').value = '';
+  });
+
+  // Init tooltips
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+</script>
+{% endblock %}

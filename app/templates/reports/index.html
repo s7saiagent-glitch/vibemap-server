@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Reports') }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .report-card {
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    padding: 1.5rem;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    transition: all .2s;
+    background: #fff;
+    height: 100%;
+  }
+  .report-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 8px 24px rgba(26,86,219,.12);
+    transform: translateY(-3px);
+    color: inherit;
+  }
+  .report-card .report-icon {
+    font-size: 2.2rem;
+    width: 54px; height: 54px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .report-card h5 { font-weight: 700; margin-bottom: 0; font-size: 1rem; }
+  .report-card p  { color: #6b7280; font-size: .82rem; margin-bottom: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="mb-4">
+  <h1 class="h4 fw-bold mb-0">
+    <i class="bi bi-bar-chart-line-fill text-primary me-2"></i>
+    {{ _('Reports') }}
+  </h1>
+  <p class="text-muted small mb-0">{{ _('Detailed analysis and performance reports') }}</p>
+</div>
+
+<!-- Report Cards Grid -->
+<div class="row g-3">
+
+  <!-- Employee Performance -->
+  <div class="col-12 col-sm-6 col-xl-4">
+    <a href="{{ url_for('reports.employee_report', emp_id=1) }}" class="report-card">
+      <div class="report-icon bg-primary bg-opacity-10 text-primary">
+        <i class="bi bi-person-lines-fill"></i>
+      </div>
+      <h5 class="text-dark">{{ _('Employee Performance') }}</h5>
+      <p>{{ _('Individual sales trends, KPIs, monthly chart, and product category breakdown.') }}</p>
+      <div class="d-flex align-items-center gap-1 text-primary small fw-semibold mt-auto">
+        {{ _('View Report') }} <i class="bi bi-arrow-{% if current_locale == 'ar' %}left{% else %}right{% endif %}"></i>
+      </div>
+    </a>
+  </div>
+
+  <!-- Actual vs Target -->
+  <div class="col-12 col-sm-6 col-xl-4">
+    <a href="{{ url_for('reports.actual_vs_target') }}" class="report-card">
+      <div class="report-icon bg-success bg-opacity-10 text-success">
+        <i class="bi bi-bullseye"></i>
+      </div>
+      <h5 class="text-dark">{{ _('Actual vs Target') }}</h5>
+      <p>{{ _('Compare actual monthly sales against targets. Color-coded achievement status.') }}</p>
+      <div class="d-flex align-items-center gap-1 text-success small fw-semibold mt-auto">
+        {{ _('View Report') }} <i class="bi bi-arrow-{% if current_locale == 'ar' %}left{% else %}right{% endif %}"></i>
+      </div>
+    </a>
+  </div>
+
+  <!-- Weekly Comparison -->
+  <div class="col-12 col-sm-6 col-xl-4">
+    <a href="{{ url_for('reports.weekly') }}" class="report-card">
+      <div class="report-icon bg-warning bg-opacity-10 text-warning">
+        <i class="bi bi-calendar-week-fill"></i>
+      </div>
+      <h5 class="text-dark">{{ _('Weekly Comparison') }}</h5>
+      <p>{{ _('Current week vs previous week performance with trend indicators.') }}</p>
+      <div class="d-flex align-items-center gap-1 text-warning small fw-semibold mt-auto">
+        {{ _('View Report') }} <i class="bi bi-arrow-{% if current_locale == 'ar' %}left{% else %}right{% endif %}"></i>
+      </div>
+    </a>
+  </div>
+
+  <!-- Pending Invoices (link to invoices) -->
+  <div class="col-12 col-sm-6 col-xl-4">
+    <a href="{{ url_for('invoices.index') }}" class="report-card">
+      <div class="report-icon bg-danger bg-opacity-10 text-danger">
+        <i class="bi bi-receipt-cutoff"></i>
+      </div>
+      <h5 class="text-dark">{{ _('Pending Invoices') }}</h5>
+      <p>{{ _('Track and manage open/pending invoices by employee, date, and status.') }}</p>
+      <div class="d-flex align-items-center gap-1 text-danger small fw-semibold mt-auto">
+        {{ _('View Report') }} <i class="bi bi-arrow-{% if current_locale == 'ar' %}left{% else %}right{% endif %}"></i>
+      </div>
+    </a>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="col-12 col-sm-6 col-xl-4">
+    <a href="{{ url_for('dashboard.index') }}" class="report-card">
+      <div class="report-icon bg-info bg-opacity-10 text-info">
+        <i class="bi bi-speedometer2"></i>
+      </div>
+      <h5 class="text-dark">{{ _('Live Dashboard') }}</h5>
+      <p>{{ _('Real-time KPIs, daily progress, and team performance overview.') }}</p>
+      <div class="d-flex align-items-center gap-1 text-info small fw-semibold mt-auto">
+        {{ _('Go to Dashboard') }} <i class="bi bi-arrow-{% if current_locale == 'ar' %}left{% else %}right{% endif %}"></i>
+      </div>
+    </a>
+  </div>
+
+  <!-- Sales Advice -->
+  <div class="col-12 col-sm-6 col-xl-4">
+    <a href="{{ url_for('dashboard.advice') }}" class="report-card">
+      <div class="report-icon" style="background:#fef3c7; color:#92400e;">
+        <i class="bi bi-lightbulb-fill"></i>
+      </div>
+      <h5 class="text-dark">{{ _('Sales Advice') }}</h5>
+      <p>{{ _('AI-powered recommendations and alerts based on current performance data.') }}</p>
+      <div class="d-flex align-items-center gap-1 small fw-semibold mt-auto" style="color:#92400e;">
+        {{ _('View Advice') }} <i class="bi bi-arrow-{% if current_locale == 'ar' %}left{% else %}right{% endif %}"></i>
+      </div>
+    </a>
+  </div>
+
+</div>
+
+<!-- Quick Stats Row -->
+<div class="row g-3 mt-2">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body py-3">
+        <div class="row g-3 text-center">
+          <div class="col-6 col-md-3">
+            <div class="fw-bold h5 text-primary mb-0">
+              <a href="{{ url_for('employees.index') }}" class="text-decoration-none text-primary">
+                {{ _('Employees') }} →
+              </a>
+            </div>
+            <div class="small text-muted">{{ _('Manage team') }}</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="fw-bold h5 text-success mb-0">
+              <a href="{{ url_for('uploads.index') }}" class="text-decoration-none text-success">
+                {{ _('Uploads') }} →
+              </a>
+            </div>
+            <div class="small text-muted">{{ _('Import data') }}</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="fw-bold h5 text-danger mb-0">
+              <a href="{{ url_for('targets.index') }}" class="text-decoration-none text-danger">
+                {{ _('Targets') }} →
+              </a>
+            </div>
+            <div class="small text-muted">{{ _('Set goals') }}</div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="fw-bold h5 text-warning mb-0">
+              <a href="{{ url_for('schedule.index') }}" class="text-decoration-none text-warning">
+                {{ _('Schedule') }} →
+              </a>
+            </div>
+            <div class="small text-muted">{{ _('View calendar') }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

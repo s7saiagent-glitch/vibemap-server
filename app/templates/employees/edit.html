@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Edit Employee') }} — {{ emp.name }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .alias-chip {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .25rem .65rem;
+    background: #dbeafe; color: #1e40af;
+    border-radius: 99px; font-size: .78rem; font-weight: 600;
+    margin: .15rem;
+  }
+  .alias-chip .del-btn {
+    background: none; border: none; color: #1e40af;
+    cursor: pointer; padding: 0; line-height: 1; font-size: .85rem;
+  }
+  .alias-chip .del-btn:hover { color: #c81e1e; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('employees.index') }}">{{ _('Employees') }}</a>
+    </li>
+    <li class="breadcrumb-item active">{{ _('Edit') }}: {{ emp.name }}</li>
+  </ol>
+</nav>
+
+<div class="row g-4">
+  <!-- Edit Form -->
+  <div class="col-12 col-lg-7">
+    <div class="card">
+      <div class="card-header fw-semibold py-3">
+        <i class="bi bi-person-gear me-2 text-primary"></i>{{ _('Edit Employee Details') }}
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('employees.edit', emp_id=emp.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              {{ _('Name (English)') }} <span class="text-danger">*</span>
+            </label>
+            <input type="text" name="name" class="form-control"
+                   value="{{ emp.name }}" required
+                   placeholder="{{ _('Employee English name') }}">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">{{ _('Name (Arabic) / الاسم بالعربي') }}</label>
+            <input type="text" name="name_ar" class="form-control" dir="rtl"
+                   value="{{ emp.name_ar or '' }}"
+                   placeholder="الاسم بالعربي">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">{{ _('SAP ID') }}</label>
+            <input type="text" name="sap_id" class="form-control"
+                   value="{{ emp.sap_id or '' }}"
+                   placeholder="{{ _('Optional SAP system ID') }}">
+          </div>
+
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="is_active" id="isActive"
+                     {% if emp.is_active %}checked{% endif %}>
+              <label class="form-check-label fw-semibold" for="isActive">
+                {{ _('Active Employee') }}
+              </label>
+            </div>
+            <div class="form-text text-muted">{{ _('Inactive employees are hidden from reports but history is preserved.') }}</div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1"></i>{{ _('Save Changes') }}
+            </button>
+            <a href="{{ url_for('employees.index') }}" class="btn btn-outline-secondary">
+              {{ _('Cancel') }}
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alias Management -->
+  <div class="col-12 col-lg-5">
+    <div class="card">
+      <div class="card-header fw-semibold py-3">
+        <i class="bi bi-tags me-2 text-info"></i>{{ _('Alias Names') }}
+        <span class="badge bg-info ms-1">{{ emp.aliases|length }}</span>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">
+          {{ _('Aliases help the system automatically match employee names from uploaded Excel files.') }}
+        </p>
+
+        <!-- Current Aliases -->
+        <div class="mb-3" id="aliasContainer">
+          {% if emp.aliases %}
+            {% for alias in emp.aliases %}
+            <span class="alias-chip">
+              {{ alias.alias }}
+              <form method="POST"
+                    action="{{ url_for('employees.delete_alias', emp_id=emp.id, alias_id=alias.id) }}"
+                    class="d-inline"
+                    onsubmit="return confirm('{{ _('Remove alias') }} {{ alias.alias }}?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="del-btn" title="{{ _('Remove') }}">
+                  <i class="bi bi-x-circle-fill"></i>
+                </button>
+              </form>
+            </span>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted small" id="noAlias">{{ _('No aliases yet.') }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Add Alias Form -->
+        <form method="POST" action="{{ url_for('employees.add_alias', emp_id=emp.id) }}" class="d-flex gap-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="alias" class="form-control form-control-sm flex-grow-1"
+                 placeholder="{{ _('New alias name…') }}" required>
+          <button type="submit" class="btn btn-sm btn-info text-white">
+            <i class="bi bi-plus-lg"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="card mt-3">
+      <div class="card-body">
+        <h6 class="fw-semibold mb-2"><i class="bi bi-info-circle me-2 text-secondary"></i>{{ _('Employee Info') }}</h6>
+        <table class="table table-sm mb-0">
+          <tr>
+            <td class="text-muted small">{{ _('ID') }}</td>
+            <td class="fw-semibold">#{{ emp.id }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted small">{{ _('SAP ID') }}</td>
+            <td>{{ emp.sap_id or '—' }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted small">{{ _('Created') }}</td>
+            <td class="small">{{ emp.created_at.strftime('%Y-%m-%d') if emp.created_at else '—' }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted small">{{ _('Status') }}</td>
+            <td>
+              {% if emp.is_locked %}
+                <span class="badge bg-warning text-dark"><i class="bi bi-lock me-1"></i>{{ _('Locked') }}</span>
+              {% elif emp.is_active %}
+                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ _('Active') }}</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ _('Inactive') }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+
+        <!-- Lock Toggle -->
+        <form method="POST" action="{{ url_for('employees.toggle_lock', emp_id=emp.id) }}" class="mt-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-sm btn-outline-{{ 'secondary' if emp.is_locked else 'warning' }} w-100">
+            <i class="bi bi-{{ 'unlock' if emp.is_locked else 'lock' }} me-1"></i>
+            {{ _('Unlock Employee') if emp.is_locked else _('Lock Employee') }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

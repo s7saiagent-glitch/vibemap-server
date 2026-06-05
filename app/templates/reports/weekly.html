@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Weekly Comparison') }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .trend-up   { color: #057a55; font-weight: 700; }
+  .trend-down { color: #c81e1e; font-weight: 700; }
+  .trend-same { color: #6b7280; }
+
+  .delta-badge {
+    display: inline-block;
+    padding: .2rem .5rem;
+    border-radius: 6px;
+    font-size: .75rem; font-weight: 700;
+  }
+  .delta-pos { background: #d1fae5; color: #065f46; }
+  .delta-neg { background: #fee2e2; color: #991b1b; }
+  .delta-neu { background: #f3f4f6; color: #6b7280; }
+
+  .motivational-box {
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    border: 1px solid;
+  }
+  .motivational-up   { border-color: #057a55; background: #ecfdf5; }
+  .motivational-down { border-color: #c27803; background: #fffbeb; }
+
+  @media print { .no-print { display: none !important; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2 no-print">
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-calendar-week-fill text-warning me-2"></i>
+      {{ _('Weekly Comparison') }}
+    </h1>
+    <p class="text-muted small mb-0">{{ _('Week-by-week sales breakdown within the selected month') }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-printer me-1"></i>{{ _('Print') }}
+    </button>
+    <a href="{{ url_for('reports.export', report_type='weekly', year=year, month=month) }}"
+       class="btn btn-outline-success btn-sm">
+      <i class="bi bi-file-earmark-excel me-1"></i>{{ _('Export Excel') }}
+    </a>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-{% if current_locale == 'ar' %}right{% else %}left{% endif %} me-1"></i>{{ _('Back') }}
+    </a>
+  </div>
+</div>
+
+<!-- Month / Year Filter -->
+<div class="card mb-4 no-print">
+  <div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+      <div class="col-6 col-md-2">
+        <label class="form-label fw-semibold small">{{ _('Year') }}</label>
+        <select name="year" class="form-select" onchange="this.form.submit()">
+          {% for y in range(2023, 2028) %}
+            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label fw-semibold small">{{ _('Month') }}</label>
+        <select name="month" class="form-select" onchange="this.form.submit()">
+          {% for m_num, m_name in months %}
+            <option value="{{ m_num }}" {% if m_num == month %}selected{% endif %}>
+              {{ m_num }} — {{ m_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-funnel me-1"></i>{{ _('Apply') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Weekly Data Table -->
+{% if weekly_data %}
+
+{# Compute current-week vs prev-week totals from the last two columns of all_weeks #}
+{% set last_week_idx  = all_weeks|length - 1 %}
+{% set prev_week_idx  = all_weeks|length - 2 if all_weeks|length >= 2 else -1 %}
+
+{% set ns = namespace(grand_current=0, grand_prev=0) %}
+{% for row in weekly_data %}
+  {% if last_week_idx >= 0 %}
+    {% set ns.grand_current = ns.grand_current + row.week_totals[last_week_idx] %}
+  {% endif %}
+  {% if prev_week_idx >= 0 %}
+    {% set ns.grand_prev = ns.grand_prev + row.week_totals[prev_week_idx] %}
+  {% endif %}
+{% endfor %}
+
+{% set grand_delta = ns.grand_current - ns.grand_prev %}
+{% if ns.grand_prev > 0 %}
+  {% set grand_delta_pct = grand_delta / ns.grand_prev * 100 %}
+  <div class="motivational-box {% if grand_delta >= 0 %}motivational-up{% else %}motivational-down{% endif %} mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <i class="bi bi-{% if grand_delta >= 0 %}graph-up-arrow text-success{% else %}graph-down-arrow text-warning{% endif %} fs-3"></i>
+      <div>
+        {% if grand_delta >= 0 %}
+          <strong class="text-success">{{ _('Great progress!') }}</strong>
+          {{ _('Sales are up %(pct)s%% vs the previous week. Keep the momentum!', pct='{:.1f}'.format(grand_delta_pct)) }}
+        {% else %}
+          <strong class="text-warning">{{ _('Needs attention!') }}</strong>
+          {{ _('Sales are down %(pct)s%% vs the previous week. Push harder!', pct='{:.1f}'.format(grand_delta_pct|abs)) }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header py-3">
+    <i class="bi bi-table me-2 text-warning"></i>
+    {{ _('Weekly Sales by Employee') }} —
+    {% for m_num, m_name in months %}{% if m_num == month %}{{ m_name }}{% endif %}{% endfor %}
+    {{ year }}
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead>
+          <tr>
+            <th>{{ _('Employee') }}</th>
+            {% for w in all_weeks %}
+              <th class="text-end">{{ _('W') }}{{ w }}</th>
+            {% endfor %}
+            <th class="text-end">{{ _('Monthly Total') }}</th>
+            <th class="text-center">{{ _('Trend') }}</th>
+            <th>{{ _('Message') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in weekly_data %}
+            {# Current and previous week values for trend #}
+            {% set cur_val  = row.week_totals[last_week_idx]  if last_week_idx >= 0  and last_week_idx  < row.week_totals|length else 0 %}
+            {% set prev_val = row.week_totals[prev_week_idx]  if prev_week_idx >= 0  and prev_week_idx  < row.week_totals|length else 0 %}
+            {% set delta = cur_val - prev_val %}
+            {% set delta_pct = (delta / prev_val * 100) if prev_val > 0 else 0 %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ row.employee.name }}</div>
+              {% if row.employee.name_ar %}
+                <div class="text-muted small" dir="rtl">{{ row.employee.name_ar }}</div>
+              {% endif %}
+            </td>
+            {% for total in row.week_totals %}
+              <td class="text-end font-monospace
+                {% if not loop.last %}text-muted{% else %}fw-semibold{% endif %}">
+                {{ '{:,.0f}'.format(total) if total else '—' }}
+              </td>
+            {% endfor %}
+            <td class="text-end font-monospace fw-bold text-primary">
+              {{ '{:,.0f}'.format(row.monthly_total) }}
+            </td>
+            <td class="text-center">
+              {% if delta > 0 %}
+                <span class="trend-up fs-5">↑</span>
+                <span class="small text-success d-block">+{{ '{:.0f}'.format(delta_pct) }}%</span>
+              {% elif delta < 0 %}
+                <span class="trend-down fs-5">↓</span>
+                <span class="small text-danger d-block">{{ '{:.0f}'.format(delta_pct) }}%</span>
+              {% else %}
+                <span class="trend-same">→</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if delta > 0 and delta_pct >= 20 %}
+                <span class="small text-success">
+                  <i class="bi bi-star-fill me-1"></i>{{ _('Strong growth!') }}
+                </span>
+              {% elif delta > 0 %}
+                <span class="small text-success">
+                  <i class="bi bi-graph-up me-1"></i>{{ _('Improving — keep it up!') }}
+                </span>
+              {% elif delta_pct < -20 %}
+                <span class="small text-danger">
+                  <i class="bi bi-exclamation-triangle me-1"></i>{{ _('Significant drop — review needed') }}
+                </span>
+              {% elif delta < 0 %}
+                <span class="small text-warning">
+                  <i class="bi bi-dash-circle me-1"></i>{{ _('Slight decline — push harder') }}
+                </span>
+              {% else %}
+                <span class="small text-muted">
+                  <i class="bi bi-check me-1"></i>{{ _('Stable performance') }}
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light fw-bold">
+          <tr>
+            <td>{{ _('Week Total') }}</td>
+            {% for w_idx in range(all_weeks|length) %}
+              {% set ns_col = namespace(col_sum=0) %}
+              {% for row in weekly_data %}
+                {% set ns_col.col_sum = ns_col.col_sum + (row.week_totals[w_idx] if w_idx < row.week_totals|length else 0) %}
+              {% endfor %}
+              <td class="text-end font-monospace">{{ '{:,.0f}'.format(ns_col.col_sum) }}</td>
+            {% endfor %}
+            <td class="text-end font-monospace text-primary">
+              {% set ns_grand = namespace(g=0) %}
+              {% for row in weekly_data %}{% set ns_grand.g = ns_grand.g + row.monthly_total %}{% endfor %}
+              {{ '{:,.0f}'.format(ns_grand.g) }}
+            </td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="card">
+  <div class="card-body text-center py-6">
+    <i class="bi bi-calendar-x fs-1 text-muted d-block mb-3"></i>
+    <h5 class="fw-bold">{{ _('No Data Found') }}</h5>
+    <p class="text-muted">{{ _('No sales data for the selected month. Try uploading data first.') }}</p>
+    <a href="{{ url_for('uploads.index') }}" class="btn btn-primary">
+      <i class="bi bi-cloud-upload me-1"></i>{{ _('Upload Data') }}
+    </a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

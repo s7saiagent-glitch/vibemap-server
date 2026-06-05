@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Employee Performance') }} — {{ emp.name if emp else '' }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .kpi-card-sm {
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+  }
+  .kpi-card-sm .val { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
+  .kpi-card-sm .lbl { font-size: .75rem; color: #6b7280; margin-top: .25rem; }
+
+  @media print {
+    .no-print { display: none !important; }
+    .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2 no-print">
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-person-lines-fill text-primary me-2"></i>
+      {{ _('Employee Performance') }}
+      {% if emp %}— {{ emp.name }}{% endif %}
+    </h1>
+  </div>
+  <div class="d-flex gap-2">
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-printer me-1"></i>{{ _('Print') }}
+    </button>
+    {% if emp %}
+    <a href="{{ url_for('reports.export', report_type='sales_detail', year=year, month=month) }}"
+       class="btn btn-outline-success btn-sm">
+      <i class="bi bi-file-earmark-excel me-1"></i>{{ _('Export Excel') }}
+    </a>
+    {% endif %}
+    <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-{% if current_locale == 'ar' %}right{% else %}left{% endif %} me-1"></i>{{ _('Back') }}
+    </a>
+  </div>
+</div>
+
+<!-- Filters: employee selector + month/year -->
+<div class="card mb-4 no-print">
+  <div class="card-body">
+    <form method="GET" class="row g-3 align-items-end" id="filterForm">
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold small">{{ _('Employee') }}</label>
+        <select name="emp_id" id="employee-selector" class="form-select"
+                onchange="this.form.submit()">
+          <option value="">— {{ _('Select Employee') }} —</option>
+          {% for e in employees %}
+            <option value="{{ e.id }}" {% if emp and emp.id == e.id %}selected{% endif %}>
+              {{ e.name }}{% if e.name_ar %} — {{ e.name_ar }}{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label fw-semibold small">{{ _('Year') }}</label>
+        <select name="year" class="form-select" onchange="this.form.submit()">
+          {% for y in range(2023, 2028) %}
+            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label fw-semibold small">{{ _('Month') }}</label>
+        <select name="month" class="form-select" onchange="this.form.submit()">
+          {% for m_num, m_name in months %}
+            <option value="{{ m_num }}" {% if m_num == month %}selected{% endif %}>
+              {{ m_num }} — {{ m_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-search me-1"></i>{{ _('Apply') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if emp %}
+
+<!-- Employee header -->
+<div class="d-flex align-items-center gap-3 mb-4">
+  <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white fs-3"
+       style="width:56px;height:56px;background:var(--primary);flex-shrink:0;">
+    {{ emp.name[0]|upper }}
+  </div>
+  <div>
+    <h2 class="h5 fw-bold mb-0">{{ emp.name }}</h2>
+    {% if emp.name_ar %}
+      <div class="text-muted" dir="rtl">{{ emp.name_ar }}</div>
+    {% endif %}
+    {% if emp.sap_id %}
+      <code class="small text-secondary">SAP: {{ emp.sap_id }}</code>
+    {% endif %}
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="kpi-card-sm">
+      <div class="val text-primary">{{ '{:,.0f}'.format(achieved) }}</div>
+      <div class="lbl">{{ _('Total Sales (SAR)') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="kpi-card-sm">
+      <div class="val text-danger">{{ '{:,.0f}'.format(target_amount) }}</div>
+      <div class="lbl">{{ _('Target (SAR)') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="kpi-card-sm">
+      <div class="val {% if progress_pct >= 100 %}text-success{% elif progress_pct >= 80 %}text-warning{% else %}text-danger{% endif %}">
+        {{ '{:.1f}'.format(progress_pct) }}%
+      </div>
+      <div class="lbl">{{ _('Achievement') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="kpi-card-sm">
+      <div class="val text-info">{{ '{:,.0f}'.format(daily_target) }}</div>
+      <div class="lbl">{{ _('Daily Target Remaining') }} ({{ remaining_days }}d)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Progress bar -->
+<div class="card mb-4">
+  <div class="card-body py-3">
+    <div class="d-flex justify-content-between small fw-semibold mb-1">
+      <span>{{ _('Monthly Progress') }}</span>
+      <span>{{ '{:,.0f}'.format(achieved) }} / {{ '{:,.0f}'.format(target_amount) }}</span>
+    </div>
+    <div class="progress" style="height:12px;">
+      <div class="progress-bar bg-{% if progress_pct >= 100 %}success{% elif progress_pct >= 80 %}warning{% else %}danger{% endif %}"
+           style="width:{{ [progress_pct, 100]|min }}%">
+        {{ '{:.0f}'.format(progress_pct) }}%
+      </div>
+    </div>
+    <div class="d-flex justify-content-between small text-muted mt-1">
+      <span>{{ _('Remaining') }}: {{ '{:,.0f}'.format(remaining) }}</span>
+      <span>{{ remaining_days }} {{ _('days left') }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+  <!-- Daily/Cumulative Chart -->
+  <div class="col-12 col-lg-8">
+    <div class="card h-100">
+      <div class="card-header py-3">
+        <i class="bi bi-graph-up me-2 text-primary"></i>{{ _('Daily Sales vs Target') }}
+      </div>
+      <div class="card-body">
+        <canvas id="monthly-chart" style="max-height:280px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Doughnut -->
+  <div class="col-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-header py-3">
+        <i class="bi bi-pie-chart me-2 text-success"></i>{{ _('By Category') }}
+      </div>
+      <div class="card-body d-flex align-items-center justify-content-center">
+        <canvas id="category-chart" style="max-height:240px;"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sales Table -->
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between py-3">
+    <span><i class="bi bi-table me-2 text-primary"></i>{{ _('Daily Sales') }}</span>
+    <span class="badge bg-secondary">{{ daily_sales|length }} {{ _('days with sales') }}</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead>
+          <tr>
+            <th>{{ _('Day') }}</th>
+            <th class="text-end">{{ _('Sales (SAR)') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if daily_sales %}
+            {% for ds in daily_sales %}
+            <tr>
+              <td>{{ _('Day') }} {{ ds.day }}</td>
+              <td class="text-end font-monospace fw-semibold">{{ '{:,.2f}'.format(ds.total) }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="2" class="text-center py-4 text-muted">
+                {{ _('No sales records found for the selected period.') }}
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+        {% if daily_sales %}
+        <tfoot class="table-light fw-bold">
+          <tr>
+            <td>{{ _('Total') }}</td>
+            <td class="text-end font-monospace text-success">
+              {{ '{:,.2f}'.format(achieved) }}
+            </td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- No employee selected -->
+<div class="card">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-person-circle fs-1 text-muted d-block mb-3"></i>
+    <h5 class="fw-bold">{{ _('Select an Employee') }}</h5>
+    <p class="text-muted">
+      {{ _('Choose an employee from the dropdown above to view their performance report.') }}
+    </p>
+    <p class="text-muted small">
+      اختر موظفاً من القائمة أعلاه لعرض تقرير أدائه
+    </p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if emp %}
+<script>
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+  Chart.defaults.color = '#6b7280';
+
+  // Daily cumulative chart data from view
+  const chartLabels     = {{ chart_labels     | tojson }};
+  const chartDaily      = {{ chart_daily      | tojson }};
+  const chartCumulative = {{ chart_cumulative | tojson }};
+  const chartTarget     = {{ chart_target_line| tojson }};
+
+  const monthlyCtx = document.getElementById('monthly-chart');
+  if (monthlyCtx) {
+    new Chart(monthlyCtx, {
+      type: 'bar',
+      data: {
+        labels: chartLabels,
+        datasets: [
+          {
+            type: 'bar',
+            label: '{{ _("Daily Sales") }}',
+            data: chartDaily,
+            backgroundColor: 'rgba(26,86,219,.25)',
+            borderColor: '#1a56db',
+            borderWidth: 1,
+            yAxisID: 'y',
+          },
+          {
+            type: 'line',
+            label: '{{ _("Cumulative") }}',
+            data: chartCumulative,
+            borderColor: '#057a55',
+            backgroundColor: 'rgba(5,122,85,.08)',
+            tension: .35,
+            fill: true,
+            pointRadius: 2,
+            yAxisID: 'y',
+          },
+          {
+            type: 'line',
+            label: '{{ _("Target") }}',
+            data: chartTarget,
+            borderColor: '#c81e1e',
+            borderDash: [5, 4],
+            pointRadius: 0,
+            fill: false,
+            yAxisID: 'y',
+          },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+        scales: {
+          y: {
+            grid: { color: 'rgba(0,0,0,.05)' },
+            ticks: { callback: v => v.toLocaleString() }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // Category doughnut
+  const catLabels = {{ categories | map(attribute='category') | list | tojson }};
+  const catValues = {{ categories | map(attribute='total')    | list | tojson }};
+  const catCtx    = document.getElementById('category-chart');
+
+  if (catCtx && catLabels.length) {
+    new Chart(catCtx, {
+      type: 'doughnut',
+      data: {
+        labels: catLabels,
+        datasets: [{
+          data: catValues,
+          backgroundColor: [
+            '#1a56db','#057a55','#c27803','#7e3af2','#c81e1e',
+            '#0891b2','#be185d','#15803d','#d97706','#6366f1'
+          ],
+          borderWidth: 2,
+          borderColor: '#fff',
+        }]
+      },
+      options: {
+        cutout: '60%',
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 11 } } },
+          tooltip: { callbacks: { label: ctx => ` ${Number(ctx.raw).toLocaleString()}` } }
+        }
+      }
+    });
+  }
+</script>
+{% endif %}
+{% endblock %}

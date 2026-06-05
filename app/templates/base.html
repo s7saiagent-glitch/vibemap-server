@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="{{ current_locale }}" {% if current_locale == 'ar' %}dir="rtl"{% else %}dir="ltr"{% endif %}>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ _('Sahs Pro | ساهس برو') }}{% endblock %}</title>
+
+  {% if current_locale == 'ar' %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+  {% else %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  {% endif %}
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Google Fonts: Arabic (Cairo) + Latin (Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary:     #1a56db;
+      --primary-dk:  #1648c0;
+      --success:     #057a55;
+      --warning:     #c27803;
+      --danger:      #c81e1e;
+      --info:        #1c64f2;
+      --sidebar-bg:  #111827;
+      --sidebar-w:   240px;
+      --topbar-h:    60px;
+      --card-radius: 12px;
+    }
+
+    body {
+      font-family: {% if current_locale == 'ar' %}'Cairo'{% else %}'Inter'{% endif %}, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      direction: {% if current_locale == 'ar' %}rtl{% else %}ltr{% endif %};
+    }
+
+    /* ── Navbar ──────────────────────────────────── */
+    .top-navbar {
+      height: var(--topbar-h);
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1040;
+      display: flex;
+      align-items: center;
+      padding: 0 1.25rem;
+      gap: 1rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+
+    .top-navbar .brand {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .top-navbar .nav-link {
+      color: #374151;
+      font-weight: 500;
+      font-size: .875rem;
+      padding: .4rem .7rem;
+      border-radius: 8px;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+
+    .top-navbar .nav-link:hover,
+    .top-navbar .nav-link.active {
+      background: #eff6ff;
+      color: var(--primary);
+    }
+
+    .top-navbar .nav-link i {
+      font-size: 1rem;
+    }
+
+    /* ── Main content ────────────────────────────── */
+    .main-content {
+      margin-top: var(--topbar-h);
+      padding: 1.75rem 1.5rem;
+      min-height: calc(100vh - var(--topbar-h));
+    }
+
+    /* ── Cards ───────────────────────────────────── */
+    .card {
+      border: none;
+      border-radius: var(--card-radius);
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+
+    .card-header {
+      background: transparent;
+      border-bottom: 1px solid #f3f4f6;
+      font-weight: 600;
+    }
+
+    /* KPI cards */
+    .kpi-card {
+      border-radius: var(--card-radius);
+      padding: 1.25rem 1.5rem;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card .kpi-icon {
+      font-size: 2.5rem;
+      opacity: .25;
+      position: absolute;
+      bottom: -0.5rem;
+      {% if current_locale == 'ar' %}left{% else %}right{% endif %}: 1rem;
+    }
+
+    .kpi-card .kpi-value {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .kpi-card .kpi-label {
+      font-size: .8rem;
+      opacity: .88;
+      margin-top: .3rem;
+    }
+
+    /* ── Tables ──────────────────────────────────── */
+    .table th {
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #6b7280;
+      font-weight: 600;
+      background: #f9fafb;
+    }
+
+    .table td {
+      vertical-align: middle;
+      font-size: .875rem;
+    }
+
+    /* ── Badges / pills ──────────────────────────── */
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger  { background: #fee2e2; color: #991b1b; }
+    .badge-info    { background: #dbeafe; color: #1e40af; }
+
+    /* ── Language switcher ───────────────────────── */
+    .lang-btn {
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      padding: .25rem .6rem;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .15s;
+      line-height: 1.5;
+    }
+
+    .lang-btn.active, .lang-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: #eff6ff;
+    }
+
+    .lang-btn:not(.active) {
+      color: #6b7280;
+      background: #fff;
+    }
+
+    /* ── Flash messages ──────────────────────────── */
+    .flash-container {
+      position: fixed;
+      top: calc(var(--topbar-h) + .75rem);
+      {% if current_locale == 'ar' %}left{% else %}right{% endif %}: 1rem;
+      z-index: 1050;
+      min-width: 300px;
+      max-width: 420px;
+    }
+
+    /* ── Progress bar ────────────────────────────── */
+    .progress { border-radius: 99px; }
+
+    /* ── Buttons ─────────────────────────────────── */
+    .btn { border-radius: 8px; font-weight: 500; }
+    .btn-primary { background: var(--primary); border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dk); border-color: var(--primary-dk); }
+
+    /* ── Mobile hamburger ────────────────────────── */
+    @media (max-width: 991px) {
+      .nav-links-collapse { display: none; }
+      .nav-links-collapse.show { display: flex; flex-direction: column; position: fixed; top: var(--topbar-h); left: 0; right: 0; background: #fff; border-bottom: 1px solid #e5e7eb; padding: .75rem 1rem; z-index: 1039; }
+    }
+
+    /* ── Print ───────────────────────────────────── */
+    @media print {
+      .top-navbar, .no-print { display: none !important; }
+      .main-content { margin-top: 0; padding: 0; }
+      body { background: #fff; }
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     TOP NAVBAR
+═══════════════════════════════════════════════════ -->
+<nav class="top-navbar no-print">
+
+  <!-- Hamburger (mobile) -->
+  <button class="btn btn-sm btn-light d-lg-none me-2" id="navToggle" aria-label="Menu">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+
+  <!-- Brand -->
+  <a href="{{ url_for('dashboard.index') }}" class="brand">
+    ساهس برو <span class="text-secondary fw-normal" style="font-size:.9rem;">| Sahs Pro</span>
+  </a>
+
+  <!-- Nav links (desktop) -->
+  <div class="d-none d-lg-flex align-items-center gap-1 flex-grow-1 {% if current_locale == 'ar' %}me-3{% else %}ms-3{% endif %}" id="navLinks">
+    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('dashboard') %}active{% endif %}"
+       href="{{ url_for('dashboard.index') }}">
+      <i class="bi bi-speedometer2"></i> {{ _('Dashboard') }}
+    </a>
+    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('employees') %}active{% endif %}"
+       href="{{ url_for('employees.index') }}">
+      <i class="bi bi-people"></i> {{ _('Employees') }}
+    </a>
+    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('uploads') %}active{% endif %}"
+       href="{{ url_for('uploads.index') }}">
+      <i class="bi bi-cloud-upload"></i> {{ _('Uploads') }}
+    </a>
+    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('targets') %}active{% endif %}"
+       href="{{ url_for('targets.index') }}">
+      <i class="bi bi-bullseye"></i> {{ _('Targets') }}
+    </a>
+    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('reports') %}active{% endif %}"
+       href="{{ url_for('reports.index') }}">
+      <i class="bi bi-bar-chart-line"></i> {{ _('Reports') }}
+    </a>
+    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('invoices') %}active{% endif %}"
+       href="{{ url_for('invoices.index') }}">
+      <i class="bi bi-receipt"></i> {{ _('Invoices') }}
+    </a>
+    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('schedule') %}active{% endif %}"
+       href="{{ url_for('schedule.index') }}">
+      <i class="bi bi-calendar3"></i> {{ _('Schedule') }}
+    </a>
+    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('assistant') %}active{% endif %}"
+       href="{{ url_for('assistant.index') }}">
+      <i class="bi bi-robot"></i> {{ _('Assistant') }}
+    </a>
+  </div>
+
+  <!-- Language switcher -->
+  <div class="d-flex align-items-center gap-1 {% if current_locale == 'ar' %}me-auto{% else %}ms-auto{% endif %} no-print">
+    <a href="{{ url_for('set_language', lang='ar') }}"
+       class="lang-btn {% if current_locale == 'ar' %}active{% endif %}">
+      🇸🇦 AR
+    </a>
+    <a href="{{ url_for('set_language', lang='en') }}"
+       class="lang-btn {% if current_locale == 'en' %}active{% endif %}">
+      🇬🇧 EN
+    </a>
+  </div>
+
+</nav>
+
+<!-- Mobile nav collapse -->
+<div class="nav-links-collapse d-lg-none no-print" id="mobileNav">
+  <a class="nav-link py-2" href="{{ url_for('dashboard.index') }}"><i class="bi bi-speedometer2 me-2"></i>{{ _('Dashboard') }}</a>
+  <a class="nav-link py-2" href="{{ url_for('employees.index') }}"><i class="bi bi-people me-2"></i>{{ _('Employees') }}</a>
+  <a class="nav-link py-2" href="{{ url_for('uploads.index') }}"><i class="bi bi-cloud-upload me-2"></i>{{ _('Uploads') }}</a>
+  <a class="nav-link py-2" href="{{ url_for('targets.index') }}"><i class="bi bi-bullseye me-2"></i>{{ _('Targets') }}</a>
+  <a class="nav-link py-2" href="{{ url_for('reports.index') }}"><i class="bi bi-bar-chart-line me-2"></i>{{ _('Reports') }}</a>
+  <a class="nav-link py-2" href="{{ url_for('invoices.index') }}"><i class="bi bi-receipt me-2"></i>{{ _('Invoices') }}</a>
+  <a class="nav-link py-2" href="{{ url_for('schedule.index') }}"><i class="bi bi-calendar3 me-2"></i>{{ _('Schedule') }}</a>
+  <a class="nav-link py-2" href="{{ url_for('assistant.index') }}"><i class="bi bi-robot me-2"></i>{{ _('Assistant') }}</a>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     FLASH MESSAGES
+═══════════════════════════════════════════════════ -->
+<div class="flash-container no-print" id="flashContainer">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      {% set alert_class = {
+          'success': 'alert-success',
+          'error':   'alert-danger',
+          'warning': 'alert-warning',
+          'info':    'alert-info'
+        }.get(category, 'alert-info') %}
+      <div class="alert {{ alert_class }} alert-dismissible fade show shadow-sm mb-2" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════════ -->
+<main class="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+  // Mobile nav toggle
+  document.getElementById('navToggle')?.addEventListener('click', function () {
+    const nav = document.getElementById('mobileNav');
+    nav.classList.toggle('show');
+  });
+
+  // Auto-dismiss flash messages after 5s
+  setTimeout(() => {
+    document.querySelectorAll('#flashContainer .alert').forEach(el => {
+      const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
+      bsAlert.close();
+    });
+  }, 5000);
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

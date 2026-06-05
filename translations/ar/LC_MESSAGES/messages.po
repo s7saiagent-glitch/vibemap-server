@@ -1,0 +1,239 @@
+# Arabic translations for Sahs Pro
+msgid ""
+msgstr ""
+"Project-Id-Version: SahsPro 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-05 00:00+0000\n"
+"PO-Revision-Date: 2026-06-05 00:00+0000\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Dashboard"
+msgstr "لوحة التحكم"
+
+msgid "Employees"
+msgstr "الموظفين"
+
+msgid "Uploads"
+msgstr "رفع الملفات"
+
+msgid "Targets"
+msgstr "الأهداف"
+
+msgid "Reports"
+msgstr "التقارير"
+
+msgid "Invoices"
+msgstr "الفواتير"
+
+msgid "Schedule"
+msgstr "الجدول"
+
+msgid "Assistant"
+msgstr "المساعد"
+
+msgid "Total Employees"
+msgstr "إجمالي الموظفين"
+
+msgid "Monthly Sales"
+msgstr "مبيعات الشهر"
+
+msgid "Target Achievement"
+msgstr "نسبة الإنجاز"
+
+msgid "Pending Invoices"
+msgstr "الفواتير المعلقة"
+
+msgid "Employee Name"
+msgstr "اسم الموظف"
+
+msgid "Target"
+msgstr "الهدف"
+
+msgid "Achieved"
+msgstr "المحقق"
+
+msgid "Remaining"
+msgstr "المتبقي"
+
+msgid "Daily Target"
+msgstr "الهدف اليومي"
+
+msgid "Progress"
+msgstr "التقدم"
+
+msgid "Save"
+msgstr "حفظ"
+
+msgid "Cancel"
+msgstr "إلغاء"
+
+msgid "Delete"
+msgstr "حذف"
+
+msgid "Edit"
+msgstr "تعديل"
+
+msgid "Add"
+msgstr "إضافة"
+
+msgid "Search"
+msgstr "بحث"
+
+msgid "Export Excel"
+msgstr "تصدير Excel"
+
+msgid "Print"
+msgstr "طباعة"
+
+msgid "Send Email"
+msgstr "إرسال بريد"
+
+msgid "Upload File"
+msgstr "رفع ملف"
+
+msgid "Sales Detail"
+msgstr "تفاصيل المبيعات"
+
+msgid "Productivity Report"
+msgstr "تقرير الإنتاجية"
+
+msgid "Auto-detect"
+msgstr "اكتشاف تلقائي"
+
+msgid "Percentage"
+msgstr "النسبة المئوية"
+
+msgid "Amount"
+msgstr "المبلغ"
+
+msgid "Working Days"
+msgstr "أيام العمل"
+
+msgid "Company Target"
+msgstr "هدف الشركة"
+
+msgid "Month"
+msgstr "الشهر"
+
+msgid "Year"
+msgstr "السنة"
+
+msgid "Date Range"
+msgstr "نطاق التاريخ"
+
+msgid "From"
+msgstr "من"
+
+msgid "To"
+msgstr "إلى"
+
+msgid "Product Category"
+msgstr "فئة المنتج"
+
+msgid "Region"
+msgstr "المنطقة"
+
+msgid "Sales Analysis"
+msgstr "تحليل المبيعات"
+
+msgid "Weekly Performance"
+msgstr "الأداء الأسبوعي"
+
+msgid "Actual vs Target"
+msgstr "الفعلي مقابل الهدف"
+
+msgid "Top Performer"
+msgstr "أفضل موظف"
+
+msgid "Motivational Message"
+msgstr "رسالة تحفيزية"
+
+msgid "Keep up the great work!"
+msgstr "استمر في العمل الرائع!"
+
+msgid "You need to catch up on your target."
+msgstr "تحتاج إلى اللحاق بهدفك."
+
+msgid "Chat with Sahs Pro"
+msgstr "تحدث مع ساهس برو"
+
+msgid "Type your question..."
+msgstr "اكتب سؤالك..."
+
+msgid "Send"
+msgstr "إرسال"
+
+msgid "Lock"
+msgstr "تأمين"
+
+msgid "Unlock"
+msgstr "إلغاء التأمين"
+
+msgid "Add Alias"
+msgstr "إضافة اسم بديل"
+
+msgid "SAP ID"
+msgstr "رقم SAP"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Active"
+msgstr "نشط"
+
+msgid "Inactive"
+msgstr "غير نشط"
+
+msgid "Locked"
+msgstr "مؤمن"
+
+msgid "Actions"
+msgstr "الإجراءات"
+
+msgid "Note"
+msgstr "ملاحظة"
+
+msgid "Add Note"
+msgstr "إضافة ملاحظة"
+
+msgid "Reason"
+msgstr "السبب"
+
+msgid "Invoice No"
+msgstr "رقم الفاتورة"
+
+msgid "Invoice Date"
+msgstr "تاريخ الفاتورة"
+
+msgid "Customer"
+msgstr "العميل"
+
+msgid "Net Amount"
+msgstr "المبلغ الصافي"
+
+msgid "Sales Advice"
+msgstr "نصائح المبيعات"
+
+msgid "Shift"
+msgstr "الوردية"
+
+msgid "Morning"
+msgstr "صباحي"
+
+msgid "Evening"
+msgstr "مسائي"
+
+msgid "Day Off"
+msgstr "إجازة"
+
+msgid "Import Results"
+msgstr "نتائج الاستيراد"
+
+msgid "Records Imported"
+msgstr "السجلات المستوردة"
+
+msgid "Records Skipped"
+msgstr "السجلات المتخطاة"

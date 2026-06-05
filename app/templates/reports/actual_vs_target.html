@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Actual vs Target') }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* CSS classes as specified: achievement-high, achievement-med, achievement-low */
+  .achievement-high { background: #d1fae5; color: #065f46; }
+  .achievement-med  { background: #fef3c7; color: #92400e; }
+  .achievement-low  { background: #fee2e2; color: #991b1b; }
+
+  .ach-badge {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .25rem .65rem;
+    border-radius: 99px;
+    font-size: .75rem; font-weight: 700;
+  }
+
+  .pct-bar-wrap { min-width: 140px; }
+
+  tfoot tr td { border-top: 2px solid #e5e7eb !important; }
+
+  @media print {
+    .no-print { display: none !important; }
+    body { font-size: 11px !important; }
+    .card { box-shadow: none !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2 no-print">
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-bullseye text-success me-2"></i>
+      {{ _('Actual vs Target') }}
+    </h1>
+    <p class="text-muted small mb-0">{{ _('Monthly achievement comparison') }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-printer me-1"></i>{{ _('Print') }}
+    </button>
+    <a href="{{ url_for('reports.export', report_type='actual_vs_target', year=year, month=month) }}"
+       class="btn btn-outline-success btn-sm">
+      <i class="bi bi-file-earmark-excel me-1"></i>{{ _('Export Excel') }}
+    </a>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-{% if current_locale == 'ar' %}right{% else %}left{% endif %} me-1"></i>{{ _('Back') }}
+    </a>
+  </div>
+</div>
+
+<!-- Month / Year selector -->
+<div class="card mb-4 no-print">
+  <div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+      <div class="col-6 col-md-2">
+        <label class="form-label fw-semibold small">{{ _('Year') }}</label>
+        <select name="year" class="form-select" onchange="this.form.submit()">
+          {% for y in range(2023, 2028) %}
+            <option value="{{ y }}" {% if y == (year|default(2025)) %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label fw-semibold small">{{ _('Month') }}</label>
+        <select name="month" class="form-select" onchange="this.form.submit()">
+          {% for m_num, m_name in months %}
+            <option value="{{ m_num }}" {% if m_num == (month|default(1)) %}selected{% endif %}>
+              {{ m_num }} — {{ m_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-search me-1"></i>{{ _('Apply') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="d-flex gap-3 mb-3 flex-wrap no-print">
+  <span class="ach-badge achievement-high"><i class="bi bi-check-circle-fill"></i>≥ 100% {{ _('Achieved') }}</span>
+  <span class="ach-badge achievement-med"><i class="bi bi-exclamation-circle-fill"></i>80–99% {{ _('Needs Push') }}</span>
+  <span class="ach-badge achievement-low"><i class="bi bi-x-circle-fill"></i>&lt; 80% {{ _('Behind') }}</span>
+</div>
+
+<!-- Report Table -->
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{{ _('Employee') }}</th>
+            <th class="text-end">{{ _('Target (SAR)') }}</th>
+            <th class="text-end">{{ _('Achieved (SAR)') }}</th>
+            <th class="text-center pct-bar-wrap">{{ _('Achievement %%') }}</th>
+            <th class="text-center">{{ _('Status') }}</th>
+            <th class="text-end">{{ _('Variance') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if report_data %}
+            {% for row in report_data %}
+              {% set pct = row.progress_pct | default(0) %}
+              {% if pct >= 100 %}
+                {% set cls = 'achievement-high' %}
+                {% set icon = 'bi-check-circle-fill' %}
+                {% set status_text = _('Achieved') %}
+              {% elif pct >= 80 %}
+                {% set cls = 'achievement-med' %}
+                {% set icon = 'bi-exclamation-circle-fill' %}
+                {% set status_text = _('Needs Push') %}
+              {% else %}
+                {% set cls = 'achievement-low' %}
+                {% set icon = 'bi-x-circle-fill' %}
+                {% set status_text = _('Behind') %}
+              {% endif %}
+            <tr>
+              <td class="text-muted small">{{ loop.index }}</td>
+              <td>
+                <div class="fw-semibold">{{ row.employee.name }}</div>
+                {% if row.employee.name_ar %}
+                  <div class="text-muted small" dir="rtl">{{ row.employee.name_ar }}</div>
+                {% endif %}
+              </td>
+              <td class="text-end font-monospace">{{ '{:,.0f}'.format(row.target_amount) }}</td>
+              <td class="text-end font-monospace fw-semibold">{{ '{:,.0f}'.format(row.achieved) }}</td>
+              <td class="text-center pct-bar-wrap">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="progress flex-grow-1" style="height:8px;">
+                    <div class="progress-bar {% if pct >= 100 %}bg-success{% elif pct >= 80 %}bg-warning{% else %}bg-danger{% endif %}"
+                         style="width:{{ [pct, 100]|min }}%"></div>
+                  </div>
+                  <span class="fw-bold small {% if pct >= 100 %}text-success{% elif pct >= 80 %}text-warning{% else %}text-danger{% endif %}"
+                        style="min-width:44px;">{{ '{:.1f}'.format(pct) }}%</span>
+                </div>
+              </td>
+              <td class="text-center">
+                <span class="ach-badge {{ cls }}">
+                  <i class="bi {{ icon }}"></i>{{ status_text }}
+                </span>
+              </td>
+              <td class="text-end font-monospace {% if row.variance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                {% if row.variance >= 0 %}+{% endif %}{{ '{:,.0f}'.format(row.variance) }}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                {{ _('No data found for the selected period.') }}
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+
+        {% if report_data %}
+        <tfoot class="table-dark">
+          <tr>
+            <td colspan="2" class="fw-bold">{{ _('Company Total') }}</td>
+            <td class="text-end font-monospace fw-bold">{{ '{:,.0f}'.format(grand_target) }}</td>
+            <td class="text-end font-monospace fw-bold">{{ '{:,.0f}'.format(grand_achieved) }}</td>
+            <td class="text-center">
+              <span class="fw-bold">{{ '{:.1f}'.format(grand_pct) }}%</span>
+            </td>
+            <td class="text-center">
+              {% if grand_pct >= 100 %}
+                <span class="ach-badge achievement-high"><i class="bi bi-trophy-fill"></i>{{ _('Achieved') }}</span>
+              {% elif grand_pct >= 80 %}
+                <span class="ach-badge achievement-med">{{ _('Needs Push') }}</span>
+              {% else %}
+                <span class="ach-badge achievement-low">{{ _('Behind') }}</span>
+              {% endif %}
+            </td>
+            <td class="text-end font-monospace fw-bold
+              {% if grand_achieved - grand_target >= 0 %}text-success{% else %}text-danger{% endif %}">
+              {% set gv = grand_achieved - grand_target %}
+              {% if gv >= 0 %}+{% endif %}{{ '{:,.0f}'.format(gv) }}
+            </td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Achievement Distribution Summary -->
+{% if report_data %}
+<div class="row g-3 mt-2 no-print">
+  {% set green_count  = report_data | selectattr('status', 'eq', 'achieved') | list | length %}
+  {% set yellow_count = report_data | selectattr('status', 'eq', 'near')     | list | length %}
+  {% set red_count    = report_data | selectattr('status', 'eq', 'below')    | list | length %}
+  <div class="col-4">
+    <div class="card text-center py-3" style="border-left: 4px solid #057a55;">
+      <div class="h3 fw-bold text-success mb-0">{{ green_count }}</div>
+      <div class="small text-muted">{{ _('On Target') }}</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card text-center py-3" style="border-left: 4px solid #c27803;">
+      <div class="h3 fw-bold text-warning mb-0">{{ yellow_count }}</div>
+      <div class="small text-muted">{{ _('Needs Push') }}</div>
+    </div>
+  </div>
+  <div class="col-4">
+    <div class="card text-center py-3" style="border-left: 4px solid #c81e1e;">
+      <div class="h3 fw-bold text-danger mb-0">{{ red_count }}</div>
+      <div class="small text-muted">{{ _('Behind') }}</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

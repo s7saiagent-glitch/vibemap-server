@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Employees') }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .emp-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .85rem; color: #fff;
+    background: var(--primary);
+    flex-shrink: 0;
+  }
+  .locked-row { opacity: .6; }
+  .alias-chip {
+    display: inline-block;
+    padding: .15rem .5rem;
+    background: #dbeafe; color: #1e40af;
+    border-radius: 99px; font-size: .72rem; font-weight: 600;
+    margin: .1rem;
+  }
+  #addEmpPanel { display: none; }
+  #addEmpPanel.show { display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-people-fill text-primary me-2"></i>
+      {{ _('Employees') }}
+    </h1>
+    <p class="text-muted small mb-0">{{ _('Total') }}: <strong>{{ employees|length }}</strong> {{ _('employees') }}</p>
+  </div>
+  <button class="btn btn-primary btn-sm" id="toggleAddBtn" onclick="toggleAddPanel()">
+    <i class="bi bi-plus-lg me-1"></i>{{ _('Add Employee') }}
+  </button>
+</div>
+
+<!-- Add Employee Panel -->
+<div id="addEmpPanel" class="card mb-4">
+  <div class="card-header fw-semibold">
+    <i class="bi bi-person-plus me-2 text-primary"></i>{{ _('Add New Employee') }}
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('employees.index') }}" class="row g-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">{{ _('Name (English)') }} <span class="text-danger">*</span></label>
+        <input type="text" name="name" class="form-control" placeholder="{{ _('e.g. Ahmed Ali') }}" required>
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">{{ _('Name (Arabic) / الاسم بالعربي') }}</label>
+        <input type="text" name="name_ar" class="form-control" dir="rtl" placeholder="مثال: أحمد علي">
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">{{ _('SAP ID') }}</label>
+        <input type="text" name="sap_id" class="form-control" placeholder="{{ _('Optional') }}">
+      </div>
+      <div class="col-12 col-md-1 d-flex align-items-end">
+        <button type="submit" class="btn btn-success w-100">
+          <i class="bi bi-check-lg"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Employee Table -->
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between py-3">
+    <span><i class="bi bi-table me-2 text-primary"></i>{{ _('Employee List') }}</span>
+    <input type="text" id="empSearch" class="form-control form-control-sm w-auto"
+           placeholder="{{ _('Search...') }}" oninput="filterTable()" style="min-width:180px;">
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" id="empTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{{ _('Name') }}</th>
+            <th>{{ _('SAP ID') }}</th>
+            <th>{{ _('Aliases') }}</th>
+            <th class="text-end">{{ _('This Month Sales') }}</th>
+            <th class="text-center">{{ _('Status') }}</th>
+            <th class="text-center no-print">{{ _('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if employees %}
+            {% for emp in employees %}
+            <tr class="{% if emp.is_locked %}locked-row{% endif %}" data-name="{{ emp.name|lower }} {{ (emp.name_ar or '')|lower }}">
+              <td class="text-muted small">{{ loop.index }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="emp-avatar" style="background: hsl({{ (loop.index * 47) % 360 }},60%,45%)">
+                    {{ emp.name[0]|upper }}
+                  </div>
+                  <div>
+                    <div class="fw-semibold">{{ emp.name }}</div>
+                    {% if emp.name_ar %}
+                      <div class="text-muted small" dir="rtl">{{ emp.name_ar }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td>
+                {% if emp.sap_id %}
+                  <code class="text-secondary">{{ emp.sap_id }}</code>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if emp.aliases %}
+                  {% for alias in emp.aliases %}
+                    <span class="alias-chip">{{ alias.alias }}</span>
+                  {% endfor %}
+                {% else %}
+                  <span class="text-muted small">{{ _('None') }}</span>
+                {% endif %}
+              </td>
+              <td class="text-end font-monospace small">
+                {% if stats.get(emp.id) %}
+                  {{ '{:,.0f}'.format(stats[emp.id].total) }}
+                  <span class="text-muted">({{ stats[emp.id].count }} {{ _('records') }})</span>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if not emp.is_active %}
+                  <span class="badge bg-secondary">{{ _('Inactive') }}</span>
+                {% elif emp.is_locked %}
+                  <span class="badge bg-warning text-dark">
+                    <i class="bi bi-lock-fill me-1"></i>{{ _('Locked') }}
+                  </span>
+                {% else %}
+                  <span class="badge bg-success">
+                    <i class="bi bi-check-circle me-1"></i>{{ _('Active') }}
+                  </span>
+                {% endif %}
+              </td>
+              <td class="text-center no-print">
+                <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                  <!-- Edit -->
+                  <a href="{{ url_for('employees.edit', emp_id=emp.id) }}"
+                     class="btn btn-sm btn-outline-primary" title="{{ _('Edit') }}">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <!-- Lock/Unlock -->
+                  <form method="POST" action="{{ url_for('employees.toggle_lock', emp_id=emp.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-{{ 'secondary' if emp.is_locked else 'warning' }}"
+                            title="{{ _('Unlock') if emp.is_locked else _('Lock') }}">
+                      <i class="bi bi-{{ 'unlock' if emp.is_locked else 'lock' }}"></i>
+                    </button>
+                  </form>
+                  <!-- Delete -->
+                  <form method="POST" action="{{ url_for('employees.delete', emp_id=emp.id) }}" class="d-inline"
+                        onsubmit="return confirm('{{ _('Delete employee') }} {{ emp.name }}?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ _('Delete') }}">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-people fs-2 d-block mb-2"></i>
+                {{ _('No employees yet. Add the first one above.') }}
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleAddPanel() {
+  const panel = document.getElementById('addEmpPanel');
+  panel.classList.toggle('show');
+}
+
+function filterTable() {
+  const q = document.getElementById('empSearch').value.toLowerCase();
+  document.querySelectorAll('#empTable tbody tr[data-name]').forEach(row => {
+    row.style.display = row.dataset.name.includes(q) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

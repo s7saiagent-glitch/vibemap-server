@@ -1,0 +1,239 @@
+# English translations for Sahs Pro
+msgid ""
+msgstr ""
+"Project-Id-Version: SahsPro 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-05 00:00+0000\n"
+"PO-Revision-Date: 2026-06-05 00:00+0000\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Employees"
+msgstr "Employees"
+
+msgid "Uploads"
+msgstr "Uploads"
+
+msgid "Targets"
+msgstr "Targets"
+
+msgid "Reports"
+msgstr "Reports"
+
+msgid "Invoices"
+msgstr "Invoices"
+
+msgid "Schedule"
+msgstr "Schedule"
+
+msgid "Assistant"
+msgstr "Assistant"
+
+msgid "Total Employees"
+msgstr "Total Employees"
+
+msgid "Monthly Sales"
+msgstr "Monthly Sales"
+
+msgid "Target Achievement"
+msgstr "Target Achievement"
+
+msgid "Pending Invoices"
+msgstr "Pending Invoices"
+
+msgid "Employee Name"
+msgstr "Employee Name"
+
+msgid "Target"
+msgstr "Target"
+
+msgid "Achieved"
+msgstr "Achieved"
+
+msgid "Remaining"
+msgstr "Remaining"
+
+msgid "Daily Target"
+msgstr "Daily Target"
+
+msgid "Progress"
+msgstr "Progress"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Edit"
+msgstr "Edit"
+
+msgid "Add"
+msgstr "Add"
+
+msgid "Search"
+msgstr "Search"
+
+msgid "Export Excel"
+msgstr "Export Excel"
+
+msgid "Print"
+msgstr "Print"
+
+msgid "Send Email"
+msgstr "Send Email"
+
+msgid "Upload File"
+msgstr "Upload File"
+
+msgid "Sales Detail"
+msgstr "Sales Detail"
+
+msgid "Productivity Report"
+msgstr "Productivity Report"
+
+msgid "Auto-detect"
+msgstr "Auto-detect"
+
+msgid "Percentage"
+msgstr "Percentage"
+
+msgid "Amount"
+msgstr "Amount"
+
+msgid "Working Days"
+msgstr "Working Days"
+
+msgid "Company Target"
+msgstr "Company Target"
+
+msgid "Month"
+msgstr "Month"
+
+msgid "Year"
+msgstr "Year"
+
+msgid "Date Range"
+msgstr "Date Range"
+
+msgid "From"
+msgstr "From"
+
+msgid "To"
+msgstr "To"
+
+msgid "Product Category"
+msgstr "Product Category"
+
+msgid "Region"
+msgstr "Region"
+
+msgid "Sales Analysis"
+msgstr "Sales Analysis"
+
+msgid "Weekly Performance"
+msgstr "Weekly Performance"
+
+msgid "Actual vs Target"
+msgstr "Actual vs Target"
+
+msgid "Top Performer"
+msgstr "Top Performer"
+
+msgid "Motivational Message"
+msgstr "Motivational Message"
+
+msgid "Keep up the great work!"
+msgstr "Keep up the great work!"
+
+msgid "You need to catch up on your target."
+msgstr "You need to catch up on your target."
+
+msgid "Chat with Sahs Pro"
+msgstr "Chat with Sahs Pro"
+
+msgid "Type your question..."
+msgstr "Type your question..."
+
+msgid "Send"
+msgstr "Send"
+
+msgid "Lock"
+msgstr "Lock"
+
+msgid "Unlock"
+msgstr "Unlock"
+
+msgid "Add Alias"
+msgstr "Add Alias"
+
+msgid "SAP ID"
+msgstr "SAP ID"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Active"
+msgstr "Active"
+
+msgid "Inactive"
+msgstr "Inactive"
+
+msgid "Locked"
+msgstr "Locked"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Note"
+msgstr "Note"
+
+msgid "Add Note"
+msgstr "Add Note"
+
+msgid "Reason"
+msgstr "Reason"
+
+msgid "Invoice No"
+msgstr "Invoice No"
+
+msgid "Invoice Date"
+msgstr "Invoice Date"
+
+msgid "Customer"
+msgstr "Customer"
+
+msgid "Net Amount"
+msgstr "Net Amount"
+
+msgid "Sales Advice"
+msgstr "Sales Advice"
+
+msgid "Shift"
+msgstr "Shift"
+
+msgid "Morning"
+msgstr "Morning"
+
+msgid "Evening"
+msgstr "Evening"
+
+msgid "Day Off"
+msgstr "Day Off"
+
+msgid "Import Results"
+msgstr "Import Results"
+
+msgid "Records Imported"
+msgstr "Records Imported"
+
+msgid "Records Skipped"
+msgstr "Records Skipped"
