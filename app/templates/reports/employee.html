@@ -52,8 +52,8 @@
     <form method="GET" class="row g-3 align-items-end" id="filterForm">
       <div class="col-12 col-md-4">
         <label class="form-label fw-semibold small">{{ _('Employee') }}</label>
-        <select name="emp_id" id="employee-selector" class="form-select"
-                onchange="this.form.submit()">
+        <select id="employee-selector" class="form-select"
+                onchange="navigateEmployee(this.value)">
           <option value="">— {{ _('Select Employee') }} —</option>
           {% for e in employees %}
             <option value="{{ e.id }}" {% if emp and emp.id == e.id %}selected{% endif %}>
@@ -64,7 +64,7 @@
       </div>
       <div class="col-6 col-md-2">
         <label class="form-label fw-semibold small">{{ _('Year') }}</label>
-        <select name="year" class="form-select" onchange="this.form.submit()">
+        <select id="yearSel" class="form-select">
           {% for y in range(2023, 2028) %}
             <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
           {% endfor %}
@@ -72,7 +72,7 @@
       </div>
       <div class="col-6 col-md-3">
         <label class="form-label fw-semibold small">{{ _('Month') }}</label>
-        <select name="month" class="form-select" onchange="this.form.submit()">
+        <select id="monthSel" class="form-select">
           {% for m_num, m_name in months %}
             <option value="{{ m_num }}" {% if m_num == month %}selected{% endif %}>
               {{ m_num }} — {{ m_name }}
@@ -81,7 +81,7 @@
         </select>
       </div>
       <div class="col-12 col-md-2">
-        <button type="submit" class="btn btn-primary w-100">
+        <button type="button" class="btn btn-primary w-100" onclick="applyFilter()">
           <i class="bi bi-search me-1"></i>{{ _('Apply') }}
         </button>
       </div>
@@ -249,6 +249,18 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+  function navigateEmployee(empId) {
+    if (!empId) return;
+    const y = document.getElementById('yearSel')?.value || '{{ year }}';
+    const m = document.getElementById('monthSel')?.value || '{{ month }}';
+    window.location.href = `/reports/employee/${empId}?year=${y}&month=${m}`;
+  }
+  function applyFilter() {
+    const empId = document.getElementById('employee-selector')?.value;
+    if (empId) navigateEmployee(empId);
+  }
+</script>
 {% if emp %}
 <script>
   Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
