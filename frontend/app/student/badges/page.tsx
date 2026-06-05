@@ -127,7 +127,7 @@ export default function BadgesPage() {
         {recentPoints.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="card-uni">
             <h3 className="font-bold text-uni-text mb-4 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-uni-green" /> آخر النقاط المكتسبة
+              <TrendingUp className="w-4 h-4 text-uni-green" /> {t.badges.recentPoints}
             </h3>
             <div className="space-y-2">
               {recentPoints.map((p, i) => (

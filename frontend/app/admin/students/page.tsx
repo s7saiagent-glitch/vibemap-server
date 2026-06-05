@@ -116,9 +116,9 @@ export default function AdminStudentsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-uni-text">{t.admin.studentsList}</h1>
-            <p className="text-uni-muted text-sm mt-1">جميع الطلاب المسجلين في الجامعة</p>
+            <p className="text-uni-muted text-sm mt-1">{t.admin.allRegisteredStudents}</p>
           </div>
-          <div className="badge-gold text-sm px-4 py-2">{total} طالب</div>
+          <div className="badge-gold text-sm px-4 py-2">{total} {t.admin.studentCountSuffix}</div>
         </div>
 
         {/* Search */}
@@ -139,7 +139,7 @@ export default function AdminStudentsPage() {
         ) : students.length === 0 ? (
           <div className="card-uni text-center py-16">
             <Users className="w-16 h-16 mx-auto mb-4 text-uni-muted opacity-30" />
-            <h3 className="text-xl font-bold text-uni-text mb-2">لا يوجد طلاب</h3>
+            <h3 className="text-xl font-bold text-uni-text mb-2">{t.admin.noStudents}</h3>
             <p className="text-uni-muted text-sm">{t.common.noData}</p>
           </div>
         ) : (
@@ -221,7 +221,7 @@ export default function AdminStudentsPage() {
             >
               {t.common.prev}
             </button>
-            <span className="text-uni-muted text-sm">صفحة {page} من {Math.ceil(total / 20)}</span>
+            <span className="text-uni-muted text-sm">{t.admin.pageOf} {page} {t.admin.pageFrom} {Math.ceil(total / 20)}</span>
             <button
               onClick={() => setPage(p => p + 1)}
               disabled={page >= Math.ceil(total / 20)}
