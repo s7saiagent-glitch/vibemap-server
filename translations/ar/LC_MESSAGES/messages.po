@@ -1,4 +1,4 @@
-# Arabic translations for Sahs Pro
+# Arabic translations for Sahs Pro - COMPLETE
 msgid ""
 msgstr ""
 "Project-Id-Version: SahsPro 1.0\n"
@@ -14,7 +14,7 @@ msgid "Dashboard"
 msgstr "لوحة التحكم"
 
 msgid "Employees"
-msgstr "الموظفين"
+msgstr "الموظفون"
 
 msgid "Uploads"
 msgstr "رفع الملفات"
@@ -29,10 +29,16 @@ msgid "Invoices"
 msgstr "الفواتير"
 
 msgid "Schedule"
-msgstr "الجدول"
+msgstr "الجدول الزمني"
 
 msgid "Assistant"
 msgstr "المساعد"
+
+msgid "Sahs Pro | ساهس برو"
+msgstr "ساهس برو"
+
+msgid "Sahs Pro Assistant"
+msgstr "مساعد ساهس برو"
 
 msgid "Total Employees"
 msgstr "إجمالي الموظفين"
@@ -49,8 +55,35 @@ msgstr "الفواتير المعلقة"
 msgid "Employee Name"
 msgstr "اسم الموظف"
 
+msgid "Employee Progress"
+msgstr "تقدم الموظفين"
+
+msgid "Employee List"
+msgstr "قائمة الموظفين"
+
+msgid "Employee"
+msgstr "الموظف"
+
+msgid "Add Employee"
+msgstr "إضافة موظف"
+
+msgid "Add New Employee"
+msgstr "إضافة موظف جديد"
+
+msgid "Add employees first"
+msgstr "أضف الموظفين أولاً"
+
 msgid "Target"
 msgstr "الهدف"
+
+msgid "Target Amount"
+msgstr "مبلغ الهدف"
+
+msgid "Total Company Target"
+msgstr "الهدف الإجمالي للشركة"
+
+msgid "Company Target"
+msgstr "هدف الشركة"
 
 msgid "Achieved"
 msgstr "المحقق"
@@ -64,8 +97,20 @@ msgstr "الهدف اليومي"
 msgid "Progress"
 msgstr "التقدم"
 
+msgid "Achievement Overview"
+msgstr "نظرة عامة على الإنجاز"
+
 msgid "Save"
 msgstr "حفظ"
+
+msgid "Save Targets"
+msgstr "حفظ الأهداف"
+
+msgid "Save Note"
+msgstr "حفظ الملاحظة"
+
+msgid "Save Shift"
+msgstr "حفظ الوردية"
 
 msgid "Cancel"
 msgstr "إلغاء"
@@ -79,20 +124,41 @@ msgstr "تعديل"
 msgid "Add"
 msgstr "إضافة"
 
+msgid "Apply"
+msgstr "تطبيق"
+
 msgid "Search"
 msgstr "بحث"
 
-msgid "Export Excel"
-msgstr "تصدير Excel"
+msgid "Load"
+msgstr "تحميل"
 
 msgid "Print"
 msgstr "طباعة"
 
+msgid "Export Excel"
+msgstr "تصدير Excel"
+
 msgid "Send Email"
-msgstr "إرسال بريد"
+msgstr "إرسال بريد إلكتروني"
 
 msgid "Upload File"
 msgstr "رفع ملف"
+
+msgid "Upload Data"
+msgstr "رفع البيانات"
+
+msgid "Upload History"
+msgstr "سجل الرفع"
+
+msgid "Click to choose file or drag & drop"
+msgstr "انقر لاختيار ملف أو اسحب وأفلت"
+
+msgid "File"
+msgstr "الملف"
+
+msgid "File Type"
+msgstr "نوع الملف"
 
 msgid "Sales Detail"
 msgstr "تفاصيل المبيعات"
@@ -103,8 +169,14 @@ msgstr "تقرير الإنتاجية"
 msgid "Auto-detect"
 msgstr "اكتشاف تلقائي"
 
+msgid "Pct Share"
+msgstr "النسبة المئوية"
+
 msgid "Percentage"
 msgstr "النسبة المئوية"
+
+msgid "Equal Split"
+msgstr "توزيع متساوٍ"
 
 msgid "Amount"
 msgstr "المبلغ"
@@ -112,14 +184,17 @@ msgstr "المبلغ"
 msgid "Working Days"
 msgstr "أيام العمل"
 
-msgid "Company Target"
-msgstr "هدف الشركة"
+msgid "Set Targets"
+msgstr "تحديد الأهداف"
 
 msgid "Month"
 msgstr "الشهر"
 
 msgid "Year"
 msgstr "السنة"
+
+msgid "Date"
+msgstr "التاريخ"
 
 msgid "Date Range"
 msgstr "نطاق التاريخ"
@@ -136,11 +211,23 @@ msgstr "فئة المنتج"
 msgid "Region"
 msgstr "المنطقة"
 
+msgid "Name"
+msgstr "الاسم"
+
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgid "None"
+msgstr "لا يوجد"
+
+msgid "Pages"
+msgstr "الصفحات"
+
 msgid "Sales Analysis"
 msgstr "تحليل المبيعات"
 
-msgid "Weekly Performance"
-msgstr "الأداء الأسبوعي"
+msgid "Weekly Comparison"
+msgstr "المقارنة الأسبوعية"
 
 msgid "Actual vs Target"
 msgstr "الفعلي مقابل الهدف"
@@ -148,8 +235,14 @@ msgstr "الفعلي مقابل الهدف"
 msgid "Top Performer"
 msgstr "أفضل موظف"
 
-msgid "Motivational Message"
-msgstr "رسالة تحفيزية"
+msgid "Employee Performance"
+msgstr "أداء الموظف"
+
+msgid "Live Dashboard"
+msgstr "لوحة التحكم الحية"
+
+msgid "Sales Advice"
+msgstr "نصائح المبيعات"
 
 msgid "Keep up the great work!"
 msgstr "استمر في العمل الرائع!"
@@ -161,7 +254,7 @@ msgid "Chat with Sahs Pro"
 msgstr "تحدث مع ساهس برو"
 
 msgid "Type your question..."
-msgstr "اكتب سؤالك..."
+msgstr "اكتب سؤالك هنا..."
 
 msgid "Send"
 msgstr "إرسال"
@@ -174,6 +267,9 @@ msgstr "إلغاء التأمين"
 
 msgid "Add Alias"
 msgstr "إضافة اسم بديل"
+
+msgid "Aliases"
+msgstr "الأسماء البديلة"
 
 msgid "SAP ID"
 msgstr "رقم SAP"
@@ -188,7 +284,7 @@ msgid "Inactive"
 msgstr "غير نشط"
 
 msgid "Locked"
-msgstr "مؤمن"
+msgstr "مؤمَّن"
 
 msgid "Actions"
 msgstr "الإجراءات"
@@ -214,8 +310,17 @@ msgstr "العميل"
 msgid "Net Amount"
 msgstr "المبلغ الصافي"
 
-msgid "Sales Advice"
-msgstr "نصائح المبيعات"
+msgid "Invoice List"
+msgstr "قائمة الفواتير"
+
+msgid "Open Invoices"
+msgstr "الفواتير المفتوحة"
+
+msgid "Filtered Results"
+msgstr "نتائج التصفية"
+
+msgid "All Employees"
+msgstr "جميع الموظفين"
 
 msgid "Shift"
 msgstr "الوردية"
@@ -227,7 +332,28 @@ msgid "Evening"
 msgstr "مسائي"
 
 msgid "Day Off"
-msgstr "إجازة"
+msgstr "يوم إجازة"
+
+msgid "Sick Leave"
+msgstr "إجازة مرضية"
+
+msgid "Annual Leave"
+msgstr "إجازة سنوية"
+
+msgid "Holiday"
+msgstr "عطلة رسمية"
+
+msgid "Monthly Summary"
+msgstr "ملخص شهري"
+
+msgid "Monthly shift calendar for all employees"
+msgstr "جدول الورديات الشهري لجميع الموظفين"
+
+msgid "Start Time"
+msgstr "وقت البداية"
+
+msgid "End Time"
+msgstr "وقت النهاية"
 
 msgid "Import Results"
 msgstr "نتائج الاستيراد"
@@ -237,3 +363,105 @@ msgstr "السجلات المستوردة"
 
 msgid "Records Skipped"
 msgstr "السجلات المتخطاة"
+
+msgid "Batch ID"
+msgstr "رقم الدفعة"
+
+msgid "Imported"
+msgstr "مستورد"
+
+msgid "Quick Links"
+msgstr "روابط سريعة"
+
+msgid "Pending"
+msgstr "معلق"
+
+msgid "Resolved"
+msgstr "محلول"
+
+msgid "Cancelled"
+msgstr "ملغي"
+
+msgid "In Progress"
+msgstr "قيد المعالجة"
+
+msgid "Payment Delay"
+msgstr "تأخر السداد"
+
+msgid "Dispute"
+msgstr "نزاع"
+
+msgid "Missing Documents"
+msgstr "وثائق ناقصة"
+
+msgid "Returned Goods"
+msgstr "بضاعة مرتجعة"
+
+msgid "Other"
+msgstr "أخرى"
+
+msgid "Behind"
+msgstr "متأخر عن الهدف"
+
+msgid "This Month Sales"
+msgstr "مبيعات هذا الشهر"
+
+msgid "Description"
+msgstr "الوصف"
+
+msgid "Back"
+msgstr "رجوع"
+
+msgid "View Report"
+msgstr "عرض التقرير"
+
+msgid "Go to Dashboard"
+msgstr "الذهاب للوحة التحكم"
+
+msgid "View Advice"
+msgstr "عرض النصائح"
+
+msgid "Manage team"
+msgstr "إدارة الفريق"
+
+msgid "Import data"
+msgstr "استيراد البيانات"
+
+msgid "Set goals"
+msgstr "تحديد الأهداف"
+
+msgid "View calendar"
+msgstr "عرض التقويم"
+
+msgid "Detailed analysis and performance reports"
+msgstr "تقارير تفصيلية وتحليل الأداء"
+
+msgid "Needs Push"
+msgstr "يحتاج دفعة"
+
+msgid "Achievement"
+msgstr "الإنجاز"
+
+msgid "Variance"
+msgstr "الفارق"
+
+msgid "Chat"
+msgstr "المحادثة"
+
+msgid "Top seller this month?"
+msgstr "أفضل بائع هذا الشهر؟"
+
+msgid "My remaining daily target?"
+msgstr "هدفي اليومي المتبقي؟"
+
+msgid "Target achievement status?"
+msgstr "نسبة تحقيق الأهداف؟"
+
+msgid "Show pending invoices"
+msgstr "عرض الفواتير المعلقة"
+
+msgid "Performance vs last week?"
+msgstr "الأداء مقارنةً بالأسبوع الماضي؟"
+
+msgid "Update Status"
+msgstr "تحديث الحالة"

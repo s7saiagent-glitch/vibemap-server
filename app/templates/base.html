@@ -232,35 +232,35 @@
 
   <!-- Nav links (desktop) -->
   <div class="d-none d-lg-flex align-items-center gap-1 flex-grow-1 {% if current_locale == 'ar' %}me-3{% else %}ms-3{% endif %}" id="navLinks">
-    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('dashboard') %}active{% endif %}"
+    <a class="nav-link {% if request.endpoint and 'dashboard' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('dashboard.index') }}">
       <i class="bi bi-speedometer2"></i> {{ _('Dashboard') }}
     </a>
-    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('employees') %}active{% endif %}"
+    <a class="nav-link {% if request.endpoint and 'employees' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('employees.index') }}">
-      <i class="bi bi-people"></i> {{ _('Employees') }}
+      <i class="bi bi-people-fill"></i> {{ _('Employees') }}
     </a>
-    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('uploads') %}active{% endif %}"
+    <a class="nav-link {% if request.endpoint and 'uploads' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('uploads.index') }}">
-      <i class="bi bi-cloud-upload"></i> {{ _('Uploads') }}
+      <i class="bi bi-cloud-upload-fill"></i> {{ _('Uploads') }}
     </a>
-    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('targets') %}active{% endif %}"
+    <a class="nav-link {% if request.endpoint and 'targets' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('targets.index') }}">
       <i class="bi bi-bullseye"></i> {{ _('Targets') }}
     </a>
-    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('reports') %}active{% endif %}"
+    <a class="nav-link {% if request.endpoint and 'reports' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('reports.index') }}">
-      <i class="bi bi-bar-chart-line"></i> {{ _('Reports') }}
+      <i class="bi bi-bar-chart-line-fill"></i> {{ _('Reports') }}
     </a>
-    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('invoices') %}active{% endif %}"
+    <a class="nav-link {% if request.endpoint and 'invoices' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('invoices.index') }}">
-      <i class="bi bi-receipt"></i> {{ _('Invoices') }}
+      <i class="bi bi-receipt-cutoff"></i> {{ _('Invoices') }}
     </a>
-    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('schedule') %}active{% endif %}"
+    <a class="nav-link {% if request.endpoint and 'schedule' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('schedule.index') }}">
-      <i class="bi bi-calendar3"></i> {{ _('Schedule') }}
+      <i class="bi bi-calendar-week-fill"></i> {{ _('Schedule') }}
     </a>
-    <a class="nav-link {% if request.endpoint and request.endpoint.startswith('assistant') %}active{% endif %}"
+    <a class="nav-link {% if request.endpoint and 'assistant' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('assistant.index') }}">
       <i class="bi bi-robot"></i> {{ _('Assistant') }}
     </a>
@@ -282,14 +282,14 @@
 
 <!-- Mobile nav collapse -->
 <div class="nav-links-collapse d-lg-none no-print" id="mobileNav">
-  <a class="nav-link py-2" href="{{ url_for('dashboard.index') }}"><i class="bi bi-speedometer2 me-2"></i>{{ _('Dashboard') }}</a>
-  <a class="nav-link py-2" href="{{ url_for('employees.index') }}"><i class="bi bi-people me-2"></i>{{ _('Employees') }}</a>
-  <a class="nav-link py-2" href="{{ url_for('uploads.index') }}"><i class="bi bi-cloud-upload me-2"></i>{{ _('Uploads') }}</a>
-  <a class="nav-link py-2" href="{{ url_for('targets.index') }}"><i class="bi bi-bullseye me-2"></i>{{ _('Targets') }}</a>
-  <a class="nav-link py-2" href="{{ url_for('reports.index') }}"><i class="bi bi-bar-chart-line me-2"></i>{{ _('Reports') }}</a>
-  <a class="nav-link py-2" href="{{ url_for('invoices.index') }}"><i class="bi bi-receipt me-2"></i>{{ _('Invoices') }}</a>
-  <a class="nav-link py-2" href="{{ url_for('schedule.index') }}"><i class="bi bi-calendar3 me-2"></i>{{ _('Schedule') }}</a>
-  <a class="nav-link py-2" href="{{ url_for('assistant.index') }}"><i class="bi bi-robot me-2"></i>{{ _('Assistant') }}</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'dashboard' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('dashboard.index') }}"><i class="bi bi-speedometer2 me-2"></i>{{ _('Dashboard') }}</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'employees' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('employees.index') }}"><i class="bi bi-people-fill me-2"></i>{{ _('Employees') }}</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'uploads' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('uploads.index') }}"><i class="bi bi-cloud-upload-fill me-2"></i>{{ _('Uploads') }}</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'targets' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('targets.index') }}"><i class="bi bi-bullseye me-2"></i>{{ _('Targets') }}</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'reports' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('reports.index') }}"><i class="bi bi-bar-chart-line-fill me-2"></i>{{ _('Reports') }}</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'invoices' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('invoices.index') }}"><i class="bi bi-receipt-cutoff me-2"></i>{{ _('Invoices') }}</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'schedule' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('schedule.index') }}"><i class="bi bi-calendar-week-fill me-2"></i>{{ _('Schedule') }}</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'assistant' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('assistant.index') }}"><i class="bi bi-robot me-2"></i>{{ _('Assistant') }}</a>
 </div>
 
 <!-- ═══════════════════════════════════════════════════
