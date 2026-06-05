@@ -9,6 +9,7 @@ import { studentAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 
 export default function CertificatesPage() {
+  const { t } = useT()
   const { user } = useAuthStore()
   const [generating, setGenerating] = useState<number | null>(null)
 
@@ -98,9 +99,9 @@ export default function CertificatesPage() {
       <div className="space-y-6 max-w-5xl">
         <div>
           <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
-            <Award className="w-6 h-6 text-uni-gold" /> شهاداتي
+            <Award className="w-6 h-6 text-uni-gold" /> {t.certificates.title}
           </h1>
-          <p className="text-uni-muted text-sm mt-1">شهادات إتمام المواد الدراسية</p>
+          <p className="text-uni-muted text-sm mt-1">{t.certificates.completeCourse}</p>
         </div>
 
         {/* Summary */}
@@ -108,17 +109,17 @@ export default function CertificatesPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-uni text-center">
             <CheckCircle className="w-6 h-6 text-uni-green mx-auto mb-2" />
             <div className="text-2xl font-black text-uni-green">{passedCourses.length}</div>
-            <div className="text-xs text-uni-muted">مادة مجتازة</div>
+            <div className="text-xs text-uni-muted">{t.certificates.passedCourse}</div>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card-uni text-center">
             <Star className="w-6 h-6 text-uni-gold mx-auto mb-2" />
             <div className="text-2xl font-black text-gold-gradient">{gpa.toFixed(2)}</div>
-            <div className="text-xs text-uni-muted">المعدل التراكمي</div>
+            <div className="text-xs text-uni-muted">{t.grades.cumulativeGpa}</div>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-uni text-center">
             <GraduationCap className="w-6 h-6 text-uni-blue mx-auto mb-2" />
             <div className="text-2xl font-black text-uni-blue">{totalCredits}</div>
-            <div className="text-xs text-uni-muted">ساعة معتمدة</div>
+            <div className="text-xs text-uni-muted">{t.certificates.creditHours}</div>
           </motion.div>
         </div>
 
@@ -131,14 +132,14 @@ export default function CertificatesPage() {
           >
             <GraduationCap className="w-10 h-10 text-uni-gold flex-shrink-0" />
             <div className="flex-1">
-              <div className="font-bold text-uni-text">مؤهل للتخرج! 🎉</div>
-              <div className="text-sm text-uni-muted mt-0.5">أتممت {totalCredits} ساعة معتمدة — يمكنك التقدم لشهادة التخرج</div>
+              <div className="font-bold text-uni-text">{t.certificates.eligibleForGraduation}</div>
+              <div className="text-sm text-uni-muted mt-0.5">{t.certificates.graduationDesc.replace('{credits}', String(totalCredits))}</div>
             </div>
             <button
-              onClick={() => generateCertificate(0, 'شهادة التخرج')}
+              onClick={() => generateCertificate(0, t.certificates.degreeTitle)}
               className="btn-gold px-4 py-2 rounded-xl text-sm font-bold flex-shrink-0 flex items-center gap-2"
             >
-              <Download className="w-4 h-4" /> طباعة شهادة التخرج
+              <Download className="w-4 h-4" /> {t.certificates.printDegree}
             </button>
           </motion.div>
         )}
@@ -147,12 +148,12 @@ export default function CertificatesPage() {
         {passedCourses.length === 0 ? (
           <div className="card-uni text-center py-12">
             <Clock className="w-12 h-12 text-uni-muted mx-auto mb-3" />
-            <p className="text-uni-muted">لم تُتم أي مادة دراسية بعد</p>
-            <p className="text-xs text-uni-muted mt-1">أتم موادك الدراسية لتحصل على شهاداتك</p>
+            <p className="text-uni-muted">{t.certificates.noCertificates}</p>
+            <p className="text-xs text-uni-muted mt-1">{t.certificates.completeCourse}</p>
           </div>
         ) : (
           <div>
-            <h2 className="text-sm font-bold text-uni-muted mb-3 uppercase tracking-wide">شهادات المواد المجتازة ({passedCourses.length})</h2>
+            <h2 className="text-sm font-bold text-uni-muted mb-3 uppercase tracking-wide">{t.certificates.passedCourseCerts} ({passedCourses.length})</h2>
             <div className="grid md:grid-cols-2 gap-4">
               {passedCourses.map((course, i) => (
                 <motion.div
@@ -180,9 +181,9 @@ export default function CertificatesPage() {
                     className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs btn-gold disabled:opacity-50"
                   >
                     {generating === (Number(course.course_id) || i) ? (
-                      <span>جاري...</span>
+                      <span>{t.common.loading}</span>
                     ) : (
-                      <><Download className="w-3.5 h-3.5" /> طباعة</>
+                      <><Download className="w-3.5 h-3.5" /> {t.certificates.download}</>
                     )}
                   </button>
                 </motion.div>

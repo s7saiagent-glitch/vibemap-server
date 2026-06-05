@@ -31,6 +31,7 @@ interface ScheduleSlot {
 }
 
 export default function SchedulePage() {
+  const { t } = useT()
   const today = new Date()
   const [weekOffset, setWeekOffset] = useState(0)
 
@@ -96,9 +97,9 @@ export default function SchedulePage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
-              <Calendar className="w-6 h-6 text-uni-gold" /> الجدول الدراسي
+              <Calendar className="w-6 h-6 text-uni-gold" /> {t.schedule.title}
             </h1>
-            <p className="text-uni-muted text-sm mt-1">جدولك الأسبوعي للمواد الدراسية</p>
+            <p className="text-uni-muted text-sm mt-1">{t.schedule.weeklyDesc}</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setWeekOffset(w => w - 1)}
@@ -106,7 +107,7 @@ export default function SchedulePage() {
               <ChevronRight className="w-4 h-4" />
             </button>
             <span className="text-sm text-uni-muted px-2">
-              {weekOffset === 0 ? 'هذا الأسبوع' : weekOffset === -1 ? 'الأسبوع الماضي' : weekOffset === 1 ? 'الأسبوع القادم' : `أسبوع ${weekOffset > 0 ? '+' : ''}${weekOffset}`}
+              {weekOffset === 0 ? t.schedule.thisWeek : weekOffset === -1 ? t.schedule.lastWeek : weekOffset === 1 ? t.schedule.nextWeek : `${t.schedule.week} ${weekOffset > 0 ? '+' : ''}${weekOffset}`}
             </span>
             <button onClick={() => setWeekOffset(w => w + 1)}
               className="w-8 h-8 rounded-lg border border-uni-border/30 hover:border-uni-gold/30 flex items-center justify-center text-uni-muted hover:text-uni-gold transition-all">
@@ -114,7 +115,7 @@ export default function SchedulePage() {
             </button>
             <button onClick={() => setWeekOffset(0)}
               className="text-xs px-3 py-1.5 rounded-lg border border-uni-gold/30 text-uni-gold hover:bg-uni-gold/5 transition-all">
-              اليوم
+              {t.calendar.today}
             </button>
           </div>
         </div>
@@ -124,7 +125,7 @@ export default function SchedulePage() {
           <div className="min-w-[600px]">
             {/* Header row */}
             <div className="grid grid-cols-6 gap-0 border-b border-uni-border/30">
-              <div className="p-3 text-xs text-uni-muted font-medium">الوقت</div>
+              <div className="p-3 text-xs text-uni-muted font-medium">{t.schedule.time}</div>
               {WORK_DAYS.map(d => {
                 const date = new Date(weekStart)
                 date.setDate(weekStart.getDate() + d)
@@ -183,7 +184,7 @@ export default function SchedulePage() {
         {enrollments.length > 0 && (
           <div className="card-uni">
             <h3 className="font-bold text-uni-text flex items-center gap-2 mb-3">
-              <BookOpen className="w-4 h-4 text-uni-gold" /> المواد المسجلة ({enrollments.length})
+              <BookOpen className="w-4 h-4 text-uni-gold" /> {t.schedule.registeredCourses} ({enrollments.length})
             </h3>
             <div className="flex flex-wrap gap-2">
               {enrollments.map((e, i) => (

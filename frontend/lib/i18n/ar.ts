@@ -540,6 +540,12 @@ const ar = {
     lab: 'مختبر',
     tutorial: 'درس خصوصي',
     noSchedule: 'لا يوجد جدول محاضرات',
+    weeklyDesc: 'جدولك الأسبوعي للمحاضرات',
+    thisWeek: 'هذا الأسبوع',
+    lastWeek: 'الأسبوع الماضي',
+    nextWeek: 'الأسبوع القادم',
+    week: 'أسبوع',
+    registeredCourses: 'المواد المسجلة',
   },
 
   // Forum

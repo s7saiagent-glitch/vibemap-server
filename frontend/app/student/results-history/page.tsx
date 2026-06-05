@@ -7,6 +7,7 @@ import { useT } from '@/lib/i18n'
 import { studentAPI } from '@/lib/api'
 
 export default function ResultsHistoryPage() {
+  const { t } = useT()
   const { data, isLoading } = useQuery({
     queryKey: ['my-submissions'],
     queryFn: () => studentAPI.getMySubmissions().then(r => r.data),
@@ -20,7 +21,7 @@ export default function ResultsHistoryPage() {
   const passed = submissions.filter(s => s.passed).length
 
   const TYPE_LABELS: Record<string, string> = {
-    quiz: 'اختبار قصير', midterm: 'منتصف الفصل', final: 'نهائي', assignment: 'واجب', project: 'مشروع',
+    quiz: t.student.quiz, midterm: t.student.midterm, final: t.student.final, assignment: t.student.assignment, project: t.resultsHistory.project,
   }
 
   return (
@@ -28,26 +29,26 @@ export default function ResultsHistoryPage() {
       <div className="space-y-6 max-w-4xl">
         <div>
           <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
-            <FileText className="w-6 h-6 text-uni-gold" /> سجل نتائجي
+            <FileText className="w-6 h-6 text-uni-gold" /> {t.nav.resultsHistory}
           </h1>
-          <p className="text-uni-muted text-sm mt-1">جميع نتائجك في الاختبارات والواجبات</p>
+          <p className="text-uni-muted text-sm mt-1">{t.resultsHistory.subtitle}</p>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-uni text-center">
             <Award className="w-6 h-6 text-uni-gold mx-auto mb-2" />
             <div className="text-2xl font-black text-gold-gradient">{submissions.length}</div>
-            <div className="text-xs text-uni-muted">اختبار مؤدى</div>
+            <div className="text-xs text-uni-muted">{t.resultsHistory.assessmentsTaken}</div>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card-uni text-center">
             <TrendingUp className="w-6 h-6 text-uni-blue mx-auto mb-2" />
             <div className="text-2xl font-black text-uni-blue">{avgPct}%</div>
-            <div className="text-xs text-uni-muted">متوسط الدرجات</div>
+            <div className="text-xs text-uni-muted">{t.resultsHistory.avgScore}</div>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-uni text-center">
             <CheckCircle className="w-6 h-6 text-uni-green mx-auto mb-2" />
             <div className="text-2xl font-black text-uni-green">{passed}</div>
-            <div className="text-xs text-uni-muted">اختبار مجتاز</div>
+            <div className="text-xs text-uni-muted">{t.resultsHistory.passed}</div>
           </motion.div>
         </div>
 
