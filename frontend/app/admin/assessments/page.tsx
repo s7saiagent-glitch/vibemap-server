@@ -10,20 +10,20 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useT } from '@/lib/i18n'
 import { adminAPI } from '@/lib/api'
 
-const ASSESSMENT_TYPES = [
-  { value: 'quiz', label: 'اختبار قصير' },
-  { value: 'midterm', label: 'امتحان منتصف الفصل' },
-  { value: 'final', label: 'امتحان نهائي' },
-  { value: 'assignment', label: 'واجب' },
-  { value: 'project', label: 'مشروع' },
-]
+const ASSESSMENT_TYPE_KEYS: Record<string, string> = {
+  quiz: 'typeQuiz',
+  midterm: 'typeMidterm',
+  final: 'typeFinal',
+  assignment: 'typeAssignment',
+  project: 'typeProject',
+}
 
-const QUESTION_TYPES = [
-  { value: 'mcq', label: 'اختيار من متعدد' },
-  { value: 'true_false', label: 'صح أو خطأ' },
-  { value: 'essay', label: 'مقال' },
-  { value: 'short_answer', label: 'إجابة قصيرة' },
-]
+const QUESTION_TYPE_KEYS: Record<string, string> = {
+  mcq: 'qTypeMcq',
+  true_false: 'qTypeTrueFalse',
+  essay: 'qTypeEssay',
+  short_answer: 'qTypeShortAnswer',
+}
 
 type QuestionDraft = {
   content: string
@@ -51,6 +51,7 @@ const emptyQuestion = (): QuestionDraft => ({
 })
 
 export default function AdminAssessmentsPage() {
+  const { t } = useT()
   const qc = useQueryClient()
   const [step, setStep] = useState(0) // 0=list, 1=basic, 2=questions, 3=review
   const [msg, setMsg] = useState('')
@@ -120,12 +121,12 @@ export default function AdminAssessmentsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-assessments'] })
-      setMsg('تم إنشاء الاختبار بنجاح')
+      setMsg(t.admin.createSuccess)
       setStep(0)
       resetForm()
       setTimeout(() => setMsg(''), 4000)
     },
-    onError: () => setMsg('حدث خطأ أثناء الإنشاء'),
+    onError: () => setMsg(t.admin.createError),
   })
 
   const publishMutation = useMutation({
@@ -164,12 +165,12 @@ export default function AdminAssessmentsPage() {
       <div className="space-y-6 max-w-5xl">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-uni-text">إدارة الاختبارات</h1>
-            <p className="text-uni-muted text-sm mt-1">إنشاء وإدارة اختبارات الطلاب</p>
+            <h1 className="text-2xl font-black text-uni-text">{t.admin.manageAssessments}</h1>
+            <p className="text-uni-muted text-sm mt-1">{t.admin.manageAssessmentsDesc}</p>
           </div>
           {step === 0 && (
             <button onClick={() => setStep(1)} className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gold text-sm font-bold">
-              <Plus className="w-4 h-4" /> إنشاء اختبار
+              <Plus className="w-4 h-4" /> {t.admin.createAssessmentBtn}
             </button>
           )}
         </div>
@@ -188,9 +189,9 @@ export default function AdminAssessmentsPage() {
             ) : assessmentList.length === 0 ? (
               <div className="card-uni text-center py-12">
                 <FileText className="w-12 h-12 text-uni-muted mx-auto mb-3" />
-                <p className="text-uni-muted">لا توجد اختبارات بعد</p>
+                <p className="text-uni-muted">{t.admin.noAssessments}</p>
                 <button onClick={() => setStep(1)} className="mt-4 btn-gold px-6 py-2 rounded-xl text-sm font-bold">
-                  إنشاء أول اختبار
+                  {t.admin.createFirstAssessment}
                 </button>
               </div>
             ) : (
@@ -205,17 +206,17 @@ export default function AdminAssessmentsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-uni-text truncate">{a.title as string}</div>
                       <div className="text-xs text-uni-muted mt-0.5">
-                        {a.course_name as string} · {ASSESSMENT_TYPES.find(t => t.value === a.assessment_type)?.label} · {a.duration_minutes as number} دقيقة · {a.total_points as number} نقطة
+                        {a.course_name as string} · {t.admin[ASSESSMENT_TYPE_KEYS[a.assessment_type as string] as keyof typeof t.admin] || String(a.assessment_type)} · {a.duration_minutes as number} {t.admin.durationMinutes} · {a.total_points as number} {t.admin.pointsSuffix}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={`text-xs px-2 py-1 rounded-lg font-medium ${a.is_published ? 'bg-uni-green/10 text-uni-green border border-uni-green/20' : 'bg-uni-muted/10 text-uni-muted border border-uni-border/20'}`}>
-                        {a.is_published ? 'منشور' : 'مسودة'}
+                        {a.is_published ? t.admin.published : t.admin.draft}
                       </span>
                       <button
                         onClick={() => publishMutation.mutate({ id: a.id as number, pub: !a.is_published })}
                         className="p-2 rounded-lg hover:bg-uni-gold/10 text-uni-muted hover:text-uni-gold transition-colors"
-                        title={a.is_published ? 'إلغاء النشر' : 'نشر'}
+                        title={a.is_published ? t.admin.unpublish : t.admin.publish}
                       >
                         {a.is_published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -231,33 +232,35 @@ export default function AdminAssessmentsPage() {
         {step === 1 && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="card-uni border-uni-gold/20">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-uni-text">معلومات الاختبار الأساسية</h3>
+              <h3 className="font-bold text-uni-text">{t.admin.assessmentBasicInfo}</h3>
               <button onClick={() => { setStep(0); resetForm() }}><X className="w-5 h-5 text-uni-muted hover:text-uni-red" /></button>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="col-span-2">
-                <label className="text-xs text-uni-muted mb-1 block">عنوان الاختبار (عربي) *</label>
+                <label className="text-xs text-uni-muted mb-1 block">{t.admin.assessmentTitleAr}</label>
                 <input
                   type="text"
                   value={form.title_ar}
                   onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))}
-                  placeholder="مثال: اختبار منتصف الفصل - مقدمة البرمجة"
+                  placeholder={t.admin.assessmentTitlePlaceholder}
                   className="w-full bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none"
                 />
               </div>
               <div>
-                <label className="text-xs text-uni-muted mb-1 block">نوع الاختبار *</label>
+                <label className="text-xs text-uni-muted mb-1 block">{t.admin.assessmentTypeLbl}</label>
                 <select value={form.assessment_type} onChange={e => setForm(f => ({ ...f, assessment_type: e.target.value }))}
                   className="w-full bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none">
-                  {ASSESSMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  {Object.entries(ASSESSMENT_TYPE_KEYS).map(([value, key]) => (
+                    <option key={value} value={value}>{t.admin[key as keyof typeof t.admin] as string}</option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-uni-muted mb-1 block">الشعبة الدراسية *</label>
+                <label className="text-xs text-uni-muted mb-1 block">{t.admin.sectionLbl}</label>
                 <select value={form.section_id} onChange={e => setForm(f => ({ ...f, section_id: e.target.value }))}
                   className="w-full bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none">
-                  <option value="">اختر الشعبة</option>
+                  <option value="">{t.admin.selectSection}</option>
                   {sectionList.map((s: Record<string, unknown>) => (
                     <option key={s.id as number} value={s.id as number}>
                       {s.course_code as string} - {s.course_name as string}
@@ -266,32 +269,32 @@ export default function AdminAssessmentsPage() {
                 </select>
               </div>
               {[
-                { label: 'مدة الاختبار (دقيقة)', key: 'duration_minutes', type: 'number' },
-                { label: 'إجمالي النقاط', key: 'total_points', type: 'number' },
-                { label: 'درجة النجاح', key: 'passing_score', type: 'number' },
-                { label: 'الوزن من الدرجة الكلية (%)', key: 'weight_percent', type: 'number' },
-              ].map(({ label, key, type }) => (
+                { labelKey: 'durationLbl', key: 'duration_minutes', type: 'number' },
+                { labelKey: 'totalPointsLbl', key: 'total_points', type: 'number' },
+                { labelKey: 'passingScoreLbl', key: 'passing_score', type: 'number' },
+                { labelKey: 'weightLbl', key: 'weight_percent', type: 'number' },
+              ].map(({ labelKey, key, type }) => (
                 <div key={key}>
-                  <label className="text-xs text-uni-muted mb-1 block">{label}</label>
+                  <label className="text-xs text-uni-muted mb-1 block">{t.admin[labelKey as keyof typeof t.admin] as string}</label>
                   <input type={type} value={form[key as keyof typeof form]}
                     onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                     className="w-full bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none" />
                 </div>
               ))}
               <div>
-                <label className="text-xs text-uni-muted mb-1 block">تاريخ البداية</label>
+                <label className="text-xs text-uni-muted mb-1 block">{t.admin.startDateLbl}</label>
                 <input type="datetime-local" value={form.start_datetime}
                   onChange={e => setForm(f => ({ ...f, start_datetime: e.target.value }))}
                   className="w-full bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none" />
               </div>
               <div>
-                <label className="text-xs text-uni-muted mb-1 block">تاريخ الانتهاء</label>
+                <label className="text-xs text-uni-muted mb-1 block">{t.admin.endDateLbl}</label>
                 <input type="datetime-local" value={form.end_datetime}
                   onChange={e => setForm(f => ({ ...f, end_datetime: e.target.value }))}
                   className="w-full bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none" />
               </div>
               <div className="col-span-2">
-                <label className="text-xs text-uni-muted mb-1 block">تعليمات الاختبار</label>
+                <label className="text-xs text-uni-muted mb-1 block">{t.admin.instructionsLbl}</label>
                 <textarea value={form.instructions}
                   onChange={e => setForm(f => ({ ...f, instructions: e.target.value }))}
                   rows={2}
@@ -301,14 +304,14 @@ export default function AdminAssessmentsPage() {
 
             <div className="flex justify-end gap-3">
               <button onClick={() => { setStep(0); resetForm() }} className="px-4 py-2 rounded-xl text-sm text-uni-muted hover:text-uni-text border border-uni-border hover:border-uni-gold/30 transition-all">
-                إلغاء
+                {t.common.cancel}
               </button>
               <button
                 onClick={() => setStep(2)}
                 disabled={!form.title_ar || !form.section_id}
                 className="btn-gold px-6 py-2 rounded-xl text-sm font-bold disabled:opacity-50 flex items-center gap-2"
               >
-                التالي: الأسئلة <ChevronLeft className="w-4 h-4" />
+                {t.admin.nextQuestions} <ChevronLeft className="w-4 h-4" />
               </button>
             </div>
           </motion.div>
@@ -319,11 +322,11 @@ export default function AdminAssessmentsPage() {
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="card-uni border-uni-blue/20">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-uni-text">أسئلة الاختبار</h3>
+                <h3 className="font-bold text-uni-text">{t.admin.questionBankTitle}</h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-uni-muted">{questions.length} سؤال</span>
+                  <span className="text-xs text-uni-muted">{questions.length} {t.admin.questionCount}</span>
                   <button onClick={addQuestion} className="flex items-center gap-1 px-3 py-1.5 rounded-lg btn-gold text-xs font-bold">
-                    <Plus className="w-3 h-3" /> إضافة سؤال
+                    <Plus className="w-3 h-3" /> {t.admin.addQuestion}
                   </button>
                 </div>
               </div>
@@ -349,25 +352,27 @@ export default function AdminAssessmentsPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs text-uni-muted mb-1 block">نوع السؤال</label>
+                    <label className="text-xs text-uni-muted mb-1 block">{t.admin.questionTypeLbl}</label>
                     <select value={q.question_type} onChange={e => updateQ({ question_type: e.target.value })}
                       className="w-full bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none">
-                      {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                      {Object.entries(QUESTION_TYPE_KEYS).map(([value, key]) => (
+                        <option key={value} value={value}>{t.admin[key as keyof typeof t.admin] as string}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-uni-muted mb-1 block">النقاط</label>
+                    <label className="text-xs text-uni-muted mb-1 block">{t.admin.pointsLbl}</label>
                     <input type="number" min="0.5" step="0.5" value={q.points}
                       onChange={e => updateQ({ points: Number(e.target.value) })}
                       className="w-full bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none" />
                   </div>
                   <div className="col-span-2">
-                    <label className="text-xs text-uni-muted mb-1 block">نص السؤال *</label>
+                    <label className="text-xs text-uni-muted mb-1 block">{t.admin.questionTextLbl}</label>
                     <textarea
                       value={q.content_ar}
                       onChange={e => updateQ({ content_ar: e.target.value, content: e.target.value })}
                       rows={2}
-                      placeholder="اكتب نص السؤال هنا..."
+                      placeholder={t.admin.questionTextPlaceholder}
                       className="w-full bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none resize-none"
                     />
                   </div>
@@ -376,7 +381,7 @@ export default function AdminAssessmentsPage() {
                 {/* MCQ Options */}
                 {q.question_type === 'mcq' && (
                   <div className="space-y-2">
-                    <label className="text-xs text-uni-muted block">الخيارات (حدد الإجابة الصحيحة)</label>
+                    <label className="text-xs text-uni-muted block">{t.admin.mcqOptionsLbl}</label>
                     {q.options.map((opt, oi) => (
                       <div key={oi} className="flex items-center gap-3">
                         <input
@@ -390,7 +395,7 @@ export default function AdminAssessmentsPage() {
                           type="text"
                           value={opt.text}
                           onChange={e => updateQ({ options: q.options.map((o, j) => j === oi ? { ...o, text: e.target.value } : o) })}
-                          placeholder={`الخيار ${oi + 1}`}
+                          placeholder={`${t.admin.optionPlaceholder} ${oi + 1}`}
                           className="flex-1 bg-uni-card border border-uni-border rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none"
                         />
                         {opt.is_correct && <CheckCircle className="w-4 h-4 text-uni-green flex-shrink-0" />}
@@ -402,14 +407,14 @@ export default function AdminAssessmentsPage() {
                 {/* True/False */}
                 {q.question_type === 'true_false' && (
                   <div>
-                    <label className="text-xs text-uni-muted mb-2 block">الإجابة الصحيحة</label>
+                    <label className="text-xs text-uni-muted mb-2 block">{t.admin.correctAnswerLbl}</label>
                     <div className="flex gap-3">
                       {['true', 'false'].map(v => (
                         <button key={v}
                           onClick={() => updateQ({ correct_answer: v })}
                           className={`px-6 py-2 rounded-xl text-sm font-medium transition-all ${q.correct_answer === v ? 'btn-gold' : 'border border-uni-border text-uni-muted hover:border-uni-gold/30'}`}
                         >
-                          {v === 'true' ? '✓ صح' : '✗ خطأ'}
+                          {v === 'true' ? t.admin.correctTrue : t.admin.correctFalse}
                         </button>
                       ))}
                     </div>
@@ -420,10 +425,10 @@ export default function AdminAssessmentsPage() {
 
             <div className="flex justify-between gap-3">
               <button onClick={() => setStep(1)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-uni-muted border border-uni-border hover:border-uni-gold/30 transition-all">
-                <ChevronRight className="w-4 h-4" /> السابق
+                <ChevronRight className="w-4 h-4" /> {t.common.prev}
               </button>
               <button onClick={() => setStep(3)} className="btn-gold px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-                مراجعة وحفظ <ChevronLeft className="w-4 h-4" />
+                {t.admin.reviewAndSave} <ChevronLeft className="w-4 h-4" />
               </button>
             </div>
           </motion.div>
@@ -432,35 +437,35 @@ export default function AdminAssessmentsPage() {
         {/* Step 3: Review */}
         {step === 3 && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="card-uni border-uni-green/20">
-            <h3 className="font-bold text-uni-text mb-4">مراجعة الاختبار</h3>
+            <h3 className="font-bold text-uni-text mb-4">{t.admin.reviewTitle}</h3>
 
             <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-uni-muted">
                   <BookOpen className="w-4 h-4" />
-                  <span>العنوان: <span className="text-uni-text font-medium">{form.title_ar}</span></span>
+                  <span>{t.admin.titleLabel}: <span className="text-uni-text font-medium">{form.title_ar}</span></span>
                 </div>
                 <div className="flex items-center gap-2 text-uni-muted">
                   <Clock className="w-4 h-4" />
-                  <span>المدة: <span className="text-uni-text font-medium">{form.duration_minutes} دقيقة</span></span>
+                  <span>{t.admin.durationLabel}: <span className="text-uni-text font-medium">{form.duration_minutes} {t.admin.durationMinutes}</span></span>
                 </div>
                 <div className="flex items-center gap-2 text-uni-muted">
                   <Target className="w-4 h-4" />
-                  <span>النقاط: <span className="text-uni-text font-medium">{form.total_points} نقطة</span></span>
+                  <span>{t.admin.pointsLabel}: <span className="text-uni-text font-medium">{form.total_points} {t.admin.pointsSuffix}</span></span>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-uni-muted">
                   <FileText className="w-4 h-4" />
-                  <span>النوع: <span className="text-uni-text font-medium">{ASSESSMENT_TYPES.find(t => t.value === form.assessment_type)?.label}</span></span>
+                  <span>{t.admin.typeLabel}: <span className="text-uni-text font-medium">{t.admin[ASSESSMENT_TYPE_KEYS[form.assessment_type] as keyof typeof t.admin] as string}</span></span>
                 </div>
                 <div className="flex items-center gap-2 text-uni-muted">
                   <CheckCircle className="w-4 h-4" />
-                  <span>عدد الأسئلة: <span className="text-uni-text font-medium">{questions.length} سؤال</span></span>
+                  <span>{t.admin.questionCountLabel}: <span className="text-uni-text font-medium">{questions.length} {t.admin.questionCount}</span></span>
                 </div>
                 <div className="flex items-center gap-2 text-uni-muted">
                   <Target className="w-4 h-4" />
-                  <span>درجة النجاح: <span className="text-uni-text font-medium">{form.passing_score} نقطة</span></span>
+                  <span>{t.admin.passingScoreLabel}: <span className="text-uni-text font-medium">{form.passing_score} {t.admin.pointsSuffix}</span></span>
                 </div>
               </div>
             </div>
@@ -470,8 +475,8 @@ export default function AdminAssessmentsPage() {
               {questions.map((q, i) => (
                 <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-uni-card/50 border border-uni-border/30">
                   <span className="badge-gold text-xs w-8 text-center">س{i + 1}</span>
-                  <span className="text-sm text-uni-text flex-1 truncate">{q.content_ar || 'سؤال غير مكتمل'}</span>
-                  <span className="text-xs text-uni-muted">{QUESTION_TYPES.find(t => t.value === q.question_type)?.label}</span>
+                  <span className="text-sm text-uni-text flex-1 truncate">{q.content_ar || t.admin.incompleteQuestion}</span>
+                  <span className="text-xs text-uni-muted">{t.admin[QUESTION_TYPE_KEYS[q.question_type] as keyof typeof t.admin] as string}</span>
                   <span className="text-xs badge-blue">{q.points} ن</span>
                 </div>
               ))}
@@ -486,21 +491,21 @@ export default function AdminAssessmentsPage() {
                 <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${publish ? 'right-1' : 'left-1'}`} />
               </button>
               <div>
-                <div className="text-sm font-medium text-uni-text">نشر الاختبار فوراً</div>
-                <div className="text-xs text-uni-muted">{publish ? 'سيكون مرئياً للطلاب' : 'سيُحفظ كمسودة'}</div>
+                <div className="text-sm font-medium text-uni-text">{t.admin.publishNow}</div>
+                <div className="text-xs text-uni-muted">{publish ? t.admin.publishVisible : t.admin.saveDraft}</div>
               </div>
             </div>
 
             <div className="flex justify-between gap-3">
               <button onClick={() => setStep(2)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-uni-muted border border-uni-border hover:border-uni-gold/30 transition-all">
-                <ChevronRight className="w-4 h-4" /> تعديل الأسئلة
+                <ChevronRight className="w-4 h-4" /> {t.admin.editQuestions}
               </button>
               <button
                 onClick={() => createMutation.mutate()}
                 disabled={createMutation.isPending}
                 className="btn-gold px-8 py-2 rounded-xl text-sm font-bold disabled:opacity-50"
               >
-                {createMutation.isPending ? 'جاري الحفظ...' : publish ? 'حفظ ونشر' : 'حفظ كمسودة'}
+                {createMutation.isPending ? t.admin.saving : publish ? t.admin.saveAndPublish : t.admin.saveAsDraft}
               </button>
             </div>
           </motion.div>

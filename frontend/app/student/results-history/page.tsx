@@ -57,7 +57,7 @@ export default function ResultsHistoryPage() {
         ) : submissions.length === 0 ? (
           <div className="card-uni text-center py-12">
             <FileText className="w-12 h-12 text-uni-muted mx-auto mb-3" />
-            <p className="text-uni-muted">لم تؤدِّ أي اختبار بعد</p>
+            <p className="text-uni-muted">{t.resultsHistory.noSubmissions}</p>
           </div>
         ) : (
           <div className="space-y-3">

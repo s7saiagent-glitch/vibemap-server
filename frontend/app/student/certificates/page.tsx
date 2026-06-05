@@ -171,8 +171,8 @@ export default function CertificatesPage() {
                       {course.course_name_ar as string || course.course_name as string || `مادة ${i + 1}`}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="badge-gold text-xs">{course.letter_grade as string || 'اجتياز'}</span>
-                      <span className="text-xs text-uni-muted">{course.credit_hours as number || 3} ساعات</span>
+                      <span className="badge-gold text-xs">{course.letter_grade as string || t.certificates.passed}</span>
+                      <span className="text-xs text-uni-muted">{course.credit_hours as number || 3} {t.certificates.creditHoursSuffix}</span>
                     </div>
                   </div>
                   <button

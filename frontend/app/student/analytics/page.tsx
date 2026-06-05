@@ -15,11 +15,11 @@ const STANDING_COLORS: Record<string, string> = {
   probation: 'text-uni-red border-uni-red/30 bg-uni-red/10',
 }
 
-const STANDING_LABELS: Record<string, string> = {
-  excellent: 'ممتاز',
-  good: 'جيد',
-  warning: 'تحذير',
-  probation: 'قيد المراقبة',
+const STANDING_LABEL_KEYS: Record<string, string> = {
+  excellent: 'standingExcellent',
+  good: 'standingGood',
+  warning: 'standingWarning',
+  probation: 'standingProbation',
 }
 
 const GRADE_COLORS: Record<string, string> = {
@@ -30,6 +30,7 @@ const GRADE_COLORS: Record<string, string> = {
 }
 
 export default function StudentAnalyticsPage() {
+  const { t, lang } = useT()
   const { data, isLoading } = useQuery({
     queryKey: ['student-analytics'],
     queryFn: () => studentAPI.getAnalytics().then(r => r.data),
@@ -57,8 +58,8 @@ export default function StudentAnalyticsPage() {
     <DashboardLayout>
       <div className="space-y-6 max-w-5xl">
         <div>
-          <h1 className="text-2xl font-black text-uni-text">التحليلات الأكاديمية</h1>
-          <p className="text-uni-muted text-sm mt-1">متابعة أدائك وتقدمك الأكاديمي</p>
+          <h1 className="text-2xl font-black text-uni-text">{t.analytics.title}</h1>
+          <p className="text-uni-muted text-sm mt-1">{t.analytics.subtitle}</p>
         </div>
 
         {/* Top stats */}
@@ -67,32 +68,32 @@ export default function StudentAnalyticsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-uni text-center col-span-2 md:col-span-1">
             <Star className="w-6 h-6 text-uni-gold mx-auto mb-2" />
             <div className="text-4xl font-black text-gold-gradient">{gpa.toFixed(2)}</div>
-            <div className="text-xs text-uni-muted mt-1">المعدل التراكمي</div>
-            <div className="text-xs text-uni-muted">من 4.00</div>
+            <div className="text-xs text-uni-muted mt-1">{t.analytics.cumulativeGpa}</div>
+            <div className="text-xs text-uni-muted">{t.analytics.outOf}</div>
           </motion.div>
 
           {/* Credits */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-uni text-center">
             <BookOpen className="w-6 h-6 text-uni-blue mx-auto mb-2" />
             <div className="text-3xl font-black text-uni-text">{creditsEarned}</div>
-            <div className="text-xs text-uni-muted mt-1">ساعة معتمدة</div>
-            <div className="text-xs text-uni-muted">من {creditsTotal}</div>
+            <div className="text-xs text-uni-muted mt-1">{t.analytics.creditHours}</div>
+            <div className="text-xs text-uni-muted">{t.analytics.outOfCredits} {creditsTotal}</div>
           </motion.div>
 
           {/* Current courses */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card-uni text-center">
             <Clock className="w-6 h-6 text-uni-green mx-auto mb-2" />
             <div className="text-3xl font-black text-uni-text">{data?.current_courses || 0}</div>
-            <div className="text-xs text-uni-muted mt-1">مادة حالية</div>
+            <div className="text-xs text-uni-muted mt-1">{t.analytics.currentCourses}</div>
           </motion.div>
 
           {/* Standing */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-uni text-center">
             <Award className="w-6 h-6 text-uni-gold mx-auto mb-2" />
             <div className={`inline-block px-3 py-1 rounded-full text-sm font-bold border mt-1 ${STANDING_COLORS[standing] || STANDING_COLORS.good}`}>
-              {STANDING_LABELS[standing] || standing}
+              {t.analytics[STANDING_LABEL_KEYS[standing] as keyof typeof t.analytics] || standing}
             </div>
-            <div className="text-xs text-uni-muted mt-1">الوضع الأكاديمي</div>
+            <div className="text-xs text-uni-muted mt-1">{t.analytics.academicStanding}</div>
           </motion.div>
         </div>
 
@@ -100,9 +101,9 @@ export default function StudentAnalyticsPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="card-uni">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-uni-text flex items-center gap-2">
-              <Target className="w-4 h-4 text-uni-gold" /> تقدم الساعات نحو التخرج
+              <Target className="w-4 h-4 text-uni-gold" /> {t.analytics.creditsProgress}
             </h3>
-            <span className="text-sm text-uni-muted">{creditsEarned} / {creditsTotal} ساعة</span>
+            <span className="text-sm text-uni-muted">{creditsEarned} / {creditsTotal} {t.analytics.creditHours}</span>
           </div>
           <div className="h-4 bg-uni-card rounded-full overflow-hidden border border-uni-border/30">
             <motion.div
@@ -113,8 +114,8 @@ export default function StudentAnalyticsPage() {
             />
           </div>
           <div className="flex justify-between text-xs text-uni-muted mt-2">
-            <span>مكتمل {creditsPercent.toFixed(0)}%</span>
-            <span>{data?.credits_to_graduate || 0} ساعة متبقية</span>
+            <span>{t.analytics.completed} {creditsPercent.toFixed(0)}%</span>
+            <span>{data?.credits_to_graduate || 0} {t.analytics.hoursRemaining}</span>
           </div>
         </motion.div>
 
@@ -122,7 +123,7 @@ export default function StudentAnalyticsPage() {
         {trend.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="card-uni">
             <h3 className="font-bold text-uni-text mb-4 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-uni-blue" /> منحنى الأداء في الاختبارات
+              <TrendingUp className="w-4 h-4 text-uni-blue" /> {t.analytics.performanceTrend}
             </h3>
             <div className="flex items-end gap-2 h-28 overflow-x-auto pb-2">
               {trend.map((t, i) => {
@@ -151,7 +152,7 @@ export default function StudentAnalyticsPage() {
         {courseGrades.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="card-uni">
             <h3 className="font-bold text-uni-text mb-4 flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-uni-gold" /> درجات المواد
+              <BarChart3 className="w-4 h-4 text-uni-gold" /> {t.analytics.courseGrades}
             </h3>
             <div className="space-y-3">
               {courseGrades.map((c, i) => {
@@ -169,7 +170,7 @@ export default function StudentAnalyticsPage() {
                         </span>
                         <div>
                           <div className="text-sm text-uni-text font-medium">{c.course_name as string}</div>
-                          <div className="text-xs text-uni-muted">{c.credits as number} ساعات · {c.semester as string}</div>
+                          <div className="text-xs text-uni-muted">{c.credits as number} {t.analytics.hours} · {c.semester as string}</div>
                         </div>
                       </div>
                       <div className="text-sm font-bold" style={{ color: gradeColor }}>{grade > 0 ? `${grade.toFixed(0)}%` : '—'}</div>
@@ -195,8 +196,8 @@ export default function StudentAnalyticsPage() {
         {courseGrades.length === 0 && trend.length === 0 && (
           <div className="card-uni text-center py-12">
             <BarChart3 className="w-12 h-12 text-uni-muted mx-auto mb-3" />
-            <p className="text-uni-muted">لا توجد بيانات أكاديمية بعد</p>
-            <p className="text-xs text-uni-muted mt-1">ستظهر درجاتك هنا بعد إكمال اختباراتك</p>
+            <p className="text-uni-muted">{t.analytics.noData}</p>
+            <p className="text-xs text-uni-muted mt-1">{t.analytics.noDataDesc}</p>
           </div>
         )}
       </div>

@@ -7,7 +7,7 @@ import {
   LayoutDashboard, BookOpen, Brain, FileText, BarChart3,
   Languages, User, Settings, LogOut, GraduationCap, Menu, X,
   Users, Layers, Award, Bell, Globe, ChevronDown, TrendingUp, Search,
-  Calendar, CreditCard, MessageSquare, Clock, CheckCircle
+  Calendar, CreditCard, MessageSquare, Clock, CheckCircle, Code
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
 import { authAPI, studentAPI, searchAPI } from '@/lib/api'
@@ -36,6 +36,7 @@ const STUDENT_NAV_ITEMS: NavItem[] = [
   { href: '/student/calendar', icon: Calendar, labelKey: 'calendar' },
   { href: '/student/study-timer', icon: Clock, labelKey: 'studyTimer' },
   { href: '/student/english', icon: Languages, labelKey: 'englishCourses' },
+  { href: '/student/cs-courses', icon: Code, labelKey: 'csCourses' },
   { href: '/academic/plans', icon: Award, labelKey: 'studyPlans' },
   { href: '/roadmap', icon: Globe, labelKey: 'academicRoadmap' },
   { href: '/student/profile', icon: User, labelKey: 'myProfile' },

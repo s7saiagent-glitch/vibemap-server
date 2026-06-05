@@ -154,6 +154,12 @@ export const englishAPI = {
     api.post(`/english/exercises/${unitId}/submit`, answers),
 }
 
+// CS Courses API (placeholder for future backend)
+export const csCoursesAPI = {
+  getCourses: () => api.get('/cs-courses'),
+  getProgress: () => api.get('/cs-courses/my-progress'),
+}
+
 // Attendance API
 export const attendanceAPI = {
   getMyAttendance: (sectionId?: number) => api.get('/attendance/my-attendance', { params: sectionId ? { section_id: sectionId } : {} }),
