@@ -185,6 +185,8 @@ export const adminAPI = {
   uploadFile: (formData: FormData) => api.post('/admin/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
+  getGrades: (params?: { section_id?: number; search?: string }) => api.get('/admin/grades', { params }),
+  updateGrade: (enrollmentId: number, data: Record<string, unknown>) => api.patch(`/admin/grades/${enrollmentId}`, data),
 }
 
 export const paymentAPI = {

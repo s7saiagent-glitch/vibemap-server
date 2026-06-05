@@ -787,3 +787,199 @@ async def reject_enrollment(
     enrollment.status = EnrollmentStatus.DROPPED
     await db.commit()
     return {"message": "تم رفض طلب التسجيل"}
+
+
+# ---------------------------------------------------------------------------
+# Grade Management
+# ---------------------------------------------------------------------------
+
+class GradeUpdateRequest(BaseModel):
+    midterm_grade: Optional[float] = None
+    final_grade: Optional[float] = None
+    assignment_grade: Optional[float] = None
+    participation_grade: Optional[float] = None
+    status: Optional[str] = None
+
+
+def _calculate_letter_grade(total: float) -> str:
+    if total >= 95:
+        return "A+"
+    elif total >= 90:
+        return "A"
+    elif total >= 85:
+        return "B+"
+    elif total >= 80:
+        return "B"
+    elif total >= 75:
+        return "C+"
+    elif total >= 70:
+        return "C"
+    elif total >= 65:
+        return "D+"
+    elif total >= 60:
+        return "D"
+    else:
+        return "F"
+
+
+def _calculate_gpa_points(letter: str) -> float:
+    return {
+        "A+": 4.0,
+        "A": 4.0,
+        "B+": 3.0,
+        "B": 3.0,
+        "C+": 2.0,
+        "C": 2.0,
+        "D+": 1.0,
+        "D": 1.0,
+        "F": 0.0,
+    }.get(letter, 0.0)
+
+
+def _enrollment_to_dict(e: Enrollment) -> dict:
+    student_name = "غير معروف"
+    student_number = None
+    if e.student and e.student.user:
+        u = e.student.user
+        first = u.first_name_ar or u.first_name or ""
+        last = u.last_name_ar or u.last_name or ""
+        student_name = f"{first} {last}".strip()
+        student_number = e.student.student_id
+
+    course_name = None
+    course_code = None
+    if e.section and e.section.course:
+        course_name = e.section.course.name_ar or e.section.course.name
+        course_code = e.section.course.code
+
+    return {
+        "enrollment_id": e.id,
+        "student_id": e.student_id,
+        "student_name": student_name,
+        "student_number": student_number,
+        "course_name": course_name,
+        "course_code": course_code,
+        "section_id": e.section_id,
+        "midterm_grade": e.midterm_grade,
+        "final_grade": e.final_grade,
+        "assignment_grade": e.assignment_grade,
+        "participation_grade": e.participation_grade,
+        "total_grade": e.total_grade,
+        "letter_grade": e.letter_grade,
+        "gpa_points": e.gpa_points,
+        "status": e.status.value if e.status else None,
+    }
+
+
+@router.get("/grades")
+async def get_grades(
+    section_id: Optional[int] = Query(None),
+    search: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    """Return enrollments (ENROLLED / COMPLETED / FAILED) with grade data."""
+    query = (
+        select(Enrollment)
+        .where(
+            Enrollment.status.in_([
+                EnrollmentStatus.ENROLLED,
+                EnrollmentStatus.COMPLETED,
+                EnrollmentStatus.FAILED,
+            ])
+        )
+        .options(
+            selectinload(Enrollment.student).selectinload(StudentProfile.user),
+            selectinload(Enrollment.section).selectinload(CourseSection.course),
+        )
+    )
+
+    if section_id is not None:
+        query = query.where(Enrollment.section_id == section_id)
+
+    if search:
+        # Join through student_profiles -> users to filter by name or student_id
+        query = (
+            query
+            .join(StudentProfile, Enrollment.student_id == StudentProfile.id)
+            .join(User, StudentProfile.user_id == User.id)
+            .where(
+                (User.first_name_ar.ilike(f"%{search}%")) |
+                (User.last_name_ar.ilike(f"%{search}%")) |
+                (User.first_name.ilike(f"%{search}%")) |
+                (User.last_name.ilike(f"%{search}%")) |
+                (StudentProfile.student_id.ilike(f"%{search}%"))
+            )
+        )
+
+    result = await db.execute(query.order_by(Enrollment.id.desc()))
+    enrollments = result.scalars().all()
+    return [_enrollment_to_dict(e) for e in enrollments]
+
+
+@router.patch("/grades/{enrollment_id}")
+async def update_grade(
+    enrollment_id: int,
+    data: GradeUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    """Update grade fields for a specific enrollment and auto-calculate totals."""
+    result = await db.execute(
+        select(Enrollment)
+        .where(Enrollment.id == enrollment_id)
+        .options(
+            selectinload(Enrollment.student).selectinload(StudentProfile.user),
+            selectinload(Enrollment.section).selectinload(CourseSection.course),
+        )
+    )
+    enrollment = result.scalar_one_or_none()
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="التسجيل غير موجود")
+
+    # Apply grade updates
+    if data.midterm_grade is not None:
+        enrollment.midterm_grade = data.midterm_grade
+    if data.final_grade is not None:
+        enrollment.final_grade = data.final_grade
+    if data.assignment_grade is not None:
+        enrollment.assignment_grade = data.assignment_grade
+    if data.participation_grade is not None:
+        enrollment.participation_grade = data.participation_grade
+
+    # Apply status update
+    if data.status is not None:
+        try:
+            enrollment.status = EnrollmentStatus(data.status)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"حالة التسجيل غير صالحة: {data.status}")
+
+    # Auto-calculate total from non-null grade components
+    grade_parts = [
+        enrollment.midterm_grade,
+        enrollment.final_grade,
+        enrollment.assignment_grade,
+        enrollment.participation_grade,
+    ]
+    non_null = [g for g in grade_parts if g is not None]
+    if non_null:
+        total = sum(non_null)
+        enrollment.total_grade = total
+        letter = _calculate_letter_grade(total)
+        enrollment.letter_grade = letter
+        enrollment.gpa_points = _calculate_gpa_points(letter)
+
+    await db.commit()
+    await db.refresh(enrollment)
+
+    # Re-load relationships so _enrollment_to_dict works
+    result2 = await db.execute(
+        select(Enrollment)
+        .where(Enrollment.id == enrollment_id)
+        .options(
+            selectinload(Enrollment.student).selectinload(StudentProfile.user),
+            selectinload(Enrollment.section).selectinload(CourseSection.course),
+        )
+    )
+    enrollment = result2.scalar_one()
+    return _enrollment_to_dict(enrollment)

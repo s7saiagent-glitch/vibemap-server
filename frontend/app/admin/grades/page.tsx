@@ -1,20 +1,41 @@
 'use client'
 import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { BarChart3, Search, Edit2, Save, X, CheckCircle, Download, Filter } from 'lucide-react'
+import { BarChart3, Search, Edit2, Save, X, Download } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { adminAPI } from '@/lib/api'
+import { useT } from '@/lib/i18n'
+import toast from 'react-hot-toast'
 
 interface GradeRow {
+  enrollment_id: number
+  student_name: string
+  student_number: string
+  midterm_grade: number | null
+  final_grade: number | null
+  assignment_grade: number | null
+  total_grade: number | null
+  letter_grade: string | null
+}
+
+interface Section {
   id: number
-  studentId: string
-  studentName: string
-  course: string
-  courseCode: string
-  midterm: number
-  final: number
-  project: number
-  total: number
-  letterGrade: string
+  course_code: string
+  course_name: string
+  academic_year: string
+}
+
+const GRADE_COLORS: Record<string, string> = {
+  'A+': 'text-uni-green',
+  A: 'text-uni-green',
+  'B+': 'text-uni-blue',
+  B: 'text-uni-blue',
+  'C+': 'text-uni-gold',
+  C: 'text-uni-gold',
+  'D+': 'text-uni-red',
+  D: 'text-uni-red',
+  F: 'text-uni-red',
 }
 
 function calcLetter(total: number): string {
@@ -29,59 +50,94 @@ function calcLetter(total: number): string {
   return 'F'
 }
 
-const MOCK_GRADES: GradeRow[] = [
-  { id: 1, studentId: '2021001', studentName: 'أحمد محمد الغامدي', course: 'هياكل البيانات', courseCode: 'CS301', midterm: 38, final: 45, project: 9, total: 92, letterGrade: 'A' },
-  { id: 2, studentId: '2021002', studentName: 'سارة عبدالله المالكي', course: 'هياكل البيانات', courseCode: 'CS301', midterm: 42, final: 48, project: 10, total: 100, letterGrade: 'A+' },
-  { id: 3, studentId: '2021003', studentName: 'محمد فهد الزهراني', course: 'هياكل البيانات', courseCode: 'CS301', midterm: 30, final: 35, project: 8, total: 73, letterGrade: 'C+' },
-  { id: 4, studentId: '2021004', studentName: 'فاطمة علي العتيبي', course: 'هياكل البيانات', courseCode: 'CS301', midterm: 35, final: 40, project: 9, total: 84, letterGrade: 'B' },
-  { id: 5, studentId: '2021005', studentName: 'خالد ناصر الحربي', course: 'هياكل البيانات', courseCode: 'CS301', midterm: 25, final: 28, project: 7, total: 60, letterGrade: 'D' },
-  { id: 6, studentId: '2021006', studentName: 'نورة سعد الدوسري', course: 'هياكل البيانات', courseCode: 'CS301', midterm: 40, final: 46, project: 10, total: 96, letterGrade: 'A+' },
-  { id: 7, studentId: '2021007', studentName: 'عمر يوسف القحطاني', course: 'هياكل البيانات', courseCode: 'CS301', midterm: 33, final: 38, project: 8, total: 79, letterGrade: 'C+' },
-  { id: 8, studentId: '2021008', studentName: 'ليلى أحمد السهلي', course: 'هياكل البيانات', courseCode: 'CS301', midterm: 37, final: 44, project: 9, total: 90, letterGrade: 'A' },
-]
-
-const GRADE_COLORS: Record<string, string> = {
-  'A+': 'text-uni-green', A: 'text-uni-green', 'B+': 'text-uni-blue', B: 'text-uni-blue',
-  'C+': 'text-uni-gold', C: 'text-uni-gold', 'D+': 'text-uni-red', D: 'text-uni-red', F: 'text-uni-red',
-}
-
 export default function AdminGradesPage() {
-  const [grades, setGrades] = useState<GradeRow[]>(MOCK_GRADES)
+  useT()
+  const queryClient = useQueryClient()
+
+  const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null)
   const [search, setSearch] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
-  const [editValues, setEditValues] = useState({ midterm: 0, final: 0, project: 0 })
-  const [saved, setSaved] = useState(false)
+  const [editValues, setEditValues] = useState({ midterm_grade: 0, final_grade: 0, assignment_grade: 0 })
 
-  const filtered = grades.filter(g =>
-    g.studentName.includes(search) || g.studentId.includes(search)
+  // Fetch sections
+  const { data: sectionsData } = useQuery({
+    queryKey: ['admin-sections'],
+    queryFn: () => adminAPI.getSections().then(r => r.data),
+  })
+  const sectionList: Section[] = Array.isArray(sectionsData) ? sectionsData : []
+
+  // Fetch grades when a section is selected
+  const { data: gradesData, isLoading: gradesLoading } = useQuery({
+    queryKey: ['admin-grades', selectedSectionId],
+    queryFn: () =>
+      adminAPI.getGrades({ section_id: selectedSectionId! }).then(r => r.data),
+    enabled: selectedSectionId !== null,
+  })
+  const allGrades: GradeRow[] = Array.isArray(gradesData) ? gradesData : []
+
+  // Client-side search filter
+  const grades = allGrades.filter(
+    g =>
+      !search ||
+      g.student_name.includes(search) ||
+      g.student_number.includes(search),
   )
 
+  // Save grade mutation
+  const saveMutation = useMutation({
+    mutationFn: ({ enrollmentId, data }: { enrollmentId: number; data: Record<string, unknown> }) =>
+      adminAPI.updateGrade(enrollmentId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-grades', selectedSectionId] })
+      setEditId(null)
+      toast.success('تم حفظ الدرجات بنجاح')
+    },
+    onError: () => {
+      toast.error('حدث خطأ أثناء حفظ الدرجات')
+    },
+  })
+
   const startEdit = (row: GradeRow) => {
-    setEditId(row.id)
-    setEditValues({ midterm: row.midterm, final: row.final, project: row.project })
+    setEditId(row.enrollment_id)
+    setEditValues({
+      midterm_grade: row.midterm_grade ?? 0,
+      final_grade: row.final_grade ?? 0,
+      assignment_grade: row.assignment_grade ?? 0,
+    })
   }
 
-  const saveEdit = (id: number) => {
-    const total = editValues.midterm + editValues.final + editValues.project
-    setGrades(prev => prev.map(g => g.id === id
-      ? { ...g, midterm: editValues.midterm, final: editValues.final, project: editValues.project, total, letterGrade: calcLetter(total) }
-      : g
-    ))
-    setEditId(null)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+  const saveEdit = () => {
+    if (editId === null) return
+    saveMutation.mutate({
+      enrollmentId: editId,
+      data: {
+        midterm_grade: editValues.midterm_grade,
+        final_grade: editValues.final_grade,
+        assignment_grade: editValues.assignment_grade,
+      },
+    })
   }
 
+  // Stats calculated from fetched data
   const stats = {
-    avg: Math.round(grades.reduce((s, g) => s + g.total, 0) / grades.length),
-    passing: grades.filter(g => g.total >= 60).length,
-    failing: grades.filter(g => g.total < 60).length,
-    aGrade: grades.filter(g => g.letterGrade.startsWith('A')).length,
+    avg:
+      allGrades.length > 0
+        ? Math.round(
+            allGrades.reduce((s, g) => s + (g.total_grade ?? 0), 0) / allGrades.length,
+          )
+        : 0,
+    passing: allGrades.filter(g => (g.total_grade ?? 0) >= 60).length,
+    failing: allGrades.filter(g => (g.total_grade ?? 0) < 60).length,
+    aGrade: allGrades.filter(g => g.letter_grade?.startsWith('A')).length,
   }
+
+  const editTotal = editValues.midterm_grade + editValues.final_grade + editValues.assignment_grade
+  const editLetter = calcLetter(editTotal)
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
@@ -94,31 +150,48 @@ export default function AdminGradesPage() {
           </button>
         </div>
 
-        {saved && (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-            className="p-3 rounded-xl bg-uni-green/10 border border-uni-green/30 text-uni-green text-sm font-bold flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" /> تم حفظ الدرجات بنجاح
-          </motion.div>
-        )}
-
-        {/* Stats */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'متوسط الدرجات', value: `${stats.avg}%`, color: 'text-uni-gold' },
-            { label: 'ناجحون', value: stats.passing, color: 'text-uni-green' },
-            { label: 'راسبون', value: stats.failing, color: 'text-uni-red' },
-            { label: 'درجة A', value: stats.aGrade, color: 'text-uni-blue' },
+            { label: 'متوسط الدرجات', value: selectedSectionId ? `${stats.avg}%` : '—', color: 'text-uni-gold' },
+            { label: 'ناجحون', value: selectedSectionId ? stats.passing : '—', color: 'text-uni-green' },
+            { label: 'راسبون', value: selectedSectionId ? stats.failing : '—', color: 'text-uni-red' },
+            { label: 'درجة A', value: selectedSectionId ? stats.aGrade : '—', color: 'text-uni-blue' },
           ].map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-              className="card-uni text-center">
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="card-uni text-center"
+            >
               <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
               <div className="text-xs text-uni-muted mt-1">{s.label}</div>
             </motion.div>
           ))}
         </div>
 
-        {/* Filters */}
+        {/* Section Selector + Search */}
         <div className="flex gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-1 min-w-48">
+            <label className="text-sm text-uni-muted flex-shrink-0">الشعبة:</label>
+            <select
+              value={selectedSectionId ?? ''}
+              onChange={e => {
+                setSelectedSectionId(e.target.value ? Number(e.target.value) : null)
+                setEditId(null)
+              }}
+              className="flex-1 bg-uni-card border border-uni-border rounded-xl px-3 py-2.5 text-uni-text text-sm focus:border-uni-gold outline-none"
+            >
+              <option value="">اختر شعبة لعرض الدرجات</option>
+              {sectionList.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.course_code} - {s.course_name} ({s.academic_year})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="relative flex-1 min-w-48">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-uni-muted" />
             <input
@@ -129,84 +202,160 @@ export default function AdminGradesPage() {
               className="w-full bg-uni-card border border-uni-border rounded-xl pr-10 pl-4 py-2.5 text-uni-text text-sm focus:border-uni-gold outline-none"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2.5 border border-uni-border rounded-xl text-sm text-uni-muted hover:border-uni-gold/30 transition-all">
-            <Filter className="w-4 h-4" /> تصفية
-          </button>
         </div>
 
         {/* Table */}
-        <div className="card-uni overflow-x-auto p-0">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-uni-border/30">
-                {['الطالب', 'الرقم', 'نصف السنة (40)', 'النهائي (50)', 'المشاريع (10)', 'المجموع', 'التقدير', 'إجراء'].map(h => (
-                  <th key={h} className="text-right text-xs text-uni-muted font-medium p-4 whitespace-nowrap">{h}</th>
+        {!selectedSectionId ? (
+          <div className="card-uni text-center py-16">
+            <BarChart3 className="w-16 h-16 mx-auto mb-4 text-uni-muted opacity-30" />
+            <p className="text-uni-muted text-sm">اختر شعبة لعرض درجات الطلاب</p>
+          </div>
+        ) : gradesLoading ? (
+          <div className="space-y-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-14 glass rounded-2xl shimmer" />
+            ))}
+          </div>
+        ) : grades.length === 0 ? (
+          <div className="card-uni text-center py-16">
+            <BarChart3 className="w-16 h-16 mx-auto mb-4 text-uni-muted opacity-30" />
+            <p className="text-uni-muted text-sm">لا توجد درجات لهذه الشعبة</p>
+          </div>
+        ) : (
+          <div className="card-uni overflow-x-auto p-0">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-uni-border/30">
+                  {[
+                    'اسم الطالب',
+                    'رقم الطالب',
+                    'نصف السنة (40)',
+                    'النهائي (50)',
+                    'الواجبات (10)',
+                    'المجموع',
+                    'التقدير',
+                    'إجراء',
+                  ].map(h => (
+                    <th key={h} className="text-right text-xs text-uni-muted font-medium p-4 whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {grades.map((row, i) => (
+                  <motion.tr
+                    key={row.enrollment_id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="border-b border-uni-border/10 hover:bg-uni-card/30 transition-colors"
+                  >
+                    <td className="p-4 font-medium text-uni-text whitespace-nowrap">{row.student_name}</td>
+                    <td className="p-4 text-uni-muted">{row.student_number}</td>
+
+                    {editId === row.enrollment_id ? (
+                      <>
+                        <td className="p-4">
+                          <input
+                            type="number"
+                            min={0}
+                            max={40}
+                            value={editValues.midterm_grade}
+                            onChange={e =>
+                              setEditValues(v => ({
+                                ...v,
+                                midterm_grade: Math.min(40, Math.max(0, Number(e.target.value))),
+                              }))
+                            }
+                            className="w-16 bg-uni-card border border-uni-gold/50 rounded-lg px-2 py-1 text-uni-text text-center outline-none"
+                          />
+                        </td>
+                        <td className="p-4">
+                          <input
+                            type="number"
+                            min={0}
+                            max={50}
+                            value={editValues.final_grade}
+                            onChange={e =>
+                              setEditValues(v => ({
+                                ...v,
+                                final_grade: Math.min(50, Math.max(0, Number(e.target.value))),
+                              }))
+                            }
+                            className="w-16 bg-uni-card border border-uni-gold/50 rounded-lg px-2 py-1 text-uni-text text-center outline-none"
+                          />
+                        </td>
+                        <td className="p-4">
+                          <input
+                            type="number"
+                            min={0}
+                            max={10}
+                            value={editValues.assignment_grade}
+                            onChange={e =>
+                              setEditValues(v => ({
+                                ...v,
+                                assignment_grade: Math.min(10, Math.max(0, Number(e.target.value))),
+                              }))
+                            }
+                            className="w-14 bg-uni-card border border-uni-gold/50 rounded-lg px-2 py-1 text-uni-text text-center outline-none"
+                          />
+                        </td>
+                        <td className="p-4 font-bold text-uni-text">{editTotal}</td>
+                        <td className="p-4">
+                          <span className={`font-bold ${GRADE_COLORS[editLetter] ?? ''}`}>
+                            {editLetter}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={saveEdit}
+                              disabled={saveMutation.isPending}
+                              className="text-uni-green hover:text-uni-green/80 disabled:opacity-50"
+                            >
+                              <Save className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setEditId(null)}
+                              className="text-uni-muted hover:text-uni-red"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="p-4 text-uni-text">{row.midterm_grade ?? '—'}</td>
+                        <td className="p-4 text-uni-text">{row.final_grade ?? '—'}</td>
+                        <td className="p-4 text-uni-text">{row.assignment_grade ?? '—'}</td>
+                        <td className="p-4 font-bold text-uni-text">{row.total_grade ?? '—'}</td>
+                        <td className="p-4">
+                          <span
+                            className={`font-bold text-base ${
+                              row.letter_grade ? (GRADE_COLORS[row.letter_grade] ?? '') : 'text-uni-muted'
+                            }`}
+                          >
+                            {row.letter_grade ?? '—'}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <button
+                            onClick={() => startEdit(row)}
+                            className="text-uni-muted hover:text-uni-gold transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </>
+                    )}
+                  </motion.tr>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((row, i) => (
-                <motion.tr key={row.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                  className="border-b border-uni-border/10 hover:bg-uni-card/30 transition-colors">
-                  <td className="p-4 font-medium text-uni-text whitespace-nowrap">{row.studentName}</td>
-                  <td className="p-4 text-uni-muted">{row.studentId}</td>
-                  {editId === row.id ? (
-                    <>
-                      <td className="p-4">
-                        <input type="number" min={0} max={40} value={editValues.midterm}
-                          onChange={e => setEditValues(v => ({ ...v, midterm: Math.min(40, Math.max(0, +e.target.value)) }))}
-                          className="w-16 bg-uni-card border border-uni-gold/50 rounded-lg px-2 py-1 text-uni-text text-center outline-none" />
-                      </td>
-                      <td className="p-4">
-                        <input type="number" min={0} max={50} value={editValues.final}
-                          onChange={e => setEditValues(v => ({ ...v, final: Math.min(50, Math.max(0, +e.target.value)) }))}
-                          className="w-16 bg-uni-card border border-uni-gold/50 rounded-lg px-2 py-1 text-uni-text text-center outline-none" />
-                      </td>
-                      <td className="p-4">
-                        <input type="number" min={0} max={10} value={editValues.project}
-                          onChange={e => setEditValues(v => ({ ...v, project: Math.min(10, Math.max(0, +e.target.value)) }))}
-                          className="w-14 bg-uni-card border border-uni-gold/50 rounded-lg px-2 py-1 text-uni-text text-center outline-none" />
-                      </td>
-                      <td className="p-4 font-bold text-uni-text">
-                        {editValues.midterm + editValues.final + editValues.project}
-                      </td>
-                      <td className="p-4">
-                        <span className={`font-bold ${GRADE_COLORS[calcLetter(editValues.midterm + editValues.final + editValues.project)] || ''}`}>
-                          {calcLetter(editValues.midterm + editValues.final + editValues.project)}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex gap-2">
-                          <button onClick={() => saveEdit(row.id)} className="text-uni-green hover:text-uni-green/80">
-                            <Save className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => setEditId(null)} className="text-uni-muted hover:text-uni-red">
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="p-4 text-uni-text">{row.midterm}</td>
-                      <td className="p-4 text-uni-text">{row.final}</td>
-                      <td className="p-4 text-uni-text">{row.project}</td>
-                      <td className="p-4 font-bold text-uni-text">{row.total}</td>
-                      <td className="p-4">
-                        <span className={`font-bold text-base ${GRADE_COLORS[row.letterGrade] || ''}`}>{row.letterGrade}</span>
-                      </td>
-                      <td className="p-4">
-                        <button onClick={() => startEdit(row)} className="text-uni-muted hover:text-uni-gold transition-colors">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </>
-                  )}
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )
