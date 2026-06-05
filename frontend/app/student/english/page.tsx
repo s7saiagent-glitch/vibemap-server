@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Languages, Send, Loader2, Award, Download, X, BookOpen, Brain, CheckCircle, ChevronRight, RotateCcw, Lock } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { useT } from '@/lib/i18n'
 import { englishAPI, paymentAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 

@@ -5,6 +5,7 @@ import { MessageSquare, Send, Clock, CheckCircle, AlertCircle, Info, X } from 'l
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { studentAPI } from '@/lib/api'
+import { useT } from '@/lib/i18n'
 
 type AppealStatus = 'pending' | 'reviewing' | 'resolved' | 'rejected'
 
@@ -29,11 +30,17 @@ interface ApiAppeal {
   submitted_at?: string
 }
 
-const STATUS_CONFIG: Record<AppealStatus, { label: string; color: string; icon: typeof Clock }> = {
+const STATUS_CONFIG_AR: Record<AppealStatus, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: 'في الانتظار', color: 'text-uni-gold', icon: Clock },
   reviewing: { label: 'قيد المراجعة', color: 'text-uni-blue', icon: Info },
   resolved: { label: 'تم الحل', color: 'text-uni-green', icon: CheckCircle },
   rejected: { label: 'مرفوض', color: 'text-uni-red', icon: AlertCircle },
+}
+const STATUS_CONFIG_EN: Record<AppealStatus, { label: string; color: string; icon: typeof Clock }> = {
+  pending: { label: 'Pending', color: 'text-uni-gold', icon: Clock },
+  reviewing: { label: 'Under Review', color: 'text-uni-blue', icon: Info },
+  resolved: { label: 'Resolved', color: 'text-uni-green', icon: CheckCircle },
+  rejected: { label: 'Rejected', color: 'text-uni-red', icon: AlertCircle },
 }
 
 function normalizeStatus(raw?: string): AppealStatus {
@@ -42,6 +49,8 @@ function normalizeStatus(raw?: string): AppealStatus {
 }
 
 export default function GradeAppealPage() {
+  const { t, lang } = useT()
+  const STATUS_CONFIG = lang === 'ar' ? STATUS_CONFIG_AR : STATUS_CONFIG_EN
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -105,20 +114,20 @@ export default function GradeAppealPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
-              <MessageSquare className="w-6 h-6 text-uni-gold" /> تظلمات الدرجات
+              <MessageSquare className="w-6 h-6 text-uni-gold" /> {t.gradeAppeal.title}
             </h1>
-            <p className="text-uni-muted text-sm mt-1">تقديم اعتراضات رسمية على الدرجات الدراسية</p>
+            <p className="text-uni-muted text-sm mt-1">{t.gradeAppeal.subtitle}</p>
           </div>
           <button onClick={() => setShowForm(true)}
             className="btn-gold px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-            <Send className="w-4 h-4" /> تقديم تظلم
+            <Send className="w-4 h-4" /> {t.gradeAppeal.submitAppeal}
           </button>
         </div>
 
         {submitted && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
             className="p-4 rounded-xl bg-uni-green/10 border border-uni-green/30 text-uni-green text-sm font-bold flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" /> تم تقديم تظلمك — سيُراجَع خلال 3 أيام عمل
+            <CheckCircle className="w-4 h-4" /> {t.gradeAppeal.appealSuccess}
           </motion.div>
         )}
 
@@ -200,8 +209,8 @@ export default function GradeAppealPage() {
         {appeals.length === 0 ? (
           <div className="card-uni text-center py-12">
             <MessageSquare className="w-12 h-12 text-uni-muted mx-auto mb-3" />
-            <p className="text-uni-muted">لا توجد تظلمات مقدمة</p>
-            <p className="text-xs text-uni-muted mt-1">اضغط &quot;تقديم تظلم&quot; للبدء</p>
+            <p className="text-uni-muted">{t.gradeAppeal.noAppeals}</p>
+            <p className="text-xs text-uni-muted mt-1">{t.gradeAppeal.submitAppeal}</p>
           </div>
         ) : (
           <div className="space-y-3">

@@ -7,8 +7,10 @@ import { useAuthStore } from '@/lib/store'
 import api, { authAPI, studentAPI } from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { useT } from '@/lib/i18n'
 
 export default function ProfilePage() {
+  const { t, lang } = useT()
   const { user, updateUser } = useAuthStore()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -27,10 +29,10 @@ export default function ProfilePage() {
       const res = await authAPI.updateProfile(form)
       updateUser(res.data)
       setEditing(false)
-      setMsg('تم حفظ التغييرات بنجاح')
+      setMsg(t.profile.updateSuccess)
       setTimeout(() => setMsg(''), 3000)
     } catch {
-      setMsg('حدث خطأ أثناء الحفظ')
+      setMsg(t.common.error)
     }
     setSaving(false)
   }
@@ -58,9 +60,9 @@ export default function ProfilePage() {
   })
 
   const roleLabel: Record<string, string> = {
-    student: 'طالب',
-    admin: 'مدير',
-    superadmin: 'مدير أعلى',
+    student: lang === 'ar' ? 'طالب' : 'Student',
+    admin: lang === 'ar' ? 'مدير' : 'Admin',
+    superadmin: lang === 'ar' ? 'مدير أعلى' : 'Super Admin',
   }
 
   return (
@@ -68,23 +70,23 @@ export default function ProfilePage() {
       <div className="space-y-6 max-w-2xl">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-uni-text">ملفي الشخصي</h1>
-            <p className="text-uni-muted text-sm mt-1">بياناتك الشخصية والأكاديمية</p>
+            <h1 className="text-2xl font-black text-uni-text">{t.profile.title}</h1>
+            <p className="text-uni-muted text-sm mt-1">{t.profile.personalInfo}</p>
           </div>
           {!editing ? (
             <button onClick={() => setEditing(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-uni-gold/10 border border-uni-gold/20 text-uni-gold text-sm hover:bg-uni-gold/20 transition-all">
-              <Edit3 className="w-4 h-4" /> تعديل
+              <Edit3 className="w-4 h-4" /> {t.common.edit}
             </button>
           ) : (
             <div className="flex items-center gap-2">
               <button onClick={() => setEditing(false)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-uni-border/30 text-uni-muted text-sm hover:bg-uni-border/50 transition-all">
-                <X className="w-4 h-4" /> إلغاء
+                <X className="w-4 h-4" /> {t.common.cancel}
               </button>
               <button onClick={handleSave} disabled={saving}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-uni-gold text-uni-dark text-sm font-bold hover:bg-uni-gold-light transition-all disabled:opacity-50">
-                <Save className="w-4 h-4" /> {saving ? 'جاري الحفظ...' : 'حفظ'}
+                <Save className="w-4 h-4" /> {saving ? t.common.loading : t.common.save}
               </button>
             </div>
           )}
@@ -108,7 +110,7 @@ export default function ProfilePage() {
           <span className="badge-gold mt-2 inline-block">{roleLabel[user?.role || 'student']}</span>
           <label className="cursor-pointer text-xs text-uni-gold hover:underline flex items-center gap-1 justify-center mt-2">
             <Camera className="w-3 h-3" />
-            تغيير الصورة
+            {t.profile.uploadAvatar}
             <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
           </label>
         </motion.div>
@@ -116,7 +118,7 @@ export default function ProfilePage() {
         {/* Info Fields */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-uni space-y-4">
           <h3 className="font-bold text-uni-text flex items-center gap-2 mb-4">
-            <User className="w-4 h-4 text-uni-gold" /> البيانات الشخصية
+            <User className="w-4 h-4 text-uni-gold" /> {t.profile.personalInfo}
           </h3>
 
           <div className="grid grid-cols-2 gap-4">
@@ -162,12 +164,12 @@ export default function ProfilePage() {
         {/* Account Info */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card-uni space-y-3">
           <h3 className="font-bold text-uni-text flex items-center gap-2 mb-4">
-            <Shield className="w-4 h-4 text-uni-gold" /> بيانات الحساب
+            <Shield className="w-4 h-4 text-uni-gold" /> {t.profile.academicInfo}
           </h3>
           <div className="flex items-center gap-3 p-3 rounded-xl bg-uni-card/50 border border-uni-border/30">
             <Mail className="w-4 h-4 text-uni-muted" />
             <div>
-              <div className="text-xs text-uni-muted">البريد الإلكتروني</div>
+              <div className="text-xs text-uni-muted">{t.auth.email}</div>
               <div className="text-sm text-uni-text">{user?.email}</div>
             </div>
           </div>

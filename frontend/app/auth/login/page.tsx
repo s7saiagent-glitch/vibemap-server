@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 import { GraduationCap, Mail, Lock, Eye, EyeOff, LogIn, Loader2, ArrowRight } from 'lucide-react'
 import { authAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
+import { useT } from '@/lib/i18n'
 
 const loginSchema = z.object({
   email: z.string().email('البريد الإلكتروني غير صحيح'),
@@ -19,6 +20,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
+  const { t, lang } = useT()
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -71,7 +73,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-uni-dark flex items-center justify-center p-4 relative overflow-hidden" dir="rtl">
+    <div className="min-h-screen bg-uni-dark flex items-center justify-center p-4 relative overflow-hidden" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="absolute inset-0 bg-hero-gradient" />
       <div className="absolute inset-0 bg-glow-gold opacity-30" />
 
@@ -100,8 +102,8 @@ export default function LoginPage() {
         </Link>
 
         <div className="glass rounded-2xl p-6 md:p-8 border border-uni-gold/10">
-          <h2 className="text-2xl font-bold text-uni-text mb-2">تسجيل الدخول</h2>
-          <p className="text-uni-muted text-sm mb-6">أدخل بياناتك للوصول إلى حسابك</p>
+          <h2 className="text-2xl font-bold text-uni-text mb-2">{t.auth.login}</h2>
+          <p className="text-uni-muted text-sm mb-6">{t.auth.loginSubtitle}</p>
 
           {/* Social Login Buttons */}
           <div className="grid grid-cols-3 gap-3 mb-6">
@@ -139,13 +141,13 @@ export default function LoginPage() {
 
           <div className="flex items-center gap-3 mb-6">
             <div className="flex-1 h-px bg-uni-border/40" />
-            <span className="text-uni-subtle text-xs">أو بالبريد الإلكتروني</span>
+            <span className="text-uni-subtle text-xs">{t.auth.orContinueWith}</span>
             <div className="flex-1 h-px bg-uni-border/40" />
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-uni-text mb-1.5">البريد الإلكتروني</label>
+              <label className="block text-sm font-medium text-uni-text mb-1.5">{t.auth.email}</label>
               <div className="relative">
                 <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-uni-subtle" />
                 <input
@@ -160,7 +162,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-uni-text mb-1.5">كلمة المرور</label>
+              <label className="block text-sm font-medium text-uni-text mb-1.5">{t.auth.password}</label>
               <div className="relative">
                 <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-uni-subtle" />
                 <input
@@ -180,7 +182,7 @@ export default function LoginPage() {
               {errors.password && <p className="text-uni-red text-xs mt-1">{errors.password.message}</p>}
               <div className="flex justify-start mt-1">
                 <Link href="/auth/forgot-password" className="text-xs text-uni-muted hover:text-uni-gold transition-colors">
-                  نسيت كلمة المرور؟
+                  {t.auth.forgotPassword}
                 </Link>
               </div>
             </div>
@@ -191,17 +193,17 @@ export default function LoginPage() {
               className="btn-gold w-full py-3 rounded-xl font-bold text-uni-dark flex items-center justify-center gap-2 mt-2"
             >
               {loading ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> جاري الدخول...</>
+                <><Loader2 className="w-5 h-5 animate-spin" /> {t.common.loading}</>
               ) : (
-                <><LogIn className="w-5 h-5" /> دخول</>
+                <><LogIn className="w-5 h-5" /> {t.auth.login}</>
               )}
             </button>
           </form>
 
           <div className="mt-5 text-center">
-            <span className="text-uni-muted text-sm">ليس لديك حساب؟ </span>
+            <span className="text-uni-muted text-sm">{t.auth.dontHaveAccount} </span>
             <Link href="/auth/register" className="text-uni-gold font-semibold text-sm hover:text-uni-gold-light">
-              سجّل الآن
+              {t.auth.registerHere}
             </Link>
           </div>
         </div>

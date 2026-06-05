@@ -5,16 +5,18 @@ import { motion } from 'framer-motion'
 import { CheckCircle, XCircle, Clock, AlertTriangle, Calendar, BarChart3 } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { attendanceAPI, studentAPI } from '@/lib/api'
-
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof CheckCircle }> = {
-  present: { label: 'حاضر', color: 'text-uni-green', icon: CheckCircle },
-  absent: { label: 'غائب', color: 'text-uni-red', icon: XCircle },
-  late: { label: 'متأخر', color: 'text-uni-gold', icon: Clock },
-  excused: { label: 'معذور', color: 'text-uni-blue', icon: CheckCircle },
-}
+import { useT } from '@/lib/i18n'
 
 export default function AttendancePage() {
+  const { t, lang } = useT()
   const [selectedSection, setSelectedSection] = useState<number | undefined>()
+
+  const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof CheckCircle }> = {
+    present: { label: t.attendance.present, color: 'text-uni-green', icon: CheckCircle },
+    absent: { label: t.attendance.absent, color: 'text-uni-red', icon: XCircle },
+    late: { label: t.attendance.late, color: 'text-uni-gold', icon: Clock },
+    excused: { label: t.attendance.excused, color: 'text-uni-blue', icon: CheckCircle },
+  }
 
   const { data: coursesData } = useQuery({
     queryKey: ['my-courses-att'],
@@ -32,20 +34,20 @@ export default function AttendancePage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6 max-w-4xl" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
         <div>
           <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-uni-gold" /> سجل الحضور والغياب
+            <Calendar className="w-6 h-6 text-uni-gold" /> {t.attendance.title}
           </h1>
           <p className="text-uni-muted text-sm mt-1">تتبع حضورك في المواد الدراسية</p>
         </div>
 
         {/* Section filter */}
         <div className="flex items-center gap-3">
-          <label className="text-sm text-uni-muted">المادة:</label>
+          <label className="text-sm text-uni-muted">{t.attendance.selectCourse}:</label>
           <select value={selectedSection || ''} onChange={e => setSelectedSection(e.target.value ? Number(e.target.value) : undefined)}
             className="bg-uni-card border border-uni-border/30 rounded-xl px-3 py-2 text-uni-text text-sm focus:border-uni-gold outline-none">
-            <option value="">جميع المواد</option>
+            <option value="">{t.attendance.allCourses}</option>
             {enrollments.map((e: Record<string, unknown>, i: number) => (
               <option key={i} value={Number(e.section_id || e.id)}>{String(e.course_name_ar || e.course_name || `مادة ${i + 1}`)}</option>
             ))}
@@ -58,7 +60,7 @@ export default function AttendancePage() {
             className="card-uni border-uni-red/30 bg-uni-red/5 flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-uni-red flex-shrink-0" />
             <div>
-              <div className="font-bold text-uni-red text-sm">تحذير: نسبة حضورك منخفضة</div>
+              <div className="font-bold text-uni-red text-sm">{t.attendance.warningThreshold}</div>
               <p className="text-xs text-uni-muted mt-0.5">نسبة حضورك {stats.attendance_percentage}% — الحد الأدنى المطلوب 75%</p>
             </div>
           </motion.div>
@@ -67,10 +69,10 @@ export default function AttendancePage() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'نسبة الحضور', value: `${stats.attendance_percentage}%`, color: stats.at_risk ? 'text-uni-red' : 'text-uni-green', icon: BarChart3 },
-            { label: 'حاضر', value: stats.present, color: 'text-uni-green', icon: CheckCircle },
-            { label: 'غائب', value: stats.absent, color: 'text-uni-red', icon: XCircle },
-            { label: 'متأخر', value: stats.late, color: 'text-uni-gold', icon: Clock },
+            { label: t.attendance.attendanceRate, value: `${stats.attendance_percentage}%`, color: stats.at_risk ? 'text-uni-red' : 'text-uni-green', icon: BarChart3 },
+            { label: t.attendance.present, value: stats.present, color: 'text-uni-green', icon: CheckCircle },
+            { label: t.attendance.absent, value: stats.absent, color: 'text-uni-red', icon: XCircle },
+            { label: t.attendance.late, value: stats.late, color: 'text-uni-gold', icon: Clock },
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="card-uni text-center">
               <stat.icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} />
@@ -83,7 +85,7 @@ export default function AttendancePage() {
         {/* Attendance bar */}
         <div className="card-uni">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-bold text-uni-text">نسبة الحضور الإجمالية</span>
+            <span className="text-sm font-bold text-uni-text">{t.attendance.attendanceRate}</span>
             <span className={`text-sm font-bold ${stats.at_risk ? 'text-uni-red' : 'text-uni-green'}`}>{stats.attendance_percentage}%</span>
           </div>
           <div className="h-3 bg-uni-card rounded-full overflow-hidden border border-uni-border/20">
@@ -108,7 +110,7 @@ export default function AttendancePage() {
           </div>
         ) : (
           <div className="space-y-2">
-            <h3 className="font-bold text-uni-text text-sm">آخر السجلات</h3>
+            <h3 className="font-bold text-uni-text text-sm">{t.attendance.attendedSessions}</h3>
             {records.map((r, i) => {
               const statusKey = String(r.status || 'present')
               const sc = STATUS_CONFIG[statusKey] || STATUS_CONFIG.present

@@ -3,16 +3,24 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Pause, RotateCcw, Coffee, Brain, Target, TrendingUp, Bell } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { useT } from '@/lib/i18n'
 
 type Mode = 'work' | 'short_break' | 'long_break'
 
-const MODE_CONFIG: Record<Mode, { label: string; duration: number; color: string; bg: string; icon: typeof Brain }> = {
+const MODE_CONFIG_AR: Record<Mode, { label: string; duration: number; color: string; bg: string; icon: typeof Brain }> = {
   work: { label: 'وقت الدراسة', duration: 25 * 60, color: 'text-uni-gold', bg: 'bg-uni-gold/10 border-uni-gold/30', icon: Brain },
   short_break: { label: 'راحة قصيرة', duration: 5 * 60, color: 'text-uni-green', bg: 'bg-uni-green/10 border-uni-green/30', icon: Coffee },
   long_break: { label: 'راحة طويلة', duration: 15 * 60, color: 'text-uni-blue', bg: 'bg-uni-blue/10 border-uni-blue/30', icon: Coffee },
 }
+const MODE_CONFIG_EN: Record<Mode, { label: string; duration: number; color: string; bg: string; icon: typeof Brain }> = {
+  work: { label: 'Study Time', duration: 25 * 60, color: 'text-uni-gold', bg: 'bg-uni-gold/10 border-uni-gold/30', icon: Brain },
+  short_break: { label: 'Short Break', duration: 5 * 60, color: 'text-uni-green', bg: 'bg-uni-green/10 border-uni-green/30', icon: Coffee },
+  long_break: { label: 'Long Break', duration: 15 * 60, color: 'text-uni-blue', bg: 'bg-uni-blue/10 border-uni-blue/30', icon: Coffee },
+}
 
 export default function StudyTimerPage() {
+  const { t, lang } = useT()
+  const MODE_CONFIG = lang === 'ar' ? MODE_CONFIG_AR : MODE_CONFIG_EN
   const [mode, setMode] = useState<Mode>('work')
   const [timeLeft, setTimeLeft] = useState(MODE_CONFIG.work.duration)
   const [running, setRunning] = useState(false)
@@ -92,9 +100,9 @@ export default function StudyTimerPage() {
       <div className="space-y-6 max-w-2xl mx-auto">
         <div>
           <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
-            <Target className="w-6 h-6 text-uni-gold" /> مؤقت بومودورو
+            <Target className="w-6 h-6 text-uni-gold" /> {t.studyTimer.title}
           </h1>
-          <p className="text-uni-muted text-sm mt-1">تقنية بومودورو لتحسين التركيز والإنتاجية</p>
+          <p className="text-uni-muted text-sm mt-1">{t.studyTimer.pomodoro}</p>
         </div>
 
         {/* Mode selector */}

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useAuthStore } from '@/lib/store'
+import { useT } from '@/lib/i18n'
 
 type PaymentStatus = 'paid' | 'pending' | 'overdue'
 
@@ -44,6 +45,7 @@ function fmt(n: number) {
 }
 
 export default function FinancialPage() {
+  const { t } = useT()
   const { user } = useAuthStore()
   const [activeTab, setActiveTab] = useState<'all' | 'paid' | 'pending'>('all')
 
@@ -98,7 +100,7 @@ export default function FinancialPage() {
           <div>
             <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
               <CreditCard className="w-6 h-6 text-uni-gold" />
-              الحساب المالي
+              {t.financial.title}
             </h1>
             <p className="text-uni-muted text-sm mt-1">
               مرحباً {user?.first_name_ar || user?.first_name} — متابعة الرسوم والأقساط الدراسية

@@ -8,6 +8,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { studentAPI, academicAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 import toast from 'react-hot-toast'
+import { useT } from '@/lib/i18n'
 
 const LEVEL_COLORS = [
   'from-blue-600/20 to-cyan-600/20 border-blue-500/30 text-blue-400',
@@ -17,6 +18,7 @@ const LEVEL_COLORS = [
 ]
 
 export default function MyCoursesPage() {
+  const { t } = useT()
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
   const [tab, setTab] = useState<'enrolled' | 'browse'>('enrolled')
@@ -58,21 +60,21 @@ export default function MyCoursesPage() {
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-black text-uni-text">موادي الدراسية</h1>
+            <h1 className="text-2xl font-black text-uni-text">{t.courses.title}</h1>
             <p className="text-uni-muted text-sm mt-1">
               {user?.program_name ? `تخصص: ${user.program_name}` : 'جميع مواد فصلك الحالي'}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="badge-gold text-sm px-4 py-2">{courses.length} مادة مسجلة</div>
+            <div className="badge-gold text-sm px-4 py-2">{courses.length} {t.courses.enrolled}</div>
           </div>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2 border-b border-uni-border/30 pb-0">
           {[
-            { key: 'enrolled', label: 'موادي المسجلة', count: courses.length },
-            { key: 'browse', label: 'استعراض البرنامج', count: null },
+            { key: 'enrolled', label: t.courses.title, count: courses.length },
+            { key: 'browse', label: t.nav.studyPlans, count: null },
           ].map(t => (
             <button
               key={t.key}
@@ -100,7 +102,7 @@ export default function MyCoursesPage() {
               ) : courses.length === 0 ? (
                 <div className="card-uni text-center py-16">
                   <BookOpen className="w-16 h-16 mx-auto mb-4 text-uni-muted opacity-30" />
-                  <h3 className="text-xl font-bold text-uni-text mb-2">لم تسجل في أي مادة بعد</h3>
+                  <h3 className="text-xl font-bold text-uni-text mb-2">{t.courses.noCourses}</h3>
                   <p className="text-uni-muted text-sm mb-6">
                     {user?.program_id
                       ? 'اضغط على "استعراض البرنامج" لتسجيل مواد الفصل الأول'
@@ -133,7 +135,7 @@ export default function MyCoursesPage() {
                             ? 'bg-uni-gold/10 text-uni-gold border-uni-gold/30'
                             : 'bg-uni-border/30 text-uni-muted border-uni-border/30'
                         }`}>
-                          {course.status === 'enrolled' ? '✓ مسجل' : course.status === 'completed' ? '★ مكتمل' : course.status as string}
+                          {course.status === 'enrolled' ? `✓ ${t.courses.enrolled}` : course.status === 'completed' ? `★ ${t.courses.completed}` : course.status as string}
                         </span>
                       </div>
 
@@ -141,7 +143,7 @@ export default function MyCoursesPage() {
                       <p className="text-uni-muted text-xs font-mono mb-3">{course.course_code as string}</p>
 
                       <div className="flex items-center gap-3 text-xs text-uni-muted mb-3">
-                        <span className="flex items-center gap-1"><Award className="w-3 h-3" />{course.credits as number} ساعات</span>
+                        <span className="flex items-center gap-1"><Award className="w-3 h-3" />{course.credits as number} {t.courses.credits}</span>
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{course.semester === 'fall' ? 'خريف' : course.semester === 'spring' ? 'ربيع' : 'صيف'}</span>
                         <span className="text-xs">{course.academic_year as string}</span>
                       </div>
@@ -165,7 +167,7 @@ export default function MyCoursesPage() {
                             href={`/student/ai-professor/${course.section_id}`}
                             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-uni-gold text-uni-dark text-xs font-bold hover:bg-uni-gold-light transition-all"
                           >
-                            <Play className="w-3 h-3" /> ابدأ الدراسة
+                            <Play className="w-3 h-3" /> {t.courses.startLearning}
                           </Link>
                         )}
                         {!!(course.section_id as number) && (

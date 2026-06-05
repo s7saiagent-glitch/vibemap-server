@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Star, Trophy, Target, TrendingUp, Zap, Award } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { useT } from '@/lib/i18n'
 import { studentAPI } from '@/lib/api'
 
 export default function BadgesPage() {

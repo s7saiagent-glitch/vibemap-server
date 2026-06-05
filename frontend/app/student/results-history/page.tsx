@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { FileText, CheckCircle, XCircle, Clock, Award, TrendingUp } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { useT } from '@/lib/i18n'
 import { studentAPI } from '@/lib/api'
 
 export default function ResultsHistoryPage() {

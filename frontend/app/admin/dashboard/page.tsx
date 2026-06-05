@@ -11,6 +11,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts'
+import { useT } from '@/lib/i18n'
 
 const CHART_COLORS = ['#D4AF37', '#00D4FF', '#8B5CF6', '#10B981', '#EF4444']
 
@@ -52,6 +53,7 @@ function StatCard({ value, label, icon: Icon, color = 'gold', change }: {
 }
 
 export default function AdminDashboard() {
+  const { t, lang } = useT()
   const { data: dashboard, isLoading } = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: () => adminAPI.getDashboard().then(r => r.data),
@@ -73,16 +75,16 @@ export default function AdminDashboard() {
               <FileDown className="w-4 h-4" /> تصدير تقرير
             </button>
             <button className="btn-gold px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2">
-              <PlusCircle className="w-4 h-4" /> إضافة مادة
+              <PlusCircle className="w-4 h-4" /> {t.admin.addCourse}
             </button>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard value={stats.total_students || 0} label="إجمالي الطلاب" icon={Users} color="blue" change="+12% هذا الشهر" />
+          <StatCard value={stats.total_students || 0} label={t.admin.totalStudents} icon={Users} color="blue" change="+12% هذا الشهر" />
           <StatCard value={stats.active_sections || 0} label="شعب نشطة" icon={BookOpen} color="gold" />
-          <StatCard value={stats.total_enrollments || 0} label="تسجيل نشط" icon={GraduationCap} color="green" />
+          <StatCard value={stats.total_enrollments || 0} label={t.admin.activeEnrollments} icon={GraduationCap} color="green" />
           <StatCard value={stats.ai_interactions || 0} label="تفاعل AI" icon={Brain} color="purple" change="اليوم" />
           <StatCard value={stats.total_programs || 0} label="البرامج" icon={Award} color="orange" />
           <StatCard value={stats.ai_professors || 0} label="أساتذة AI" icon={Zap} color="blue" />
@@ -125,13 +127,13 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <div className="card-uni">
-          <h2 className="text-lg font-bold text-uni-text mb-4">إجراءات سريعة</h2>
+          <h2 className="text-lg font-bold text-uni-text mb-4">{t.admin.quickActions}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { icon: Users, label: 'إدارة الطلاب', desc: 'عرض وإدارة ملفات الطلاب', href: '/admin/students', color: 'blue' },
-              { icon: Brain, label: 'إنشاء أستاذ AI', desc: 'إضافة أستاذ ذكي لمادة جديدة', href: '/admin/ai-professors', color: 'purple' },
-              { icon: BookOpen, label: 'إضافة مادة', desc: 'إنشاء مادة دراسية جديدة', href: '/admin/courses', color: 'gold' },
-              { icon: BarChart3, label: 'التقارير', desc: 'تحليلات أكاديمية مفصلة', href: '/admin/analytics', color: 'green' },
+              { icon: Brain, label: t.admin.createAIProfessor, desc: 'إضافة أستاذ ذكي لمادة جديدة', href: '/admin/ai-professors', color: 'purple' },
+              { icon: BookOpen, label: t.admin.addCourse, desc: 'إنشاء مادة دراسية جديدة', href: '/admin/courses', color: 'gold' },
+              { icon: BarChart3, label: t.admin.viewReports, desc: 'تحليلات أكاديمية مفصلة', href: '/admin/analytics', color: 'green' },
             ].map((action, i) => (
               <motion.a
                 key={i}
@@ -158,7 +160,7 @@ export default function AdminDashboard() {
           <div className="card-uni">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-uni-text">آخر الطلاب المسجلين</h2>
-              <a href="/admin/students" className="text-uni-gold text-sm hover:text-uni-gold-light">عرض الكل</a>
+              <a href="/admin/students" className="text-uni-gold text-sm hover:text-uni-gold-light">{t.common.viewAll}</a>
             </div>
             <div className="space-y-3">
               {dashboard.recent_students.map((student: Record<string, unknown>, i: number) => (

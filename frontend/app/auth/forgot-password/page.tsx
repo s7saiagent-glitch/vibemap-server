@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import { authAPI } from '@/lib/api'
+import { useT } from '@/lib/i18n'
 
 const schema = z.object({
   email: z.string().email('البريد الإلكتروني غير صحيح'),

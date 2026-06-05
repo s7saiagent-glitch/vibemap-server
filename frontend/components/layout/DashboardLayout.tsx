@@ -12,55 +12,54 @@ import {
 import { useAuthStore } from '@/lib/store'
 import { authAPI, studentAPI, searchAPI } from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { useT, useI18nStore, applyDirection } from '@/lib/i18n'
 
 interface NavItem {
   href: string
   icon: React.ElementType
-  label: string
-  badge?: string
+  labelKey: string
 }
 
-const STUDENT_NAV: NavItem[] = [
-  { href: '/student/dashboard', icon: LayoutDashboard, label: 'لوحة التحكم' },
-  { href: '/student/courses', icon: BookOpen, label: 'موادي الدراسية' },
-  { href: '/student/registration', icon: BookOpen, label: 'تسجيل المقررات' },
-  { href: '/student/assessments', icon: FileText, label: 'الاختبارات' },
-  { href: '/student/results-history', icon: FileText, label: 'سجل نتائجي' },
-  { href: '/student/grades', icon: BarChart3, label: 'درجاتي ومعدلي' },
-  { href: '/student/analytics', icon: TrendingUp, label: 'تحليلاتي الأكاديمية' },
-  { href: '/student/badges', icon: Award, label: 'إنجازاتي' },
-  { href: '/student/twin', icon: Brain, label: 'توأمي الأكاديمي' },
-  { href: '/student/announcements', icon: Bell, label: 'الإشعارات' },
-  { href: '/student/schedule', icon: Calendar, label: 'جدولي الدراسي' },
-  { href: '/student/attendance', icon: CheckCircle, label: 'الحضور والغياب' },
-  { href: '/student/calendar', icon: Calendar, label: 'التقويم الأكاديمي' },
-  { href: '/student/study-timer', icon: Clock, label: 'مؤقت الدراسة' },
-  { href: '/student/english', icon: Languages, label: 'اللغة الإنجليزية' },
-  { href: '/academic/plans', icon: Award, label: 'الخطط الدراسية' },
-  { href: '/roadmap', icon: Globe, label: 'خريطة التطوير' },
-  { href: '/student/profile', icon: User, label: 'ملفي الشخصي' },
-  { href: '/student/certificates', icon: Award, label: 'شهاداتي' },
-  { href: '/student/id-card', icon: CreditCard, label: 'بطاقتي الجامعية' },
-  { href: '/student/grade-appeal', icon: MessageSquare, label: 'تظلمات الدرجات' },
-  { href: '/student/financial', icon: CreditCard, label: 'حسابي المالي' },
+const STUDENT_NAV_ITEMS: NavItem[] = [
+  { href: '/student/dashboard', icon: LayoutDashboard, labelKey: 'dashboard' },
+  { href: '/student/courses', icon: BookOpen, labelKey: 'myCourses' },
+  { href: '/student/registration', icon: BookOpen, labelKey: 'registration' },
+  { href: '/student/assessments', icon: FileText, labelKey: 'assessments' },
+  { href: '/student/results-history', icon: FileText, labelKey: 'resultsHistory' },
+  { href: '/student/grades', icon: BarChart3, labelKey: 'grades' },
+  { href: '/student/analytics', icon: TrendingUp, labelKey: 'analytics' },
+  { href: '/student/badges', icon: Award, labelKey: 'badges' },
+  { href: '/student/twin', icon: Brain, labelKey: 'digitalTwin' },
+  { href: '/student/announcements', icon: Bell, labelKey: 'announcements' },
+  { href: '/student/schedule', icon: Calendar, labelKey: 'schedule' },
+  { href: '/student/attendance', icon: CheckCircle, labelKey: 'attendance' },
+  { href: '/student/calendar', icon: Calendar, labelKey: 'calendar' },
+  { href: '/student/study-timer', icon: Clock, labelKey: 'studyTimer' },
+  { href: '/student/english', icon: Languages, labelKey: 'englishCourses' },
+  { href: '/academic/plans', icon: Award, labelKey: 'studyPlans' },
+  { href: '/roadmap', icon: Globe, labelKey: 'academicRoadmap' },
+  { href: '/student/profile', icon: User, labelKey: 'myProfile' },
+  { href: '/student/certificates', icon: Award, labelKey: 'certificates' },
+  { href: '/student/id-card', icon: CreditCard, labelKey: 'studentIdCard' },
+  { href: '/student/grade-appeal', icon: MessageSquare, labelKey: 'gradeAppeal' },
+  { href: '/student/financial', icon: CreditCard, labelKey: 'financial' },
 ]
 
-const ADMIN_NAV: NavItem[] = [
-  { href: '/admin/dashboard', icon: LayoutDashboard, label: 'لوحة الإدارة' },
-  { href: '/admin/students', icon: Users, label: 'إدارة الطلاب' },
-  { href: '/admin/enrollments', icon: Users, label: 'طلبات التسجيل' },
-  { href: '/admin/grades', icon: BarChart3, label: 'إدارة الدرجات' },
-  { href: '/admin/courses', icon: BookOpen, label: 'إدارة المواد' },
-  { href: '/admin/sections', icon: Layers, label: 'الشُعب الدراسية' },
-  { href: '/admin/assessments', icon: FileText, label: 'إدارة الاختبارات' },
-  { href: '/admin/materials', icon: BookOpen, label: 'المواد التعليمية' },
-  { href: '/admin/lectures', icon: BookOpen, label: 'إدارة المحاضرات' },
-  { href: '/admin/programs', icon: Layers, label: 'التخصصات' },
-  { href: '/admin/ai-professors', icon: Brain, label: 'الأساتذة الذكاء' },
-  { href: '/admin/analytics', icon: BarChart3, label: 'التحليلات' },
-  { href: '/admin/payments', icon: CreditCard, label: 'المدفوعات والكوبونات' },
-  { href: '/admin/settings', icon: Settings, label: 'الإعدادات' },
+const ADMIN_NAV_ITEMS: NavItem[] = [
+  { href: '/admin/dashboard', icon: LayoutDashboard, labelKey: 'dashboard' },
+  { href: '/admin/students', icon: Users, labelKey: 'students' },
+  { href: '/admin/enrollments', icon: Users, labelKey: 'enrollments' },
+  { href: '/admin/grades', icon: BarChart3, labelKey: 'grades' },
+  { href: '/admin/courses', icon: BookOpen, labelKey: 'coursesAdmin' },
+  { href: '/admin/sections', icon: Layers, labelKey: 'sections' },
+  { href: '/admin/assessments', icon: FileText, labelKey: 'assessmentsAdmin' },
+  { href: '/admin/materials', icon: BookOpen, labelKey: 'materials' },
+  { href: '/admin/lectures', icon: BookOpen, labelKey: 'lectures' },
+  { href: '/admin/programs', icon: Layers, labelKey: 'programs' },
+  { href: '/admin/ai-professors', icon: Brain, labelKey: 'aiProfessors' },
+  { href: '/admin/analytics', icon: BarChart3, labelKey: 'analyticsAdmin' },
+  { href: '/admin/payments', icon: CreditCard, labelKey: 'payments' },
+  { href: '/admin/settings', icon: Settings, labelKey: 'settingsAdmin' },
 ]
 
 function useIsMobile() {
@@ -77,7 +76,6 @@ function useIsMobile() {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile()
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [lang, setLang] = useState<'ar' | 'en'>('ar')
   const [notifOpen, setNotifOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -87,6 +85,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
   const { user, logout } = useAuthStore()
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
+  const { t, lang } = useT()
+  const { toggleLang } = useI18nStore()
+
+  // Apply document direction on mount and language change
+  useEffect(() => {
+    applyDirection(lang)
+  }, [lang])
 
   const { data: notifData } = useQuery({
     queryKey: ['notifications'],
@@ -108,10 +113,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const handleLanguageToggle = () => {
-    toast('اللغة الإنجليزية قيد التطوير — قريباً!', { icon: '🔜' })
-  }
-
   useEffect(() => {
     if (isMobile) setSidebarOpen(false)
     else setSidebarOpen(true)
@@ -121,7 +122,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (isMobile) setSidebarOpen(false)
   }, [pathname, isMobile])
 
-  const navItems = isAdmin ? ADMIN_NAV : STUDENT_NAV
+  const navItems = isAdmin ? ADMIN_NAV_ITEMS : STUDENT_NAV_ITEMS
+
+  const getNavLabel = (labelKey: string): string => {
+    const navT = t.nav as Record<string, string>
+    return navT[labelKey] || labelKey
+  }
 
   const handleSearch = async (q: string) => {
     setSearchQuery(q)
@@ -143,9 +149,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   const sidebarWidth = 260
+  const dir = lang === 'ar' ? 'rtl' : 'ltr'
+  const sidebarSide = lang === 'ar' ? 'right-0' : 'left-0'
+  const sidebarBorder = lang === 'ar' ? 'border-l' : 'border-r'
 
   return (
-    <div className="min-h-screen bg-uni-dark flex" dir="rtl">
+    <div className="min-h-screen bg-uni-dark flex" dir={dir}>
       {/* Mobile overlay */}
       {isMobile && sidebarOpen && (
         <div
@@ -158,11 +167,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <AnimatePresence>
         {sidebarOpen && (
           <motion.aside
-            initial={{ x: isMobile ? sidebarWidth : 0, opacity: isMobile ? 0 : 1 }}
+            initial={{ x: isMobile ? (lang === 'ar' ? sidebarWidth : -sidebarWidth) : 0, opacity: isMobile ? 0 : 1 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: isMobile ? sidebarWidth : 0, opacity: isMobile ? 0 : 1 }}
+            exit={{ x: isMobile ? (lang === 'ar' ? sidebarWidth : -sidebarWidth) : 0, opacity: isMobile ? 0 : 1 }}
             transition={{ duration: 0.25 }}
-            className="fixed right-0 top-0 bottom-0 z-40 flex flex-col glass border-l border-uni-border/30 overflow-hidden"
+            className={`fixed ${sidebarSide} top-0 bottom-0 z-40 flex flex-col glass ${sidebarBorder} border-uni-border/30 overflow-hidden`}
             style={{ width: sidebarWidth }}
           >
             {/* Logo */}
@@ -172,8 +181,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <GraduationCap className="w-5 h-5 text-uni-dark" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-black text-gold-gradient leading-tight truncate">مملكة الأرض</div>
-                  <div className="text-xs text-uni-muted truncate">الجامعية</div>
+                  <div className="text-sm font-black text-gold-gradient leading-tight truncate">
+                    {lang === 'ar' ? 'مملكة الأرض' : 'Virtual Earth'}
+                  </div>
+                  <div className="text-xs text-uni-muted truncate">
+                    {lang === 'ar' ? 'الجامعية' : 'University'}
+                  </div>
                 </div>
               </Link>
               {isMobile && (
@@ -199,10 +212,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       }`}
                     >
                       <item.icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-uni-gold' : ''}`} />
-                      <span className="truncate">{item.label}</span>
-                      {item.badge && (
-                        <span className="badge-gold mr-auto text-xs">{item.badge}</span>
-                      )}
+                      <span className="truncate">{getNavLabel(item.labelKey)}</span>
                     </Link>
                   )
                 })}
@@ -229,7 +239,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className="flex items-center gap-2 text-uni-muted hover:text-uni-red text-sm transition-colors w-full px-2 py-1.5 rounded-lg hover:bg-uni-red/10"
               >
                 <LogOut className="w-4 h-4" />
-                تسجيل الخروج
+                {t.common.logout}
               </button>
             </div>
           </motion.aside>
@@ -239,7 +249,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main */}
       <div
         className="flex-1 flex flex-col min-h-screen transition-all duration-300"
-        style={{ marginRight: !isMobile && sidebarOpen ? sidebarWidth : 0 }}
+        style={{ [lang === 'ar' ? 'marginRight' : 'marginLeft']: !isMobile && sidebarOpen ? sidebarWidth : 0 }}
       >
         {/* Topbar */}
         <header className="sticky top-0 z-30 glass border-b border-uni-border/30 px-4 h-14 flex items-center gap-3">
@@ -253,7 +263,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Breadcrumb */}
           <div className="flex-1 min-w-0">
             <span className="text-uni-muted text-sm truncate hidden sm:block">
-              {navItems.find(n => pathname === n.href || pathname.startsWith(n.href + '/'))?.label || ''}
+              {(() => {
+                const found = navItems.find(n => pathname === n.href || pathname.startsWith(n.href + '/'))
+                return found ? getNavLabel(found.labelKey) : ''
+              })()}
             </span>
           </div>
 
@@ -266,7 +279,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onChange={e => handleSearch(e.target.value)}
                 onFocus={() => setSearchOpen(true)}
                 onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
-                placeholder="بحث..."
+                placeholder={lang === 'ar' ? 'بحث...' : 'Search...'}
                 className="bg-transparent text-xs text-uni-text placeholder:text-uni-muted outline-none w-full"
               />
             </div>
@@ -299,11 +312,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Language toggle */}
           <button
-            onClick={handleLanguageToggle}
+            onClick={toggleLang}
             className="text-uni-muted hover:text-uni-gold transition-colors flex items-center gap-1 text-xs border border-uni-border/30 rounded-lg px-2 py-1 hover:border-uni-gold/30"
+            title={lang === 'ar' ? 'Switch to English' : 'التبديل للعربية'}
           >
             <Globe className="w-3.5 h-3.5" />
-            <span>{lang.toUpperCase()}</span>
+            <span>{lang === 'ar' ? 'EN' : 'AR'}</span>
           </button>
 
           {/* Notifications */}
@@ -329,14 +343,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   className="absolute left-0 top-8 w-80 glass rounded-2xl border border-uni-border/40 shadow-2xl z-50 overflow-hidden"
                 >
                   <div className="px-4 py-3 border-b border-uni-border/30 flex items-center justify-between">
-                    <span className="font-bold text-uni-text text-sm">الإشعارات</span>
-                    {notifCount > 0 && <span className="badge-gold text-xs">{notifCount} جديد</span>}
+                    <span className="font-bold text-uni-text text-sm">{t.common.notifications}</span>
+                    {notifCount > 0 && (
+                      <span className="badge-gold text-xs">
+                        {notifCount} {lang === 'ar' ? 'جديد' : 'new'}
+                      </span>
+                    )}
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
                       <div className="text-center py-8">
                         <Bell className="w-8 h-8 text-uni-muted mx-auto mb-2" />
-                        <p className="text-xs text-uni-muted">لا توجد إشعارات</p>
+                        <p className="text-xs text-uni-muted">
+                          {lang === 'ar' ? 'لا توجد إشعارات' : 'No notifications'}
+                        </p>
                       </div>
                     ) : (
                       <div className="divide-y divide-uni-border/20">
@@ -348,7 +368,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <div className="text-xs font-medium text-uni-text truncate">{n.title as string}</div>
                                 <div className="text-xs text-uni-muted mt-0.5 line-clamp-2">{n.body as string}</div>
                               </div>
-                              {!!(n.is_urgent) && <span className="text-[10px] text-uni-red border border-uni-red/30 rounded px-1 flex-shrink-0">عاجل</span>}
+                              {!!(n.is_urgent) && (
+                                <span className="text-[10px] text-uni-red border border-uni-red/30 rounded px-1 flex-shrink-0">
+                                  {lang === 'ar' ? 'عاجل' : 'Urgent'}
+                                </span>
+                              )}
                             </div>
                           </div>
                         ))}

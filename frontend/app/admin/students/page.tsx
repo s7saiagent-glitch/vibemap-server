@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Search, GraduationCap, Mail, Calendar, Shield, Pencil, X, Check } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { adminAPI } from '@/lib/api'
+import { useT } from '@/lib/i18n'
 
 type Student = Record<string, unknown>
 
@@ -86,6 +87,7 @@ function EditRow({ student, onSave, onCancel }: { student: Student; onSave: (dat
 }
 
 export default function AdminStudentsPage() {
+  const { t, lang } = useT()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -113,7 +115,7 @@ export default function AdminStudentsPage() {
       <div className="space-y-6 max-w-6xl">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-uni-text">إدارة الطلاب</h1>
+            <h1 className="text-2xl font-black text-uni-text">{t.admin.studentsList}</h1>
             <p className="text-uni-muted text-sm mt-1">جميع الطلاب المسجلين في الجامعة</p>
           </div>
           <div className="badge-gold text-sm px-4 py-2">{total} طالب</div>
@@ -125,7 +127,7 @@ export default function AdminStudentsPage() {
           <input
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1) }}
-            placeholder="ابحث بالاسم أو البريد..."
+            placeholder={t.admin.searchStudents}
             className="w-full bg-uni-card border border-uni-border rounded-xl pr-10 pl-4 py-3 text-uni-text text-sm focus:border-uni-gold outline-none transition-colors"
           />
         </div>
@@ -138,7 +140,7 @@ export default function AdminStudentsPage() {
           <div className="card-uni text-center py-16">
             <Users className="w-16 h-16 mx-auto mb-4 text-uni-muted opacity-30" />
             <h3 className="text-xl font-bold text-uni-text mb-2">لا يوجد طلاب</h3>
-            <p className="text-uni-muted text-sm">لم يتم العثور على طلاب مطابقين للبحث</p>
+            <p className="text-uni-muted text-sm">{t.common.noData}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -186,7 +188,7 @@ export default function AdminStudentsPage() {
                       <span className={`badge-gold text-xs ${
                         student.is_active ? 'text-uni-green border-uni-green/40 bg-uni-green/10' : 'text-uni-red border-uni-red/40 bg-uni-red/10'
                       }`}>
-                        {student.is_active ? 'نشط' : 'غير نشط'}
+                        {student.is_active ? t.common.active : t.common.inactive}
                       </span>
                       <span className="badge-gold text-xs">
                         <Shield className="w-3 h-3 inline ml-1" />
@@ -217,7 +219,7 @@ export default function AdminStudentsPage() {
               disabled={page === 1}
               className="px-4 py-2 rounded-xl border border-uni-border text-uni-muted text-sm hover:border-uni-gold/30 disabled:opacity-40 transition-all"
             >
-              السابق
+              {t.common.prev}
             </button>
             <span className="text-uni-muted text-sm">صفحة {page} من {Math.ceil(total / 20)}</span>
             <button
@@ -225,7 +227,7 @@ export default function AdminStudentsPage() {
               disabled={page >= Math.ceil(total / 20)}
               className="px-4 py-2 rounded-xl border border-uni-border text-uni-muted text-sm hover:border-uni-gold/30 disabled:opacity-40 transition-all"
             >
-              التالي
+              {t.common.next}
             </button>
           </div>
         )}

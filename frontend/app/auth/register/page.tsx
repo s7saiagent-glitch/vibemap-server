@@ -11,6 +11,7 @@ import { GraduationCap, User, Mail, Lock, Phone, ChevronLeft, ChevronRight, Chec
 import { authAPI, academicAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 import { useQuery } from '@tanstack/react-query'
+import { useT } from '@/lib/i18n'
 
 const step1Schema = z.object({
   first_name: z.string().min(2, 'الاسم الأول مطلوب'),
@@ -25,6 +26,7 @@ const step1Schema = z.object({
 type FormData = z.infer<typeof step1Schema> & { program_id?: number }
 
 export default function RegisterPage() {
+  const { t, lang } = useT()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [selectedProgram, setSelectedProgram] = useState<number | null>(null)
@@ -65,7 +67,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-uni-dark flex items-center justify-center p-4 relative overflow-hidden" dir="rtl">
+    <div className="min-h-screen bg-uni-dark flex items-center justify-center p-4 relative overflow-hidden" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="absolute inset-0 bg-hero-gradient" />
       <div className="absolute inset-0 bg-glow-gold opacity-20" />
 
@@ -110,7 +112,7 @@ export default function RegisterPage() {
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                <h2 className="text-2xl font-bold text-uni-text mb-1">معلوماتك الشخصية</h2>
+                <h2 className="text-2xl font-bold text-uni-text mb-1">{t.auth.registerTitle}</h2>
                 <p className="text-uni-muted text-sm mb-6">الخطوة 1 من 2</p>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -136,7 +138,7 @@ export default function RegisterPage() {
 
                 <div className="space-y-4 mt-4">
                   <div>
-                    <label className="block text-xs font-medium text-uni-text mb-1">البريد الإلكتروني</label>
+                    <label className="block text-xs font-medium text-uni-text mb-1">{t.auth.email}</label>
                     <div className="relative">
                       <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-uni-subtle" />
                       <input {...register('email')} type="email" placeholder="your@email.com" dir="ltr" className="input-uni w-full pr-10 pl-4 py-3 rounded-xl text-sm" />
@@ -144,7 +146,7 @@ export default function RegisterPage() {
                     {errors.email && <p className="text-uni-red text-xs mt-0.5">{errors.email.message}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-uni-text mb-1">كلمة المرور</label>
+                    <label className="block text-xs font-medium text-uni-text mb-1">{t.auth.password}</label>
                     <div className="relative">
                       <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-uni-subtle" />
                       <input {...register('password')} type="password" placeholder="8 أحرف على الأقل" className="input-uni w-full pr-10 pl-4 py-3 rounded-xl text-sm" />
@@ -158,7 +160,7 @@ export default function RegisterPage() {
                 </div>
 
                 <button onClick={onStep1} className="btn-gold w-full py-3 rounded-xl font-bold text-uni-dark mt-6 flex items-center justify-center gap-2">
-                  التالي <ChevronLeft className="w-4 h-4" />
+                  {t.common.next} <ChevronLeft className="w-4 h-4" />
                 </button>
               </motion.div>
             )}
@@ -199,14 +201,14 @@ export default function RegisterPage() {
 
                 <div className="flex gap-3 mt-6">
                   <button onClick={() => setStep(1)} className="btn-ghost-gold px-5 py-3 rounded-xl font-bold flex items-center gap-2">
-                    <ChevronRight className="w-4 h-4" /> رجوع
+                    <ChevronRight className="w-4 h-4" /> {t.common.back}
                   </button>
                   <button
                     onClick={onFinalSubmit}
                     disabled={loading}
                     className="btn-gold flex-1 py-3 rounded-xl font-bold text-uni-dark flex items-center justify-center gap-2"
                   >
-                    {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> جاري التسجيل...</> : 'إنشاء الحساب ✓'}
+                    {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> {t.common.loading}</> : t.auth.register + ' ✓'}
                   </button>
                 </div>
               </motion.div>
@@ -217,17 +219,17 @@ export default function RegisterPage() {
                 <div className="w-20 h-20 rounded-full bg-uni-green/20 border-2 border-uni-green flex items-center justify-center mx-auto mb-6">
                   <CheckCircle className="w-10 h-10 text-uni-green" />
                 </div>
-                <h2 className="text-2xl font-black text-uni-text mb-2">تم إنشاء حسابك!</h2>
-                <p className="text-uni-muted">جاري تحويلك إلى لوحة الطالب...</p>
+                <h2 className="text-2xl font-black text-uni-text mb-2">{t.auth.registerSuccess}</h2>
+                <p className="text-uni-muted">{t.common.loading}</p>
               </motion.div>
             )}
           </AnimatePresence>
 
           {step === 1 && (
             <div className="mt-4 text-center">
-              <span className="text-uni-muted text-sm">لديك حساب؟ </span>
+              <span className="text-uni-muted text-sm">{t.auth.alreadyHaveAccount} </span>
               <Link href="/auth/login" className="text-uni-gold font-semibold text-sm hover:text-uni-gold-light">
-                تسجيل الدخول
+                {t.auth.loginHere}
               </Link>
             </div>
           )}

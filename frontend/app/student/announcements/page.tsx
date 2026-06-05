@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Bell, AlertTriangle, Info, BookOpen, Calendar } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { studentAPI } from '@/lib/api'
+import { useT } from '@/lib/i18n'
 
 const TYPE_CONFIG: Record<string, { icon: typeof Bell; color: string; bg: string }> = {
   assessment: { icon: BookOpen, color: 'text-uni-gold', bg: 'bg-uni-gold/10 border-uni-gold/20' },
@@ -13,6 +14,7 @@ const TYPE_CONFIG: Record<string, { icon: typeof Bell; color: string; bg: string
 }
 
 export default function AnnouncementsPage() {
+  const { t, lang } = useT()
   const { data, isLoading } = useQuery({
     queryKey: ['notifications-full'],
     queryFn: () => studentAPI.getNotifications().then(r => r.data),
@@ -28,13 +30,13 @@ export default function AnnouncementsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
-              <Bell className="w-6 h-6 text-uni-gold" /> الإشعارات والإعلانات
+              <Bell className="w-6 h-6 text-uni-gold" /> {t.announcements.title}
             </h1>
-            <p className="text-uni-muted text-sm mt-1">جميع التنبيهات الأكاديمية الخاصة بك</p>
+            <p className="text-uni-muted text-sm mt-1">{t.common.notifications}</p>
           </div>
           {urgentCount > 0 && (
             <span className="badge-gold text-xs flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" /> {urgentCount} عاجل
+              <AlertTriangle className="w-3 h-3" /> {urgentCount} {lang === 'ar' ? 'عاجل' : 'urgent'}
             </span>
           )}
         </div>
@@ -46,7 +48,7 @@ export default function AnnouncementsPage() {
         ) : notifications.length === 0 ? (
           <div className="card-uni text-center py-16">
             <Bell className="w-12 h-12 text-uni-muted mx-auto mb-3" />
-            <p className="text-uni-muted">لا توجد إشعارات حالياً</p>
+            <p className="text-uni-muted">{t.announcements.noAnnouncements}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -74,7 +76,7 @@ export default function AnnouncementsPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="font-medium text-uni-text text-sm">{n.title as string}</div>
                         {!!(n.is_urgent) && (
-                          <span className="text-[10px] text-uni-red border border-uni-red/30 rounded px-1 flex-shrink-0">عاجل</span>
+                          <span className="text-[10px] text-uni-red border border-uni-red/30 rounded px-1 flex-shrink-0">{lang === 'ar' ? 'عاجل' : 'Urgent'}</span>
                         )}
                       </div>
                       <p className="text-xs text-uni-muted mt-1 leading-relaxed">{n.body as string}</p>

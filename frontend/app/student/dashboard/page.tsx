@@ -9,6 +9,7 @@ import {
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { studentAPI } from '@/lib/api'
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
+import { useT } from '@/lib/i18n'
 
 const GPA_CHART_DATA = [
   { sem: 'F22', gpa: 2.8 }, { sem: 'S23', gpa: 3.1 }, { sem: 'F23', gpa: 3.3 },
@@ -47,6 +48,7 @@ function StatCard({ value, label, icon: Icon, color = 'gold', trend }: {
 }
 
 export default function StudentDashboard() {
+  const { t } = useT()
   const { data: dashboard, isLoading } = useQuery({
     queryKey: ['student-dashboard'],
     queryFn: () => studentAPI.getDashboard().then(r => r.data),
@@ -80,26 +82,26 @@ export default function StudentDashboard() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="w-5 h-5 text-uni-gold" />
-                <span className="text-uni-gold font-semibold">مرحباً بعودتك</span>
+                <span className="text-uni-gold font-semibold">{t.student.welcome}</span>
               </div>
               <h1 className="text-2xl font-black text-uni-text">{student.name || 'الطالب'}</h1>
               <p className="text-uni-muted text-sm mt-1">
-                الرقم الجامعي: <span className="text-uni-gold font-mono">{student.student_id || 'STU-0000'}</span>
+                {t.student.studentId}: <span className="text-uni-gold font-mono">{student.student_id || 'STU-0000'}</span>
               </p>
             </div>
             <div className="text-center">
               <div className="text-4xl font-black text-gold-gradient">{student.gpa || '0.00'}</div>
-              <div className="text-xs text-uni-muted">المعدل التراكمي / 4.0</div>
+              <div className="text-xs text-uni-muted">{t.student.cumulativeGpa} / 4.0</div>
             </div>
           </div>
         </motion.div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard value={dashboard?.current_courses_count || 0} label="مواد الفصل الحالي" icon={BookOpen} color="blue" />
-          <StatCard value={student.credits_earned || 0} label="الساعات المكتسبة" icon={Award} color="gold" trend="+3 هذا الفصل" />
-          <StatCard value={dashboard?.upcoming_assessments_count || 0} label="اختبارات قادمة" icon={Clock} color="purple" />
-          <StatCard value={student.academic_standing === 'good' ? 'جيد' : student.academic_standing || 'جيد'} label="الوضع الأكاديمي" icon={Target} color="green" />
+          <StatCard value={dashboard?.current_courses_count || 0} label={t.student.currentCourses} icon={BookOpen} color="blue" />
+          <StatCard value={student.credits_earned || 0} label={t.student.creditsEarned} icon={Award} color="gold" trend={t.student.thisTermCredits} />
+          <StatCard value={dashboard?.upcoming_assessments_count || 0} label={t.student.upcomingAssessments} icon={Clock} color="purple" />
+          <StatCard value={student.academic_standing === 'good' ? t.student.standingGood : student.academic_standing || t.student.standingGood} label={t.student.academicStanding} icon={Target} color="green" />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -108,10 +110,10 @@ export default function StudentDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-uni-text flex items-center gap-2">
                 <Clock className="w-5 h-5 text-uni-gold" />
-                الاختبارات القادمة
+                {t.student.upcomingAssessments}
               </h2>
               <Link href="/student/assessments" className="text-uni-gold text-sm hover:text-uni-gold-light flex items-center gap-1">
-                عرض الكل <ChevronLeft className="w-4 h-4" />
+                {t.common.viewAll} <ChevronLeft className="w-4 h-4" />
               </Link>
             </div>
 
@@ -130,13 +132,13 @@ export default function StudentDashboard() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-uni-text truncate">{a.title as string}</div>
-                      <div className="text-xs text-uni-muted">{a.duration_minutes as number} دقيقة</div>
+                      <div className="text-xs text-uni-muted">{a.duration_minutes as number} {t.common.minutes}</div>
                     </div>
                     <span className={`badge-gold text-xs flex-shrink-0 ${
                       a.type === 'final' ? 'text-uni-red border-uni-red/40 bg-uni-red/10' :
                       a.type === 'midterm' ? 'text-uni-orange border-uni-orange/40 bg-uni-orange/10' : ''
                     }`}>
-                      {a.type === 'quiz' ? 'اختبار قصير' : a.type === 'midterm' ? 'منتصف الفصل' : a.type === 'final' ? 'نهائي' : a.type as string}
+                      {a.type === 'quiz' ? t.student.quiz : a.type === 'midterm' ? t.student.midterm : a.type === 'final' ? t.student.final : a.type as string}
                     </span>
                   </motion.div>
                 ))}
@@ -144,7 +146,7 @@ export default function StudentDashboard() {
             ) : (
               <div className="text-center py-8 text-uni-muted">
                 <Clock className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">لا توجد اختبارات قادمة</p>
+                <p className="text-sm">{t.student.noUpcomingAssessments}</p>
               </div>
             )}
           </div>
@@ -155,7 +157,7 @@ export default function StudentDashboard() {
             <div className="card-uni">
               <h3 className="text-sm font-bold text-uni-text mb-3 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-uni-gold" />
-                تطور المعدل التراكمي
+                {t.student.gpaProgress}
               </h3>
               <ResponsiveContainer width="100%" height={100}>
                 <LineChart data={GPA_CHART_DATA}>
@@ -172,7 +174,7 @@ export default function StudentDashboard() {
             <div className="card-uni">
               <h3 className="text-sm font-bold text-uni-text mb-3 flex items-center gap-2">
                 <Brain className="w-4 h-4 text-uni-blue" />
-                توصيات الذكاء الاصطناعي
+                {t.student.aiRecommendations}
               </h3>
               {dashboard?.ai_recommendations?.length > 0 ? (
                 <div className="space-y-2">
@@ -184,7 +186,7 @@ export default function StudentDashboard() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-uni-muted">سيقوم الذكاء الاصطناعي بتحليل أدائك وتقديم توصيات مخصصة</p>
+                <p className="text-xs text-uni-muted">{t.student.aiRecommendationsDesc}</p>
               )}
             </div>
           </div>
@@ -196,20 +198,20 @@ export default function StudentDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-uni-text flex items-center gap-2">
                 <Award className="w-5 h-5 text-uni-gold" />
-                آخر الدرجات
+                {t.student.recentGrades}
               </h2>
               <Link href="/student/grades" className="text-uni-gold text-sm flex items-center gap-1">
-                كشف الدرجات <ChevronLeft className="w-4 h-4" />
+                {t.student.gradeSheet} <ChevronLeft className="w-4 h-4" />
               </Link>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-uni-muted border-b border-uni-border/30">
-                    <th className="text-right pb-2 font-medium">المادة</th>
-                    <th className="text-right pb-2 font-medium">الرمز</th>
-                    <th className="text-center pb-2 font-medium">الدرجة</th>
-                    <th className="text-center pb-2 font-medium">التقدير</th>
+                    <th className="text-right pb-2 font-medium">{t.student.course}</th>
+                    <th className="text-right pb-2 font-medium">{t.student.courseCode}</th>
+                    <th className="text-center pb-2 font-medium">{t.common.grade}</th>
+                    <th className="text-center pb-2 font-medium">{t.student.letterGrade}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -5,6 +5,7 @@ import {
   TrendingUp, Award, BookOpen, Target, BarChart3, Star, CheckCircle, Clock
 } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { useT } from '@/lib/i18n'
 import { studentAPI } from '@/lib/api'
 
 const STANDING_COLORS: Record<string, string> = {

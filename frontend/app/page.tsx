@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '@/lib/store'
+import { useT, useI18nStore } from '@/lib/i18n'
 import {
   Brain, GraduationCap, Users, BookOpen, Award,
   ChevronLeft, BarChart3, Globe, Shield,
@@ -63,9 +64,10 @@ export default function LandingPage() {
   const { user, isAuthenticated } = useAuthStore()
   const router = useRouter()
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
+  const { t, lang } = useT()
 
   return (
-    <div className="min-h-screen bg-uni-dark overflow-x-hidden" dir="rtl">
+    <div className="min-h-screen bg-uni-dark overflow-x-hidden" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-uni-border/50">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
@@ -73,30 +75,30 @@ export default function LandingPage() {
             <div className="w-9 h-9 rounded-lg bg-gold-gradient flex items-center justify-center flex-shrink-0">
               <GraduationCap className="w-5 h-5 text-uni-dark" />
             </div>
-            <span className="font-bold text-base md:text-lg text-uni-gold">مملكة الأرض الافتراضية</span>
+            <span className="font-bold text-base md:text-lg text-uni-gold">{t.home.heroTitle}</span>
           </div>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3">
             <Link href="/roadmap" className="text-uni-muted hover:text-uni-gold text-sm transition-colors">خريطة التطوير</Link>
             <Link href="/academic/plans" className="text-uni-muted hover:text-uni-gold text-sm transition-colors">الخطط الدراسية</Link>
             <Link href="/pricing" className="text-uni-muted hover:text-uni-gold text-sm transition-colors">الأسعار</Link>
-            <button className="text-uni-muted hover:text-uni-gold text-xs border border-uni-border/30 rounded-lg px-2 py-1 hover:border-uni-gold/30 flex items-center gap-1">
-              <Globe className="w-3.5 h-3.5" /> AR
+            <button onClick={() => useI18nStore.getState().toggleLang()} className="text-uni-muted hover:text-uni-gold text-xs border border-uni-border/30 rounded-lg px-2 py-1 hover:border-uni-gold/30 flex items-center gap-1">
+              <Globe className="w-3.5 h-3.5" /> {lang === 'ar' ? 'EN' : 'AR'}
             </button>
             {isAuthenticated ? (
               <button
                 onClick={() => router.push(isAdmin ? '/admin/dashboard' : '/student/dashboard')}
                 className="btn-gold px-5 py-2 rounded-lg text-sm font-semibold"
               >
-                لوحة التحكم
+                {t.nav.dashboard}
               </button>
             ) : (
               <>
                 <Link href="/auth/login" className="btn-ghost-gold px-5 py-2 rounded-lg text-sm font-semibold">
-                  تسجيل الدخول
+                  {t.auth.login}
                 </Link>
                 <Link href="/auth/register" className="btn-gold px-5 py-2 rounded-lg text-sm font-semibold">
-                  ابدأ مجاناً
+                  {t.home.getStarted}
                 </Link>
               </>
             )}
@@ -117,15 +119,15 @@ export default function LandingPage() {
                 onClick={() => { setMobileMenu(false); router.push(isAdmin ? '/admin/dashboard' : '/student/dashboard') }}
                 className="btn-gold px-5 py-3 rounded-lg text-sm font-semibold text-center"
               >
-                لوحة التحكم
+                {t.nav.dashboard}
               </button>
             ) : (
               <>
                 <Link href="/auth/login" onClick={() => setMobileMenu(false)} className="btn-ghost-gold px-5 py-3 rounded-lg text-sm font-semibold text-center">
-                  تسجيل الدخول
+                  {t.auth.login}
                 </Link>
                 <Link href="/auth/register" onClick={() => setMobileMenu(false)} className="btn-gold px-5 py-3 rounded-lg text-sm font-semibold text-center">
-                  ابدأ مجاناً
+                  {t.home.getStarted}
                 </Link>
               </>
             )}

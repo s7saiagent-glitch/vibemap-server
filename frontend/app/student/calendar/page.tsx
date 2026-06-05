@@ -4,8 +4,10 @@ import { motion } from 'framer-motion'
 import { Calendar, BookOpen, AlertTriangle } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { academicAPI } from '@/lib/api'
+import { useT } from '@/lib/i18n'
 
 export default function AcademicCalendarPage() {
+  const { t, lang } = useT()
   const { data, isLoading } = useQuery({
     queryKey: ['academic-calendar'],
     queryFn: () => academicAPI.getCalendar().then(r => r.data),
@@ -32,10 +34,10 @@ export default function AcademicCalendarPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-3xl">
+      <div className="space-y-6 max-w-3xl" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
         <div>
           <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-uni-gold" /> التقويم الأكاديمي
+            <Calendar className="w-6 h-6 text-uni-gold" /> {t.calendar.title}
           </h1>
           <p className="text-uni-muted text-sm mt-1">جدول الفصل الدراسي الحالي والمواعيد المهمة</p>
         </div>
@@ -45,7 +47,7 @@ export default function AcademicCalendarPage() {
         ) : !data ? (
           <div className="card-uni text-center py-12">
             <Calendar className="w-12 h-12 text-uni-muted mx-auto mb-3" />
-            <p className="text-uni-muted">لم يُضف التقويم الأكاديمي بعد</p>
+            <p className="text-uni-muted">{t.calendar.noEvents}</p>
             <p className="text-xs text-uni-muted mt-1">تواصل مع الإدارة لإضافة مواعيد الفصل الدراسي</p>
           </div>
         ) : (
@@ -85,7 +87,7 @@ export default function AcademicCalendarPage() {
                           </div>
                           <div className="text-left">
                             <div className="text-xs text-uni-muted">{evtDate.toLocaleDateString('ar-SA')}</div>
-                            {isUpcoming && <span className="text-[10px] text-uni-gold border border-uni-gold/30 rounded px-1">قريباً</span>}
+                            {isUpcoming && <span className="text-[10px] text-uni-gold border border-uni-gold/30 rounded px-1">{t.common.next}</span>}
                             {isPast && <span className="text-[10px] text-uni-muted">انتهى</span>}
                           </div>
                         </div>

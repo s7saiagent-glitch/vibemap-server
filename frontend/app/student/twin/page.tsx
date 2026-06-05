@@ -5,8 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Brain, Sparkles, Target, TrendingUp, BookOpen, Zap, RefreshCw, ChevronRight } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { studentAPI } from '@/lib/api'
+import { useT } from '@/lib/i18n'
 
 export default function AcademicTwinPage() {
+  const { t, lang } = useT()
   const [activating, setActivating] = useState(false)
   const [activeGoal, setActiveGoal] = useState<string | null>(null)
 
@@ -55,12 +57,12 @@ export default function AcademicTwinPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6 max-w-4xl" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
         <div>
           <h1 className="text-2xl font-black text-uni-text flex items-center gap-2">
-            <Brain className="w-6 h-6 text-uni-gold" /> توأمي الأكاديمي
+            <Brain className="w-6 h-6 text-uni-gold" /> {t.twin.title}
           </h1>
-          <p className="text-uni-muted text-sm mt-1">نسختك الذكية التي تتعلم معك وتوجهك نحو التميز</p>
+          <p className="text-uni-muted text-sm mt-1">{t.twin.subtitle}</p>
         </div>
 
         {!isActive ? (
@@ -72,7 +74,7 @@ export default function AcademicTwinPage() {
             <div className="w-20 h-20 rounded-full bg-uni-gold/10 border border-uni-gold/20 flex items-center justify-center mx-auto mb-6">
               <Brain className="w-10 h-10 text-uni-gold" />
             </div>
-            <h2 className="text-xl font-black text-uni-text mb-3">فعّل توأمك الأكاديمي</h2>
+            <h2 className="text-xl font-black text-uni-text mb-3">{t.twin.activate}</h2>
             <p className="text-uni-muted text-sm max-w-md mx-auto mb-8 leading-relaxed">
               التوأم الأكاديمي هو ذكاء اصطناعي شخصي يحلل أسلوب تعلمك، يتتبع نقاط قوتك وضعفك،
               ويقدم توصيات مخصصة لتحسين أدائك الأكاديمي.
@@ -108,7 +110,7 @@ export default function AcademicTwinPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-uni text-center">
                 <div className="text-3xl font-black text-gold-gradient">{gpa.toFixed(2)}</div>
-                <div className="text-xs text-uni-muted mt-1">المعدل التراكمي</div>
+                <div className="text-xs text-uni-muted mt-1">{t.student.cumulativeGpa}</div>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card-uni text-center">
                 <div className="text-3xl mb-1">{styleInfo.icon}</div>
@@ -117,7 +119,7 @@ export default function AcademicTwinPage() {
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-uni text-center">
                 <div className="text-3xl font-black text-uni-green">{strengths.length}</div>
-                <div className="text-xs text-uni-muted mt-1">نقطة قوة</div>
+                <div className="text-xs text-uni-muted mt-1">{t.twin.strengthsTitle}</div>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card-uni text-center">
                 <div className="text-3xl font-black text-uni-blue">{goals.length}</div>

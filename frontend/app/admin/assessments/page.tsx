@@ -7,6 +7,7 @@ import {
   CheckCircle, Eye, EyeOff, Trash2, BookOpen, Clock, Target
 } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { useT } from '@/lib/i18n'
 import { adminAPI } from '@/lib/api'
 
 const ASSESSMENT_TYPES = [

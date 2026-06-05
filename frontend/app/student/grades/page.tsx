@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Award, TrendingUp, BookOpen, Star, BarChart3 } from 'lucide-react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { studentAPI } from '@/lib/api'
+import { useT } from '@/lib/i18n'
 
 function GradeLabel({ grade }: { grade: string }) {
   const colors: Record<string, string> = {
@@ -23,6 +24,7 @@ function GradeLabel({ grade }: { grade: string }) {
 }
 
 export default function GradesPage() {
+  const { t } = useT()
   const { data, isLoading } = useQuery({
     queryKey: ['transcript'],
     queryFn: () => studentAPI.getTranscript().then(r => r.data),
@@ -32,8 +34,8 @@ export default function GradesPage() {
     <DashboardLayout>
       <div className="space-y-6 max-w-5xl">
         <div>
-          <h1 className="text-2xl font-black text-uni-text">درجاتي ومعدلي</h1>
-          <p className="text-uni-muted text-sm mt-1">سجلك الأكاديمي الكامل</p>
+          <h1 className="text-2xl font-black text-uni-text">{t.grades.title}</h1>
+          <p className="text-uni-muted text-sm mt-1">{t.grades.transcript}</p>
         </div>
 
         {isLoading ? (
@@ -43,10 +45,10 @@ export default function GradesPage() {
             {/* GPA Summary */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'المعدل التراكمي', value: data?.cumulative_gpa || '0.00', icon: Star, color: 'text-uni-gold' },
-                { label: 'الساعات المكتسبة', value: data?.total_credits_earned || 0, icon: Award, color: 'text-uni-blue' },
-                { label: 'الوضع الأكاديمي', value: 'جيد', icon: TrendingUp, color: 'text-uni-green' },
-                { label: 'الرقم الجامعي', value: data?.student_id || '-', icon: BookOpen, color: 'text-uni-purple' },
+                { label: t.grades.cumulativeGpa, value: data?.cumulative_gpa || '0.00', icon: Star, color: 'text-uni-gold' },
+                { label: t.grades.credits, value: data?.total_credits_earned || 0, icon: Award, color: 'text-uni-blue' },
+                { label: t.student.academicStanding, value: t.student.standingGood, icon: TrendingUp, color: 'text-uni-green' },
+                { label: t.student.studentId, value: data?.student_id || '-', icon: BookOpen, color: 'text-uni-purple' },
               ].map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                   className="card-uni text-center">
@@ -61,8 +63,8 @@ export default function GradesPage() {
             {data?.semesters?.length === 0 ? (
               <div className="card-uni text-center py-16">
                 <BarChart3 className="w-16 h-16 mx-auto mb-4 text-uni-muted opacity-30" />
-                <h3 className="text-xl font-bold text-uni-text mb-2">لا توجد درجات بعد</h3>
-                <p className="text-uni-muted text-sm">ستظهر درجاتك هنا بعد إتمام المواد</p>
+                <h3 className="text-xl font-bold text-uni-text mb-2">{t.grades.noGrades}</h3>
+                <p className="text-uni-muted text-sm">{t.grades.noGrades}</p>
               </div>
             ) : (
               data?.semesters?.map((sem: Record<string, unknown>, i: number) => (
@@ -76,11 +78,11 @@ export default function GradesPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-uni-muted border-b border-uni-border/30">
-                          <th className="text-right pb-2 font-medium">المادة</th>
-                          <th className="text-center pb-2 font-medium">الساعات</th>
-                          <th className="text-center pb-2 font-medium">الدرجة</th>
-                          <th className="text-center pb-2 font-medium">التقدير</th>
-                          <th className="text-center pb-2 font-medium">النقاط</th>
+                          <th className="text-right pb-2 font-medium">{t.student.course}</th>
+                          <th className="text-center pb-2 font-medium">{t.grades.credits}</th>
+                          <th className="text-center pb-2 font-medium">{t.grades.total}</th>
+                          <th className="text-center pb-2 font-medium">{t.grades.letterGrade}</th>
+                          <th className="text-center pb-2 font-medium">{t.grades.gpaPoints}</th>
                         </tr>
                       </thead>
                       <tbody>
