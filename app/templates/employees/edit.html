@@ -35,7 +35,7 @@
   <div class="col-12 col-lg-7">
     <div class="card">
       <div class="card-header fw-semibold py-3">
-        <i class="bi bi-person-gear me-2 text-primary"></i>{{ _('Edit Employee Details') }}
+        <i class="bi bi-pencil-fill me-2 text-primary"></i>{{ _('Edit Employee Details') }}
       </div>
       <div class="card-body">
         <form method="POST" action="{{ url_for('employees.edit', emp_id=emp.id) }}">
@@ -77,7 +77,7 @@
 
           <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary">
-              <i class="bi bi-check-lg me-1"></i>{{ _('Save Changes') }}
+              <i class="bi bi-check2-all me-1"></i>{{ _('Save Changes') }}
             </button>
             <a href="{{ url_for('employees.index') }}" class="btn btn-outline-secondary">
               {{ _('Cancel') }}
@@ -92,7 +92,7 @@
   <div class="col-12 col-lg-5">
     <div class="card">
       <div class="card-header fw-semibold py-3">
-        <i class="bi bi-tags me-2 text-info"></i>{{ _('Alias Names') }}
+        <i class="bi bi-tag-fill me-2 text-info"></i>{{ _('Alias Names') }}
         <span class="badge bg-info ms-1">{{ emp.aliases|length }}</span>
       </div>
       <div class="card-body">
@@ -128,7 +128,7 @@
           <input type="text" name="alias" class="form-control form-control-sm flex-grow-1"
                  placeholder="{{ _('New alias name…') }}" required>
           <button type="submit" class="btn btn-sm btn-info text-white">
-            <i class="bi bi-plus-lg"></i>
+            <i class="bi bi-plus-circle-fill"></i>
           </button>
         </form>
       </div>
@@ -137,7 +137,7 @@
     <!-- Info Card -->
     <div class="card mt-3">
       <div class="card-body">
-        <h6 class="fw-semibold mb-2"><i class="bi bi-info-circle me-2 text-secondary"></i>{{ _('Employee Info') }}</h6>
+        <h6 class="fw-semibold mb-2"><i class="bi bi-info-circle-fill me-2 text-secondary"></i>{{ _('Employee Info') }}</h6>
         <table class="table table-sm mb-0">
           <tr>
             <td class="text-muted small">{{ _('ID') }}</td>
@@ -155,9 +155,9 @@
             <td class="text-muted small">{{ _('Status') }}</td>
             <td>
               {% if emp.is_locked %}
-                <span class="badge bg-warning text-dark"><i class="bi bi-lock me-1"></i>{{ _('Locked') }}</span>
+                <span class="badge bg-warning text-dark"><i class="bi bi-lock-fill me-1"></i>{{ _('Locked') }}</span>
               {% elif emp.is_active %}
-                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ _('Active') }}</span>
+                <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>{{ _('Active') }}</span>
               {% else %}
                 <span class="badge bg-secondary">{{ _('Inactive') }}</span>
               {% endif %}
@@ -169,7 +169,7 @@
         <form method="POST" action="{{ url_for('employees.toggle_lock', emp_id=emp.id) }}" class="mt-2">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn btn-sm btn-outline-{{ 'secondary' if emp.is_locked else 'warning' }} w-100">
-            <i class="bi bi-{{ 'unlock' if emp.is_locked else 'lock' }} me-1"></i>
+            <i class="bi bi-{{ 'unlock-fill' if emp.is_locked else 'lock-fill' }} me-1"></i>
             {{ _('Unlock Employee') if emp.is_locked else _('Lock Employee') }}
           </button>
         </form>

@@ -36,14 +36,14 @@
     <p class="text-muted small mb-0">{{ _('Total') }}: <strong>{{ employees|length }}</strong> {{ _('employees') }}</p>
   </div>
   <button class="btn btn-primary btn-sm" id="toggleAddBtn" onclick="toggleAddPanel()">
-    <i class="bi bi-plus-lg me-1"></i>{{ _('Add Employee') }}
+    <i class="bi bi-plus-circle-fill me-1"></i>{{ _('Add Employee') }}
   </button>
 </div>
 
 <!-- Add Employee Panel -->
 <div id="addEmpPanel" class="card mb-4">
   <div class="card-header fw-semibold">
-    <i class="bi bi-person-plus me-2 text-primary"></i>{{ _('Add New Employee') }}
+    <i class="bi bi-person-plus-fill me-2 text-primary"></i>{{ _('Add New Employee') }}
   </div>
   <div class="card-body">
     <form method="POST" action="{{ url_for('employees.index') }}" class="row g-3">
@@ -62,7 +62,7 @@
       </div>
       <div class="col-12 col-md-1 d-flex align-items-end">
         <button type="submit" class="btn btn-success w-100">
-          <i class="bi bi-check-lg"></i>
+          <i class="bi bi-check2-all"></i>
         </button>
       </div>
     </form>
@@ -72,7 +72,7 @@
 <!-- Employee Table -->
 <div class="card">
   <div class="card-header d-flex align-items-center justify-content-between py-3">
-    <span><i class="bi bi-table me-2 text-primary"></i>{{ _('Employee List') }}</span>
+    <span><i class="bi bi-people-fill me-2 text-primary"></i>{{ _('Employee List') }}</span>
     <input type="text" id="empSearch" class="form-control form-control-sm w-auto"
            placeholder="{{ _('Search...') }}" oninput="filterTable()" style="min-width:180px;">
   </div>
@@ -141,7 +141,7 @@
                   </span>
                 {% else %}
                   <span class="badge bg-success">
-                    <i class="bi bi-check-circle me-1"></i>{{ _('Active') }}
+                    <i class="bi bi-check-circle-fill me-1"></i>{{ _('Active') }}
                   </span>
                 {% endif %}
               </td>
@@ -150,14 +150,14 @@
                   <!-- Edit -->
                   <a href="{{ url_for('employees.edit', emp_id=emp.id) }}"
                      class="btn btn-sm btn-outline-primary" title="{{ _('Edit') }}">
-                    <i class="bi bi-pencil"></i>
+                    <i class="bi bi-pencil-fill"></i>
                   </a>
                   <!-- Lock/Unlock -->
                   <form method="POST" action="{{ url_for('employees.toggle_lock', emp_id=emp.id) }}" class="d-inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-sm btn-outline-{{ 'secondary' if emp.is_locked else 'warning' }}"
                             title="{{ _('Unlock') if emp.is_locked else _('Lock') }}">
-                      <i class="bi bi-{{ 'unlock' if emp.is_locked else 'lock' }}"></i>
+                      <i class="bi bi-{{ 'unlock-fill' if emp.is_locked else 'lock-fill' }}"></i>
                     </button>
                   </form>
                   <!-- Delete -->
@@ -165,7 +165,7 @@
                         onsubmit="return confirm('{{ _('Delete employee') }} {{ emp.name }}?')">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ _('Delete') }}">
-                      <i class="bi bi-trash"></i>
+                      <i class="bi bi-trash3-fill"></i>
                     </button>
                   </form>
                 </div>
@@ -175,7 +175,7 @@
           {% else %}
             <tr>
               <td colspan="7" class="text-center py-5 text-muted">
-                <i class="bi bi-people fs-2 d-block mb-2"></i>
+                <i class="bi bi-people-fill fs-2 d-block mb-2"></i>
                 {{ _('No employees yet. Add the first one above.') }}
               </td>
             </tr>

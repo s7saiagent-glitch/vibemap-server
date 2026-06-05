@@ -62,7 +62,7 @@
   <div class="col-12 col-lg-5">
     <div class="card">
       <div class="card-header fw-semibold py-3">
-        <i class="bi bi-file-earmark-arrow-up me-2 text-primary"></i>{{ _('Upload File') }}
+        <i class="bi bi-cloud-upload-fill me-2 text-primary"></i>{{ _('Upload File') }}
       </div>
       <div class="card-body">
         <form id="uploadForm" method="POST" action="{{ url_for('uploads.upload') }}" enctype="multipart/form-data">
@@ -70,7 +70,7 @@
 
           <!-- Drop Zone -->
           <div class="drop-zone mb-3" id="dropZone" onclick="document.getElementById('fileInput').click()">
-            <i class="bi bi-cloud-upload mb-2 d-block" id="dropIcon"></i>
+            <i class="bi bi-cloud-upload-fill mb-2 d-block" id="dropIcon"></i>
             <div class="fw-semibold" id="dropText">{{ _('Click to choose file or drag & drop') }}</div>
             <div class="text-muted small mt-1" id="dropSub">{{ _('Supported formats: .xls, .xlsx, .xlsm') }}</div>
             <input type="file" name="file" id="fileInput" class="d-none" accept=".xls,.xlsx,.xlsm" required>
@@ -104,7 +104,7 @@
           <div id="uploadResult" class="alert mb-3" role="alert"></div>
 
           <button type="submit" class="btn btn-primary w-100" id="uploadBtn">
-            <i class="bi bi-upload me-2"></i>{{ _('Upload & Import') }}
+            <i class="bi bi-cloud-upload-fill me-2"></i>{{ _('Upload & Import') }}
           </button>
         </form>
       </div>
@@ -113,7 +113,7 @@
     <!-- Tips Card -->
     <div class="card mt-3">
       <div class="card-body">
-        <h6 class="fw-semibold mb-2"><i class="bi bi-lightbulb text-warning me-2"></i>{{ _('Tips') }}</h6>
+        <h6 class="fw-semibold mb-2"><i class="bi bi-lightbulb-fill text-warning me-2"></i>{{ _('Tips') }}</h6>
         <ul class="small text-muted mb-0 ps-3">
           <li>{{ _('Filename containing "PRODUCTIVITY" → auto-detected as Productivity Report') }}</li>
           <li>{{ _('Filename containing "PENDING INVOICE" → auto-detected as Pending Invoices') }}</li>
@@ -128,7 +128,7 @@
   <div class="col-12 col-lg-7">
     <div class="card">
       <div class="card-header d-flex align-items-center justify-content-between py-3">
-        <span><i class="bi bi-clock-history me-2 text-primary"></i>{{ _('Upload History') }}</span>
+        <span><i class="bi bi-clock-fill me-2 text-primary"></i>{{ _('Upload History') }}</span>
         <span class="badge bg-secondary">{{ batches|length }} {{ _('batches') }}</span>
       </div>
       <div class="card-body p-0">
@@ -174,14 +174,14 @@
                   <td class="text-center">
                     <span class="type-badge status-{{ batch.status }}">
                       {% if batch.status == 'done' %}
-                        <i class="bi bi-check-circle me-1"></i>{{ _('Done') }}
+                        <i class="bi bi-check-circle-fill me-1"></i>{{ _('Done') }}
                       {% elif batch.status == 'error' %}
-                        <i class="bi bi-x-circle me-1"></i>{{ _('Error') }}
+                        <i class="bi bi-x-circle-fill me-1"></i>{{ _('Error') }}
                         {% if batch.error_message %}
                           <span data-bs-toggle="tooltip" title="{{ batch.error_message }}">ⓘ</span>
                         {% endif %}
                       {% else %}
-                        <i class="bi bi-hourglass-split me-1"></i>{{ _('Processing') }}
+                        <i class="bi bi-clock-fill me-1"></i>{{ _('Processing') }}
                       {% endif %}
                     </span>
                   </td>
@@ -191,7 +191,7 @@
                           onsubmit="return confirm('{{ _('Delete this batch record?') }}')">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1" title="{{ _('Delete record') }}">
-                        <i class="bi bi-trash"></i>
+                        <i class="bi bi-trash3-fill"></i>
                       </button>
                     </form>
                   </td>
@@ -200,7 +200,7 @@
               {% else %}
                 <tr>
                   <td colspan="8" class="text-center py-5 text-muted">
-                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                    <i class="bi bi-cloud-upload-fill fs-2 d-block mb-2"></i>
                     {{ _('No uploads yet.') }}
                   </td>
                 </tr>
@@ -246,7 +246,7 @@
     fileInput.files = dt.files;
 
     dropZone.classList.add('has-file');
-    dropIcon.className = 'bi bi-file-earmark-check mb-2 d-block';
+    dropIcon.className = 'bi bi-check-circle-fill mb-2 d-block';
     dropText.textContent = file.name;
     dropSub.textContent = (file.size / 1024).toFixed(1) + ' KB';
   }
@@ -289,23 +289,23 @@
 
       if (data.success) {
         result.className = 'alert alert-success mb-3';
-        result.innerHTML = `<i class="bi bi-check-circle me-2"></i>${data.message}
+        result.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${data.message}
           <br><small class="text-muted">Batch: ${data.batch_id} · Imported: ${data.imported} · Skipped: ${data.skipped}</small>`;
         setTimeout(() => location.reload(), 1800);
       } else {
         result.className = 'alert alert-danger mb-3';
-        result.innerHTML = `<i class="bi bi-x-circle me-2"></i>${data.error || '{{ _("Unknown error") }}'}`;
+        result.innerHTML = `<i class="bi bi-x-circle-fill me-2"></i>${data.error || '{{ _("Unknown error") }}'}`;
       }
     } catch (err) {
       clearInterval(ticker);
       result.className = 'alert alert-danger mb-3';
-      result.innerHTML = `<i class="bi bi-x-circle me-2"></i>{{ _("Network error. Please try again.") }}`;
+      result.innerHTML = `<i class="bi bi-x-circle-fill me-2"></i>{{ _("Network error. Please try again.") }}`;
     }
 
     result.style.display = 'block';
     progress.style.display = 'none';
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-upload me-2"></i>{{ _("Upload & Import") }}';
+    btn.innerHTML = '<i class="bi bi-cloud-upload-fill me-2"></i>{{ _("Upload & Import") }}';
   });
 
   // ── Tooltips ────────────────────────────────────────────────────────────

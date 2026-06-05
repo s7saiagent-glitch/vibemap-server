@@ -62,7 +62,7 @@
     </p>
   </div>
   <a href="{{ url_for('dashboard.advice') }}" class="btn btn-outline-primary btn-sm no-print">
-    <i class="bi bi-lightbulb me-1"></i>{{ _('Sales Advice') }}
+    <i class="bi bi-lightbulb-fill me-1"></i>{{ _('Sales Advice') }}
   </a>
 </div>
 
@@ -102,7 +102,7 @@
     <div class="kpi-card kpi-purple">
       <div class="kpi-label">{{ _('الفواتير المعلقة') }} / {{ _('Pending Invoices') }}</div>
       <div class="kpi-value">{{ kpis.pending_invoices }}</div>
-      <i class="bi bi-receipt kpi-icon"></i>
+      <i class="bi bi-receipt-cutoff kpi-icon"></i>
     </div>
   </div>
 </div>
@@ -120,7 +120,7 @@
 </div>
 {% elif kpis.company_achievement_pct >= 80 %}
 <div class="alert alert-warning d-flex align-items-center gap-2 mb-4 no-print" role="alert">
-  <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+  <i class="bi bi-exclamation-circle-fill fs-4"></i>
   <div>
     <strong>{{ _('Almost there!') }}</strong>
     {{ _('Current achievement is %(pct)s%%. %(days)d working days remaining — push hard!',
@@ -143,7 +143,7 @@
 ═══════════════════════════ -->
 <div class="card mb-4">
   <div class="card-header d-flex align-items-center justify-content-between py-3">
-    <span><i class="bi bi-bar-chart-steps me-2 text-primary"></i>{{ _('Employee Progress') }}</span>
+    <span><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>{{ _('Employee Progress') }}</span>
     <span class="text-muted small">{{ _('Month') }}: {{ year }}/{{ '%02d'|format(month) }}</span>
   </div>
   <div class="card-body p-0">
@@ -206,7 +206,7 @@
           {% else %}
             <tr>
               <td colspan="8" class="text-center py-5 text-muted">
-                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                <i class="bi bi-people-fill fs-2 d-block mb-2"></i>
                 {{ _('No employee data for this month.') }}
               </td>
             </tr>
@@ -228,6 +228,32 @@
 </div>
 
 <!-- ═══════════════════════════
+     MOTIVATIONAL BANNERS
+═══════════════════════════ -->
+{% if employee_data %}
+<div class="row g-2 mb-4 no-print">
+  {% for row in employee_data %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="alert {% if row.badge == 'success' %}alert-success{% elif row.badge == 'warning' %}alert-warning{% else %}alert-danger{% endif %} d-flex align-items-center gap-2 py-2 mb-0" role="alert">
+      <i class="bi {% if row.badge == 'success' %}bi-check-circle-fill{% elif row.badge == 'warning' %}bi-exclamation-circle-fill{% else %}bi-x-circle-fill{% endif %}"></i>
+      <div class="small">
+        <strong>{{ row.employee.name }}</strong>
+        —
+        {% if row.badge == 'success' %}
+          {{ row.progress_pct }}% {{ _('On Track') }}
+        {% elif row.badge == 'warning' %}
+          {{ row.progress_pct }}% {{ _('Needs Push') }}
+        {% else %}
+          {{ row.progress_pct }}% {{ _('Behind') }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ═══════════════════════════
      CHARTS ROW
 ═══════════════════════════ -->
 <div class="row g-3 mb-4">
@@ -235,7 +261,7 @@
   <div class="col-12 col-lg-7">
     <div class="card h-100">
       <div class="card-header py-3">
-        <i class="bi bi-bar-chart-fill me-2 text-primary"></i>{{ _('Top Performers') }}
+        <i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>{{ _('Top Performers') }}
       </div>
       <div class="card-body">
         <canvas id="topChart"></canvas>
@@ -247,7 +273,7 @@
   <div class="col-12 col-lg-5">
     <div class="card h-100">
       <div class="card-header py-3">
-        <i class="bi bi-pie-chart-fill me-2 text-success"></i>{{ _('Achievement Overview') }}
+        <i class="bi bi-bullseye me-2 text-success"></i>{{ _('Achievement Overview') }}
       </div>
       <div class="card-body d-flex align-items-center justify-content-center">
         <canvas id="achieveChart" style="max-height:240px;"></canvas>
@@ -265,7 +291,7 @@
   </div>
   <div class="col-6 col-md-3">
     <a href="{{ url_for('uploads.index') }}" class="quick-link-card">
-      <i class="bi bi-cloud-upload text-primary"></i>
+      <i class="bi bi-cloud-upload-fill text-primary"></i>
       <span>{{ _('Upload Data') }}</span>
     </a>
   </div>
@@ -277,13 +303,13 @@
   </div>
   <div class="col-6 col-md-3">
     <a href="{{ url_for('reports.index') }}" class="quick-link-card">
-      <i class="bi bi-bar-chart-line text-success"></i>
+      <i class="bi bi-bar-chart-line-fill text-success"></i>
       <span>{{ _('Reports') }}</span>
     </a>
   </div>
   <div class="col-6 col-md-3">
     <a href="{{ url_for('invoices.index') }}" class="quick-link-card">
-      <i class="bi bi-receipt text-warning"></i>
+      <i class="bi bi-receipt-cutoff text-warning"></i>
       <span>{{ _('Invoices') }}</span>
     </a>
   </div>

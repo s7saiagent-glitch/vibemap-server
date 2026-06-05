@@ -114,7 +114,7 @@
           <i class="bi bi-search"></i>
         </button>
         <a href="{{ url_for('invoices.index') }}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-x-circle"></i>
+          <i class="bi bi-x-lg"></i>
         </a>
       </div>
     </form>
@@ -124,7 +124,7 @@
 <!-- Invoices Table -->
 <div class="card">
   <div class="card-header d-flex align-items-center justify-content-between py-3">
-    <span><i class="bi bi-table me-2 text-warning"></i>{{ _('Invoice List') }}</span>
+    <span><i class="bi bi-receipt-cutoff me-2 text-warning"></i>{{ _('Invoice List') }}</span>
     <span class="badge bg-secondary">{{ invoices.total }} {{ _('records') }}</span>
   </div>
   <div class="card-body p-0">
@@ -177,9 +177,9 @@
                   {% if inv.status == 'resolved' %}
                     <i class="bi bi-check-circle-fill me-1"></i>{{ _('Resolved') }}
                   {% elif inv.status == 'in_progress' %}
-                    <i class="bi bi-hourglass-split me-1"></i>{{ _('In Progress') }}
+                    <i class="bi bi-clock-fill me-1"></i>{{ _('In Progress') }}
                   {% elif inv.status == 'cancelled' %}
-                    <i class="bi bi-x-circle me-1"></i>{{ _('Cancelled') }}
+                    <i class="bi bi-x-circle-fill me-1"></i>{{ _('Cancelled') }}
                   {% else %}
                     <i class="bi bi-clock-fill me-1"></i>{{ _('Pending') }}
                   {% endif %}
@@ -200,7 +200,7 @@
                         data-inv-id="{{ inv.id }}"
                         data-inv-no="{{ inv.invoice_no or '' }}"
                         title="{{ _('Add Note') }}">
-                  <i class="bi bi-chat-left-text"></i>
+                  <i class="bi bi-chat-dots-fill"></i>
                 </button>
               </td>
             </tr>
@@ -208,7 +208,7 @@
           {% else %}
             <tr>
               <td colspan="9" class="text-center py-5 text-muted">
-                <i class="bi bi-receipt fs-2 d-block mb-2"></i>
+                <i class="bi bi-receipt-cutoff fs-2 d-block mb-2"></i>
                 {{ _('No invoices found.') }}
               </td>
             </tr>
@@ -276,7 +276,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="noteModalLabel">
-          <i class="bi bi-chat-left-text me-2 text-info"></i>
+          <i class="bi bi-chat-dots-fill me-2 text-info"></i>
           {{ _('Add Note') }} / إضافة ملاحظة
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -324,7 +324,7 @@
             {{ _('Cancel') }}
           </button>
           <button type="submit" class="btn btn-info text-white">
-            <i class="bi bi-check-lg me-1"></i>{{ _('Save Note') }}
+            <i class="bi bi-check2-all me-1"></i>{{ _('Save Note') }}
           </button>
         </div>
       </form>

@@ -25,19 +25,19 @@
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2 no-print">
   <div>
     <h1 class="h4 fw-bold mb-0">
-      <i class="bi bi-person-lines-fill text-primary me-2"></i>
+      <i class="bi bi-person-fill text-primary me-2"></i>
       {{ _('Employee Performance') }}
       {% if emp %}— {{ emp.name }}{% endif %}
     </h1>
   </div>
   <div class="d-flex gap-2">
     <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-printer me-1"></i>{{ _('Print') }}
+      <i class="bi bi-printer-fill me-1"></i>{{ _('Print') }}
     </button>
     {% if emp %}
     <a href="{{ url_for('reports.export', report_type='sales_detail', year=year, month=month) }}"
        class="btn btn-outline-success btn-sm">
-      <i class="bi bi-file-earmark-excel me-1"></i>{{ _('Export Excel') }}
+      <i class="bi bi-file-earmark-excel-fill me-1"></i>{{ _('Export Excel') }}
     </a>
     {% endif %}
     <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary btn-sm">
@@ -164,7 +164,7 @@
   <div class="col-12 col-lg-8">
     <div class="card h-100">
       <div class="card-header py-3">
-        <i class="bi bi-graph-up me-2 text-primary"></i>{{ _('Daily Sales vs Target') }}
+        <i class="bi bi-graph-up-arrow me-2 text-primary"></i>{{ _('Daily Sales vs Target') }}
       </div>
       <div class="card-body">
         <canvas id="monthly-chart" style="max-height:280px;"></canvas>
@@ -176,7 +176,7 @@
   <div class="col-12 col-lg-4">
     <div class="card h-100">
       <div class="card-header py-3">
-        <i class="bi bi-pie-chart me-2 text-success"></i>{{ _('By Category') }}
+        <i class="bi bi-bullseye me-2 text-success"></i>{{ _('By Category') }}
       </div>
       <div class="card-body d-flex align-items-center justify-content-center">
         <canvas id="category-chart" style="max-height:240px;"></canvas>
@@ -188,7 +188,7 @@
 <!-- Sales Table -->
 <div class="card">
   <div class="card-header d-flex align-items-center justify-content-between py-3">
-    <span><i class="bi bi-table me-2 text-primary"></i>{{ _('Daily Sales') }}</span>
+    <span><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>{{ _('Daily Sales') }}</span>
     <span class="badge bg-secondary">{{ daily_sales|length }} {{ _('days with sales') }}</span>
   </div>
   <div class="card-body p-0">
@@ -235,7 +235,7 @@
 <!-- No employee selected -->
 <div class="card">
   <div class="card-body text-center py-5">
-    <i class="bi bi-person-circle fs-1 text-muted d-block mb-3"></i>
+    <i class="bi bi-person-fill fs-1 text-muted d-block mb-3"></i>
     <h5 class="fw-bold">{{ _('Select an Employee') }}</h5>
     <p class="text-muted">
       {{ _('Choose an employee from the dropdown above to view their performance report.') }}

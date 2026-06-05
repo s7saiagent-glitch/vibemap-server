@@ -70,6 +70,9 @@
   .bg-warning.shift-pill   { background: #fef3c7 !important; color: #92400e; }
   .bg-danger.shift-pill    { background: #fee2e2 !important; color: #991b1b; }
   .bg-success.shift-pill   { background: #d1fae5 !important; color: #065f46; }
+  /* Morning=green(success), Evening=blue(info), Day Off=red(danger), Sick=orange(warning), Annual Leave=purple */
+  .bg-purple.shift-pill    { background: #ede9fe !important; color: #5b21b6; }
+  .bg-purple               { background-color: #7c3aed !important; }
 
   .legend-pill {
     display: inline-flex; align-items: center; gap: .3rem;
@@ -101,7 +104,7 @@
   </div>
   <div class="d-flex gap-2">
     <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-printer me-1"></i>{{ _('Print') }}
+      <i class="bi bi-printer-fill me-1"></i>{{ _('Print') }}
     </button>
   </div>
 </div>
@@ -201,7 +204,7 @@
 <!-- Monthly summary table -->
 <div class="card">
   <div class="card-header d-flex align-items-center justify-content-between py-3">
-    <span><i class="bi bi-table me-2 text-primary"></i>{{ _('Monthly Summary') }}</span>
+    <span><i class="bi bi-calendar-week-fill me-2 text-primary"></i>{{ _('Monthly Summary') }}</span>
     <span class="badge bg-secondary">{{ employees|length }} {{ _('employees') }}</span>
   </div>
   <div class="card-body p-0">
@@ -272,7 +275,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="shiftModalLabel">
-          <i class="bi bi-calendar-plus me-2 text-primary"></i>
+          <i class="bi bi-calendar3 me-2 text-primary"></i>
           {{ _('Set Shift') }} / تحديد الوردية
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -324,7 +327,7 @@
             {{ _('Cancel') }}
           </button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-save me-1"></i>{{ _('Save Shift') }}
+            <i class="bi bi-check2-all me-1"></i>{{ _('Save Shift') }}
           </button>
         </div>
       </form>

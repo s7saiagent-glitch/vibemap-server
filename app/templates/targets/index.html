@@ -62,7 +62,7 @@
       <div class="col-12 col-md-4">
         <label class="form-label fw-semibold small">{{ _('Total Company Target') }}</label>
         <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-currency-dollar"></i></span>
+          <span class="input-group-text"><i class="bi bi-currency-exchange"></i></span>
           <input type="number" name="company_target" id="companyTargetInput" class="form-control fw-bold"
                  value="{{ company_target|default(0) }}" min="0" step="1000"
                  placeholder="e.g. 500000" oninput="recalcAll()">
@@ -75,7 +75,7 @@
       </div>
       <div class="col-6 col-md-2 d-flex align-items-end">
         <button type="button" class="btn btn-outline-primary w-100" onclick="this.form.submit()">
-          <i class="bi bi-funnel me-1"></i>{{ _('Load') }}
+          <i class="bi bi-funnel-fill me-1"></i>{{ _('Load') }}
         </button>
       </div>
     </form>
@@ -91,10 +91,10 @@
   <div id="sumAlert" class="small fw-semibold d-none"></div>
   <div class="ms-auto">
     <button class="btn btn-success btn-sm" id="saveTargetsBtn" onclick="saveTargets()">
-      <i class="bi bi-save me-1"></i>{{ _('Save Targets') }}
+      <i class="bi bi-check2-all me-1"></i>{{ _('Save Targets') }}
     </button>
     <button class="btn btn-outline-secondary btn-sm ms-1" onclick="equalizeAll()">
-      <i class="bi bi-distribute-vertical me-1"></i>{{ _('Equal Split') }}
+      <i class="bi bi-arrow-down me-1"></i>{{ _('Equal Split') }}
     </button>
   </div>
 </div>
@@ -160,7 +160,7 @@
           {% else %}
             <tr>
               <td colspan="6" class="text-center py-5 text-muted">
-                <i class="bi bi-people fs-2 d-block mb-2"></i>
+                <i class="bi bi-people-fill fs-2 d-block mb-2"></i>
                 {{ _('No active employees found.') }}
                 <a href="{{ url_for('employees.index') }}" class="d-block mt-1">{{ _('Add employees first') }}</a>
               </td>
