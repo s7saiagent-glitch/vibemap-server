@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>كرم | Karam — المزادات الفاخرة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A0A0C;
+  --card: #1A1A1E;
+  --border: rgba(212,175,55,0.35);
+  --text1: #F2EFE9;
+  --text2: #B3AEA6;
+  --gold: #D4AF37;
+  --gold-light: rgba(212,175,55,0.13);
+  --countdown-bg: #111114;
+  --surface: #141416;
+  --input-bg: #1E1E23;
+  --success: #4CAF88;
+  --overlay: rgba(0,0,0,0.75);
+  --tab-bar: #111114;
+  --font-en-h: 'Playfair Display', serif;
+  --font-en-b: 'Inter', sans-serif;
+  --font-ar: 'Tajawal', sans-serif;
+}
+[data-theme="light"] {
+  --bg: #F9F7F2;
+  --card: #FFFFFF;
+  --border: rgba(184,134,11,0.18);
+  --text1: #1E1C19;
+  --text2: #6B625A;
+  --gold: #B8860B;
+  --gold-light: rgba(184,134,11,0.09);
+  --countdown-bg: #F3EDE4;
+  --surface: #F0EDE6;
+  --input-bg: #EEEBE4;
+  --success: #2E7D4F;
+  --overlay: rgba(0,0,0,0.42);
+  --tab-bar: #FFFFFF;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--text1); font-family:var(--font-ar); transition:background .35s, color .35s; }
+[lang="en"] body, [lang="en"] * { font-family:var(--font-en-b); }
+[lang="en"] h1,[lang="en"] h2,[lang="en"] h3 { font-family:var(--font-en-h); }
+
+/* ── PHONE SHELL ── */
+.shell {
+  width:390px; height:844px; margin:auto; margin-top:max(0px, calc((100vh - 844px)/2));
+  border-radius:50px; overflow:hidden; position:relative;
+  box-shadow:0 40px 120px rgba(0,0,0,.7), 0 0 0 2px #2a2a2e;
+  display:flex; flex-direction:column;
+  background:var(--bg); transition:background .35s;
+}
+@media (max-height:860px){ .shell{ margin-top:0; border-radius:0; height:100vh; width:100%; } }
+@media (max-width:420px){ .shell{ border-radius:0; height:100dvh; width:100%; margin-top:0; } }
+
+/* ── STATUS BAR ── */
+.status-bar {
+  height:44px; display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px; flex-shrink:0; background:var(--bg); transition:background .35s;
+  font-size:12px; font-weight:600; color:var(--text2);
+}
+.status-time { font-size:15px; font-weight:700; color:var(--text1); }
+.status-icons { display:flex; gap:6px; align-items:center; }
+.battery { width:22px; height:11px; border:1.5px solid currentColor; border-radius:3px; position:relative; }
+.battery::after { content:''; position:absolute; right:-5px; top:50%; transform:translateY(-50%); width:3px; height:6px; background:currentColor; border-radius:0 1px 1px 0; }
+.battery-fill { height:100%; background:var(--gold); border-radius:1.5px; width:70%; }
+
+/* ── SCREENS ── */
+.screen { position:absolute; inset:0; display:flex; flex-direction:column; overflow:hidden; opacity:0; pointer-events:none; transition:opacity .3s, transform .3s; transform:translateX(30px); }
+.screen.active { opacity:1; pointer-events:all; transform:translateX(0); }
+.screen.slide-left { transform:translateX(-30px); }
+.screen-body { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
+.screen-body::-webkit-scrollbar { display:none; }
+
+/* ── SPLASH ── */
+#splash { background:var(--bg); justify-content:center; align-items:center; gap:0; }
+.splash-logo { text-align:center; animation:splashIn .9s cubic-bezier(.34,1.56,.64,1) forwards; }
+.splash-ar { font-size:80px; font-weight:300; color:var(--gold); letter-spacing:6px; font-family:var(--font-ar); line-height:1; }
+.splash-line { height:1px; background:var(--gold); width:0; margin:14px auto; animation:lineExpand 1s 0.8s ease forwards; }
+.splash-en { font-size:18px; letter-spacing:14px; color:var(--text1); font-family:var(--font-en-h); opacity:0; animation:fadeIn .6s 1.4s forwards; }
+.splash-sub { position:absolute; bottom:80px; font-size:12px; letter-spacing:2px; color:var(--text2); opacity:0; animation:fadeIn .6s 1.8s forwards; }
+@keyframes splashIn { from{opacity:0;transform:scale(.65)} to{opacity:1;transform:scale(1)} }
+@keyframes lineExpand { from{width:0} to{width:180px} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── ONBOARDING ── */
+#onboarding { background:var(--bg); }
+.ob-center { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:32px; gap:28px; text-align:center; }
+.ob-emoji { font-size:72px; }
+.ob-title { font-size:26px; font-weight:700; color:var(--text1); }
+.lang-row { display:flex; gap:14px; width:100%; }
+.lang-btn { flex:1; padding:20px 16px; border-radius:18px; border:1px solid var(--gold); background:var(--card); cursor:pointer; transition:all .2s; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.lang-btn:hover, .lang-btn.sel { background:var(--gold); }
+.lang-btn-main { font-size:20px; font-weight:700; color:var(--gold); transition:color .2s; }
+.lang-btn:hover .lang-btn-main, .lang-btn.sel .lang-btn-main { color:#000; }
+.lang-btn-sub { font-size:12px; color:var(--text2); transition:color .2s; }
+.lang-btn:hover .lang-btn-sub, .lang-btn.sel .lang-btn-sub { color:#333; }
+
+.theme-col { display:flex; flex-direction:column; gap:12px; width:100%; }
+.theme-btn { display:flex; align-items:center; gap:14px; padding:18px; border-radius:16px; border:1px solid var(--gold); background:var(--card); cursor:pointer; transition:all .2s; }
+.theme-btn:hover, .theme-btn.sel { background:var(--gold); }
+.theme-btn-emoji { font-size:24px; }
+.theme-btn-label { font-size:15px; font-weight:600; color:var(--gold); transition:color .2s; }
+.theme-btn:hover .theme-btn-label, .theme-btn.sel .theme-btn-label { color:#000; }
+
+.ob-slides-wrap { flex:1; display:flex; flex-direction:column; }
+.ob-slides { display:flex; flex:1; transition:transform .4s ease; }
+.ob-slide { min-width:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:40px; gap:24px; }
+.ob-slide-emoji { font-size:88px; }
+.ob-slide-title { font-size:26px; font-weight:700; color:var(--text1); text-align:center; }
+.ob-slide-desc { font-size:15px; line-height:1.7; color:var(--text2); text-align:center; }
+
+.ob-footer { padding:32px; display:flex; flex-direction:column; align-items:center; gap:16px; }
+.ob-dots { display:flex; gap:8px; }
+.ob-dot { width:8px; height:8px; border-radius:50%; background:var(--text2); transition:background .3s, transform .3s; }
+.ob-dot.active { background:var(--gold); transform:scale(1.3); }
+.ob-next { width:100%; padding:18px; border-radius:14px; background:var(--gold); border:none; color:#000; font-size:16px; font-weight:700; cursor:pointer; transition:transform .15s, opacity .15s; font-family:inherit; }
+.ob-next:active { transform:scale(.97); }
+.ob-skip { font-size:14px; color:var(--text2); cursor:pointer; background:none; border:none; font-family:inherit; }
+
+/* ── HEADER ── */
+.top-bar { padding:12px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:0.5px solid var(--border); background:var(--bg); flex-shrink:0; transition:background .35s; }
+.logo-wrap { display:flex; flex-direction:column; }
+.logo-ar { font-size:26px; font-weight:300; color:var(--gold); letter-spacing:2px; font-family:var(--font-ar); line-height:1.1; }
+.logo-en { font-size:10px; letter-spacing:5px; color:var(--text2); font-family:var(--font-en-h); }
+.top-actions { display:flex; gap:8px; }
+.icon-btn { width:36px; height:36px; border-radius:50%; background:var(--gold-light); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:700; color:var(--gold); transition:all .2s; }
+.icon-btn:hover { background:var(--gold); color:#000; }
+
+/* ── LIVE BANNER ── */
+.live-banner { margin:14px 16px; border-radius:14px; border:1px solid var(--gold); padding:14px; display:flex; align-items:center; gap:12px; background:var(--card); cursor:pointer; transition:transform .15s; flex-shrink:0; }
+.live-banner:hover { transform:scale(.99); }
+.live-badge { display:flex; align-items:center; gap:5px; background:#CC0000; padding:4px 10px; border-radius:20px; flex-shrink:0; }
+.live-dot { width:6px; height:6px; border-radius:50%; background:#FFF; animation:pulse 1.2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.live-badge-text { color:#FFF; font-size:11px; font-weight:700; letter-spacing:1px; }
+.live-banner-title { flex:1; font-size:14px; font-weight:600; color:var(--text1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.live-banner-arrow { font-size:16px; color:var(--gold); font-weight:700; }
+
+/* ── TABS ── */
+.tab-bar { display:flex; border-bottom:0.5px solid var(--border); padding:0 16px; flex-shrink:0; }
+.tab { flex:1; padding:12px 4px; text-align:center; cursor:pointer; position:relative; font-size:11.5px; font-weight:600; color:var(--text2); letter-spacing:.5px; transition:color .2s; }
+.tab.active { color:var(--gold); }
+.tab::after { content:''; position:absolute; bottom:0; left:20%; width:60%; height:2px; background:var(--gold); border-radius:1px; opacity:0; transition:opacity .2s; }
+.tab.active::after { opacity:1; }
+
+/* ── AUCTION CARDS ── */
+.cards-list { padding:16px; display:flex; flex-direction:column; gap:16px; }
+.auction-card { background:var(--card); border-radius:16px; border:0.5px solid var(--border); overflow:hidden; cursor:pointer; transition:transform .2s, box-shadow .2s; }
+.auction-card:hover { transform:scale(.99); box-shadow:0 8px 32px rgba(212,175,55,.08); }
+.auction-card.featured { border-width:1px; }
+.card-image { position:relative; height:200px; overflow:hidden; }
+.card-image img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s; }
+.auction-card:hover .card-image img { transform:scale(1.03); }
+.card-live-badge { position:absolute; top:12px; inset-inline-start:12px; display:flex; align-items:center; gap:4px; background:#CC0000; padding:4px 10px; border-radius:20px; }
+.card-cert { position:absolute; bottom:12px; inset-inline-end:12px; background:var(--gold-light); border:0.5px solid var(--gold); padding:3px 8px; border-radius:6px; font-size:10px; font-weight:600; color:var(--gold); }
+.card-body { padding:16px; display:flex; flex-direction:column; gap:12px; }
+.card-name { font-size:16px; font-weight:700; color:var(--text1); line-height:1.35; }
+.card-meta { display:flex; align-items:center; justify-content:space-between; }
+.card-bid-wrap { display:flex; flex-direction:column; }
+.card-bid-label { font-size:10px; text-transform:uppercase; letter-spacing:.8px; color:var(--text2); margin-bottom:2px; }
+.card-bid { font-size:18px; font-weight:800; color:var(--gold); letter-spacing:.5px; }
+.countdown-compact { background:var(--countdown-bg); border-radius:6px; padding:4px 10px; font-size:13px; font-weight:700; letter-spacing:1px; color:var(--gold); font-variant-numeric:tabular-nums; }
+.countdown-compact.urgent { color:#FF4444; animation:blink .5s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.6} }
+.bid-now-btn { width:100%; padding:12px; border-radius:10px; background:var(--gold); border:none; color:#000; font-size:14px; font-weight:700; letter-spacing:.5px; cursor:pointer; transition:transform .15s, opacity .15s; font-family:inherit; }
+.bid-now-btn:active { transform:scale(.97); opacity:.9; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav { height:80px; background:var(--tab-bar); border-top:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-around; padding-bottom:16px; flex-shrink:0; transition:background .35s; }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:4px 20px; }
+.nav-icon { font-size:22px; opacity:.5; transition:opacity .2s; }
+.nav-label { font-size:10px; color:var(--text2); font-weight:500; transition:color .2s; }
+.nav-item.active .nav-icon { opacity:1; }
+.nav-item.active .nav-label { color:var(--gold); }
+
+/* ── LIVE AUCTION SCREEN ── */
+.live-header { padding:12px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:0.5px solid var(--border); background:var(--bg); flex-shrink:0; transition:background .35s; }
+.back-btn { font-size:15px; font-weight:600; color:var(--gold); cursor:pointer; background:none; border:none; font-family:inherit; display:flex; align-items:center; gap:4px; }
+.live-screen-badge { display:flex; align-items:center; gap:5px; background:#CC0000; padding:4px 10px; border-radius:20px; }
+.attendees { font-size:13px; color:var(--text2); }
+
+.video-frame { height:220px; background:linear-gradient(135deg,var(--surface),var(--card)); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.video-inner { width:88%; height:180px; border:1px solid var(--gold); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+.video-emoji { font-size:44px; }
+.video-label { font-size:13px; color:var(--text2); }
+
+.live-content { padding:20px; display:flex; flex-direction:column; gap:18px; }
+.item-title { font-size:21px; font-weight:700; color:var(--text1); line-height:1.4; }
+
+.section-card { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:18px; }
+.section-label { font-size:10.5px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:var(--text2); margin-bottom:14px; }
+
+/* ── COUNTDOWN FULL ── */
+.countdown-full { display:flex; align-items:center; justify-content:center; gap:4px; }
+.cd-unit { display:flex; flex-direction:column; align-items:center; min-width:56px; }
+.cd-box { background:var(--countdown-bg); border-radius:10px; padding:10px 12px; min-width:56px; text-align:center; }
+.cd-val { font-size:30px; font-weight:700; color:var(--gold); letter-spacing:2px; font-variant-numeric:tabular-nums; }
+.cd-val.urgent { color:#FF4444; }
+.cd-label { font-size:9.5px; color:var(--text2); margin-top:5px; text-transform:uppercase; letter-spacing:1px; }
+.cd-sep { font-size:26px; font-weight:700; color:var(--gold); padding-bottom:18px; }
+
+/* ── BID SECTION ── */
+.bid-section { text-align:center; }
+.current-bid { font-size:44px; font-weight:800; color:var(--gold); letter-spacing:1px; transition:transform .3s; display:inline-block; }
+.current-bid.pulse { animation:bidPulse .4s ease; }
+@keyframes bidPulse { 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
+.winning-tag { font-size:13px; font-weight:600; color:var(--success); margin-top:6px; }
+
+/* ── BID CHIPS ── */
+.chips-row { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+.chip { padding:10px 18px; border-radius:24px; border:1px solid var(--gold); background:var(--gold-light); color:var(--gold); font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; font-family:inherit; }
+.chip:hover, .chip.sel { background:var(--gold); color:#000; }
+
+/* ── PLACE BID BTN ── */
+.place-bid-btn { width:100%; padding:18px; border-radius:14px; background:var(--gold); border:none; color:#000; font-size:17px; font-weight:800; letter-spacing:.5px; cursor:pointer; transition:transform .15s, opacity .2s; font-family:inherit; }
+.place-bid-btn:active { transform:scale(.97); }
+
+/* ── ANTI SNIPE BANNER ── */
+.antsnipe { background:var(--gold-light); border:0.5px solid var(--gold); border-radius:10px; padding:12px; text-align:center; font-size:14px; font-weight:700; color:var(--gold); display:none; }
+.antsnipe.show { display:block; animation:slideDown .3s ease; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── BID LIST ── */
+.bid-list { display:flex; flex-direction:column; }
+.bid-row { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:0.5px solid var(--border); }
+.bid-row:first-child { background:var(--gold-light); }
+.bid-row:last-child { border-bottom:none; }
+.bid-left { display:flex; flex-direction:column; }
+.bid-who { font-size:13px; font-weight:500; color:var(--text2); }
+.bid-time-text { font-size:11px; color:var(--text2); opacity:.7; margin-top:2px; }
+.bid-amount { font-size:15px; font-weight:700; color:var(--text1); }
+.bid-row:first-child .bid-amount { color:var(--gold); }
+
+/* ── ITEM DETAIL ── */
+.detail-header { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:0.5px solid var(--border); background:var(--bg); flex-shrink:0; transition:background .35s; }
+.detail-title { font-size:16px; font-weight:600; color:var(--text1); }
+
+.slider-wrap { position:relative; overflow:hidden; height:300px; }
+.slides-track { display:flex; height:100%; transition:transform .4s ease; }
+.slide-img { min-width:100%; height:100%; object-fit:cover; }
+.slider-dots { position:absolute; bottom:12px; left:0; right:0; display:flex; justify-content:center; gap:6px; }
+.slider-dot { width:6px; height:6px; border-radius:50%; background:var(--text2); transition:background .3s; }
+.slider-dot.active { background:var(--gold); }
+.slide-live-tag { position:absolute; top:12px; inset-inline-start:12px; display:flex; align-items:center; gap:4px; background:#CC0000; padding:4px 10px; border-radius:20px; }
+
+.detail-content { padding:20px; display:flex; flex-direction:column; gap:16px; }
+.detail-name-row { display:flex; align-items:center; gap:12px; }
+.detail-name { font-size:22px; font-weight:700; color:var(--text1); flex:1; line-height:1.35; }
+.cert-circle { width:36px; height:36px; border-radius:50%; border:0.5px solid var(--gold); background:var(--gold-light); display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--gold); flex-shrink:0; }
+
+.bid-info-row { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:16px; display:flex; align-items:center; justify-content:space-between; }
+.bid-info-col { display:flex; flex-direction:column; }
+.bid-info-label { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text2); margin-bottom:4px; }
+.bid-info-val { font-size:24px; font-weight:800; color:var(--gold); }
+
+.info-card { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+.info-card-title { font-size:10.5px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:var(--gold); }
+.info-card-body { font-size:14px; line-height:1.6; color:var(--text1); opacity:.9; }
+
+.cert-card { background:var(--gold-light); border:0.5px solid var(--gold); border-radius:14px; padding:16px; display:flex; align-items:center; gap:12px; }
+.cert-emoji { font-size:34px; }
+.cert-info-title { font-size:14px; font-weight:700; color:var(--gold); }
+.cert-info-sub { font-size:12px; color:var(--text2); }
+
+.cta-btn { width:100%; padding:18px; border-radius:14px; background:var(--gold); border:none; color:#000; font-size:16px; font-weight:700; letter-spacing:.5px; cursor:pointer; transition:all .2s; font-family:inherit; }
+.cta-btn:hover { opacity:.9; }
+.cta-btn:active { transform:scale(.97); }
+.cta-btn.reg { background:var(--gold-light); color:var(--gold); border:1px solid var(--gold); }
+
+/* ── SETTINGS ── */
+.settings-content { padding:20px; display:flex; flex-direction:column; gap:16px; }
+.settings-section { background:var(--card); border:0.5px solid var(--border); border-radius:16px; overflow:hidden; }
+.settings-section-title { font-size:10.5px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:var(--gold); padding:14px 16px 6px; }
+.settings-option { padding:14px 16px; display:flex; align-items:center; justify-content:space-between; border-top:0.5px solid var(--border); cursor:pointer; transition:background .15s; }
+.settings-option:first-of-type { border-top:none; }
+.settings-option:hover { background:var(--gold-light); }
+.settings-opt-label { font-size:15px; font-weight:500; color:var(--text1); }
+.settings-opt-label.active { color:var(--gold); }
+.settings-checkmark { font-size:16px; font-weight:700; color:var(--gold); }
+
+/* ── MODAL ── */
+.modal-overlay { position:absolute; inset:0; background:var(--overlay); display:flex; align-items:flex-end; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity .3s; }
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal { width:100%; background:var(--card); border-top-left-radius:26px; border-top-right-radius:26px; border-top:0.5px solid var(--border); border-inline:0.5px solid var(--border); padding:28px; display:flex; flex-direction:column; gap:18px; transform:translateY(100%); transition:transform .35s cubic-bezier(.32,.72,0,1); }
+.modal-overlay.open .modal { transform:translateY(0); }
+.modal-title { font-size:18px; font-weight:700; color:var(--text1); text-align:center; }
+.modal-bid-amount { font-size:38px; font-weight:800; color:var(--gold); text-align:center; }
+.modal-input { background:var(--input-bg); border:0.5px solid var(--border); border-radius:10px; padding:14px; font-size:18px; color:var(--text1); font-family:inherit; width:100%; outline:none; text-align:inherit; }
+.modal-input:focus { border-color:var(--gold); }
+.modal-actions { display:flex; gap:12px; }
+.modal-cancel { flex:1; padding:16px; border-radius:12px; border:0.5px solid var(--border); background:none; color:var(--text2); font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }
+.modal-confirm { flex:1; padding:16px; border-radius:12px; background:var(--gold); border:none; color:#000; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; }
+
+/* ── TOASTER ── */
+.toast { position:absolute; top:60px; left:50%; transform:translateX(-50%) translateY(-20px); background:var(--card); border:0.5px solid var(--gold); border-radius:12px; padding:12px 20px; font-size:14px; font-weight:600; color:var(--text1); white-space:nowrap; opacity:0; transition:all .3s; z-index:200; pointer-events:none; box-shadow:0 8px 24px rgba(0,0,0,.3); }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ── GOLD DIVIDER ── */
+.gold-divider { height:0.5px; background:var(--border); margin:0; }
+
+/* ── SCROLLBAR CUSTOM ── */
+.screen-body { scrollbar-width:none; }
+.screen-body::-webkit-scrollbar { display:none; }
+
+/* ── DESKTOP HINT ── */
+.desktop-bg {
+  position:fixed; inset:0; background:radial-gradient(ellipse at 30% 40%, rgba(212,175,55,.07), transparent 60%),
+  radial-gradient(ellipse at 70% 60%, rgba(212,175,55,.05), transparent 60%), #050507;
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:24px;
+  z-index:-1;
+}
+.desktop-title { font-family:var(--font-ar); font-size:22px; color:var(--gold); letter-spacing:3px; opacity:.4; margin-bottom:4px; }
+.desktop-sub { font-family:var(--font-en-h); font-size:11px; letter-spacing:8px; color:rgba(212,175,55,.3); }
+@media (max-width:420px) { .desktop-bg { display:none; } }
+</style>
+</head>
+<body>
+
+<!-- Desktop Background -->
+<div class="desktop-bg">
+  <div class="desktop-title">كرم</div>
+  <div class="desktop-sub">KARAM</div>
+</div>
+
+<!-- Phone Shell -->
+<div class="shell" id="app">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time" id="statusTime">9:41</span>
+    <div class="status-icons">
+      <span style="font-size:14px">📶</span>
+      <span style="font-size:14px">🔋</span>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ══════════════════ SPLASH ══════════════════ -->
+  <div class="screen active" id="splash" style="position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:center;align-items:center;background:var(--bg)">
+    <div class="splash-logo">
+      <div class="splash-ar">كرم</div>
+      <div class="splash-line" id="splashLine"></div>
+      <div class="splash-en">KARAM</div>
+    </div>
+    <div class="splash-sub">Luxury Auctions • المزادات الفاخرة</div>
+  </div>
+
+  <!-- ══════════════════ ONBOARDING ══════════════════ -->
+  <div class="screen" id="onboarding" style="position:absolute;inset:0;z-index:40;background:var(--bg);flex-direction:column">
+    <!-- Phase 1: Language -->
+    <div class="ob-center" id="ob-lang">
+      <div class="ob-emoji">🌐</div>
+      <div class="ob-title" id="ob-lang-title">اختر اللغة</div>
+      <div class="lang-row">
+        <div class="lang-btn sel" id="lang-ar" onclick="selectLang('ar')">
+          <div class="lang-btn-main">العربية</div>
+          <div class="lang-btn-sub">Arabic</div>
+        </div>
+        <div class="lang-btn" id="lang-en" onclick="selectLang('en')">
+          <div class="lang-btn-main">English</div>
+          <div class="lang-btn-sub">الإنجليزية</div>
+        </div>
+      </div>
+      <button class="ob-next" onclick="obNextPhase('theme')" id="ob-lang-btn">التالي</button>
+    </div>
+
+    <!-- Phase 2: Theme -->
+    <div class="ob-center" id="ob-theme" style="display:none">
+      <div class="ob-emoji">✨</div>
+      <div class="ob-title" id="ob-theme-title">اختر المظهر</div>
+      <div class="theme-col">
+        <div class="theme-btn sel" id="theme-dark" onclick="selectTheme('dark')">
+          <span class="theme-btn-emoji">🌙</span>
+          <span class="theme-btn-label" id="t-dark-lbl">الوضع الداكن</span>
+        </div>
+        <div class="theme-btn" id="theme-light" onclick="selectTheme('light')">
+          <span class="theme-btn-emoji">☀️</span>
+          <span class="theme-btn-label" id="t-light-lbl">الوضع الفاتح</span>
+        </div>
+        <div class="theme-btn" id="theme-system" onclick="selectTheme('system')">
+          <span class="theme-btn-emoji">⚙️</span>
+          <span class="theme-btn-label" id="t-sys-lbl">تلقائي</span>
+        </div>
+      </div>
+      <button class="ob-next" onclick="obNextPhase('slides')" id="ob-theme-btn">التالي</button>
+    </div>
+
+    <!-- Phase 3: Slides -->
+    <div style="display:none;flex:1;flex-direction:column" id="ob-slides-wrap">
+      <div class="ob-slides-wrap" style="flex:1;overflow:hidden">
+        <div class="ob-slides" id="ob-slides">
+          <div class="ob-slide">
+            <div class="ob-slide-emoji">💎</div>
+            <div class="ob-slide-title" id="ob-s1-title">مجوهرات نادرة</div>
+            <div class="ob-slide-desc" id="ob-s1-desc">اكتشف أندر المقتنيات الفاخرة من حول العالم</div>
+          </div>
+          <div class="ob-slide">
+            <div class="ob-slide-emoji">🔴</div>
+            <div class="ob-slide-title" id="ob-s2-title">مزادات مباشرة</div>
+            <div class="ob-slide-desc" id="ob-s2-desc">شارك في مزادات حية بتقنية عالية وشفافية كاملة</div>
+          </div>
+          <div class="ob-slide">
+            <div class="ob-slide-emoji">🏛️</div>
+            <div class="ob-slide-title" id="ob-s3-title">ثقة واطمئنان</div>
+            <div class="ob-slide-desc" id="ob-s3-desc">كل قطعة معتمدة وموثقة بشهادة أصالة معتمدة</div>
+          </div>
+        </div>
+      </div>
+      <div class="ob-footer">
+        <div class="ob-dots">
+          <div class="ob-dot active" id="dot-0"></div>
+          <div class="ob-dot" id="dot-1"></div>
+          <div class="ob-dot" id="dot-2"></div>
+        </div>
+        <button class="ob-next" id="ob-slide-btn" onclick="obSlideNext()">التالي</button>
+        <button class="ob-skip" id="ob-skip" onclick="finishOnboarding()">تخطي</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ HOME ══════════════════ -->
+  <div class="screen" id="home">
+    <div class="top-bar">
+      <div class="logo-wrap">
+        <div class="logo-ar">كرم</div>
+        <div class="logo-en">KARAM</div>
+      </div>
+      <div class="top-actions">
+        <div class="icon-btn" id="lang-toggle" onclick="toggleLang()" title="Language">ع</div>
+        <div class="icon-btn" onclick="toggleThemeBtn()">☀️</div>
+        <div class="icon-btn" onclick="goTo('settings')">⚙️</div>
+      </div>
+    </div>
+
+    <!-- Live Banner -->
+    <div class="live-banner" onclick="goToLive(items[0])" id="live-banner">
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        <span class="live-badge-text" id="live-badge-txt">مباشر</span>
+      </div>
+      <div class="live-banner-title" id="live-banner-title">رولكس دايتونا ١٦٥٢٠</div>
+      <div class="live-banner-arrow" id="live-arrow">←</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <div class="tab active" id="tab-featured" onclick="switchTab('featured')" data-tab="featured">
+        <span id="t-featured">المميزة</span>
+      </div>
+      <div class="tab" id="tab-ending_soon" onclick="switchTab('ending_soon')" data-tab="ending_soon">
+        <span id="t-ending">تنتهي قريباً</span>
+      </div>
+      <div class="tab" id="tab-new_arrivals" onclick="switchTab('new_arrivals')" data-tab="new_arrivals">
+        <span id="t-new">وصل حديثاً</span>
+      </div>
+    </div>
+
+    <div class="screen-body">
+      <div class="cards-list" id="cards-list"></div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-label" id="nav-home-lbl">الرئيسية</div>
+      </div>
+      <div class="nav-item" onclick="goTo('settings')">
+        <div class="nav-icon">⚙️</div>
+        <div class="nav-label" id="nav-settings-lbl">الإعدادات</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ LIVE AUCTION ══════════════════ -->
+  <div class="screen" id="live-auction">
+    <div class="live-header">
+      <button class="back-btn" id="live-back" onclick="goBack()">← <span id="live-back-txt">رجوع</span></button>
+      <div class="live-screen-badge">
+        <div class="live-dot"></div>
+        <span style="color:#FFF;font-size:11px;font-weight:700" id="live-lbl">مباشر</span>
+      </div>
+      <div class="attendees">👥 <span id="attendees-count">147</span></div>
+    </div>
+
+    <div class="screen-body">
+      <div class="video-frame">
+        <div class="video-inner">
+          <div class="video-emoji">📺</div>
+          <div class="video-label" id="live-stream-lbl">البث المباشر</div>
+        </div>
+      </div>
+
+      <div class="live-content">
+        <div class="item-title" id="live-item-title">رولكس دايتونا ١٦٥٢٠</div>
+
+        <!-- Countdown -->
+        <div class="section-card">
+          <div class="section-label" id="time-left-lbl">الوقت المتبقي</div>
+          <div class="countdown-full" id="cd-full">
+            <div class="cd-unit">
+              <div class="cd-box"><div class="cd-val" id="cd-h">00</div></div>
+              <div class="cd-label" id="cd-h-lbl">ساعات</div>
+            </div>
+            <div class="cd-sep">:</div>
+            <div class="cd-unit">
+              <div class="cd-box"><div class="cd-val" id="cd-m">00</div></div>
+              <div class="cd-label" id="cd-m-lbl">دقائق</div>
+            </div>
+            <div class="cd-sep">:</div>
+            <div class="cd-unit">
+              <div class="cd-box"><div class="cd-val" id="cd-s">00</div></div>
+              <div class="cd-label" id="cd-s-lbl">ثواني</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anti-snipe -->
+        <div class="antsnipe" id="antsnipe">⏱ <span id="antsnipe-txt">تم تمديد المزاد ٣٠ ثانية</span></div>
+
+        <!-- Current Bid -->
+        <div class="section-card bid-section">
+          <div class="section-label" id="cur-bid-lbl">المزايدة الحالية</div>
+          <div class="current-bid" id="current-bid-val">٢٨٥٬٠٠٠ ر.س</div>
+          <div class="winning-tag" id="winning-tag">أنت الفائز حالياً</div>
+        </div>
+
+        <!-- Bid Chips -->
+        <div>
+          <div class="section-label" style="margin-bottom:10px" id="bid-inc-lbl">زيادة المزايدة</div>
+          <div class="chips-row" id="chips-row">
+            <button class="chip" onclick="selectChip(500,this)">+٥٠٠ ر.س</button>
+            <button class="chip" onclick="selectChip(1000,this)">+١٬٠٠٠ ر.س</button>
+            <button class="chip" onclick="selectChip(5000,this)">+٥٬٠٠٠ ر.س</button>
+            <button class="chip" onclick="selectChip(10000,this)">+١٠٬٠٠٠ ر.س</button>
+          </div>
+        </div>
+
+        <button class="place-bid-btn" onclick="openBidModal()" id="place-bid-btn">ضع مزايدتك</button>
+
+        <!-- Bid List -->
+        <div class="section-card" id="bid-list-card" style="padding:0;overflow:hidden">
+          <div style="padding:14px 16px 6px">
+            <div class="section-label" id="recent-bids-lbl">آخر المزايدات</div>
+          </div>
+          <div class="bid-list" id="bid-list"></div>
+        </div>
+
+        <div style="height:30px"></div>
+      </div>
+    </div>
+
+    <!-- Bid Modal -->
+    <div class="modal-overlay" id="bid-modal">
+      <div class="modal">
+        <div class="modal-title" id="confirm-bid-title">تأكيد المزايدة</div>
+        <div class="modal-bid-amount" id="modal-bid-amount">٠ ر.س</div>
+        <div class="modal-actions">
+          <button class="modal-cancel" onclick="closeBidModal()" id="cancel-btn">إلغاء</button>
+          <button class="modal-confirm" onclick="confirmBid()" id="confirm-btn">تأكيد</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ ITEM DETAIL ══════════════════ -->
+  <div class="screen" id="item-detail">
+    <div class="detail-header">
+      <button class="back-btn" id="detail-back" onclick="goBack()">←</button>
+      <div class="detail-title" id="item-details-title">تفاصيل القطعة</div>
+      <div style="width:32px"></div>
+    </div>
+
+    <div class="screen-body">
+      <!-- Image Slider -->
+      <div class="slider-wrap" id="slider-wrap">
+        <div class="slides-track" id="slides-track"></div>
+        <div class="slider-dots" id="slider-dots"></div>
+        <div class="slide-live-tag" id="slide-live-tag" style="display:none">
+          <div class="live-dot"></div>
+          <span style="color:#FFF;font-size:11px;font-weight:700" id="slide-live-txt">مباشر</span>
+        </div>
+      </div>
+
+      <div class="detail-content">
+        <div class="detail-name-row">
+          <div class="detail-name" id="detail-name">رولكس دايتونا</div>
+          <div class="cert-circle">✓</div>
+        </div>
+
+        <div class="bid-info-row">
+          <div class="bid-info-col">
+            <div class="bid-info-label" id="cur-bid-lbl2">المزايدة الحالية</div>
+            <div class="bid-info-val" id="detail-bid">٢٨٥٬٠٠٠ ر.س</div>
+          </div>
+          <div>
+            <div class="bid-info-label" id="time-left-lbl2" style="text-align:end">الوقت المتبقي</div>
+            <div class="countdown-compact" id="detail-countdown" style="margin-top:4px">١:٥٩:٠٠</div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="countdown-full" id="cd-full2">
+            <div class="cd-unit">
+              <div class="cd-box"><div class="cd-val" id="cd2-h">01</div></div>
+              <div class="cd-label" id="cd2-h-lbl">ساعات</div>
+            </div>
+            <div class="cd-sep">:</div>
+            <div class="cd-unit">
+              <div class="cd-box"><div class="cd-val" id="cd2-m">59</div></div>
+              <div class="cd-label" id="cd2-m-lbl">دقائق</div>
+            </div>
+            <div class="cd-sep">:</div>
+            <div class="cd-unit">
+              <div class="cd-box"><div class="cd-val" id="cd2-s">00</div></div>
+              <div class="cd-label" id="cd2-s-lbl">ثواني</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title" id="desc-title">الوصف</div>
+          <div class="info-card-body" id="item-desc">وصف القطعة</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title" id="cond-title">الحالة</div>
+          <div class="info-card-body" id="item-cond">حالة القطعة</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title" id="prov-title">المصدر والتاريخ</div>
+          <div class="info-card-body" id="item-prov">مصدر القطعة</div>
+        </div>
+
+        <div class="cert-card">
+          <div class="cert-emoji">🏛️</div>
+          <div>
+            <div class="cert-info-title" id="cert-title">شهادة الأصالة</div>
+            <div class="cert-info-sub" id="cert-sub">معتمد</div>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title" id="ship-title">الشحن والتوصيل</div>
+          <div class="info-card-body">🔒 <span id="ship-secure">شحن آمن ومؤمَّن</span></div>
+          <div class="info-card-body" style="color:var(--gold)">✈️ <span id="ship-free">شحن مجاني داخل المملكة</span></div>
+        </div>
+
+        <button class="cta-btn" id="detail-cta" onclick="detailCTA()">سجّل للمزاد</button>
+        <div style="height:30px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SETTINGS ══════════════════ -->
+  <div class="screen" id="settings">
+    <div class="detail-header">
+      <button class="back-btn" onclick="goBack()">←</button>
+      <div class="detail-title" id="settings-title">الإعدادات</div>
+      <div style="width:32px"></div>
+    </div>
+    <div class="screen-body">
+      <div class="settings-content">
+        <div class="settings-section">
+          <div class="settings-section-title" id="s-lang-title">إعدادات اللغة</div>
+          <div class="settings-option" onclick="setLang('ar')">
+            <span class="settings-opt-label" id="s-ar" style="color:var(--gold)">🇸🇦 العربية</span>
+            <span class="settings-checkmark" id="s-ar-check">✓</span>
+          </div>
+          <div class="settings-option" onclick="setLang('en')">
+            <span class="settings-opt-label" id="s-en">🇺🇸 English</span>
+            <span class="settings-checkmark" id="s-en-check" style="display:none">✓</span>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title" id="s-appear-title">المظهر</div>
+          <div class="settings-option" onclick="setThemeSetting('dark')">
+            <span class="settings-opt-label" id="s-dark" style="color:var(--gold)">🌙 <span id="s-dark-lbl">الوضع الداكن</span></span>
+            <span class="settings-checkmark" id="s-dark-check">✓</span>
+          </div>
+          <div class="settings-option" onclick="setThemeSetting('light')">
+            <span class="settings-opt-label" id="s-light">☀️ <span id="s-light-lbl">الوضع الفاتح</span></span>
+            <span class="settings-checkmark" id="s-light-check" style="display:none">✓</span>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title" id="s-about-title">التطبيق</div>
+          <div class="settings-option" style="cursor:default">
+            <span class="settings-opt-label" style="opacity:.6">كرم | Karam — v1.0.0</span>
+          </div>
+          <div class="settings-option" style="cursor:default">
+            <span class="settings-opt-label" style="opacity:.6" id="s-tagline">المزادات الفاخرة</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════
+const now = Date.now();
+const H = 3600000, D = 86400000;
+const items = [
+  {
+    id:'1', isLive:true, featured:true, certified:true, category:'watch',
+    nameAr:'رولكس دايتونا ١٦٥٢٠', nameEn:'Rolex Daytona 16520',
+    descAr:'ساعة رولكس دايتونا الأسطورية، إصدار ١٩٩٢، هيكل من الستانلس ستيل مع مينا بيضاء نادرة. واحدة من أندر الإصدارات التي يبحث عنها هواة الساعات الفاخرة حول العالم.',
+    descEn:'The legendary Rolex Daytona ref. 16520, 1992 edition, stainless steel with rare white dial. One of the most sought-after references among serious collectors worldwide.',
+    condAr:'ممتازة جداً — مع الصندوق والوثائق الأصلية', condEn:'Excellent — Full set with original box & papers',
+    provAr:'مجموعة خاصة من جنيف، سويسرا', provEn:'Private Geneva collection, Switzerland',
+    currentBid:285000, startBid:200000, reserve:300000, increment:5000,
+    endTime: now + 2*H, attendees:147,
+    images:['https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800','https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800','https://images.unsplash.com/photo-1609587312208-cea54be969e7?w=800'],
+  },
+  {
+    id:'2', isLive:true, featured:true, certified:true, category:'watch',
+    nameAr:'باتيك فيليب نوتيلوس ٥٧١١', nameEn:'Patek Philippe Nautilus 5711',
+    descAr:'باتيك فيليب نوتيلوس المرجع ٥٧١١/١أ، مينا زرقاء مميزة. الساعة التي رفعت معيار الساعات الفاخرة إلى مستوى غير مسبوق.',
+    descEn:'Patek Philippe Nautilus ref. 5711/1A-010, iconic blue dial. The timepiece that redefined luxury sports watches.',
+    condAr:'مينت — لم تُستخدم قط، كامل الملحقات', condEn:'Mint — Unworn, complete set',
+    provAr:'من وكيل معتمد في جنيف ٢٠٢١', provEn:'Authorized dealer Geneva, 2021',
+    currentBid:620000, startBid:500000, reserve:650000, increment:10000,
+    endTime: now + 4*H, attendees:284,
+    images:['https://images.unsplash.com/photo-1619134778706-7015533a6150?w=800','https://images.unsplash.com/photo-1551818255-e7b168f61ac1?w=800'],
+  },
+  {
+    id:'3', isLive:false, featured:false, certified:true, category:'jewelry',
+    nameAr:'سوار الماس تنس', nameEn:'Diamond Tennis Bracelet',
+    descAr:'سوار تنس استثنائي من الذهب الأبيض عيار ١٨ قيراطاً، مرصع بـ ٤٢ حجرة ماس طبيعية بإجمالي وزن ١٥ قيراطاً. تصنيف D، نقاء VVS1.',
+    descEn:'Exceptional 18k white gold tennis bracelet with 42 natural diamonds totaling 15 carats. D color, VVS1 clarity, GIA certified.',
+    condAr:'ممتازة — مع تقرير GIA', condEn:'Excellent — with GIA report',
+    provAr:'دار كارتييه، باريس ٢٠١٨', provEn:'Cartier, Paris, 2018',
+    currentBid:185000, startBid:150000, reserve:200000, increment:5000,
+    endTime: now + 6*H, attendees:89,
+    images:['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800','https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=800'],
+  },
+  {
+    id:'4', isLive:false, featured:false, certified:true, category:'watch',
+    nameAr:'أوديمار بيغيه رويال أوك', nameEn:'Audemars Piguet Royal Oak',
+    descAr:'أوديمار بيغيه رويال أوك المرجع ١٥٢٠٢، فولاذ مصقول مع مينا رمادية. تحفة فنية هندسية تجمع بين الأناقة والقوة.',
+    descEn:'Audemars Piguet Royal Oak ref. 15202ST, polished steel with grey tapisserie dial. A geometric masterpiece.',
+    condAr:'ممتازة جداً — مستعملة بعناية', condEn:'Very Good — Carefully worn',
+    provAr:'مجموعة خاصة، دبي', provEn:'Private collection, Dubai',
+    currentBid:410000, startBid:350000, reserve:450000, increment:10000,
+    endTime: now + D, attendees:156,
+    images:['https://images.unsplash.com/photo-1612817288484-6f916006741a?w=800'],
+  },
+  {
+    id:'5', isLive:false, featured:true, certified:true, category:'jewelry',
+    nameAr:'خاتم الخطوبة الماسي', nameEn:'Diamond Engagement Ring',
+    descAr:'خاتم من البلاتين ٩٥٠، ماسة مركزية ٣.٢٨ قيراط، تصنيف E VS1، مقطوعة وسادة، مع هالة من الماس.',
+    descEn:'Platinum 950 ring, 3.28ct center diamond E VS1 cushion cut, surrounded by diamond halo.',
+    condAr:'مينت — جديدة تماماً', condEn:'Mint — Brand new',
+    provAr:'هاري وينستون، نيويورك', provEn:'Harry Winston, New York',
+    currentBid:95000, startBid:80000, reserve:110000, increment:2500,
+    endTime: now + 2*D, attendees:67,
+    images:['https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800','https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800'],
+  },
+  {
+    id:'6', isLive:false, featured:false, certified:true, category:'watch',
+    nameAr:'ريتشارد ميل RM 011', nameEn:'Richard Mille RM 011',
+    descAr:'ريتشارد ميل RM ٠١١ تيتانيوم، كرونوغراف متطور بهيكل من التيتانيوم والكربون. تحفة من الساعات الفاخرة الحديثة.',
+    descEn:'Richard Mille RM 011 Titanium flyback chronograph, titanium & carbon case, modern haute horlogerie.',
+    condAr:'ممتازة — مع الصندوق والوثائق', condEn:'Excellent — Full set with box & papers',
+    provAr:'مجموعة خاصة أوروبية ٢٠٢٠', provEn:'European private collection, 2020',
+    currentBid:520000, startBid:450000, reserve:580000, increment:10000,
+    endTime: now + 3*D, attendees:203,
+    images:['https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=800'],
+  },
+];
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let lang = 'ar';
+let theme = 'dark';
+let currentScreen = 'splash';
+let prevScreen = null;
+let activeTab = 'featured';
+let selectedChip = 0;
+let activeLiveItem = items[0];
+let activeDetailItem = items[0];
+let detailSlideIndex = 0;
+let obSlideIndex = 0;
+let obPhase = 'lang';
+let bidHistory = [];
+let liveEndTime = items[0].endTime;
+let detailRegistered = {};
+
+const tr = {
+  ar: {
+    live:'مباشر', bid_now:'زايد الآن', current_bid:'المزايدة الحالية', time_left:'الوقت المتبقي',
+    certified:'معتمد', back:'رجوع', place_bid:'ضع مزايدتك', confirm_bid:'تأكيد المزايدة',
+    cancel:'إلغاء', confirm:'تأكيد', recent_bids:'آخر المزايدات', bid_increment:'زيادة المزايدة',
+    winning:'أنت الفائز حالياً', anonymous:'مزايد مجهول', extended:'تم تمديد المزاد ٣٠ ثانية',
+    video_stream:'البث المباشر', item_details:'تفاصيل القطعة', description:'الوصف', condition:'الحالة',
+    provenance:'المصدر والتاريخ', shipping:'الشحن والتوصيل', secure_shipping:'شحن آمن ومؤمَّن',
+    free_shipping:'شحن مجاني داخل المملكة', certificate:'شهادة الأصالة', register:'سجّل للمزاد',
+    registered:'مسجّل', settings:'الإعدادات', language_settings:'إعدادات اللغة', appearance:'المظهر',
+    dark_mode:'الوضع الداكن', light_mode:'الوضع الفاتح', system_mode:'تلقائي', tagline:'المزادات الفاخرة',
+    featured:'المميزة', ending_soon:'تنتهي قريباً', new_arrivals:'وصل حديثاً',
+    hours:'ساعات', minutes:'دقائق', seconds:'ثواني', days:'أيام', home:'الرئيسية', auctions:'المزادات',
+    live_auction:'المزاد المباشر', choose_language:'اختر اللغة', choose_theme:'اختر المظهر',
+    get_started:'ابدأ الآن', next:'التالي', skip:'تخطي', bid_placed:'تم وضع مزايدتك ✓',
+    min_bid:'الحد الأدنى للمزايدة',
+    ob1_title:'مجوهرات نادرة', ob1_desc:'اكتشف أندر المقتنيات الفاخرة من حول العالم',
+    ob2_title:'مزادات مباشرة', ob2_desc:'شارك في مزادات حية بتقنية عالية وشفافية كاملة',
+    ob3_title:'ثقة واطمئنان', ob3_desc:'كل قطعة معتمدة وموثقة بشهادة أصالة معتمدة',
+  },
+  en: {
+    live:'Live', bid_now:'Bid Now', current_bid:'Current Bid', time_left:'Time Left',
+    certified:'Certified', back:'Back', place_bid:'Place Bid', confirm_bid:'Confirm Bid',
+    cancel:'Cancel', confirm:'Confirm', recent_bids:'Recent Bids', bid_increment:'Bid Increment',
+    winning:"You're Winning", anonymous:'Anonymous Bidder', extended:'Auction extended by 30 seconds',
+    video_stream:'Live Stream', item_details:'Item Details', description:'Description', condition:'Condition',
+    provenance:'Provenance', shipping:'Shipping', secure_shipping:'Secure & Insured Shipping',
+    free_shipping:'Free shipping within KSA', certificate:'Certificate of Authenticity', register:'Register for Auction',
+    registered:'Registered', settings:'Settings', language_settings:'Language', appearance:'Appearance',
+    dark_mode:'Dark Mode', light_mode:'Light Mode', system_mode:'System', tagline:'Luxury Auctions',
+    featured:'Featured', ending_soon:'Ending Soon', new_arrivals:'New Arrivals',
+    hours:'Hours', minutes:'Min', seconds:'Sec', days:'Days', home:'Home', auctions:'Auctions',
+    live_auction:'Live Auction', choose_language:'Choose Language', choose_theme:'Choose Theme',
+    get_started:'Get Started', next:'Next', skip:'Skip', bid_placed:'Bid Placed ✓',
+    min_bid:'Minimum Bid',
+    ob1_title:'Rare Collectibles', ob1_desc:'Discover the world\'s most exclusive luxury pieces',
+    ob2_title:'Live Auctions', ob2_desc:'Participate in live auctions with full transparency',
+    ob3_title:'Trust & Assurance', ob3_desc:'Every piece certified with a verified certificate',
+  }
+};
+const t = k => tr[lang][k] || k;
+
+// ══════════════════════════════════════════════
+//  CURRENCY FORMAT
+// ══════════════════════════════════════════════
+function fmtCurrency(n) {
+  if (lang === 'ar') return n.toLocaleString('ar-SA') + ' ر.س';
+  return 'SAR ' + n.toLocaleString('en');
+}
+function fmtChip(n) {
+  if (lang === 'ar') return '+' + n.toLocaleString('ar-SA') + ' ر.س';
+  return '+SAR ' + n.toLocaleString('en');
+}
+
+// ══════════════════════════════════════════════
+//  SCREEN NAVIGATION
+// ══════════════════════════════════════════════
+function goTo(screen, fromRight=true) {
+  const old = document.getElementById(currentScreen);
+  const next = document.getElementById(screen);
+  if (old) { old.classList.remove('active'); old.classList.add(fromRight ? 'slide-left' : ''); setTimeout(()=>old.classList.remove('slide-left'),300); }
+  prevScreen = currentScreen;
+  currentScreen = screen;
+  if (next) { next.style.transform = fromRight ? 'translateX(30px)' : 'translateX(-30px)'; next.classList.add('active'); setTimeout(()=>next.style.transform='',10); }
+}
+function goBack() { if (prevScreen) goTo(prevScreen, false); }
+
+// ══════════════════════════════════════════════
+//  SPLASH → ONBOARDING
+// ══════════════════════════════════════════════
+setTimeout(()=>{
+  const splash = document.getElementById('splash');
+  splash.style.opacity='0'; splash.style.transition='opacity .5s';
+  setTimeout(()=>{ splash.style.display='none'; goTo('onboarding'); }, 500);
+}, 3000);
+
+// ══════════════════════════════════════════════
+//  ONBOARDING
+// ══════════════════════════════════════════════
+function selectLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('lang-ar').classList.toggle('sel', l==='ar');
+  document.getElementById('lang-en').classList.toggle('sel', l==='en');
+  document.getElementById('ob-lang-title').textContent = t('choose_language');
+  document.getElementById('ob-lang-btn').textContent = t('next');
+}
+function selectTheme(th) {
+  theme = th;
+  document.documentElement.setAttribute('data-theme', th === 'light' ? 'light' : 'dark');
+  document.getElementById('theme-dark').classList.toggle('sel', th==='dark');
+  document.getElementById('theme-light').classList.toggle('sel', th==='light');
+  document.getElementById('theme-system').classList.toggle('sel', th==='system');
+  updateThemeToggleBtn();
+}
+function obNextPhase(next) {
+  if (next === 'theme') {
+    document.getElementById('ob-lang').style.display='none';
+    document.getElementById('ob-theme').style.display='flex';
+    document.getElementById('ob-theme-title').textContent = t('choose_theme');
+    document.getElementById('ob-theme-btn').textContent = t('next');
+    document.getElementById('t-dark-lbl').textContent = t('dark_mode');
+    document.getElementById('t-light-lbl').textContent = t('light_mode');
+    document.getElementById('t-sys-lbl').textContent = t('system_mode');
+  } else if (next === 'slides') {
+    document.getElementById('ob-theme').style.display='none';
+    const sw = document.getElementById('ob-slides-wrap');
+    sw.style.display='flex';
+    updateObSlide();
+  }
+}
+function updateObSlide() {
+  document.getElementById('ob-s1-title').textContent = t('ob1_title');
+  document.getElementById('ob-s1-desc').textContent = t('ob1_desc');
+  document.getElementById('ob-s2-title').textContent = t('ob2_title');
+  document.getElementById('ob-s2-desc').textContent = t('ob2_desc');
+  document.getElementById('ob-s3-title').textContent = t('ob3_title');
+  document.getElementById('ob-s3-desc').textContent = t('ob3_desc');
+  document.getElementById('ob-skip').textContent = t('skip');
+  const isLast = obSlideIndex === 2;
+  document.getElementById('ob-slide-btn').textContent = isLast ? t('get_started') : t('next');
+  document.getElementById('ob-skip').style.display = isLast ? 'none' : 'block';
+  document.getElementById('ob-slides').style.transform = `translateX(${obSlideIndex * (lang==='ar'?100:-100)}%)`;
+  [0,1,2].forEach(i=>document.getElementById('dot-'+i).classList.toggle('active',i===obSlideIndex));
+}
+function obSlideNext() {
+  if (obSlideIndex < 2) { obSlideIndex++; updateObSlide(); }
+  else finishOnboarding();
+}
+function finishOnboarding() {
+  goTo('home');
+  renderCards();
+  applyAllTranslations();
+  startStatusClock();
+  startLiveBidding();
+}
+
+// ══════════════════════════════════════════════
+//  LANGUAGE TOGGLE
+// ══════════════════════════════════════════════
+function toggleLang() { setLang(lang==='ar'?'en':'ar'); }
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l==='ar'?'rtl':'ltr';
+  document.getElementById('lang-toggle').textContent = l==='ar'?'ع':'EN';
+  document.getElementById('s-ar').style.color = l==='ar'?'var(--gold)':'var(--text1)';
+  document.getElementById('s-en').style.color = l==='en'?'var(--gold)':'var(--text1)';
+  document.getElementById('s-ar-check').style.display = l==='ar'?'':'none';
+  document.getElementById('s-en-check').style.display = l==='en'?'':'none';
+  applyAllTranslations();
+  renderCards();
+  if (currentScreen==='live-auction') renderLiveScreen();
+  if (currentScreen==='item-detail') renderDetailScreen();
+  updateLiveBanner();
+}
+
+// ══════════════════════════════════════════════
+//  THEME TOGGLE
+// ══════════════════════════════════════════════
+function toggleThemeBtn() { setThemeSetting(theme==='dark'?'light':'dark'); }
+function setThemeSetting(th) {
+  theme = th;
+  document.documentElement.setAttribute('data-theme', th==='light'?'light':'dark');
+  updateThemeToggleBtn();
+  document.getElementById('s-dark').style.color = th==='dark'?'var(--gold)':'var(--text1)';
+  document.getElementById('s-light').style.color = th==='light'?'var(--gold)':'var(--text1)';
+  document.getElementById('s-dark-check').style.display = th==='dark'?'':'none';
+  document.getElementById('s-light-check').style.display = th==='light'?'':'none';
+}
+function updateThemeToggleBtn() {
+  const btns = document.querySelectorAll('.icon-btn');
+  btns[1].textContent = theme==='dark'?'☀️':'🌙';
+}
+
+// ══════════════════════════════════════════════
+//  STATUS CLOCK
+// ══════════════════════════════════════════════
+function startStatusClock() {
+  const update = () => {
+    const d = new Date();
+    let h = d.getHours(), m = d.getMinutes();
+    if (lang==='ar') {
+      document.getElementById('statusTime').textContent = `${h}:${String(m).padStart(2,'0')}`;
+    } else {
+      const ampm = h>=12?'PM':'AM'; h=h%12||12;
+      document.getElementById('statusTime').textContent = `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+    }
+  };
+  update(); setInterval(update, 30000);
+}
+
+// ══════════════════════════════════════════════
+//  COUNTDOWN UTILS
+// ══════════════════════════════════════════════
+function getTimeLeft(endTime) {
+  const diff = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+  return { days:Math.floor(diff/86400), hours:Math.floor((diff%86400)/3600), minutes:Math.floor((diff%3600)/60), seconds:diff%60, total:diff };
+}
+function pad(n) { return String(n).padStart(2,'0'); }
+function fmtCompact(endTime) {
+  const {days,hours,minutes,seconds} = getTimeLeft(endTime);
+  if (days>0) return pad(days)+'d '+pad(hours)+'h';
+  return pad(hours)+':'+pad(minutes)+':'+pad(seconds);
+}
+
+// Update all card countdowns
+setInterval(()=>{
+  document.querySelectorAll('[data-countdown]').forEach(el=>{
+    const id = el.dataset.countdown;
+    const item = items.find(i=>i.id===id);
+    if (!item) return;
+    const t2 = getTimeLeft(item.endTime);
+    el.textContent = fmtCompact(item.endTime);
+    el.classList.toggle('urgent', t2.total<=10);
+  });
+  updateLiveCountdown();
+  updateDetailCountdown();
+}, 1000);
+
+// ══════════════════════════════════════════════
+//  RENDER CARDS
+// ══════════════════════════════════════════════
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t2=>t2.classList.toggle('active', t2.dataset.tab===tab));
+  renderCards();
+}
+function getTabItems() {
+  if (activeTab==='featured') return items.filter(i=>i.featured);
+  if (activeTab==='ending_soon') return [...items].sort((a,b)=>a.endTime-b.endTime).slice(0,4);
+  return [...items].reverse();
+}
+function renderCards() {
+  const list = document.getElementById('cards-list');
+  list.innerHTML = '';
+  getTabItems().forEach(item=>{
+    const name = lang==='ar'?item.nameAr:item.nameEn;
+    const card = document.createElement('div');
+    card.className = 'auction-card' + (item.featured?' featured':'');
+    card.innerHTML = `
+      <div class="card-image">
+        <img src="${item.images[0]}" alt="${name}" loading="lazy">
+        ${item.isLive?`<div class="card-live-badge"><div class="live-dot"></div><span style="color:#FFF;font-size:11px;font-weight:700">${t('live')}</span></div>`:''}
+        ${item.certified?`<div class="card-cert">✓ ${t('certified')}</div>`:''}
+      </div>
+      <div class="card-body">
+        <div class="card-name">${name}</div>
+        <div class="card-meta">
+          <div class="card-bid-wrap">
+            <div class="card-bid-label">${t('current_bid')}</div>
+            <div class="card-bid">${fmtCurrency(item.currentBid)}</div>
+          </div>
+          <div class="countdown-compact" data-countdown="${item.id}">${fmtCompact(item.endTime)}</div>
+        </div>
+        <button class="bid-now-btn">${t('bid_now')}</button>
+      </div>`;
+    card.querySelector('.card-body').addEventListener('click', e=>{ if(!e.target.matches('.bid-now-btn')) return; goToLive(item); });
+    card.querySelector('.card-image').addEventListener('click', ()=>goToDetail(item));
+    card.querySelector('.card-name').addEventListener('click', ()=>goToDetail(item));
+    list.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  LIVE BANNER
+// ══════════════════════════════════════════════
+function updateLiveBanner() {
+  const live = items.find(i=>i.isLive);
+  if (!live) return;
+  document.getElementById('live-banner-title').textContent = lang==='ar'?live.nameAr:live.nameEn;
+  document.getElementById('live-badge-txt').textContent = t('live');
+  document.getElementById('live-arrow').textContent = lang==='ar'?'←':'→';
+}
+function goToLive(item) {
+  activeLiveItem = item;
+  liveEndTime = item.endTime;
+  selectedChip = 0;
+  renderLiveScreen();
+  goTo('live-auction');
+}
+
+// ══════════════════════════════════════════════
+//  LIVE AUCTION SCREEN
+// ══════════════════════════════════════════════
+function renderLiveScreen() {
+  const item = activeLiveItem;
+  document.getElementById('live-item-title').textContent = lang==='ar'?item.nameAr:item.nameEn;
+  document.getElementById('live-item-title').style.textAlign = lang==='ar'?'right':'left';
+  document.getElementById('current-bid-val').textContent = fmtCurrency(item.currentBid);
+  document.getElementById('attendees-count').textContent = item.attendees;
+  document.getElementById('live-back').innerHTML = (lang==='ar'?'→':'←') + ` <span id="live-back-txt">${t('back')}</span>`;
+  document.getElementById('live-lbl').textContent = t('live');
+  document.getElementById('live-stream-lbl').textContent = t('video_stream');
+  document.getElementById('time-left-lbl').textContent = t('time_left');
+  document.getElementById('cur-bid-lbl').textContent = t('current_bid');
+  document.getElementById('winning-tag').textContent = t('winning');
+  document.getElementById('bid-inc-lbl').textContent = t('bid_increment');
+  document.getElementById('recent-bids-lbl').textContent = t('recent_bids');
+  document.getElementById('place-bid-btn').textContent = t('place_bid');
+  document.getElementById('antsnipe-txt').textContent = t('extended');
+  // chips
+  document.getElementById('cd-h-lbl').textContent = t('hours');
+  document.getElementById('cd-m-lbl').textContent = t('minutes');
+  document.getElementById('cd-s-lbl').textContent = t('seconds');
+  renderChips();
+  renderBidList();
+}
+function updateLiveCountdown() {
+  if (currentScreen !== 'live-auction') return;
+  const {hours,minutes,seconds,total} = getTimeLeft(liveEndTime);
+  const urgent = total <= 10;
+  ['cd-h','cd-m','cd-s'].forEach(id=>document.getElementById(id).classList.toggle('urgent',urgent));
+  document.getElementById('cd-h').textContent = pad(hours);
+  document.getElementById('cd-m').textContent = pad(minutes);
+  document.getElementById('cd-s').textContent = pad(seconds);
+}
+function renderChips() {
+  const chips = [500,1000,5000,10000];
+  const row = document.getElementById('chips-row');
+  row.innerHTML='';
+  chips.forEach(c=>{
+    const btn = document.createElement('button');
+    btn.className = 'chip' + (selectedChip===c?' sel':'');
+    btn.textContent = fmtChip(c);
+    btn.onclick = ()=>selectChip(c,btn);
+    row.appendChild(btn);
+  });
+}
+function selectChip(amt, btn) {
+  selectedChip = selectedChip===amt?0:amt;
+  renderChips();
+  if (selectedChip>0) {
+    document.getElementById('modal-bid-amount').textContent = fmtCurrency(activeLiveItem.currentBid+selectedChip);
+  }
+}
+function renderBidList() {
+  const list = document.getElementById('bid-list');
+  list.innerHTML='';
+  if (!bidHistory.length) return;
+  bidHistory.slice(0,8).forEach((b,i)=>{
+    const row = document.createElement('div');
+    row.className='bid-row';
+    const isYou = b.who==='YOU';
+    row.innerHTML=`
+      <div class="bid-left">
+        <div class="bid-who">${isYou?(lang==='ar'?'🏆 أنت':'🏆 You'):`${t('anonymous')} #${b.who}`}</div>
+        <div class="bid-time-text">${b.time}</div>
+      </div>
+      <div class="bid-amount">${fmtCurrency(b.amount)}</div>`;
+    list.appendChild(row);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  BID MODAL
+// ══════════════════════════════════════════════
+function openBidModal() {
+  const amount = selectedChip>0?activeLiveItem.currentBid+selectedChip:activeLiveItem.currentBid+activeLiveItem.increment;
+  document.getElementById('modal-bid-amount').textContent = fmtCurrency(amount);
+  document.getElementById('confirm-bid-title').textContent = t('confirm_bid');
+  document.getElementById('cancel-btn').textContent = t('cancel');
+  document.getElementById('confirm-btn').textContent = t('confirm');
+  document.getElementById('bid-modal').classList.add('open');
+}
+function closeBidModal() {
+  document.getElementById('bid-modal').classList.remove('open');
+}
+function confirmBid() {
+  const increment = selectedChip>0?selectedChip:activeLiveItem.increment;
+  const newBid = activeLiveItem.currentBid + increment;
+  placeBid(newBid, 'YOU');
+  closeBidModal();
+  showToast(t('bid_placed'));
+}
+function placeBid(amount, who) {
+  activeLiveItem.currentBid = amount;
+  const now2 = new Date();
+  const timeStr = now2.toLocaleTimeString(lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  bidHistory.unshift({amount, who, time:timeStr});
+  if (bidHistory.length>20) bidHistory.pop();
+  document.getElementById('current-bid-val').textContent = fmtCurrency(amount);
+  const el = document.getElementById('current-bid-val');
+  el.classList.add('pulse');
+  setTimeout(()=>el.classList.remove('pulse'),500);
+  renderBidList();
+  // Anti snipe
+  const tl = getTimeLeft(liveEndTime);
+  if (tl.total<=10 && tl.total>0) {
+    liveEndTime += 30000;
+    const snipe = document.getElementById('antsnipe');
+    snipe.classList.add('show');
+    setTimeout(()=>snipe.classList.remove('show'),3000);
+  }
+  // update attendees
+  activeLiveItem.attendees += Math.floor(Math.random()*3);
+  document.getElementById('attendees-count').textContent = activeLiveItem.attendees;
+}
+
+// ══════════════════════════════════════════════
+//  MOCK WEBSOCKET (setInterval bidding)
+// ══════════════════════════════════════════════
+function startLiveBidding() {
+  function scheduleNext() {
+    const delay = 8000 + Math.random()*9000;
+    setTimeout(()=>{
+      if (currentScreen==='live-auction' || currentScreen==='home') {
+        const inc = [1000,2000,5000,10000][Math.floor(Math.random()*4)];
+        const bidderId = Math.random().toString(36).substring(2,6).toUpperCase();
+        placeBid(activeLiveItem.currentBid+inc, bidderId);
+        // Update home card
+        renderCards();
+        updateLiveBanner();
+      }
+      scheduleNext();
+    }, delay);
+  }
+  scheduleNext();
+}
+
+// ══════════════════════════════════════════════
+//  ITEM DETAIL
+// ══════════════════════════════════════════════
+function goToDetail(item) {
+  activeDetailItem = item;
+  detailSlideIndex = 0;
+  renderDetailScreen();
+  goTo('item-detail');
+}
+function renderDetailScreen() {
+  const item = activeDetailItem;
+  const name = lang==='ar'?item.nameAr:item.nameEn;
+  const desc = lang==='ar'?item.descAr:item.descEn;
+  const cond = lang==='ar'?item.condAr:item.condEn;
+  const prov = lang==='ar'?item.provAr:item.provEn;
+  document.getElementById('item-details-title').textContent = t('item_details');
+  document.getElementById('detail-name').textContent = name;
+  document.getElementById('detail-bid').textContent = fmtCurrency(item.currentBid);
+  document.getElementById('item-desc').textContent = desc;
+  document.getElementById('item-cond').textContent = cond;
+  document.getElementById('item-prov').textContent = prov;
+  document.getElementById('desc-title').textContent = t('description');
+  document.getElementById('cond-title').textContent = t('condition');
+  document.getElementById('prov-title').textContent = t('provenance');
+  document.getElementById('cert-title').textContent = t('certificate');
+  document.getElementById('cert-sub').textContent = t('certified');
+  document.getElementById('ship-title').textContent = t('shipping');
+  document.getElementById('ship-secure').textContent = t('secure_shipping');
+  document.getElementById('ship-free').textContent = t('free_shipping');
+  document.getElementById('cur-bid-lbl2').textContent = t('current_bid');
+  document.getElementById('time-left-lbl2').textContent = t('time_left');
+  document.getElementById('cd2-h-lbl').textContent = t('hours');
+  document.getElementById('cd2-m-lbl').textContent = t('minutes');
+  document.getElementById('cd2-s-lbl').textContent = t('seconds');
+  document.getElementById('detail-back').textContent = lang==='ar'?'→':'←';
+  // Slides
+  const track = document.getElementById('slides-track');
+  track.innerHTML = item.images.map(src=>`<img class="slide-img" src="${src}" alt="${name}" loading="lazy">`).join('');
+  const dotsEl = document.getElementById('slider-dots');
+  dotsEl.innerHTML = item.images.map((_,i)=>`<div class="slider-dot${i===0?' active':''}"></div>`).join('');
+  detailSlideIndex = 0;
+  // Live tag
+  document.getElementById('slide-live-tag').style.display = item.isLive?'flex':'none';
+  document.getElementById('slide-live-txt').textContent = t('live');
+  // CTA
+  const cta = document.getElementById('detail-cta');
+  if (item.isLive) {
+    cta.textContent = '🔴 '+t('live_auction'); cta.className='cta-btn';
+    cta.onclick = ()=>goToLive(item);
+  } else if (detailRegistered[item.id]) {
+    cta.textContent = '✓ '+t('registered'); cta.className='cta-btn reg';
+    cta.onclick = ()=>{};
+  } else {
+    cta.textContent = t('register'); cta.className='cta-btn';
+    cta.onclick = ()=>{ detailRegistered[item.id]=true; cta.textContent='✓ '+t('registered'); cta.className='cta-btn reg'; showToast('✓'); };
+  }
+  // Slider swipe
+  let startX=0;
+  const sw = document.getElementById('slider-wrap');
+  sw.ontouchstart = e=>startX=e.touches[0].clientX;
+  sw.ontouchend = e=>{
+    const dx = e.changedTouches[0].clientX-startX;
+    if (Math.abs(dx)<30) return;
+    const dir = dx<0?1:-1;
+    const next = detailSlideIndex+dir;
+    if (next>=0&&next<item.images.length) {
+      detailSlideIndex=next;
+      track.style.transform=`translateX(${-next*100*(lang==='ar'?-1:1)}%)`;
+      document.querySelectorAll('.slider-dot').forEach((d,i)=>d.classList.toggle('active',i===next));
+    }
+  };
+}
+function updateDetailCountdown() {
+  if (currentScreen!=='item-detail') return;
+  const {hours,minutes,seconds} = getTimeLeft(activeDetailItem.endTime);
+  document.getElementById('cd2-h').textContent=pad(hours);
+  document.getElementById('cd2-m').textContent=pad(minutes);
+  document.getElementById('cd2-s').textContent=pad(seconds);
+  document.getElementById('detail-countdown').textContent=fmtCompact(activeDetailItem.endTime);
+}
+function detailCTA() {}
+
+// ══════════════════════════════════════════════
+//  APPLY TRANSLATIONS
+// ══════════════════════════════════════════════
+function applyAllTranslations() {
+  document.getElementById('live-badge-txt').textContent = t('live');
+  document.getElementById('live-arrow').textContent = lang==='ar'?'←':'→';
+  document.getElementById('t-featured').textContent = t('featured');
+  document.getElementById('t-ending').textContent = t('ending_soon');
+  document.getElementById('t-new').textContent = t('new_arrivals');
+  document.getElementById('nav-home-lbl').textContent = t('home');
+  document.getElementById('nav-settings-lbl').textContent = t('settings');
+  document.getElementById('settings-title').textContent = t('settings');
+  document.getElementById('s-lang-title').textContent = t('language_settings');
+  document.getElementById('s-appear-title').textContent = t('appearance');
+  document.getElementById('s-about-title').textContent = lang==='ar'?'التطبيق':'App';
+  document.getElementById('s-dark-lbl').textContent = t('dark_mode');
+  document.getElementById('s-light-lbl').textContent = t('light_mode');
+  document.getElementById('s-tagline').textContent = t('tagline');
+  updateLiveBanner();
+}
+
+// ══════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+updateThemeToggleBtn();
+</script>
+</body>
+</html>
