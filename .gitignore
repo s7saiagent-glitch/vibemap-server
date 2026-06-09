@@ -13,3 +13,4 @@ venv/
 *.log
 .DS_Store
 instance/
+app/__pycache__/
