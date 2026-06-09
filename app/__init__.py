@@ -56,6 +56,10 @@ def create_app(config_name=None):
     app.register_blueprint(assistant_bp, url_prefix='/assistant')
     app.register_blueprint(api_bp, url_prefix='/api')
 
+    # Exempt AJAX-only endpoints from CSRF (they use JSON, not forms)
+    csrf.exempt(assistant_bp)
+    csrf.exempt(api_bp)
+
     @app.route('/set-language/<lang>')
     def set_language(lang):
         from flask import redirect, url_for
