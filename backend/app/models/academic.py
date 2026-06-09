@@ -5,6 +5,7 @@ from app.core.database import Base
 
 
 class DegreeLevel(str, enum.Enum):
+    SHORT_COURSE = "short_course"
     DIPLOMA = "diploma"
     BACHELOR = "bachelor"
     MASTER = "master"

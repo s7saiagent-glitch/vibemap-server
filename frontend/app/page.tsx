@@ -8,14 +8,27 @@ import { useT, useI18nStore } from '@/lib/i18n'
 import {
   Brain, GraduationCap, Users, BookOpen, Award,
   ChevronLeft, BarChart3, Globe, Shield,
-  Play, CheckCircle, Menu, X
+  Play, CheckCircle, Menu, X, Clock, Languages, Star
 } from 'lucide-react'
 
 const STATS = [
   { value: 'AI', label: 'مدعوم بالذكاء الاصطناعي', icon: Brain },
   { value: '20+', label: 'تخصص أكاديمي', icon: GraduationCap },
-  { value: '6', label: 'مستويات إنجليزية', icon: Globe },
+  { value: '6', label: 'مستويات إنجليزية CEFR', icon: Languages },
   { value: '24/7', label: 'أساتذة متاحون', icon: Users },
+]
+
+const PROGRAM_TYPES = [
+  { key: 'courses', label: 'دورات تدريبية', icon: '📚', duration: 'أسابيع – أشهر', color: 'text-blue-400', border: 'border-blue-500/40', bg: 'bg-blue-500/10' },
+  { key: 'diploma', label: 'دبلومات', icon: '🏅', duration: '1 – 2 سنة', color: 'text-amber-400', border: 'border-amber-500/40', bg: 'bg-amber-500/10' },
+  { key: 'bachelor', label: 'بكالوريوس', icon: '🎓', duration: '4 سنوات', color: 'text-emerald-400', border: 'border-emerald-500/40', bg: 'bg-emerald-500/10' },
+]
+
+const DIPLOMA_PROGRAMS = [
+  { icon: '💻', name: 'دبلوم تطوير البرمجيات', desc: 'Full-Stack Development بـ React و Node.js', units: 12, hours: 360, color: 'from-blue-600/20 to-cyan-600/20', border: 'border-blue-500/30' },
+  { icon: '🤖', name: 'دبلوم الذكاء الاصطناعي', desc: 'Python, Machine Learning, Deep Learning', units: 14, hours: 420, color: 'from-violet-600/20 to-purple-600/20', border: 'border-violet-500/30' },
+  { icon: '🔐', name: 'دبلوم الأمن السيبراني', desc: 'Network Security, Ethical Hacking', units: 10, hours: 300, color: 'from-red-600/20 to-rose-600/20', border: 'border-red-500/30' },
+  { icon: '📊', name: 'دبلوم إدارة الأعمال', desc: 'MBA مصغّر – إدارة، تسويق، مالية', units: 12, hours: 360, color: 'from-amber-600/20 to-yellow-600/20', border: 'border-amber-500/30' },
 ]
 
 const FACULTIES = [
@@ -61,6 +74,7 @@ const HOW_IT_WORKS = [
 
 export default function LandingPage() {
   const [mobileMenu, setMobileMenu] = useState(false)
+  const [programTab, setProgramTab] = useState<'courses' | 'diploma' | 'bachelor'>('courses')
   const { user, isAuthenticated } = useAuthStore()
   const router = useRouter()
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
@@ -79,6 +93,7 @@ export default function LandingPage() {
           </div>
           {/* Desktop nav */}
           <div className="hidden sm:flex items-center gap-3">
+            <Link href="#programs" className="text-uni-muted hover:text-uni-gold text-sm transition-colors">الدورات</Link>
             <Link href="/roadmap" className="text-uni-muted hover:text-uni-gold text-sm transition-colors">خريطة التطوير</Link>
             <Link href="/academic/plans" className="text-uni-muted hover:text-uni-gold text-sm transition-colors">الخطط الدراسية</Link>
             <Link href="/pricing" className="text-uni-muted hover:text-uni-gold text-sm transition-colors">الأسعار</Link>
@@ -246,38 +261,177 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Colleges Section */}
+      {/* Programs Section - Three Types */}
       <section id="programs" className="py-20 px-6 max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-10"
         >
           <h2 className="text-4xl font-black text-uni-text mb-4">
-            الكليات و<span className="text-gold-gradient">التخصصات</span>
+            استكشف <span className="text-gold-gradient">البرامج التعليمية</span>
           </h2>
-          <p className="text-uni-muted">كليتان رئيسيتان تضمان أكثر من 15 تخصصاً أكاديمياً</p>
+          <p className="text-uni-muted">ثلاثة مسارات تعليمية تناسب جميع الأهداف والمراحل</p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {FACULTIES.map((faculty, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: i === 0 ? -30 : 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className={`card-uni bg-gradient-to-br ${faculty.color} border ${faculty.border} glass-hover`}
+        {/* Tab Switcher */}
+        <div className="flex flex-wrap justify-center gap-3 mb-12">
+          {PROGRAM_TYPES.map((type) => (
+            <button
+              key={type.key}
+              onClick={() => setProgramTab(type.key as 'courses' | 'diploma' | 'bachelor')}
+              className={`flex flex-col items-center gap-1 px-8 py-4 rounded-2xl font-bold transition-all border ${
+                programTab === type.key
+                  ? `${type.bg} ${type.border} ${type.color}`
+                  : 'glass border-uni-border/30 text-uni-muted hover:border-uni-gold/30'
+              }`}
             >
-              <div className="text-5xl mb-4">{faculty.icon}</div>
-              <h3 className="text-2xl font-bold text-uni-text mb-4">{faculty.name}</h3>
-              <div className="flex flex-wrap gap-2">
-                {faculty.programs.map((prog) => (
-                  <span key={prog} className="badge-gold text-xs">{prog}</span>
-                ))}
-              </div>
-            </motion.div>
+              <span className="text-3xl">{type.icon}</span>
+              <span className="text-base font-black">{type.label}</span>
+              <span className="text-xs opacity-70 flex items-center gap-1">
+                <Clock className="w-3 h-3" />{type.duration}
+              </span>
+            </button>
           ))}
         </div>
+
+        {/* ── دورات تدريبية ── */}
+        {programTab === 'courses' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+            {/* English Course Feature Card */}
+            <div className="relative rounded-2xl overflow-hidden border border-blue-500/30 bg-gradient-to-br from-blue-600/10 via-indigo-600/10 to-purple-600/10 glass p-8 mb-8">
+              <div className="absolute top-4 left-4">
+                <span className="badge-gold text-xs">⭐ الأكثر طلباً</span>
+              </div>
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                      <Languages className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-uni-text">دورة اللغة الإنجليزية</h3>
+                      <p className="text-blue-400 text-sm">الإطار الأوروبي CEFR — من مبتدئ إلى إتقان</p>
+                    </div>
+                  </div>
+                  <p className="text-uni-muted text-sm leading-relaxed mb-6">
+                    برنامج متكامل بـ 6 مستويات، يشمل المفردات والقواعد والقراءة والتمارين التفاعلية
+                    مع أستاذ ذكاء اصطناعي متخصص يرافقك في كل خطوة. كل مستوى يمنحك شهادة رقمية معتمدة.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {['6 وحدات لكل مستوى', 'شهادة معتمدة', 'أستاذ AI', 'A1 → C2'].map(f => (
+                      <span key={f} className="flex items-center gap-1 text-xs bg-blue-500/10 border border-blue-500/30 text-blue-400 px-3 py-1 rounded-full">
+                        <CheckCircle className="w-3 h-3" />{f}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="grid grid-cols-3 gap-3 mb-6">
+                    {ENGLISH_LEVELS.map((level) => (
+                      <div key={level.level} className={`p-3 rounded-xl border text-center ${level.color} glass-hover`}>
+                        <div className="text-xl font-black mb-0.5">{level.level}</div>
+                        <div className="text-xs">{level.name}</div>
+                        <div className="text-xs opacity-60 mt-1">
+                          {['A1','A2'].includes(level.level) ? 'مجاني' : 'مدفوع'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    href={isAuthenticated ? '/student/english' : '/auth/register'}
+                    className="btn-gold w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2"
+                  >
+                    <Languages className="w-5 h-5" />
+                    {isAuthenticated ? 'ادخل للدورة' : 'ابدأ مجاناً من A1'}
+                    <ChevronLeft className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* More Courses Coming Soon */}
+            <div className="grid md:grid-cols-3 gap-4">
+              {[
+                { icon: '💻', name: 'أساسيات البرمجة', desc: 'Python للمبتدئين', badge: 'قريباً' },
+                { icon: '🎨', name: 'تصميم الجرافيك', desc: 'Figma & Illustrator', badge: 'قريباً' },
+                { icon: '📈', name: 'ريادة الأعمال', desc: 'بناء الشركات الناشئة', badge: 'قريباً' },
+              ].map((c, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                  className="card-uni glass-hover opacity-70 relative">
+                  <span className="absolute top-3 left-3 text-xs bg-uni-gold/20 text-uni-gold border border-uni-gold/30 px-2 py-0.5 rounded-full">{c.badge}</span>
+                  <div className="text-3xl mb-3">{c.icon}</div>
+                  <h4 className="font-bold text-uni-text mb-1">{c.name}</h4>
+                  <p className="text-uni-muted text-sm">{c.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── دبلومات ── */}
+        {programTab === 'diploma' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+            <div className="grid md:grid-cols-2 gap-6">
+              {DIPLOMA_PROGRAMS.map((dp, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                  className={`card-uni bg-gradient-to-br ${dp.color} border ${dp.border} glass-hover relative overflow-hidden`}>
+                  <span className="absolute top-3 left-3 text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">قريباً</span>
+                  <div className="text-4xl mb-3">{dp.icon}</div>
+                  <h3 className="text-xl font-black text-uni-text mb-2">{dp.name}</h3>
+                  <p className="text-uni-muted text-sm mb-4">{dp.desc}</p>
+                  <div className="flex gap-4 text-xs text-uni-muted">
+                    <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" />{dp.units} وحدة</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{dp.hours} ساعة</span>
+                    <span className="flex items-center gap-1"><Award className="w-3 h-3" />شهادة دبلوم</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            <div className="mt-8 text-center glass rounded-2xl p-6 border border-amber-500/20">
+              <Star className="w-8 h-8 text-amber-400 mx-auto mb-3" />
+              <p className="text-uni-muted text-sm">الدبلومات قيد الإعداد — سجّل الآن واحصل على إشعار عند الإطلاق</p>
+              <Link href="/auth/register" className="btn-gold mt-4 inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold">
+                أبلّغني عند الإطلاق <ChevronLeft className="w-4 h-4" />
+              </Link>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── بكالوريوس ── */}
+        {programTab === 'bachelor' && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+            <div className="grid md:grid-cols-2 gap-8">
+              {FACULTIES.map((faculty, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: i === 0 ? -30 : 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className={`card-uni bg-gradient-to-br ${faculty.color} border ${faculty.border} glass-hover`}
+                >
+                  <div className="text-5xl mb-4">{faculty.icon}</div>
+                  <h3 className="text-2xl font-bold text-uni-text mb-4">{faculty.name}</h3>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {faculty.programs.map((prog) => (
+                      <span key={prog} className="badge-gold text-xs">{prog}</span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-uni-muted mt-2 pt-4 border-t border-uni-border/20">
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />4 سنوات</span>
+                    <span className="flex items-center gap-1"><Award className="w-3 h-3" />درجة بكالوريوس</span>
+                    <span className="flex items-center gap-1"><Brain className="w-3 h-3" />أستاذ AI لكل مادة</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            <div className="mt-8 text-center">
+              <Link href="/auth/register" className="btn-gold inline-flex items-center gap-2 px-10 py-4 rounded-xl text-lg font-bold">
+                سجّل في البكالوريوس <ChevronLeft className="w-5 h-5" />
+              </Link>
+            </div>
+          </motion.div>
+        )}
       </section>
 
       {/* Features Section */}
@@ -308,47 +462,6 @@ export default function LandingPage() {
               <h3 className="text-lg font-bold text-uni-text mb-2">{feature.title}</h3>
               <p className="text-uni-muted text-sm leading-relaxed">{feature.desc}</p>
             </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* English Section */}
-      <section className="py-20 px-6 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-4xl font-black text-uni-text mb-4">
-            برنامج <span className="text-blue-gradient">اللغة الإنجليزية</span>
-          </h2>
-          <p className="text-uni-muted">6 مستويات CEFR مع مدرب AI متخصص يرافقك في كل خطوة</p>
-        </motion.div>
-
-        <div className="relative">
-          <div className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-uni-gold/30 to-transparent transform -translate-y-1/2 hidden md:block" />
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 relative z-10">
-            {ENGLISH_LEVELS.map((level, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.1 }}
-                className={`p-4 rounded-xl border text-center ${level.color} glass-hover cursor-pointer`}
-              >
-                <div className="text-2xl font-black mb-1">{level.level}</div>
-                <div className="text-xs font-medium">{level.name}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 mt-10">
-          {['Reading', 'Writing', 'Grammar', 'Vocabulary', 'Listening', 'Speaking'].map((skill, i) => (
-            <div key={i} className="flex items-center gap-3 glass p-3 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-uni-gold flex-shrink-0" />
-              <span className="text-uni-text text-sm">{skill}</span>
-            </div>
           ))}
         </div>
       </section>
