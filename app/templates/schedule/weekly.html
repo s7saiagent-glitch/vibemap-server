@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+
 {% block title %}الجدول الأسبوعي | {{ _('القحطاني برو') }}{% endblock %}
 
 {% block extra_css %}
 <style>
-  /* ── Shift colour map ────────────────────────────────── */
+  /* ── Shift pill colour map (shared with monthly) ─────── */
   .sp-morning  { background: #1e3a5f; color: #93c5fd; }
   .sp-evening  { background: #164e63; color: #67e8f9; }
   .sp-split    { background: #374151; color: #d1d5db; }
@@ -12,7 +13,19 @@
   .sp-sick     { background: #7f1d1d; color: #fca5a5; }
   .sp-annual   { background: #14532d; color: #86efac; }
 
-  /* ── Table base ──────────────────────────────────────── */
+  /* ── Legend pills ─────────────────────────────────────── */
+  .legend-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .55rem;
+    border-radius: 6px;
+    font-size: .73rem;
+    font-weight: 600;
+    margin: .15rem;
+  }
+
+  /* ── Weekly grid ─────────────────────────────────────── */
   .week-table {
     font-size: .78rem;
     border-collapse: separate;
@@ -25,111 +38,116 @@
     padding: .35rem .3rem;
     vertical-align: middle;
     white-space: nowrap;
+    color: var(--text-primary);
   }
 
-  /* ── Headers ─────────────────────────────────────────── */
+  /* ── Header row ──────────────────────────────────────── */
   .week-table thead th {
     background: var(--primary);
     color: #fff;
     text-align: center;
     font-weight: 700;
-    font-size: .78rem;
+    font-size: .76rem;
     position: sticky;
     top: 0;
     z-index: 2;
   }
-  .week-table thead th.col-emp {
-    background: #1e293b;
-    text-align: start;
-    padding-inline-start: .75rem;
+  .week-table thead th.col-weekend {
+    background: #334155;
+    color: #94a3b8;
   }
-  .week-table thead th.col-weekend { background: #374151; }
   .week-table thead th.col-today {
-    background: #1648c0;
+    background: #1d4ed8;
     outline: 3px solid #fcd34d;
     outline-offset: -3px;
   }
 
   /* ── Body cells ──────────────────────────────────────── */
-  .week-table tbody tr td { background: var(--bg-card); }
-  .week-table tbody tr:hover td { background: #1a2a3a !important; }
-  .week-table td.col-today   { background: #172554 !important; }
-  .week-table td.col-weekend { background: #1a2233 !important; }
-  .week-table tfoot tr td    { background: #1e293b; }
+  .week-table tbody tr:hover td {
+    background-color: var(--bg-hover) !important;
+  }
+  .week-table td.col-today   { background: rgba(29, 78, 216, .12); }
+  .week-table td.col-weekend { background: rgba(51, 65, 85, .35); }
 
-  /* ── Employee name column ────────────────────────────── */
-  .week-table td.emp-name {
+  /* ── Sticky employee column (RTL: pin to right) ───────── */
+  .week-table td.emp-name,
+  .week-table thead th.emp-name-th {
     font-weight: 600;
-    min-width: 120px;
-    max-width: 170px;
+    min-width: 110px;
+    max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
-    background: #1e293b !important;
-    color: var(--text-primary);
+    background: var(--bg-card);
     position: sticky;
-    right: 0;         /* RTL sticky */
+    right: 0;
     z-index: 1;
-    border-inline-start: 2px solid var(--border);
+    border-left: 2px solid var(--border);
+  }
+  .week-table thead th.emp-name-th {
+    z-index: 3;
+    background: var(--primary);
+    color: #fff;
+    border-left: 2px solid rgba(255,255,255,.25);
   }
 
-  /* ── Working days count ──────────────────────────────── */
-  .col-summary {
+  /* ── Summary col ─────────────────────────────────────── */
+  .week-table td.col-summary   { text-align: center; font-weight: 700; color: #86efac; min-width: 42px; }
+  .week-table th.col-summary-th { min-width: 42px; }
+
+  /* ── Footer (Apply to All) ───────────────────────────── */
+  .week-table tfoot tr td {
+    background: var(--bg-page);
+    font-weight: 600;
+    font-size: .73rem;
     text-align: center;
-    font-weight: 700;
-    color: #86efac;
-    min-width: 45px;
-  }
-
-  /* ── Apply-to-all footer ─────────────────────────────── */
-  .week-table tfoot td.apply-label {
     color: var(--text-muted);
-    font-size: .72rem;
+  }
+  .week-table tfoot td.apply-label {
+    text-align: end;
+    color: var(--text-primary);
     font-weight: 700;
-    padding-inline-start: .6rem;
+    font-size: .75rem;
+    background: var(--bg-card);
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    border-left: 2px solid var(--border);
   }
 
-  /* ── Shift selects ───────────────────────────────────── */
+  /* ── Shift selects ────────────────────────────────────── */
   .shift-sel,
   .apply-all-select {
     width: 100%;
-    min-width: 82px;
+    min-width: 80px;
     font-size: .72rem;
-    padding: .2rem .25rem;
+    padding: .18rem .25rem;
     border: 1px solid var(--border);
-    border-radius: 5px;
+    border-radius: 4px;
+    cursor: pointer;
     background: var(--bg-page);
     color: var(--text-primary);
-    cursor: pointer;
-    transition: background-color .12s, color .12s;
+    transition: background-color .15s, color .15s;
   }
-  .shift-sel:focus, .apply-all-select:focus {
+  .shift-sel:focus,
+  .apply-all-select:focus {
     outline: none;
     border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(59,130,246,.25);
   }
 
-  /* JS-applied shift colours */
-  .shift-sel.s-morning,  .apply-all-select.s-morning  { background:#1e3a5f !important; color:#93c5fd !important; }
-  .shift-sel.s-evening,  .apply-all-select.s-evening  { background:#164e63 !important; color:#67e8f9 !important; }
-  .shift-sel.s-split,    .apply-all-select.s-split    { background:#374151 !important; color:#d1d5db !important; }
-  .shift-sel.s-day_off,  .apply-all-select.s-day_off  { background:#1f2937 !important; color:#6b7280 !important; }
-  .shift-sel.s-holiday,  .apply-all-select.s-holiday  { background:#78350f !important; color:#fcd34d !important; }
-  .shift-sel.s-sick,     .apply-all-select.s-sick     { background:#7f1d1d !important; color:#fca5a5 !important; }
-  .shift-sel.s-annual,   .apply-all-select.s-annual   { background:#14532d !important; color:#86efac !important; }
-
-  /* ── Legend ──────────────────────────────────────────── */
-  .legend-pill {
-    display: inline-flex; align-items: center; gap: .3rem;
-    padding: .22rem .65rem; border-radius: 6px;
-    font-size: .75rem; font-weight: 600; margin: .15rem;
-  }
-
-  /* ── Week-nav ────────────────────────────────────────── */
+  /* ── Week navigation label ────────────────────────────── */
   .week-range-label {
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--text-heading);
     min-width: 200px;
     text-align: center;
+  }
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
   }
 
   @media (max-width: 767px) {
@@ -137,26 +155,35 @@
     .week-table { font-size: .67rem; }
     .shift-sel, .apply-all-select { min-width: 64px; font-size: .65rem; }
   }
+
   @media print {
     .no-print { display: none !important; }
-    .week-table th, .week-table td { font-size: .65rem; padding: .2rem .15rem; border-color: #ccc; }
-    .week-table thead th { background: #374151 !important; }
-    .week-table tbody tr td { background: #fff !important; color: #111 !important; }
+    .week-table th,
+    .week-table td { font-size: .62rem; padding: .18rem .12rem; color: #000 !important; }
+    .week-table thead th {
+      background: #374151 !important; color: #fff !important;
+      -webkit-print-color-adjust: exact;
+    }
+    .week-table td.emp-name { background: #f8fafc !important; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
 
-{# ── Header ───────────────────────────────────────────── #}
+{# ── Header ─────────────────────────────────────────────── #}
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2 no-print">
-  <div>
-    <h1 class="h4 fw-bold mb-0">
-      <i class="bi bi-calendar-week text-primary me-2"></i>الجدول الأسبوعي
-    </h1>
-    <p class="text-muted small mb-0">
-      {{ week_days[0].strftime('%Y-%m-%d') }} — {{ week_days[6].strftime('%Y-%m-%d') }}
-    </p>
+  <div class="d-flex align-items-center gap-2">
+    <a href="{{ url_for('schedule.index') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-right-circle-fill fs-5"></i>
+    </a>
+    <div>
+      <h1 class="h4 fw-bold mb-0">
+        <i class="bi bi-calendar-week text-primary me-2"></i>
+        الجدول الأسبوعي
+      </h1>
+      <p class="text-muted small mb-0">عرض وتعديل ورديات الأسبوع</p>
+    </div>
   </div>
   <div class="d-flex gap-2 flex-wrap">
     <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
@@ -166,15 +193,15 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="week_start" value="{{ week_start.isoformat() }}">
       <button type="submit" class="btn btn-outline-info btn-sm"
-              onclick="return confirm('نسخ جدول هذا الأسبوع للأسبوع القادم؟')">
-        <i class="bi bi-calendar-plus me-1"></i>نسخ للأسبوع القادم
+              onclick="return confirm('نسخ هذا الأسبوع إلى الأسبوع التالي؟')">
+        <i class="bi bi-calendar-plus me-1"></i>نسخ للأسبوع التالي
       </button>
     </form>
   </div>
 </div>
 
-{# ── View switcher ────────────────────────────────────── #}
-<div class="btn-group mb-3 no-print" role="group">
+{# ── View switcher ─────────────────────────────────────── #}
+<div class="btn-group mb-3 no-print" role="group" aria-label="عرض">
   <a href="{{ url_for('schedule.index') }}" class="btn btn-outline-primary btn-sm">
     <i class="bi bi-calendar3 me-1"></i>شهري
   </a>
@@ -183,43 +210,44 @@
   </a>
 </div>
 
-{# ── Week navigation ──────────────────────────────────── #}
+{# ── Week navigation ───────────────────────────────────── #}
 <div class="card mb-3 no-print">
   <div class="card-body py-2">
-    <div class="d-flex align-items-center gap-2 flex-wrap">
+    <div class="week-nav">
       <a href="{{ url_for('schedule.weekly_view', week=prev_week) }}"
          class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-chevron-right me-1"></i>الأسبوع السابق
+        <i class="bi bi-chevron-right me-1"></i>السابق
       </a>
 
-      <span class="week-range-label flex-grow-1 text-center">
-        {{ week_days[0].strftime('%d/%m') }} — {{ week_days[6].strftime('%d/%m/%Y') }}
+      <span class="week-range-label">
+        {{ week_days[0].strftime('%d %b') }} – {{ week_days[6].strftime('%d %b %Y') }}
       </span>
-
-      <a href="{{ url_for('schedule.weekly_view') }}" class="btn btn-primary btn-sm">
-        <i class="bi bi-calendar-check me-1"></i>هذا الأسبوع
-      </a>
 
       <a href="{{ url_for('schedule.weekly_view', week=next_week) }}"
          class="btn btn-outline-secondary btn-sm">
-        الأسبوع التالي<i class="bi bi-chevron-left ms-1"></i>
+        التالي<i class="bi bi-chevron-left ms-1"></i>
+      </a>
+
+      <a href="{{ url_for('schedule.weekly_view') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-calendar-check me-1"></i>هذا الأسبوع
       </a>
     </div>
   </div>
 </div>
 
-{# ── Shift legend ─────────────────────────────────────── #}
-<div class="mb-3 no-print d-flex flex-wrap">
+{# ── Shift legend ──────────────────────────────────────── #}
+<div class="mb-3 no-print d-flex flex-wrap align-items-center gap-1">
+  <span class="text-muted small fw-semibold me-2">الأنواع:</span>
   {% for code, label in shift_choices %}
     <span class="legend-pill sp-{{ code }}">{{ label }}</span>
   {% endfor %}
 </div>
 
-{# ── Flash messages ───────────────────────────────────── #}
+{# ── Flash messages ────────────────────────────────────── #}
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     {% for cat, msg in messages %}
-      <div class="alert alert-{{ cat }} alert-dismissible fade show py-2">
+      <div class="alert alert-{{ cat }} alert-dismissible fade show py-2" role="alert">
         {{ msg }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
@@ -227,46 +255,45 @@
   {% endif %}
 {% endwith %}
 
-{# ── Main schedule grid ───────────────────────────────── #}
-<form method="POST" action="{{ url_for('schedule.save_week') }}" id="weekForm">
+{# ── Main schedule grid form ───────────────────────────── #}
+<form method="POST" action="{{ url_for('schedule.save_week') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <input type="hidden" name="week_start" value="{{ week_start.isoformat() }}">
 
-  <div class="mb-2 d-flex gap-2 no-print align-items-center">
+  {# Save button – top #}
+  <div class="mb-2 d-flex gap-2 align-items-center no-print">
     <button type="submit" class="btn btn-primary btn-sm">
       <i class="bi bi-floppy-fill me-1"></i>حفظ الجدول
     </button>
     <span class="text-muted small">
-      {{ employees|length }} موظف · {{ week_days[0].strftime('%d/%m') }} — {{ week_days[6].strftime('%d/%m/%Y') }}
+      {{ week_days[0].strftime('%d %b') }} – {{ week_days[6].strftime('%d %b %Y') }}
     </span>
   </div>
 
   <div class="table-responsive">
+    {#
+      RTL note: in an RTL Bootstrap table the visual column order is reversed.
+      We output day columns first (right-to-left visually: Sun on right),
+      then the summary Σ column, then the sticky employee name on the far right.
+      The sticky employee column uses `position: sticky; right: 0`.
+    #}
+    {% set ar_day_map = {6: 'أح', 0: 'إث', 1: 'ث', 2: 'أر', 3: 'خ', 4: 'ج', 5: 'س'} %}
     <table class="week-table">
       <thead>
         <tr>
-          {# Day column headers #}
-          {% set ar_days = ['أح','إث','ث','أر','خ','ج','س'] %}
           {% for day in week_days %}
-            {% set is_today_col  = (day == today) %}
-            {% set is_weekend    = (day.weekday() in [4, 5]) %}
+            {% set is_today_col = (day == today) %}
+            {% set is_weekend   = (day.weekday() in [4, 5]) %}
             <th class="text-center
-              {% if is_today_col %}col-today{% elif is_weekend %}col-weekend{% endif %}">
-              {{ ar_days[day.weekday() if day.weekday() < 6 else 6] }}
-              {# Sun=6 in Python weekday → index 0 in ar_days #}
-              {%- if day.weekday() == 6 %}أح
-              {%- elif day.weekday() == 0 %}إث
-              {%- elif day.weekday() == 1 %}ث
-              {%- elif day.weekday() == 2 %}أر
-              {%- elif day.weekday() == 3 %}خ
-              {%- elif day.weekday() == 4 %}ج
-              {%- else %}س{%- endif %}
-              <br><span class="fw-normal" style="font-size:.88em;">{{ day.day }}</span>
+              {% if is_today_col %}col-today
+              {% elif is_weekend %}col-weekend
+              {% endif %}">
+              {{ ar_day_map[day.weekday()] }}<br>
+              <span style="font-size:.88em; font-weight:400;">{{ day.day }}</span>
             </th>
           {% endfor %}
-          <th class="text-center" style="min-width:42px; background:#1e293b;">Σ</th>
-          {# Sticky employee name column on the right (RTL) #}
-          <th class="col-emp">الموظف</th>
+          <th class="text-center col-summary-th" title="إجمالي أيام العمل">Σ</th>
+          <th class="emp-name-th text-start ps-2">الموظف</th>
         </tr>
       </thead>
 
@@ -274,36 +301,33 @@
         {% for emp in employees %}
           {% set ns = namespace(working=0) %}
           <tr>
-            {# Day cells #}
             {% for day in week_days %}
               {% set is_today_col = (day == today) %}
               {% set is_weekend   = (day.weekday() in [4, 5]) %}
-              {% set sched = schedule_map.get((emp.id, day)) %}
-              {% set cur_shift = sched.shift if sched else '' %}
+              {% set sched        = schedule_map.get((emp.id, day)) %}
+              {% set cur_shift    = sched.shift if sched else '' %}
               {% if sched and sched.is_working %}{% set ns.working = ns.working + 1 %}{% endif %}
               <td class="text-center p-1
                 {% if is_today_col %}col-today{% elif is_weekend %}col-weekend{% endif %}">
                 <select name="shift_{{ emp.id }}_{{ day.isoformat() }}"
                         class="shift-sel"
                         data-col="{{ loop.index0 }}">
-                  <option value="">—</option>
+                  <option value=""></option>
                   {% for code, label in shift_choices %}
-                    <option value="{{ code }}" {% if cur_shift == code %}selected{% endif %}>
+                    <option value="{{ code }}"
+                      {% if cur_shift == code %}selected{% endif %}>
                       {{ label }}
                     </option>
                   {% endfor %}
                 </select>
               </td>
             {% endfor %}
-
-            {# Working days count #}
             <td class="col-summary">{{ ns.working }}</td>
-
-            {# Sticky employee name #}
-            <td class="emp-name" title="{{ emp.name }}">
-              <div>{{ emp.name[:20] }}</div>
+            <td class="emp-name text-start ps-2"
+                title="{{ emp.name }}{% if emp.name_ar %} — {{ emp.name_ar }}{% endif %}">
+              <div class="fw-semibold" dir="rtl">{{ emp.name[:18] }}</div>
               {% if emp.name_ar %}
-                <div class="text-muted" style="font-size:.65rem;" dir="rtl">{{ emp.name_ar[:18] }}</div>
+                <div class="text-muted" style="font-size:.65rem;" dir="rtl">{{ emp.name_ar[:16] }}</div>
               {% endif %}
             </td>
           </tr>
@@ -312,14 +336,13 @@
 
       <tfoot>
         <tr>
-          {# Apply to all selects #}
           {% for day in week_days %}
             {% set is_today_col = (day == today) %}
             {% set is_weekend   = (day.weekday() in [4, 5]) %}
             <td class="p-1
               {% if is_today_col %}col-today{% elif is_weekend %}col-weekend{% endif %}">
               <select class="apply-all-select" data-col="{{ loop.index0 }}">
-                <option value="">تطبيق</option>
+                <option value="">—</option>
                 {% for code, label in shift_choices %}
                   <option value="{{ code }}">{{ label }}</option>
                 {% endfor %}
@@ -327,12 +350,13 @@
             </td>
           {% endfor %}
           <td></td>
-          <td class="apply-label">تطبيق على الجميع ↑</td>
+          <td class="apply-label ps-2">تطبيق على الجميع</td>
         </tr>
       </tfoot>
     </table>
   </div>
 
+  {# Save button – bottom #}
   <div class="mt-3 d-flex gap-2 no-print">
     <button type="submit" class="btn btn-primary">
       <i class="bi bi-floppy-fill me-1"></i>حفظ الجدول
@@ -342,10 +366,13 @@
   </div>
 </form>
 
-{# ── Weekly summary ───────────────────────────────────── #}
+{# ── Weekly summary card ─────────────────────────────── #}
 <div class="card mt-4">
   <div class="card-header d-flex align-items-center justify-content-between py-3">
-    <span><i class="bi bi-bar-chart-fill me-2 text-primary"></i>ملخص أيام العمل</span>
+    <span>
+      <i class="bi bi-bar-chart-fill me-2 text-primary"></i>
+      ملخص الأسبوع
+    </span>
     <span class="badge bg-secondary">{{ employees|length }} موظف</span>
   </div>
   <div class="card-body p-0">
@@ -356,7 +383,10 @@
             <th>الموظف</th>
             <th class="text-center">أيام العمل</th>
             {% for code, label in shift_choices %}
-              <th class="text-center">{{ label }}</th>
+              <th class="text-center">
+                <span class="legend-pill sp-{{ code }}"
+                      style="font-size:.65rem; padding:.1rem .35rem;">{{ label }}</span>
+              </th>
             {% endfor %}
           </tr>
         </thead>
@@ -364,8 +394,9 @@
           {% for emp in employees %}
             {% set ns2 = namespace(working=0) %}
             {% set shift_counts = {} %}
-            {% for code, label in shift_choices %}{% set _ = shift_counts.update({code: 0}) %}{% endfor %}
-
+            {% for code, label in shift_choices %}
+              {% set _ = shift_counts.update({code: 0}) %}
+            {% endfor %}
             {% for day in week_days %}
               {% set sched = schedule_map.get((emp.id, day)) %}
               {% if sched %}
@@ -375,15 +406,20 @@
                 {% endif %}
               {% endif %}
             {% endfor %}
-
             <tr>
-              <td class="fw-semibold">{{ emp.name }}</td>
-              <td class="text-center fw-bold" style="color:#86efac;">{{ ns2.working }}</td>
+              <td>
+                <div class="fw-semibold" dir="rtl">{{ emp.name }}</div>
+                {% if emp.name_ar %}
+                  <div class="text-muted small" dir="rtl">{{ emp.name_ar }}</div>
+                {% endif %}
+              </td>
+              <td class="text-center fw-bold" style="color: #86efac;">{{ ns2.working }}</td>
               {% for code, label in shift_choices %}
                 <td class="text-center">
                   {% set cnt = shift_counts.get(code, 0) %}
                   {% if cnt > 0 %}
-                    <span class="badge sp-{{ code }}">{{ cnt }}</span>
+                    <span class="sp-{{ code }}"
+                          style="display:inline-block; border-radius:5px; padding:.15rem .4rem; font-size:.72rem; font-weight:700;">{{ cnt }}</span>
                   {% else %}
                     <span class="text-muted">—</span>
                   {% endif %}
@@ -401,35 +437,43 @@
 
 {% block scripts %}
 <script>
-(function () {
-  var SHIFT_CLASS = {
-    morning: 's-morning', evening: 's-evening', split: 's-split',
-    day_off: 's-day_off', holiday: 's-holiday', sick: 's-sick', annual: 's-annual'
+  // Dark-mode aware shift colours for the select widgets
+  const SHIFT_COLORS = {
+    morning:  { bg: '#1e3a5f', color: '#93c5fd' },
+    evening:  { bg: '#164e63', color: '#67e8f9' },
+    split:    { bg: '#374151', color: '#d1d5db' },
+    day_off:  { bg: '#1f2937', color: '#6b7280' },
+    holiday:  { bg: '#78350f', color: '#fcd34d' },
+    sick:     { bg: '#7f1d1d', color: '#fca5a5' },
+    annual:   { bg: '#14532d', color: '#86efac' },
   };
 
   function colorSelect(sel) {
-    // Remove all shift classes
-    Object.values(SHIFT_CLASS).forEach(function(c) { sel.classList.remove(c); });
-    var cls = SHIFT_CLASS[sel.value];
-    if (cls) sel.classList.add(cls);
+    const val = sel.value;
+    if (val && SHIFT_COLORS[val]) {
+      sel.style.backgroundColor = SHIFT_COLORS[val].bg;
+      sel.style.color            = SHIFT_COLORS[val].color;
+    } else {
+      sel.style.backgroundColor  = 'var(--bg-page)';
+      sel.style.color            = 'var(--text-primary)';
+    }
   }
 
-  // Colour on load
-  document.querySelectorAll('.shift-sel, .apply-all-select').forEach(function(s) {
+  // Colour all selects on load
+  document.querySelectorAll('.shift-sel, .apply-all-select').forEach(s => {
     colorSelect(s);
     s.addEventListener('change', function () { colorSelect(this); });
   });
 
-  // "تطبيق على الجميع" – propagate column
-  document.querySelectorAll('.apply-all-select').forEach(function(allSel) {
+  // "تطبيق على الجميع" — propagate column selection downward
+  document.querySelectorAll('.apply-all-select').forEach(allSel => {
     allSel.addEventListener('change', function () {
-      var col = this.dataset.col;
-      document.querySelectorAll('.shift-sel[data-col="' + col + '"]').forEach(function(sel) {
-        sel.value = allSel.value;
+      const col = this.dataset.col;
+      document.querySelectorAll(`.shift-sel[data-col="${col}"]`).forEach(sel => {
+        sel.value = this.value;
         colorSelect(sel);
       });
     });
   });
-})();
 </script>
 {% endblock %}
