@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Work Schedule') }} – {{ emp.name }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    background: #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .cal-day-header {
+    background: #1a56db;
+    color: #fff;
+    text-align: center;
+    font-weight: 700;
+    font-size: .73rem;
+    padding: .5rem .25rem;
+    text-transform: uppercase;
+  }
+  .cal-day {
+    background: #fff;
+    min-height: 80px;
+    padding: .35rem .4rem;
+    font-size: .78rem;
+  }
+  .cal-day.empty   { background: #f9fafb; }
+  .cal-day.today   { background: #eff6ff; }
+  .cal-day.weekend { background: #fafafa; }
+  .cal-day .day-num {
+    font-weight: 700;
+    font-size: .8rem;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 24px; height: 24px;
+    margin-bottom: .2rem;
+  }
+  .cal-day.today .day-num {
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+  }
+  .shift-badge {
+    display: block;
+    padding: .15rem .4rem;
+    border-radius: 4px;
+    font-size: .68rem;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  @media print {
+    .no-print { display: none !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{{ url_for('schedule.index', year=year, month=month) }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-{% if current_locale == 'ar' %}right{% else %}left{% endif %}"></i>
+  </a>
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-calendar3 text-primary me-2"></i>
+      {{ emp.name }}
+    </h1>
+    <p class="text-muted small mb-0">{{ _('Work Schedule') }}</p>
+  </div>
+  <div class="ms-auto d-flex gap-2 no-print">
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-printer-fill me-1"></i>{{ _('Print') }}
+    </button>
+  </div>
+</div>
+
+<!-- Month selector -->
+<div class="card mb-3 no-print">
+  <div class="card-body py-2">
+    <form method="GET" class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label small mb-1">{{ _('Year') }}</label>
+        <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+          {% for y in range(2023, 2028) %}
+            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label small mb-1">{{ _('Month') }}</label>
+        <select name="month" class="form-select form-select-sm" onchange="this.form.submit()">
+          {% for m_num, m_name in months %}
+            <option value="{{ m_num }}" {% if m_num == month %}selected{% endif %}>{{ m_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Summary badges -->
+<div class="d-flex gap-2 mb-3 flex-wrap">
+  <span class="badge bg-success fs-6">
+    <i class="bi bi-calendar-check me-1"></i>
+    {{ _('Working Days') }}: {{ working_days_count }}
+  </span>
+  {% for code, label in shift_choices %}
+    {% set cnt = schedules | selectattr('shift', 'equalto', code) | list | length %}
+    {% if cnt > 0 %}
+      {% set badge = shift_badge.get(code, 'secondary') %}
+      <span class="badge bg-{{ badge }}">{{ label }}: {{ cnt }}</span>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<!-- Calendar -->
+<h5 class="fw-bold mb-3 text-center">
+  {% for m_num, m_name in months %}{% if m_num == month %}{{ m_name }}{% endif %}{% endfor %} {{ year }}
+</h5>
+
+<div class="cal-grid mb-4">
+  {% set day_headers = [_('Sun'), _('Mon'), _('Tue'), _('Wed'), _('Thu'), _('Fri'), _('Sat')] %}
+  {% for dh in day_headers %}
+    <div class="cal-day-header">{{ dh }}</div>
+  {% endfor %}
+
+  {% for week in calendar_weeks %}
+    {% for day_date in week %}
+      {% if day_date is none %}
+        <div class="cal-day empty"></div>
+      {% else %}
+        {% set is_today = (day_date == today) %}
+        {% set is_weekend = (day_date.weekday() in [4, 5]) %}
+        {% set sched = schedule_map.get(day_date) %}
+        <div class="cal-day {% if is_today %}today{% endif %} {% if is_weekend %}weekend{% endif %}">
+          <span class="day-num">{{ day_date.day }}</span>
+          {% if sched %}
+            {% set badge = shift_badge.get(sched.shift, 'secondary') %}
+            <span class="shift-badge bg-{{ badge }} bg-opacity-25" style="color: var(--bs-{{ badge }}, #333);">
+              {% for code, label in shift_choices %}{% if code == sched.shift %}{{ label }}{% endif %}{% endfor %}
+              {% if sched.start_time %}<br>{{ sched.start_time }}{% if sched.end_time %}–{{ sched.end_time }}{% endif %}{% endif %}
+            </span>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+</div>
+
+<!-- Detailed list -->
+<div class="card">
+  <div class="card-header fw-semibold">
+    <i class="bi bi-list-ul me-2 text-primary"></i>{{ _('Schedule Details') }}
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>{{ _('Date') }}</th>
+            <th>{{ _('Shift') }}</th>
+            <th>{{ _('Start Time') }}</th>
+            <th>{{ _('End Time') }}</th>
+            <th>{{ _('Notes') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sched in schedules %}
+            {% set badge = shift_badge.get(sched.shift, 'secondary') %}
+            <tr>
+              <td>{{ sched.date.strftime('%Y-%m-%d') }}</td>
+              <td>
+                <span class="badge bg-{{ badge }}">
+                  {% for code, label in shift_choices %}{% if code == sched.shift %}{{ label }}{% endif %}{% endfor %}
+                </span>
+              </td>
+              <td>{{ sched.start_time or '—' }}</td>
+              <td>{{ sched.end_time or '—' }}</td>
+              <td class="text-muted small">{{ sched.notes or '—' }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-4">{{ _('No schedule entries this month') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

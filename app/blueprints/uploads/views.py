@@ -102,7 +102,12 @@ def upload():
     filepath = os.path.join(upload_folder, saved_filename)
     file.save(filepath)
 
-    file_type = _detect_file_type(original_filename, filepath)
+    # Respect user's explicit choice; fall back to auto-detect
+    selected_type = request.form.get('file_type', 'auto_detect')
+    if selected_type in ('sales_detail', 'productivity', 'pending_invoices'):
+        file_type = selected_type
+    else:
+        file_type = _detect_file_type(original_filename, filepath)
 
     # Create a pending batch record so failures are logged
     batch_record = UploadBatch(

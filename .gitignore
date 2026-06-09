@@ -9,7 +9,7 @@ build/
 .env
 .venv
 venv/
-uploads/
+/uploads/
 *.log
 .DS_Store
 instance/

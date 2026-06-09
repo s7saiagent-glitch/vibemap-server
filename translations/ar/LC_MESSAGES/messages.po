@@ -528,3 +528,120 @@ msgstr "ملاحظات اختيارية..."
 
 msgid "Select Employee"
 msgstr "اختر موظفاً"
+
+msgid "Schedule Details"
+msgstr "تفاصيل الجدول"
+
+msgid "No schedule entries this month"
+msgstr "لا توجد إدخالات في الجدول هذا الشهر"
+
+msgid "employees"
+msgstr "موظفين"
+
+msgid "batches"
+msgstr "دفعات"
+
+msgid "No uploads yet."
+msgstr "لا توجد ملفات مرفوعة بعد."
+
+msgid "Import Excel reports: Sales, Productivity, or Pending Invoices"
+msgstr "استيراد تقارير Excel: المبيعات، الإنتاجية، أو الفواتير المعلقة"
+
+msgid "Supported formats: .xls, .xlsx, .xlsm"
+msgstr "الصيغ المدعومة: xls. ، xlsx. ، xlsm."
+
+msgid "Auto-detect reads the filename to determine type."
+msgstr "الاكتشاف التلقائي يقرأ اسم الملف لتحديد النوع."
+
+msgid "Uploading & processing…"
+msgstr "جارٍ الرفع والمعالجة..."
+
+msgid "Processing…"
+msgstr "جارٍ المعالجة..."
+
+msgid "Upload & Import"
+msgstr "رفع واستيراد"
+
+msgid "Upload & Import"
+msgstr "رفع واستيراد"
+
+msgid "Filename containing \"PRODUCTIVITY\" → auto-detected as Productivity Report"
+msgstr "اسم الملف يحتوي على \"PRODUCTIVITY\" → يُكتشف تلقائياً كتقرير إنتاجية"
+
+msgid "Filename containing \"PENDING INVOICE\" → auto-detected as Pending Invoices"
+msgstr "اسم الملف يحتوي على \"PENDING INVOICE\" → يُكتشف تلقائياً كفواتير معلقة"
+
+msgid "All other Excel files → Sales Detail Report"
+msgstr "جميع ملفات Excel الأخرى → تقرير تفصيل المبيعات"
+
+msgid "Duplicate records are skipped automatically"
+msgstr "السجلات المكررة تُتجاهل تلقائياً"
+
+msgid "Delete this batch record?"
+msgstr "هل تريد حذف سجل الدفعة؟"
+
+msgid "Delete record"
+msgstr "حذف السجل"
+
+msgid "Network error. Please try again."
+msgstr "خطأ في الشبكة. يرجى المحاولة مرة أخرى."
+
+msgid "Unknown error"
+msgstr "خطأ غير معروف"
+
+msgid "Tips"
+msgstr "نصائح"
+
+msgid "Sales Detail Report"
+msgstr "تقرير تفصيل المبيعات"
+
+msgid "Productivity Report"
+msgstr "تقرير الإنتاجية"
+
+msgid "Pending Invoices"
+msgstr "الفواتير المعلقة"
+
+msgid "Productivity"
+msgstr "الإنتاجية"
+
+msgid "Sales"
+msgstr "المبيعات"
+
+msgid "Invoices"
+msgstr "الفواتير"
+
+msgid "Processing"
+msgstr "قيد المعالجة"
+
+msgid "Done"
+msgstr "تم"
+
+msgid "Error"
+msgstr "خطأ"
+
+msgid "Mark as Resolved"
+msgstr "تحديد كمحلول"
+
+msgid "No notes yet"
+msgstr "لا توجد ملاحظات بعد"
+
+msgid "Type your note..."
+msgstr "اكتب ملاحظتك هنا..."
+
+msgid "Price"
+msgstr "السعر"
+
+msgid "Tax"
+msgstr "الضريبة"
+
+msgid "Discount"
+msgstr "الخصم"
+
+msgid "Branch"
+msgstr "الفرع"
+
+msgid "Invoice Details"
+msgstr "تفاصيل الفاتورة"
+
+msgid "Item Code"
+msgstr "كود المنتج"
