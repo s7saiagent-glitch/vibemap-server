@@ -8,8 +8,10 @@
   .chat-wrapper {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - var(--topbar-h) - 3.5rem);
+    height: calc(100vh - var(--topbar-h, 64px) - 3.5rem);
     max-height: 760px;
+    background: var(--bg-card, #1e293b);
+    border-radius: 12px;
   }
 
   .chat-messages {
@@ -20,6 +22,7 @@
     flex-direction: column;
     gap: .75rem;
     scroll-behavior: smooth;
+    background: var(--bg-page, #0f172a);
   }
 
   /* ── Bubbles ─────────────────────────────────────────────────────────── */
@@ -46,25 +49,25 @@
   }
 
   .bubble.user {
-    background: var(--primary);
+    background: var(--primary, #3b82f6);
     color: #fff;
     border-{% if current_locale == 'ar' %}right{% else %}left{% endif %}-bottom-radius: 4px;
   }
 
   .bubble.bot {
-    background: #fff;
-    color: #111827;
-    border: 1px solid #e5e7eb;
+    background: var(--bg-card, #1e293b);
+    color: var(--text-primary, #f1f5f9);
+    border: 1px solid var(--border, #334155);
     border-{% if current_locale == 'ar' %}left{% else %}right{% endif %}-bottom-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06);
   }
 
   .bubble .msg-time {
     font-size: .65rem;
-    opacity: .7;
+    opacity: .6;
     display: block;
     margin-top: .25rem;
     text-align: {% if current_locale == 'ar' %}left{% else %}right{% endif %};
+    color: var(--text-muted, #94a3b8);
   }
 
   /* Avatar */
@@ -75,8 +78,8 @@
     font-size: .8rem; font-weight: 700;
     flex-shrink: 0;
   }
-  .avatar.bot-avatar { background: #eff6ff; color: var(--primary); border: 2px solid #dbeafe; }
-  .avatar.user-avatar { background: var(--primary); color: #fff; }
+  .avatar.bot-avatar  { background: #1e3a5f; color: #60a5fa; border: 2px solid #1d4ed8; }
+  .avatar.user-avatar { background: var(--primary, #3b82f6); color: #fff; }
 
   /* ── Typing indicator ────────────────────────────────────────────────── */
   .typing-indicator {
@@ -89,7 +92,7 @@
   .typing-dot {
     width: 7px; height: 7px;
     border-radius: 50%;
-    background: #9ca3af;
+    background: var(--text-muted, #94a3b8);
     animation: bounce .9s infinite;
   }
   .typing-dot:nth-child(2) { animation-delay: .15s; }
@@ -101,9 +104,9 @@
 
   /* ── Input area ──────────────────────────────────────────────────────── */
   .chat-input-area {
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--border, #334155);
     padding: .75rem 1rem;
-    background: #fff;
+    background: var(--bg-card, #1e293b);
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
   }
@@ -113,47 +116,81 @@
     border-radius: 24px;
     padding: .6rem 1rem;
     font-size: .9rem;
-    border: 1.5px solid #e5e7eb;
+    border: 1.5px solid var(--border, #334155);
+    background: var(--bg-page, #0f172a);
+    color: var(--text-primary, #f1f5f9);
     transition: border-color .15s;
     flex: 1;
   }
-  .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,86,219,.1); }
+  .chat-input::placeholder { color: var(--text-muted, #94a3b8); }
+  .chat-input:focus {
+    border-color: var(--primary, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.2);
+    outline: none;
+  }
 
   .send-btn {
-    width: 42px; height: 42px;
+    width: 44px; height: 44px;
     border-radius: 50%;
-    background: var(--primary);
+    background: var(--primary, #3b82f6);
     color: #fff;
     border: none;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
-    transition: background .15s;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
   }
-  .send-btn:hover { background: var(--primary-dk); }
-  .send-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+  .send-btn:hover  { background: #2563eb; transform: scale(1.05); }
+  .send-btn:active { transform: scale(.95); }
+  .send-btn:disabled { background: var(--text-muted, #94a3b8); cursor: not-allowed; transform: none; }
 
   /* ── Quick questions ─────────────────────────────────────────────────── */
+  .quick-questions-bar {
+    padding: .5rem 1rem;
+    border-top: 1px solid var(--border, #334155);
+    overflow-x: auto;
+    white-space: nowrap;
+    background: var(--bg-card, #1e293b);
+  }
   .quick-btn {
-    border: 1.5px solid #dbeafe;
-    background: #eff6ff;
-    color: #1e40af;
+    display: inline-block;
+    border: 1.5px solid var(--border, #334155);
+    background: var(--bg-page, #0f172a);
+    color: var(--text-muted, #94a3b8);
     border-radius: 20px;
-    padding: .3rem .8rem;
+    padding: .3rem .9rem;
     font-size: .78rem;
     font-weight: 600;
     cursor: pointer;
     transition: all .15s;
     white-space: nowrap;
+    margin-inline-end: .4rem;
+    margin-bottom: .3rem;
   }
-  .quick-btn:hover { background: #dbeafe; border-color: var(--primary); }
+  .quick-btn:hover {
+    background: var(--primary, #3b82f6);
+    color: #fff;
+    border-color: var(--primary, #3b82f6);
+  }
 
-  /* ── Welcome / empty state ───────────────────────────────────────────── */
-  .welcome-msg {
-    text-align: center;
-    padding: 2rem 1rem;
-    color: #6b7280;
+  /* ── Chat header ─────────────────────────────────────────────────────── */
+  .chat-header {
+    background: var(--bg-card, #1e293b);
+    border-bottom: 1px solid var(--border, #334155);
+    padding: .85rem 1rem;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
   }
-  .welcome-msg i { font-size: 3rem; color: #bfdbfe; }
+
+  /* Error bubble */
+  .bubble.error {
+    background: #450a0a;
+    color: #fca5a5;
+    border-color: #991b1b;
+  }
 </style>
 {% endblock %}
 
@@ -162,22 +199,22 @@
   <div class="col-12 col-lg-9 col-xl-8">
 
     <!-- Chat Card -->
-    <div class="card chat-wrapper">
+    <div class="chat-wrapper card border-0 shadow">
 
       <!-- Chat Header -->
-      <div class="card-header d-flex align-items-center gap-3 py-3">
+      <div class="chat-header">
         <div class="avatar bot-avatar fs-5">
           <i class="bi bi-robot"></i>
         </div>
-        <div>
-          <div class="fw-bold">{{ _('Al-Qahtani Pro Assistant') }}</div>
-          <div class="text-muted small d-flex align-items-center gap-1">
+        <div class="flex-grow-1">
+          <div class="fw-bold" style="color:var(--text-primary,#f1f5f9)">البدوي برو</div>
+          <div style="color:var(--text-muted,#94a3b8);font-size:.78rem;" class="d-flex align-items-center gap-1">
             <span class="badge bg-success" style="width:8px;height:8px;border-radius:50%;padding:0;"></span>
-            {{ _('مساعدك الذكي للمبيعات') }}
+            مساعدك الذكي للمبيعات
           </div>
         </div>
-        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearChat()" title="{{ _('Clear chat') }}">
-          <i class="bi bi-trash3-fill"></i>
+        <button class="btn btn-sm btn-outline-secondary" onclick="clearChat()" title="مسح المحادثة">
+          <i class="bi bi-trash3"></i>
         </button>
       </div>
 
@@ -188,32 +225,22 @@
           <div class="avatar bot-avatar"><i class="bi bi-robot"></i></div>
           <div class="bubble bot">
             <div>
-              {% if current_locale == 'ar' %}
-                مرحباً! أنا مساعد القحطاني برو. يمكنني مساعدتك في:
-                <ul class="mb-1 mt-1 ps-3">
-                  <li>تحليل أداء المبيعات</li>
-                  <li>معرفة أفضل البائعين</li>
-                  <li>الهدف المتبقي لكل موظف</li>
-                  <li>الفواتير المعلقة</li>
-                </ul>
-                ما الذي تريد معرفته؟
-              {% else %}
-                Hello! I'm the Al-Qahtani Pro Assistant. I can help you with:
-                <ul class="mb-1 mt-1 ps-3">
-                  <li>Sales performance analysis</li>
-                  <li>Top performers ranking</li>
-                  <li>Remaining targets per employee</li>
-                  <li>Pending invoices status</li>
-                </ul>
-                What would you like to know?
-              {% endif %}
+              مرحباً! أنا البدوي برو، مساعدك لتحليل المبيعات.<br>
+              يمكنني مساعدتك في:
+              <ul class="mb-1 mt-1 ps-3">
+                <li>أفضل البائعين هذا الشهر</li>
+                <li>الهدف المتبقي لكل موظف</li>
+                <li>الفواتير المعلقة</li>
+                <li>تحقيق الأهداف</li>
+              </ul>
+              ما الذي تريد معرفته؟
             </div>
-            <span class="msg-time">{{ _('Now') }}</span>
+            <span class="msg-time">الآن</span>
           </div>
         </div>
 
         <!-- Typing Indicator -->
-        <div class="msg-row bot-row" id="typingIndicator" style="display:none;">
+        <div class="msg-row bot-row" id="typingRow" style="display:none;">
           <div class="avatar bot-avatar"><i class="bi bi-robot"></i></div>
           <div class="bubble bot" style="padding:.5rem 1rem;">
             <div class="typing-indicator show">
@@ -225,28 +252,13 @@
         </div>
       </div>
 
-      <!-- Quick Question Buttons -->
-      <div class="px-3 pb-2 d-flex flex-wrap gap-2" id="quickBtns">
-        <!-- Arabic quick questions -->
-        <button class="quick-btn quick-question" data-q="أفضل بائع هذا الشهر؟" onclick="sendQuick(this.dataset.q)">
-          أفضل بائع هذا الشهر؟
-        </button>
-        <button class="quick-btn quick-question" data-q="هدفي اليومي المتبقي؟" onclick="sendQuick(this.dataset.q)">
-          هدفي اليومي المتبقي؟
-        </button>
-        <button class="quick-btn quick-question" data-q="الفواتير المعلقة" onclick="sendQuick(this.dataset.q)">
-          الفواتير المعلقة
-        </button>
-        <!-- English quick questions -->
-        <button class="quick-btn quick-question" data-q="Top seller this month?" onclick="sendQuick(this.dataset.q)">
-          Top seller this month?
-        </button>
-        <button class="quick-btn quick-question" data-q="My remaining daily target?" onclick="sendQuick(this.dataset.q)">
-          My remaining daily target?
-        </button>
-        <button class="quick-btn quick-question" data-q="Pending invoices" onclick="sendQuick(this.dataset.q)">
-          Pending invoices
-        </button>
+      <!-- Quick Questions -->
+      <div class="quick-questions-bar" id="quickBtns">
+        <button class="quick-btn" onclick="sendQuick('أفضل بائع هذا الشهر؟')">أفضل بائع؟</button>
+        <button class="quick-btn" onclick="sendQuick('الهدف المتبقي لهذا الشهر؟')">الهدف المتبقي؟</button>
+        <button class="quick-btn" onclick="sendQuick('الفواتير المعلقة')">الفواتير المعلقة</button>
+        <button class="quick-btn" onclick="sendQuick('نسبة تحقيق الأهداف؟')">نسبة الإنجاز؟</button>
+        <button class="quick-btn" onclick="sendQuick('ملخص المبيعات')">ملخص المبيعات</button>
       </div>
 
       <!-- Input Area -->
@@ -256,18 +268,16 @@
             id="chatInput"
             class="form-control chat-input"
             rows="1"
-            placeholder="{{ _('Type your question…') }}"
+            placeholder="اكتب سؤالك هنا..."
             maxlength="500"
-            dir="auto"
-            onkeydown="handleKey(event)"
-            oninput="autoResize(this)"></textarea>
-          <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="{{ _('Send') }}">
+            dir="auto"></textarea>
+          <button class="send-btn" id="sendBtn" title="إرسال">
             <i class="bi bi-send-fill"></i>
           </button>
         </div>
         <div class="d-flex justify-content-between mt-1">
-          <span class="small text-muted">{{ _('Enter to send') }} · Shift+Enter {{ _('for new line') }}</span>
-          <span class="small text-muted" id="charCount">0/500</span>
+          <span class="small" style="color:var(--text-muted,#94a3b8)">Enter للإرسال · Shift+Enter لسطر جديد</span>
+          <span class="small" id="charCount" style="color:var(--text-muted,#94a3b8)">0/500</span>
         </div>
       </div>
 
@@ -278,125 +288,121 @@
 
 {% block scripts %}
 <script>
-const CHAT_URL = '{{ url_for("assistant.chat") }}';
-const CSRF_TOKEN = '{{ csrf_token() }}';
-const messages = document.getElementById('chatMessages');
-const input    = document.getElementById('chatInput');
-const sendBtn  = document.getElementById('sendBtn');
-const typing   = document.getElementById('typingIndicator');
+(function() {
+  const CHAT_URL = '{{ url_for("assistant.chat") }}';
+  const LANG     = '{{ lang }}';
+  const msgs     = document.getElementById('chatMessages');
+  const input    = document.getElementById('chatInput');
+  const sendBtn  = document.getElementById('sendBtn');
+  const typingRow = document.getElementById('typingRow');
+  const quickBtns = document.getElementById('quickBtns');
 
-function scrollToBottom() {
-  messages.scrollTop = messages.scrollHeight;
-}
+  function scrollBottom() { msgs.scrollTop = msgs.scrollHeight; }
 
-function now() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function appendMessage(text, role) {
-  const isUser = role === 'user';
-  const row = document.createElement('div');
-  row.className = `msg-row ${isUser ? 'user-row' : 'bot-row'}`;
-
-  const avatarHtml = isUser
-    ? `<div class="avatar user-avatar"><i class="bi bi-person-fill"></i></div>`
-    : `<div class="avatar bot-avatar"><i class="bi bi-robot"></i></div>`;
-
-  // Render newlines and basic markdown-like formatting
-  const safe = text
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/\n/g, '<br>');
-
-  row.innerHTML = `
-    ${!isUser ? avatarHtml : ''}
-    <div class="bubble ${isUser ? 'user' : 'bot'}">
-      <div dir="auto">${safe}</div>
-      <span class="msg-time">${now()}</span>
-    </div>
-    ${isUser ? avatarHtml : ''}
-  `;
-
-  // Insert before typing indicator
-  messages.insertBefore(row, typing);
-  scrollToBottom();
-}
-
-function showTyping() {
-  typing.style.display = 'flex';
-  scrollToBottom();
-}
-function hideTyping() {
-  typing.style.display = 'none';
-}
-
-async function sendMessage() {
-  const text = input.value.trim();
-  if (!text) return;
-
-  appendMessage(text, 'user');
-  input.value = '';
-  document.getElementById('charCount').textContent = '0/500';
-  autoResize(input);
-  sendBtn.disabled = true;
-  showTyping();
-
-  // Hide quick buttons after first message
-  document.getElementById('quickBtns').style.display = 'none';
-
-  try {
-    const resp = await fetch(CHAT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': CSRF_TOKEN,
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      body: JSON.stringify({ message: text, lang: '{{ lang }}' }),
-    });
-
-    const data = await resp.json();
-    hideTyping();
-
-    if (resp.ok && data.success && data.answer) {
-      appendMessage(data.answer, 'bot');
-    } else {
-      appendMessage(data.error || '{{ _("Sorry, I couldn\'t process that. Please try again.") }}', 'bot');
-    }
-  } catch (err) {
-    hideTyping();
-    appendMessage('{{ _("Network error. Please check your connection.") }}', 'bot');
+  function nowTime() {
+    return new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
   }
 
-  sendBtn.disabled = false;
-  input.focus();
-}
+  function addMsg(text, role) {
+    const isUser = role === 'user';
+    const row = document.createElement('div');
+    row.className = 'msg-row ' + (isUser ? 'user-row' : 'bot-row');
 
-function sendQuick(q) {
-  input.value = q;
-  sendMessage();
-}
+    const safe = String(text)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\n/g,'<br>');
 
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
+    const avatarHtml = isUser
+      ? '<div class="avatar user-avatar"><i class="bi bi-person-fill"></i></div>'
+      : '<div class="avatar bot-avatar"><i class="bi bi-robot"></i></div>';
+
+    const bubbleClass = 'bubble ' + (isUser ? 'user' : (role === 'error' ? 'bot error' : 'bot'));
+
+    row.innerHTML = (isUser ? '' : avatarHtml)
+      + '<div class="' + bubbleClass + '"><div dir="auto">' + safe + '</div>'
+      + '<span class="msg-time">' + nowTime() + '</span></div>'
+      + (isUser ? avatarHtml : '');
+
+    msgs.insertBefore(row, typingRow);
+    scrollBottom();
+  }
+
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMsg(text, 'user');
+    input.value = '';
+    document.getElementById('charCount').textContent = '0/500';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+    typingRow.style.display = 'flex';
+    quickBtns.style.display = 'none';
+    scrollBottom();
+
+    try {
+      const resp = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, lang: LANG }),
+      });
+
+      typingRow.style.display = 'none';
+
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.success && data.answer) {
+          addMsg(data.answer, 'bot');
+        } else {
+          addMsg(data.error || 'حدث خطأ غير متوقع.', 'error');
+        }
+      } else {
+        addMsg('خطأ من الخادم (' + resp.status + '). حاول مرة أخرى.', 'error');
+      }
+    } catch (err) {
+      typingRow.style.display = 'none';
+      addMsg('خطأ في الشبكة: ' + err.message, 'error');
+    }
+
+    sendBtn.disabled = false;
+    input.focus();
+  }
+
+  function sendQuick(q) {
+    input.value = q;
     sendMessage();
   }
-}
 
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-  document.getElementById('charCount').textContent = `${el.value.length}/500`;
-}
+  // Event listeners
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+  input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    document.getElementById('charCount').textContent = this.value.length + '/500';
+  });
 
-function clearChat() {
-  const rows = messages.querySelectorAll('.msg-row:not(#typingIndicator):not(#welcomeMsg)');
-  rows.forEach(r => r.remove());
-  document.getElementById('quickBtns').style.display = '';
-}
+  // Quick buttons
+  document.querySelectorAll('.quick-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      sendQuick(this.dataset.q || this.textContent.trim());
+    });
+  });
 
-// Init
-scrollToBottom();
-input.focus();
+  function clearChat() {
+    msgs.querySelectorAll('.msg-row:not(#typingRow):not(#welcomeMsg)').forEach(r => r.remove());
+    quickBtns.style.display = '';
+  }
+  document.querySelector('[onclick="clearChat()"]').removeAttribute('onclick');
+  document.querySelector('button[title="مسح المحادثة"]').addEventListener('click', clearChat);
+
+  scrollBottom();
+  input.focus();
+})();
 </script>
 {% endblock %}
