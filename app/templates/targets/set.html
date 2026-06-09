@@ -2,8 +2,55 @@
 {% block title %}{{ _('Set Targets') }} | {{ _('القحطاني برو') }}{% endblock %}
 {% block extra_css %}
 <style>
-  .pct-input { width: 90px; text-align: center; }
+  .pct-input {
+    width: 90px;
+    text-align: center;
+    background: var(--bg-page, #0f172a);
+    color: var(--text-primary, #f1f5f9);
+    border-color: var(--border, #334155);
+  }
+  .pct-input:focus {
+    background: var(--bg-page, #0f172a);
+    color: var(--text-primary, #f1f5f9);
+    border-color: var(--primary, #3b82f6);
+    box-shadow: 0 0 0 2px rgba(59,130,246,.25);
+  }
   #sumBar { height: 8px; border-radius: 4px; transition: width .3s; }
+  .card {
+    background: var(--bg-card, #1e293b);
+    border-color: var(--border, #334155) !important;
+  }
+  .form-select, .form-control {
+    background: var(--bg-page, #0f172a);
+    color: var(--text-primary, #f1f5f9);
+    border-color: var(--border, #334155);
+  }
+  .form-select:focus, .form-control:focus {
+    background: var(--bg-page, #0f172a);
+    color: var(--text-primary, #f1f5f9);
+    border-color: var(--primary, #3b82f6);
+    box-shadow: 0 0 0 2px rgba(59,130,246,.25);
+  }
+  .form-select option { background: #1e293b; color: #f1f5f9; }
+  .input-group-text {
+    background: var(--bg-card, #1e293b);
+    color: var(--text-muted, #94a3b8);
+    border-color: var(--border, #334155);
+  }
+  .set-table { color: var(--text-primary, #f1f5f9); }
+  .set-table thead th {
+    background: var(--bg-card, #1e293b);
+    color: var(--text-muted, #94a3b8);
+    border-color: var(--border, #334155);
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .set-table td { border-color: var(--border, #334155); }
+  .set-table tbody tr:hover td { background: rgba(59,130,246,.06); }
+  .calc-amount { color: #34d399; font-weight: 700; font-family: monospace; }
+  .calc-daily { color: var(--text-muted, #94a3b8); }
+  .progress { background: rgba(255,255,255,.08); }
 </style>
 {% endblock %}
 {% block content %}
@@ -17,6 +64,20 @@
   </div>
 </div>
 
+{% if not employees %}
+<!-- No employees – guide user -->
+<div class="card text-center py-5">
+  <div class="card-body">
+    <i class="bi bi-people-fill fs-1 text-muted d-block mb-3"></i>
+    <h5 class="fw-bold mb-2">{{ _('No active employees found') }}</h5>
+    <p class="text-muted mb-4">{{ _('Add employees first, then come back to set targets.') }}</p>
+    <a href="{{ url_for('employees.index') }}" class="btn btn-primary">
+      <i class="bi bi-person-plus me-2"></i>{{ _('Go to Employees') }}
+    </a>
+  </div>
+</div>
+
+{% else %}
 <form method="POST" action="{{ url_for('targets.set_targets') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -25,7 +86,7 @@
     <div class="card-body">
       <div class="row g-3 align-items-end">
         <div class="col-md-2">
-          <label class="form-label fw-semibold">{{ _('Year') }}</label>
+          <label class="form-label fw-semibold small text-muted">{{ _('Year') }}</label>
           <select name="year" class="form-select">
             {% for y in range(2023, 2028) %}
             <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
@@ -33,7 +94,7 @@
           </select>
         </div>
         <div class="col-md-2">
-          <label class="form-label fw-semibold">{{ _('Month') }}</label>
+          <label class="form-label fw-semibold small text-muted">{{ _('Month') }}</label>
           <select name="month" class="form-select">
             {% for m_num, m_name in months %}
             <option value="{{ m_num }}" {% if m_num == month %}selected{% endif %}>{{ m_name }}</option>
@@ -41,16 +102,16 @@
           </select>
         </div>
         <div class="col-md-3">
-          <label class="form-label fw-semibold">{{ _('Company Target') }} (SAR)</label>
+          <label class="form-label fw-semibold small text-muted">{{ _('Company Target') }} (SAR)</label>
           <input type="number" id="company_total" name="company_total" class="form-control"
                  value="{{ company_target.total_target if company_target else 0 }}" min="0" step="1000">
         </div>
         <div class="col-md-2">
-          <label class="form-label fw-semibold">{{ _('Working Days') }}</label>
+          <label class="form-label fw-semibold small text-muted">{{ _('Working Days') }}</label>
           <input type="number" name="working_days" class="form-control" value="{{ working_days }}" min="1" max="31">
         </div>
-        <div class="col-md-3 text-muted small">
-          {{ _('Remaining days this month') }}: <strong>{{ remaining_days }}</strong>
+        <div class="col-md-3 text-muted small d-flex align-items-end">
+          {{ _('Remaining days this month') }}: <strong class="ms-1">{{ remaining_days }}</strong>
         </div>
       </div>
     </div>
@@ -58,7 +119,7 @@
 
   <!-- Percentage sum indicator -->
   <div class="card mb-3">
-    <div class="card-body py-2 d-flex align-items-center gap-3">
+    <div class="card-body py-2 d-flex align-items-center gap-3 flex-wrap">
       <span class="fw-semibold">{{ _('Total') }}:</span>
       <div class="flex-grow-1">
         <div class="progress" style="height:8px">
@@ -67,7 +128,7 @@
       </div>
       <span id="pct-sum" class="fw-bold fs-5">0%</span>
       <button type="button" class="btn btn-sm btn-outline-secondary" onclick="equalSplit()">
-        <i class="bi bi-arrow-down me-1"></i>{{ _('Equal Split') }}
+        <i class="bi bi-distribute-vertical me-1"></i>{{ _('Equal Split') }}
       </button>
       <button type="submit" id="save-targets-btn" class="btn btn-primary" disabled>
         <i class="bi bi-check2-all me-1"></i>{{ _('Save Targets') }}
@@ -78,11 +139,11 @@
   <!-- Employee table -->
   <div class="card">
     <div class="table-responsive">
-      <table class="table align-middle mb-0">
+      <table class="table align-middle mb-0 set-table">
         <thead>
           <tr>
             <th>{{ _('Employee Name') }}</th>
-            <th class="text-center" style="width:110px">{{ _('Percentage') }} %%</th>
+            <th class="text-center" style="width:110px">{{ _('Percentage') }} %</th>
             <th class="text-end" style="width:160px">{{ _('Target Amount') }} (SAR)</th>
             <th class="text-end" style="width:140px">{{ _('Daily Target') }}</th>
           </tr>
@@ -100,67 +161,76 @@
                      value="{{ cur.percentage|round(1) if cur else 0 }}" min="0" max="100" step="0.1">
             </td>
             <td class="text-end">
-              <span class="calc-amount fw-semibold text-primary">
+              <span class="calc-amount">
                 {{ '{:,.0f}'.format(cur.target_amount) if cur else '0' }}
               </span>
             </td>
-            <td class="text-end text-muted small">
-              <span class="calc-daily">
+            <td class="text-end">
+              <span class="calc-daily small">
                 {% if cur and cur.target_amount and working_days %}
                   {{ '{:,.0f}'.format(cur.target_amount / working_days) }}
                 {% else %}0{% endif %}
               </span>
             </td>
           </tr>
-          {% else %}
-          <tr><td colspan="4" class="text-center text-muted py-4">{{ _('No active employees found') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
 </form>
+{% endif %}
 {% endblock %}
 {% block scripts %}
+{% if employees %}
 <script>
-const totalInput  = document.getElementById('company_total');
-const sumEl       = document.getElementById('pct-sum');
-const sumBar      = document.getElementById('sumBar');
-const saveBtn     = document.getElementById('save-targets-btn');
-const pctInputs   = document.querySelectorAll('.pct-input');
-const workDaysEl  = document.querySelector('[name=working_days]');
+(function() {
+  const totalInput  = document.getElementById('company_total');
+  const sumEl       = document.getElementById('pct-sum');
+  const sumBar      = document.getElementById('sumBar');
+  const saveBtn     = document.getElementById('save-targets-btn');
+  const pctInputs   = document.querySelectorAll('.pct-input');
+  const workDaysEl  = document.querySelector('[name=working_days]');
 
-function updateTargetAmounts() {
-  const total    = parseFloat(totalInput.value) || 0;
-  const workDays = parseInt(workDaysEl.value) || 26;
-  let sum = 0;
-  pctInputs.forEach(inp => {
-    const pct = parseFloat(inp.value) || 0;
-    sum += pct;
-    const row = inp.closest('tr');
-    const amt = total * pct / 100;
-    row.querySelector('.calc-amount').textContent = amt.toLocaleString('ar-SA', {maximumFractionDigits:0});
-    row.querySelector('.calc-daily').textContent  = workDays ? (amt / workDays).toLocaleString('ar-SA', {maximumFractionDigits:0}) : '0';
-  });
-  const ok = Math.abs(sum - 100) < 0.1;
-  sumEl.textContent = sum.toFixed(1) + '%';
-  sumEl.className   = 'fw-bold fs-5 ' + (ok ? 'text-success' : 'text-danger');
-  sumBar.style.width = Math.min(sum, 100) + '%';
-  sumBar.className   = 'progress-bar ' + (ok ? 'bg-success' : sum > 100 ? 'bg-danger' : 'bg-warning');
-  saveBtn.disabled   = !ok;
-}
+  function updateTargetAmounts() {
+    const total    = parseFloat(totalInput.value) || 0;
+    const workDays = parseInt(workDaysEl.value) || 26;
+    let sum = 0;
+    pctInputs.forEach(inp => {
+      const pct = parseFloat(inp.value) || 0;
+      sum += pct;
+      const row = inp.closest('tr');
+      const amt = total * pct / 100;
+      row.querySelector('.calc-amount').textContent = Math.round(amt).toLocaleString('ar-SA');
+      row.querySelector('.calc-daily').textContent  = workDays ? Math.round(amt / workDays).toLocaleString('ar-SA') : '0';
+    });
+    const ok = Math.abs(sum - 100) < 0.1;
+    sumEl.textContent = sum.toFixed(1) + '%';
+    sumEl.className   = 'fw-bold fs-5 ' + (ok ? 'text-success' : 'text-danger');
+    sumBar.style.width = Math.min(sum, 100) + '%';
+    sumBar.className   = 'progress-bar ' + (ok ? 'bg-success' : sum > 100 ? 'bg-danger' : 'bg-warning');
+    saveBtn.disabled   = !ok;
+  }
 
-function equalSplit() {
-  const n = pctInputs.length;
-  if (!n) return;
-  const each = (100 / n).toFixed(1);
-  pctInputs.forEach((inp, i) => inp.value = i === n-1 ? (100 - each*(n-1)).toFixed(1) : each);
+  function equalSplit() {
+    const n = pctInputs.length;
+    if (!n) return;
+    const each = (100 / n).toFixed(1);
+    pctInputs.forEach((inp, i) => {
+      inp.value = i === n - 1 ? (100 - each * (n - 1)).toFixed(1) : each;
+    });
+    updateTargetAmounts();
+  }
+
+  pctInputs.forEach(inp => inp.addEventListener('input', updateTargetAmounts));
+  totalInput.addEventListener('input', updateTargetAmounts);
+  workDaysEl.addEventListener('input', updateTargetAmounts);
+
+  // Make equalSplit accessible to the inline onclick (already migrated to addEventListener above)
+  window.equalSplit = equalSplit;
+
   updateTargetAmounts();
-}
-
-pctInputs.forEach(inp => inp.addEventListener('input', updateTargetAmounts));
-totalInput.addEventListener('input', updateTargetAmounts);
-workDaysEl.addEventListener('input', updateTargetAmounts);
-updateTargetAmounts();
+})();
 </script>
+{% endif %}
 {% endblock %}
