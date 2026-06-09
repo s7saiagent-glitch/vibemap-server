@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Weekly Schedule') }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Weekly grid ─────────────────────────────── */
+  .week-table {
+    font-size: .78rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+  }
+  .week-table th,
+  .week-table td {
+    border: 1px solid #e5e7eb;
+    padding: .35rem .3rem;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .week-table thead th {
+    background: #1a56db;
+    color: #fff;
+    text-align: center;
+    font-weight: 700;
+    font-size: .75rem;
+    text-transform: uppercase;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .week-table thead th.col-weekend {
+    background: #4b5563;
+  }
+  .week-table thead th.col-today {
+    background: #1648c0;
+    outline: 3px solid #fcd34d;
+    outline-offset: -3px;
+  }
+  .week-table tbody tr:hover td {
+    background-color: #f0f9ff !important;
+  }
+  .week-table td.col-today {
+    background: #eff6ff;
+  }
+  .week-table td.col-weekend {
+    background: #f9fafb;
+  }
+  .week-table td.emp-name {
+    font-weight: 600;
+    min-width: 110px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: #f8fafc;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    border-right: 2px solid #d1d5db;
+  }
+  .week-table td.col-summary {
+    text-align: center;
+    font-weight: 700;
+    color: #057a55;
+    min-width: 55px;
+  }
+  .week-table tfoot tr td {
+    background: #f1f5f9;
+    font-weight: 600;
+    font-size: .73rem;
+    text-align: center;
+  }
+  .week-table tfoot td.apply-label {
+    text-align: start;
+    color: #374151;
+    font-weight: 700;
+  }
+
+  /* Shift selects */
+  .shift-sel, .apply-all-select {
+    width: 100%;
+    min-width: 80px;
+    font-size: .72rem;
+    padding: .18rem .2rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color .15s;
+  }
+
+  /* Legend pills */
+  .legend-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .55rem;
+    border-radius: 6px;
+    font-size: .73rem;
+    font-weight: 600;
+    margin: .15rem;
+    border: 1px solid rgba(0,0,0,.08);
+  }
+
+  /* Week nav */
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+  .week-range-label {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    min-width: 190px;
+    text-align: center;
+  }
+
+  @media (max-width: 767px) {
+    .week-range-label { min-width: unset; font-size: .9rem; }
+    .week-table { font-size: .68rem; }
+  }
+  @media print {
+    .no-print { display: none !important; }
+    .week-table th, .week-table td { font-size: .65rem; padding: .2rem .15rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# ── Header ─────────────────────────────────────────────── #}
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2 no-print">
+  <div>
+    <a href="{{ url_for('schedule.index') }}" class="btn btn-link btn-sm text-secondary p-0 me-2">
+      <i class="bi bi-arrow-left-circle-fill fs-5"></i>
+    </a>
+    <span class="h4 fw-bold mb-0">
+      <i class="bi bi-calendar-week text-primary me-2"></i>
+      {{ _('Weekly Schedule') }} / الجدول الأسبوعي
+    </span>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-printer-fill me-1"></i>{{ _('Print') }}
+    </button>
+
+    {# Copy to Next Week #}
+    <form method="POST" action="{{ url_for('schedule.copy_week') }}" class="d-inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="week_start" value="{{ week_start.isoformat() }}">
+      <button type="submit" class="btn btn-outline-info btn-sm"
+              onclick="return confirm('{{ _('Copy to Next Week') }}?')">
+        <i class="bi bi-calendar-plus me-1"></i>{{ _('Copy to Next Week') }}
+      </button>
+    </form>
+  </div>
+</div>
+
+{# ── View switcher ─────────────────────────────────────── #}
+<div class="btn-group mb-3 no-print">
+  <a href="{{ url_for('schedule.index') }}" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-calendar3 me-1"></i>Monthly / شهري
+  </a>
+  <a href="{{ url_for('schedule.weekly_view') }}" class="btn btn-primary btn-sm">
+    <i class="bi bi-calendar-week me-1"></i>Weekly / أسبوعي
+  </a>
+</div>
+
+{# ── Week navigation ───────────────────────────────────── #}
+<div class="card mb-3 no-print">
+  <div class="card-body py-2">
+    <div class="week-nav">
+      <a href="{{ url_for('schedule.weekly_view', week=prev_week) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-chevron-left me-1"></i>{{ _('Previous Week') }}
+      </a>
+
+      <span class="week-range-label">
+        {{ week_days[0].strftime('%d %b') }} – {{ week_days[6].strftime('%d %b %Y') }}
+      </span>
+
+      <a href="{{ url_for('schedule.weekly_view', week=next_week) }}" class="btn btn-outline-secondary btn-sm">
+        {{ _('Next Week') }}<i class="bi bi-chevron-right ms-1"></i>
+      </a>
+
+      <a href="{{ url_for('schedule.weekly_view') }}" class="btn btn-primary btn-sm ms-2">
+        <i class="bi bi-calendar-check me-1"></i>{{ _('Current Week') }}
+      </a>
+    </div>
+  </div>
+</div>
+
+{# ── Shift legend ──────────────────────────────────────── #}
+<div class="mb-3 no-print">
+  {% for code, label in shift_choices %}
+    {% set badge = shift_badge.get(code, 'secondary') %}
+    <span class="legend-pill bg-{{ badge }} bg-opacity-25 text-{{ badge }}">
+      {{ label }}
+    </span>
+  {% endfor %}
+</div>
+
+{# ── Flash messages ────────────────────────────────────── #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }} alert-dismissible fade show py-2" role="alert">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+{# ── Main schedule grid form ───────────────────────────── #}
+<form method="POST" action="{{ url_for('schedule.save_week') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="week_start" value="{{ week_start.isoformat() }}">
+
+  {# Save button – top #}
+  <div class="mb-2 d-flex gap-2 no-print">
+    <button type="submit" class="btn btn-primary btn-sm">
+      <i class="bi bi-floppy-fill me-1"></i>{{ _('Save') }}
+    </button>
+    <span class="text-muted small align-self-center">
+      {{ _('Weekly Schedule') }}: {{ week_days[0].strftime('%d %b') }} – {{ week_days[6].strftime('%d %b %Y') }}
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="week-table">
+      <thead>
+        <tr>
+          <th class="text-start ps-2">{{ _('Employee') }}</th>
+          {% for day in week_days %}
+            {% set is_today_col = (day == today) %}
+            {% set is_weekend = (day.weekday() in [4, 5]) %}
+            <th class="text-center
+              {% if is_today_col %}col-today{% elif is_weekend %}col-weekend{% endif %}">
+              {# Day name #}
+              {% set day_names = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+              {{ day_names[day.weekday()] }}<br>
+              <span class="fw-normal" style="font-size:.9em;">{{ day.day }}</span>
+            </th>
+          {% endfor %}
+          <th class="text-center">Σ</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for emp in employees %}
+          {% set ns = namespace(working=0) %}
+          <tr>
+            <td class="emp-name" title="{{ emp.name }}{% if emp.name_ar %} — {{ emp.name_ar }}{% endif %}">
+              {{ emp.name[:18] }}
+              {% if emp.name_ar %}
+                <div class="text-muted" style="font-size:.65rem;" dir="rtl">{{ emp.name_ar[:16] }}</div>
+              {% endif %}
+            </td>
+            {% for day in week_days %}
+              {% set is_today_col = (day == today) %}
+              {% set is_weekend = (day.weekday() in [4, 5]) %}
+              {% set sched = schedule_map.get((emp.id, day)) %}
+              {% set cur_shift = sched.shift if sched else '' %}
+              {% if sched and sched.is_working %}{% set ns.working = ns.working + 1 %}{% endif %}
+              <td class="text-center p-1
+                {% if is_today_col %}col-today{% elif is_weekend %}col-weekend{% endif %}">
+                <select name="shift_{{ emp.id }}_{{ day.isoformat() }}"
+                        class="shift-sel"
+                        data-col="{{ loop.index0 }}">
+                  <option value=""></option>
+                  {% for code, label in shift_choices %}
+                    <option value="{{ code }}"
+                      {% if cur_shift == code %}selected{% endif %}>
+                      {{ label }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </td>
+            {% endfor %}
+            <td class="col-summary">{{ ns.working }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td class="apply-label ps-2">{{ _('Apply to All') }}</td>
+          {% for day in week_days %}
+            {% set is_today_col = (day == today) %}
+            {% set is_weekend = (day.weekday() in [4, 5]) %}
+            <td class="p-1
+              {% if is_today_col %}col-today{% elif is_weekend %}col-weekend{% endif %}">
+              <select class="apply-all-select" data-col="{{ loop.index0 }}">
+                <option value="">—</option>
+                {% for code, label in shift_choices %}
+                  <option value="{{ code }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </td>
+          {% endfor %}
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  {# Save button – bottom #}
+  <div class="mt-3 d-flex gap-2 no-print">
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-floppy-fill me-1"></i>{{ _('Save') }}
+    </button>
+    <a href="{{ url_for('schedule.weekly_view', week=week_start.isoformat()) }}"
+       class="btn btn-outline-secondary">
+      {{ _('Cancel') }}
+    </a>
+  </div>
+</form>
+
+{# ── Weekly summary card ─────────────────────────────── #}
+<div class="card mt-4">
+  <div class="card-header d-flex align-items-center justify-content-between py-3">
+    <span>
+      <i class="bi bi-bar-chart-fill me-2 text-primary"></i>
+      {{ _('Weekly Schedule') }} — {{ _('Working Days') }}
+    </span>
+    <span class="badge bg-secondary">{{ employees|length }} {{ _('employees') }}</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead>
+          <tr>
+            <th>{{ _('Employee') }}</th>
+            <th class="text-center">{{ _('Working Days') }}</th>
+            {% for code, label in shift_choices %}
+              <th class="text-center">{{ label }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for emp in employees %}
+            {% set ns2 = namespace(working=0) %}
+            {% set shift_counts = {} %}
+            {% for code, label in shift_choices %}
+              {% set _ = shift_counts.update({code: 0}) %}
+            {% endfor %}
+            {% for day in week_days %}
+              {% set sched = schedule_map.get((emp.id, day)) %}
+              {% if sched %}
+                {% if sched.is_working %}{% set ns2.working = ns2.working + 1 %}{% endif %}
+                {% if sched.shift in shift_counts %}
+                  {% set _ = shift_counts.update({sched.shift: shift_counts[sched.shift] + 1}) %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ emp.name }}</div>
+                {% if emp.name_ar %}
+                  <div class="text-muted small" dir="rtl">{{ emp.name_ar }}</div>
+                {% endif %}
+              </td>
+              <td class="text-center fw-bold text-success">{{ ns2.working }}</td>
+              {% for code, label in shift_choices %}
+                <td class="text-center">
+                  {% set cnt = shift_counts.get(code, 0) %}
+                  {% if cnt > 0 %}
+                    {% set badge = shift_badge.get(code, 'secondary') %}
+                    <span class="badge bg-{{ badge }} bg-opacity-75">{{ cnt }}</span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const SHIFT_COLORS = {
+    morning:  '#dbeafe',
+    evening:  '#e0f2fe',
+    split:    '#f3f4f6',
+    day_off:  '#f9fafb',
+    holiday:  '#fef3c7',
+    sick:     '#fee2e2',
+    annual:   '#d1fae5',
+  };
+
+  function colorSelect(sel) {
+    const val = sel.value;
+    sel.style.backgroundColor = SHIFT_COLORS[val] || '#fff';
+  }
+
+  // Colour all selects on load
+  document.querySelectorAll('.shift-sel, .apply-all-select').forEach(s => {
+    colorSelect(s);
+    s.addEventListener('change', function () { colorSelect(this); });
+  });
+
+  // "Apply to All" row – propagate selection down a column
+  document.querySelectorAll('.apply-all-select').forEach(allSel => {
+    allSel.addEventListener('change', function () {
+      const col = this.dataset.col;
+      document.querySelectorAll(`.shift-sel[data-col="${col}"]`).forEach(sel => {
+        sel.value = this.value;
+        colorSelect(sel);
+      });
+    });
+  });
+</script>
+{% endblock %}

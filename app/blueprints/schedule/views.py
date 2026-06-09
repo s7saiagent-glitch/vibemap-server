@@ -209,6 +209,124 @@ def bulk_set():
     return redirect(url_for('schedule.index', year=sched_date.year, month=sched_date.month))
 
 
+@bp.route('/weekly')
+def weekly_view():
+    today = date.today()
+    # Get start of week (Sunday) from query param or default to current week
+    week_start_str = request.args.get('week')
+    if week_start_str:
+        try:
+            week_start = date.fromisoformat(week_start_str)
+        except ValueError:
+            week_start = today
+    else:
+        week_start = today
+    # Align to Sunday (weekday 6)
+    days_since_sunday = (week_start.weekday() + 1) % 7
+    week_start = week_start - timedelta(days=days_since_sunday)
+
+    week_days = [week_start + timedelta(days=i) for i in range(7)]
+    prev_week = (week_start - timedelta(days=7)).isoformat()
+    next_week = (week_start + timedelta(days=7)).isoformat()
+
+    employees = Employee.query.filter_by(is_active=True).order_by(Employee.name).all()
+
+    schedules_raw = Schedule.query.filter(
+        Schedule.date >= week_days[0],
+        Schedule.date <= week_days[6],
+    ).all()
+    schedule_map = {(s.employee_id, s.date): s for s in schedules_raw}
+
+    return render_template(
+        'schedule/weekly.html',
+        employees=employees,
+        week_days=week_days,
+        week_start=week_start,
+        prev_week=prev_week,
+        next_week=next_week,
+        schedule_map=schedule_map,
+        shift_choices=SHIFT_CHOICES,
+        shift_badge=SHIFT_BADGE,
+        today=today,
+        page_title=_l('Weekly Schedule'),
+    )
+
+
+@bp.route('/save-week', methods=['POST'])
+def save_week():
+    """Save all shifts for a full week at once (grid form submission)."""
+    saved = 0
+    for key, value in request.form.items():
+        if key.startswith('shift_') and value:
+            parts = key.split('_', 2)
+            if len(parts) == 3:
+                try:
+                    emp_id = int(parts[1])
+                    sched_date = date.fromisoformat(parts[2])
+                except (ValueError, TypeError):
+                    continue
+                shift = value.strip()
+                if not shift:
+                    continue
+                is_working = shift not in ('day_off', 'holiday', 'sick', 'annual')
+                existing = Schedule.query.filter_by(employee_id=emp_id, date=sched_date).first()
+                if existing:
+                    existing.shift = shift
+                    existing.is_working = is_working
+                else:
+                    db.session.add(Schedule(
+                        employee_id=emp_id, date=sched_date,
+                        shift=shift, is_working=is_working,
+                    ))
+                saved += 1
+    db.session.commit()
+    flash(_l('Weekly schedule saved (%(n)d entries).', n=saved), 'success')
+    week_start = request.form.get('week_start', date.today().isoformat())
+    return redirect(url_for('schedule.weekly_view', week=week_start))
+
+
+@bp.route('/copy-week', methods=['POST'])
+def copy_week():
+    """Copy all schedules from one week to the next."""
+    week_start_str = request.form.get('week_start', '')
+    try:
+        week_start = date.fromisoformat(week_start_str)
+    except ValueError:
+        flash(_l('Invalid week.'), 'danger')
+        return redirect(url_for('schedule.weekly_view'))
+
+    week_days = [week_start + timedelta(days=i) for i in range(7)]
+    next_week_start = week_start + timedelta(days=7)
+    next_week_days = [next_week_start + timedelta(days=i) for i in range(7)]
+
+    schedules = Schedule.query.filter(
+        Schedule.date >= week_days[0],
+        Schedule.date <= week_days[6],
+    ).all()
+
+    count = 0
+    for s in schedules:
+        offset = (s.date - week_days[0]).days
+        new_date = next_week_days[offset]
+        existing = Schedule.query.filter_by(employee_id=s.employee_id, date=new_date).first()
+        if existing:
+            existing.shift = s.shift
+            existing.is_working = s.is_working
+            existing.start_time = s.start_time
+            existing.end_time = s.end_time
+        else:
+            db.session.add(Schedule(
+                employee_id=s.employee_id, date=new_date,
+                shift=s.shift, is_working=s.is_working,
+                start_time=s.start_time, end_time=s.end_time,
+            ))
+        count += 1
+
+    db.session.commit()
+    flash(_l('Copied %(n)d shifts to next week.', n=count), 'success')
+    return redirect(url_for('schedule.weekly_view', week=next_week_start.isoformat()))
+
+
 @bp.route('/employee/<int:emp_id>')
 def employee_schedule(emp_id):
     """Individual employee schedule view."""

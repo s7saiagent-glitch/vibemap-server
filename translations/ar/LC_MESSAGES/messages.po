@@ -465,3 +465,66 @@ msgstr "الأداء مقارنةً بالأسبوع الماضي؟"
 
 msgid "Update Status"
 msgstr "تحديث الحالة"
+
+msgid "Weekly Schedule"
+msgstr "الجدول الأسبوعي"
+
+msgid "Weekly view"
+msgstr "عرض أسبوعي"
+
+msgid "Previous Week"
+msgstr "الأسبوع السابق"
+
+msgid "Next Week"
+msgstr "الأسبوع التالي"
+
+msgid "Current Week"
+msgstr "الأسبوع الحالي"
+
+msgid "Copy to Next Week"
+msgstr "نسخ للأسبوع القادم"
+
+msgid "Copied %(n)d shifts to next week."
+msgstr "تم نسخ %(n)d وردية للأسبوع القادم."
+
+msgid "Weekly schedule saved (%(n)d entries)."
+msgstr "تم حفظ الجدول الأسبوعي (%(n)d إدخال)."
+
+msgid "Apply to All"
+msgstr "تطبيق على الجميع"
+
+msgid "Set Shift"
+msgstr "تحديد الوردية"
+
+msgid "Sun"
+msgstr "أح"
+
+msgid "Mon"
+msgstr "إث"
+
+msgid "Tue"
+msgstr "ث"
+
+msgid "Wed"
+msgstr "أر"
+
+msgid "Thu"
+msgstr "خ"
+
+msgid "Fri"
+msgstr "ج"
+
+msgid "Sat"
+msgstr "س"
+
+msgid "Split"
+msgstr "مزدوج"
+
+msgid "Work Schedule"
+msgstr "جدول العمل"
+
+msgid "Optional notes…"
+msgstr "ملاحظات اختيارية..."
+
+msgid "Select Employee"
+msgstr "اختر موظفاً"
