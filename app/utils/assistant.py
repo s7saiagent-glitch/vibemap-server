@@ -202,9 +202,14 @@ class SahsPro:
 
 
 def generate_sales_advice(lang: str = 'ar') -> list[dict]:
-    """Generate automated rule-based sales advice."""
+    """Generate automated rule-based sales advice cards."""
     today = date.today()
     advice = []
+
+    def _card(type_: str, employee, msg_ar: str, msg_en: str) -> dict:
+        msg = msg_ar if lang == 'ar' else msg_en
+        return {'type': type_, 'level': type_, 'employee': employee,
+                'message': msg, 'message_ar': msg_ar, 'message_en': msg_en}
 
     # Rule 1: Under 80% target for 2 consecutive months
     employees = Employee.query.filter_by(is_active=True).all()
@@ -222,18 +227,17 @@ def generate_sales_advice(lang: str = 'ar') -> list[dict]:
                 extract('year', SaleRecord.sale_date) == check_date.year,
                 extract('month', SaleRecord.sale_date) == check_date.month,
             ).scalar() or 0
-            if achieved / target.target_amount < 0.80:
+            if achieved / float(target.target_amount) < 0.80:
                 low_months += 1
         if low_months >= 2:
-            advice.append({
-                'type': 'warning',
-                'employee': emp.name,
-                'message_ar': f'الموظف {emp.name} أداء أقل من 80% لشهرين متتاليين - يُنصح بمراجعة الأداء وتقديم التدريب.',
-                'message_en': f'{emp.name} underperformed (<80%) for 2 consecutive months. Recommend performance review & training.',
-            })
+            advice.append(_card(
+                'warning', emp.name,
+                f'الموظف {emp.name} أداؤه أقل من 80% لشهرين متتاليين — يُنصح بمراجعة الأداء وتقديم الدعم.',
+                f'{emp.name} underperformed (<80%) for 2 consecutive months — recommend performance review.',
+            ))
 
-    # Rule 2: Highlight top performer this month
-    top = (
+    # Rule 2: Employees currently above target
+    top_emps = (
         db.session.query(Employee.name, func.sum(SaleRecord.value).label('total'))
         .join(SaleRecord)
         .filter(
@@ -242,33 +246,59 @@ def generate_sales_advice(lang: str = 'ar') -> list[dict]:
         )
         .group_by(Employee.id)
         .order_by(func.sum(SaleRecord.value).desc())
-        .first()
+        .all()
     )
-    if top:
-        advice.append({
-            'type': 'success',
-            'employee': top.name,
-            'message_ar': f'🏆 أفضل أداء هذا الشهر: {top.name} بإجمالي {top.total:,.0f} ريال.',
-            'message_en': f'🏆 Top performer this month: {top.name} with {top.total:,.0f} SAR.',
-        })
+    if top_emps:
+        top = top_emps[0]
+        advice.append(_card(
+            'success', top.name,
+            f'🏆 أفضل أداء هذا الشهر: {top.name} بإجمالي {top.total:,.0f} ريال.',
+            f'🏆 Top performer this month: {top.name} with {top.total:,.0f} SAR.',
+        ))
 
-    # Rule 3: Product declining trend
+    # Rule 3: Employees with no sales this month
+    emp_ids_with_sales = {r.employee_id for r in (
+        db.session.query(SaleRecord.employee_id)
+        .filter(
+            extract('year', SaleRecord.sale_date) == today.year,
+            extract('month', SaleRecord.sale_date) == today.month,
+        ).all()
+    )}
+    for emp in employees:
+        if emp.id not in emp_ids_with_sales:
+            advice.append(_card(
+                'danger', emp.name,
+                f'⚠️ لا توجد مبيعات مسجلة للموظف {emp.name} هذا الشهر.',
+                f'⚠️ No sales recorded for {emp.name} this month.',
+            ))
+
+    # Rule 4: Product declining trend
     from sqlalchemy import text
-    declining = db.session.execute(text("""
-        SELECT product_category,
-               SUM(CASE WHEN strftime('%Y-%m', sale_date) = strftime('%Y-%m', 'now', '-1 month') THEN value ELSE 0 END) AS prev_month,
-               SUM(CASE WHEN strftime('%Y-%m', sale_date) = strftime('%Y-%m', 'now') THEN value ELSE 0 END) AS curr_month
-        FROM sale_records
-        GROUP BY product_category
-        HAVING prev_month > 0 AND curr_month < prev_month * 0.8
-    """)).fetchall()
+    try:
+        declining = db.session.execute(text("""
+            SELECT product_category,
+                   SUM(CASE WHEN strftime('%Y-%m', sale_date) = strftime('%Y-%m', 'now', '-1 month') THEN value ELSE 0 END) AS prev_month,
+                   SUM(CASE WHEN strftime('%Y-%m', sale_date) = strftime('%Y-%m', 'now') THEN value ELSE 0 END) AS curr_month
+            FROM sale_records
+            WHERE product_category IS NOT NULL AND product_category != ''
+            GROUP BY product_category
+            HAVING prev_month > 0 AND curr_month < prev_month * 0.8
+        """)).fetchall()
+        for row in declining:
+            advice.append(_card(
+                'info', None,
+                f'📉 انخفاض مبيعات "{row[0]}" بأكثر من 20% — يُنصح بحملة ترويجية.',
+                f'📉 "{row[0]}" sales down >20% vs last month — suggest a promotional campaign.',
+            ))
+    except Exception:
+        pass
 
-    for row in declining:
-        advice.append({
-            'type': 'info',
-            'employee': None,
-            'message_ar': f'انخفاض مبيعات منتج "{row[0]}" بأكثر من 20% - يُنصح بحملة ترويجية.',
-            'message_en': f'Product "{row[0]}" sales declined >20% — suggest promotional campaign.',
-        })
+    # If no data at all, show a welcome message
+    if not advice:
+        advice.append(_card(
+            'info', None,
+            'لا توجد بيانات كافية بعد. قم برفع ملفات المبيعات أولاً لتظهر التوصيات.',
+            'Not enough data yet. Upload your sales files first to see recommendations.',
+        ))
 
     return advice

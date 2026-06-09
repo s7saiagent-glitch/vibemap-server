@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Sales Advice') }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .advice-card {
+    border-radius: 12px;
+    border-left: 4px solid transparent;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .advice-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.1); }
+  .advice-card.warning { border-left-color: #c27803; }
+  .advice-card.success { border-left-color: #057a55; }
+  .advice-card.info    { border-left-color: #1c64f2; }
+  .advice-card.danger  { border-left-color: #c81e1e; }
+  {% if current_locale == 'ar' %}
+  .advice-card { border-left: none; border-right: 4px solid transparent; }
+  .advice-card.warning { border-right-color: #c27803; }
+  .advice-card.success { border-right-color: #057a55; }
+  .advice-card.info    { border-right-color: #1c64f2; }
+  .advice-card.danger  { border-right-color: #c81e1e; }
+  {% endif %}
+  .advice-icon { font-size: 1.6rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{{ url_for('assistant.index') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-{% if current_locale == 'ar' %}right{% else %}left{% endif %}"></i>
+  </a>
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-lightbulb-fill text-warning me-2"></i>{{ _('Sales Advice') }}
+    </h1>
+    <p class="text-muted small mb-0">{{ _('Automated recommendations based on current sales data') }}</p>
+  </div>
+</div>
+
+<!-- Stats summary -->
+{% if advice_list %}
+<div class="row g-3 mb-4">
+  {% set ns = namespace(warning=0, success=0, info=0, danger=0) %}
+  {% for a in advice_list %}
+    {% if a.level == 'warning' %}{% set ns.warning = ns.warning + 1 %}
+    {% elif a.level == 'success' %}{% set ns.success = ns.success + 1 %}
+    {% elif a.level == 'danger' %}{% set ns.danger = ns.danger + 1 %}
+    {% else %}{% set ns.info = ns.info + 1 %}{% endif %}
+  {% endfor %}
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3 border-0 bg-danger bg-opacity-10">
+      <div class="h3 fw-bold text-danger mb-0">{{ ns.danger }}</div>
+      <div class="small text-muted">{{ _('Critical') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3 border-0 bg-warning bg-opacity-10">
+      <div class="h3 fw-bold text-warning mb-0">{{ ns.warning }}</div>
+      <div class="small text-muted">{{ _('Warnings') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3 border-0 bg-info bg-opacity-10">
+      <div class="h3 fw-bold text-info mb-0">{{ ns.info }}</div>
+      <div class="small text-muted">{{ _('Info') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3 border-0 bg-success bg-opacity-10">
+      <div class="h3 fw-bold text-success mb-0">{{ ns.success }}</div>
+      <div class="small text-muted">{{ _('Positive') }}</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Advice cards -->
+{% if advice_list %}
+<div class="row g-3">
+  {% for advice in advice_list %}
+    {% set level = advice.level %}
+    {% set icons = {
+        'warning': 'bi-exclamation-circle-fill text-warning',
+        'success': 'bi-check-circle-fill text-success',
+        'info':    'bi-info-circle-fill text-info',
+        'danger':  'bi-x-circle-fill text-danger'
+    } %}
+    <div class="col-12 col-md-6">
+      <div class="card advice-card {{ level }} h-100">
+        <div class="card-body d-flex gap-3 align-items-start py-3">
+          <i class="bi {{ icons.get(level, 'bi-info-circle-fill text-info') }} advice-icon mt-1 flex-shrink-0"></i>
+          <div>
+            <p class="mb-1 fw-semibold small">{{ advice.message }}</p>
+            {% if advice.employee %}
+              <span class="badge bg-secondary">{{ advice.employee }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-star-fill fs-1 text-success d-block mb-3"></i>
+    <h5 class="fw-bold">{{ _('All Looking Good!') }}</h5>
+    <p class="text-muted mb-3">{{ _('No alerts at this time. Keep up the excellent work!') }}</p>
+    <a href="{{ url_for('uploads.index') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-cloud-upload-fill me-1"></i>{{ _('Upload Sales Data') }}
+    </a>
+  </div>
+</div>
+{% endif %}
+
+<!-- Link to chat -->
+<div class="text-center mt-4">
+  <a href="{{ url_for('assistant.index') }}" class="btn btn-primary">
+    <i class="bi bi-robot me-2"></i>{{ _('Chat with Sahs Pro') }}
+  </a>
+</div>
+{% endblock %}
