@@ -1,13 +1,12 @@
 {% extends "base.html" %}
-
 {% block title %}{{ _('Dashboard') }} | {{ _('القحطاني برو') }}{% endblock %}
 
 {% block extra_css %}
 <style>
-  .kpi-blue   { background: linear-gradient(135deg, #1a56db 0%, #1648c0 100%); }
-  .kpi-green  { background: linear-gradient(135deg, #057a55 0%, #046c4e 100%); }
-  .kpi-orange { background: linear-gradient(135deg, #d03801 0%, #b43403 100%); }
-  .kpi-purple { background: linear-gradient(135deg, #7e3af2 0%, #6c2bd9 100%); }
+  .kpi-blue   { background: linear-gradient(135deg,#1a56db,#1648c0); }
+  .kpi-green  { background: linear-gradient(135deg,#057a55,#046c4e); }
+  .kpi-orange { background: linear-gradient(135deg,#d03801,#b43403); }
+  .kpi-purple { background: linear-gradient(135deg,#7e3af2,#6c2bd9); }
 
   .progress-bar-animated { transition: width 1s ease-in-out; }
 
@@ -17,13 +16,34 @@
     border-radius: 99px;
     font-size: .72rem;
     font-weight: 700;
-    letter-spacing: .03em;
   }
 
-  .table-hover tbody tr:hover { background: #f0f7ff; }
+  /* ── Filter bar ───────────────────────────────────────── */
+  .filter-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .mode-tabs .btn {
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 600;
+    padding: .35rem .85rem;
+  }
+  .mode-tabs .btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+  .filter-inputs { display: none; }
+  .filter-inputs.show { display: flex; }
 
+  /* ── Chart ────────────────────────────────────────────── */
   #topChart { max-height: 280px; }
 
+  /* ── Quick links ─────────────────────────────────────── */
   .quick-link-card {
     border-radius: 12px;
     padding: 1rem 1.25rem;
@@ -32,119 +52,212 @@
     align-items: center;
     gap: .75rem;
     font-weight: 600;
-    color: #374151;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     transition: all .18s;
   }
   .quick-link-card:hover {
     border-color: var(--primary);
     color: var(--primary);
-    background: #eff6ff;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(26,86,219,.12);
+    box-shadow: 0 4px 12px rgba(59,130,246,.18);
   }
   .quick-link-card i { font-size: 1.4rem; }
+
+  /* fix table row hover in dark */
+  .table-hover tbody tr:hover { background: rgba(59,130,246,.07); }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE HEADER
+═══════════════════════════════════════════════════ -->
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
   <div>
     <h1 class="h4 fw-bold mb-0">
-      <i class="bi bi-speedometer2 text-primary me-2"></i>
-      {{ _('Dashboard') }} — <span class="text-muted fw-normal fs-6">{{ _('لوحة التحكم') }}</span>
+      <i class="bi bi-speedometer2 text-primary me-2"></i>{{ _('Dashboard') }}
     </h1>
-    <p class="text-muted small mb-0">
-      {{ _('Today') }}: <strong>{{ today.strftime('%%A, %%d %%B %%Y') }}</strong>
-      &nbsp;·&nbsp; {{ _('Month') }}: <strong>{{ year }}/{{ '%02d'|format(month) }}</strong>
-    </p>
+    <p class="text-muted small mb-0">{{ _('Today') }}: <strong>{{ today.strftime('%Y-%m-%d') }}</strong></p>
   </div>
   <a href="{{ url_for('dashboard.advice') }}" class="btn btn-outline-primary btn-sm no-print">
     <i class="bi bi-lightbulb-fill me-1"></i>{{ _('Sales Advice') }}
   </a>
 </div>
 
-<!-- ═══════════════════════════
+<!-- ═══════════════════════════════════════════════════
+     FILTER BAR
+═══════════════════════════════════════════════════ -->
+<div class="filter-bar no-print">
+  <form method="GET" id="filterForm" class="d-flex flex-wrap align-items-end gap-3">
+
+    <!-- Mode tabs -->
+    <div class="mode-tabs d-flex gap-1">
+      <button type="button" onclick="setMode('day')"
+        class="btn btn-sm btn-outline-secondary {% if mode=='day' %}active{% endif %}" id="tab-day">
+        <i class="bi bi-calendar-day me-1"></i>يوم
+      </button>
+      <button type="button" onclick="setMode('month')"
+        class="btn btn-sm btn-outline-secondary {% if mode=='month' %}active{% endif %}" id="tab-month">
+        <i class="bi bi-calendar-month me-1"></i>شهر
+      </button>
+      <button type="button" onclick="setMode('range')"
+        class="btn btn-sm btn-outline-secondary {% if mode=='range' %}active{% endif %}" id="tab-range">
+        <i class="bi bi-calendar-range me-1"></i>فترة
+      </button>
+    </div>
+
+    <input type="hidden" name="mode" id="modeInput" value="{{ mode }}">
+
+    <!-- Day inputs -->
+    <div class="filter-inputs align-items-end gap-2 {% if mode=='day' %}show{% endif %}" id="inputs-day">
+      <div>
+        <label class="form-label small mb-1">التاريخ</label>
+        <input type="date" name="date" class="form-control form-control-sm"
+          value="{{ d_from.isoformat() if mode=='day' else today.isoformat() }}"
+          max="{{ today.isoformat() }}">
+      </div>
+    </div>
+
+    <!-- Month inputs -->
+    <div class="filter-inputs align-items-end gap-2 {% if mode=='month' %}show{% endif %}" id="inputs-month">
+      <div>
+        <label class="form-label small mb-1">السنة</label>
+        <select name="year" class="form-select form-select-sm">
+          {% for y in range(2023, today.year+2) %}
+          <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label small mb-1">الشهر</label>
+        <select name="month" class="form-select form-select-sm">
+          {% for m_num, m_name in months %}
+          <option value="{{ m_num }}" {% if m_num==month %}selected{% endif %}>{{ m_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Range inputs -->
+    <div class="filter-inputs align-items-end gap-2 {% if mode=='range' %}show{% endif %}" id="inputs-range">
+      <div>
+        <label class="form-label small mb-1">من</label>
+        <input type="date" name="date_from" class="form-control form-control-sm"
+          value="{{ d_from.isoformat() if mode=='range' else today.replace(day=1).isoformat() }}"
+          max="{{ today.isoformat() }}">
+      </div>
+      <div>
+        <label class="form-label small mb-1">إلى</label>
+        <input type="date" name="date_to" class="form-control form-control-sm"
+          value="{{ d_to.isoformat() if mode=='range' else today.isoformat() }}"
+          max="{{ today.isoformat() }}">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-sm">
+      <i class="bi bi-funnel-fill me-1"></i>عرض
+    </button>
+
+    {% if mode != 'month' or year != today.year or month != today.month %}
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-counterclockwise me-1"></i>هذا الشهر
+    </a>
+    {% endif %}
+
+  </form>
+</div>
+
+<!-- Period label -->
+<div class="d-flex align-items-center gap-2 mb-3">
+  <span class="badge bg-primary fs-6 px-3 py-2">
+    <i class="bi bi-{% if mode=='day' %}calendar-day{% elif mode=='range' %}calendar-range{% else %}calendar-month{% endif %} me-1"></i>
+    {% if mode == 'day' %}يوم {{ period_label }}
+    {% elif mode == 'range' %}فترة: {{ period_label }}
+    {% else %}{{ period_label }}{% endif %}
+  </span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
      KPI CARDS
-═══════════════════════════ -->
+═══════════════════════════════════════════════════ -->
 <div class="row g-3 mb-4">
-  <!-- Total Employees -->
   <div class="col-6 col-xl-3">
     <div class="kpi-card kpi-blue">
-      <div class="kpi-label">{{ _('إجمالي الموظفين') }} / {{ _('Total Employees') }}</div>
+      <div class="kpi-label">إجمالي الموظفين</div>
       <div class="kpi-value">{{ kpis.total_employees }}</div>
       <i class="bi bi-people-fill kpi-icon"></i>
     </div>
   </div>
-
-  <!-- Monthly Sales -->
   <div class="col-6 col-xl-3">
     <div class="kpi-card kpi-green">
-      <div class="kpi-label">{{ _('مبيعات الشهر') }} / {{ _('Monthly Sales') }}</div>
-      <div class="kpi-value">{{ '{:,.0f}'.format(kpis.monthly_sales) }}</div>
+      <div class="kpi-label">
+        {% if mode == 'day' %}مبيعات اليوم{% elif mode == 'range' %}مبيعات الفترة{% else %}مبيعات الشهر{% endif %}
+      </div>
+      <div class="kpi-value">{{ '{:,.0f}'.format(kpis.period_sales) }}</div>
       <i class="bi bi-currency-exchange kpi-icon"></i>
     </div>
   </div>
-
-  <!-- Achievement % -->
   <div class="col-6 col-xl-3">
     <div class="kpi-card kpi-orange">
-      <div class="kpi-label">{{ _('نسبة الإنجاز') }} / {{ _('Target Achievement') }}</div>
+      <div class="kpi-label">نسبة الإنجاز</div>
       <div class="kpi-value">{{ kpis.company_achievement_pct }}%</div>
       <i class="bi bi-bullseye kpi-icon"></i>
     </div>
   </div>
-
-  <!-- Pending Invoices -->
   <div class="col-6 col-xl-3">
     <div class="kpi-card kpi-purple">
-      <div class="kpi-label">{{ _('الفواتير المعلقة') }} / {{ _('Pending Invoices') }}</div>
+      <div class="kpi-label">الفواتير المعلقة</div>
       <div class="kpi-value">{{ kpis.pending_invoices }}</div>
       <i class="bi bi-receipt-cutoff kpi-icon"></i>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════
-     MOTIVATIONAL BANNER
-═══════════════════════════ -->
-{% if kpis.company_achievement_pct >= 100 %}
-<div class="alert alert-success d-flex align-items-center gap-2 mb-4 no-print" role="alert">
-  <i class="bi bi-trophy-fill fs-4"></i>
-  <div>
-    <strong>{{ _('Excellent! Target Achieved!') }}</strong>
-    {{ _('The team has reached %(pct)s%% of the monthly target. Keep it up!', pct=kpis.company_achievement_pct) }}
+<!-- ═══════════════════════════════════════════════════
+     STATUS BANNER
+═══════════════════════════════════════════════════ -->
+{% if kpis.company_target > 0 %}
+  {% if kpis.company_achievement_pct >= 100 %}
+  <div class="alert alert-success d-flex align-items-center gap-2 mb-4 no-print">
+    <i class="bi bi-trophy-fill fs-4"></i>
+    <div>
+      <strong>ممتاز! تم تحقيق الهدف!</strong>
+      الفريق حقق {{ kpis.company_achievement_pct }}% من الهدف.
+    </div>
   </div>
-</div>
-{% elif kpis.company_achievement_pct >= 80 %}
-<div class="alert alert-warning d-flex align-items-center gap-2 mb-4 no-print" role="alert">
-  <i class="bi bi-exclamation-circle-fill fs-4"></i>
-  <div>
-    <strong>{{ _('Almost there!') }}</strong>
-    {{ _('Current achievement is %(pct)s%%. %(days)d working days remaining — push hard!',
-        pct=kpis.company_achievement_pct, days=kpis.remaining_working_days) }}
+  {% elif kpis.company_achievement_pct >= 80 %}
+  <div class="alert alert-warning d-flex align-items-center gap-2 mb-4 no-print">
+    <i class="bi bi-exclamation-circle-fill fs-4"></i>
+    <div>
+      <strong>قريب من الهدف!</strong>
+      الإنجاز الحالي {{ kpis.company_achievement_pct }}%.
+      {% if mode == 'month' %}{{ kpis.remaining_working_days }} أيام عمل متبقية — استمر!{% endif %}
+    </div>
   </div>
-</div>
-{% else %}
-<div class="alert alert-danger d-flex align-items-center gap-2 mb-4 no-print" role="alert">
-  <i class="bi bi-exclamation-circle-fill fs-4"></i>
-  <div>
-    <strong>{{ _('Attention!') }}</strong>
-    {{ _('Achievement is only %(pct)s%%. Urgent action required — %(days)d working days left.',
-        pct=kpis.company_achievement_pct, days=kpis.remaining_working_days) }}
+  {% else %}
+  <div class="alert alert-danger d-flex align-items-center gap-2 mb-4 no-print">
+    <i class="bi bi-x-circle-fill fs-4"></i>
+    <div>
+      <strong>تنبيه!</strong>
+      الإنجاز {{ kpis.company_achievement_pct }}% فقط.
+      {% if mode == 'month' %}{{ kpis.remaining_working_days }} أيام عمل متبقية — يجب التحرك!{% endif %}
+    </div>
   </div>
-</div>
+  {% endif %}
 {% endif %}
 
-<!-- ═══════════════════════════
+<!-- ═══════════════════════════════════════════════════
      EMPLOYEE PROGRESS TABLE
-═══════════════════════════ -->
+═══════════════════════════════════════════════════ -->
 <div class="card mb-4">
   <div class="card-header d-flex align-items-center justify-content-between py-3">
-    <span><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>{{ _('Employee Progress') }}</span>
-    <span class="text-muted small">{{ _('Month') }}: {{ year }}/{{ '%02d'|format(month) }}</span>
+    <span><i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>تقدم الموظفين</span>
+    <span class="text-muted small">
+      {% if mode=='day' %}يوم {{ period_label }}{% elif mode=='range' %}{{ period_label }}{% else %}{{ period_label }}{% endif %}
+    </span>
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
@@ -152,13 +265,15 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>{{ _('Name') }}</th>
-            <th class="text-end">{{ _('Target') }}</th>
-            <th class="text-end">{{ _('Achieved') }}</th>
-            <th class="text-end">{{ _('Remaining') }}</th>
-            <th class="text-end">{{ _('Daily Target') }}</th>
-            <th style="min-width:140px">{{ _('Progress') }}</th>
-            <th class="text-center">{{ _('Status') }}</th>
+            <th>الاسم</th>
+            <th class="text-end">
+              {% if mode == 'day' %}الهدف اليومي{% elif mode == 'range' %}الهدف (الفترة){% else %}الهدف{% endif %}
+            </th>
+            <th class="text-end">المحقق</th>
+            <th class="text-end">المتبقي</th>
+            {% if mode == 'month' %}<th class="text-end">الهدف اليومي</th>{% endif %}
+            <th style="min-width:140px">التقدم</th>
+            <th class="text-center">الحالة</th>
           </tr>
         </thead>
         <tbody>
@@ -177,48 +292,51 @@
                 {{ '{:,.0f}'.format(row.achieved) }}
               </td>
               <td class="text-end font-monospace text-danger">
-                {% if row.remaining > 0 %}{{ '{:,.0f}'.format(row.remaining) }}{% else %}<span class="text-success">—</span>{% endif %}
+                {% if row.remaining > 0 %}
+                  {{ '{:,.0f}'.format(row.remaining) }}
+                {% else %}
+                  <span class="text-success">—</span>
+                {% endif %}
               </td>
+              {% if mode == 'month' %}
               <td class="text-end font-monospace text-warning">{{ '{:,.0f}'.format(row.daily_target) }}</td>
+              {% endif %}
               <td>
                 <div class="d-flex align-items-center gap-2">
                   <div class="progress flex-grow-1" style="height:8px;">
                     <div class="progress-bar bg-{{ row.badge }} progress-bar-animated"
-                         role="progressbar"
-                         style="width: {{ row.progress_pct }}%"
-                         aria-valuenow="{{ row.progress_pct }}"
-                         aria-valuemin="0" aria-valuemax="100"></div>
+                         style="width:{{ row.progress_pct }}%"></div>
                   </div>
                   <span class="small fw-bold text-{{ row.badge }}" style="min-width:38px;">{{ row.progress_pct }}%</span>
                 </div>
               </td>
               <td class="text-center">
                 {% if row.badge == 'success' %}
-                  <span class="perf-badge badge-success">{{ _('On Track') }}</span>
+                  <span class="perf-badge badge-success">على المسار</span>
                 {% elif row.badge == 'warning' %}
-                  <span class="perf-badge badge-warning">{{ _('Needs Push') }}</span>
+                  <span class="perf-badge badge-warning">يحتاج دفعة</span>
                 {% else %}
-                  <span class="perf-badge badge-danger">{{ _('Behind') }}</span>
+                  <span class="perf-badge badge-danger">متأخر</span>
                 {% endif %}
               </td>
             </tr>
             {% endfor %}
           {% else %}
             <tr>
-              <td colspan="8" class="text-center py-5 text-muted">
+              <td colspan="{% if mode=='month' %}8{% else %}7{% endif %}" class="text-center py-5 text-muted">
                 <i class="bi bi-people-fill fs-2 d-block mb-2"></i>
-                {{ _('No employee data for this month.') }}
+                لا توجد بيانات لهذه الفترة.
               </td>
             </tr>
           {% endif %}
         </tbody>
         {% if employee_data %}
-        <tfoot class="table-light">
+        <tfoot class="fw-bold" style="background:var(--bg-card);">
           <tr>
-            <td colspan="2" class="fw-bold">{{ _('Total') }}</td>
-            <td class="text-end fw-bold font-monospace">{{ '{:,.0f}'.format(kpis.company_target) }}</td>
-            <td class="text-end fw-bold font-monospace text-success">{{ '{:,.0f}'.format(kpis.monthly_sales) }}</td>
-            <td colspan="4"></td>
+            <td colspan="2">الإجمالي</td>
+            <td class="text-end font-monospace">{{ '{:,.0f}'.format(employee_data | sum(attribute='target_amount')) }}</td>
+            <td class="text-end font-monospace text-success">{{ '{:,.0f}'.format(kpis.period_sales) }}</td>
+            <td colspan="{% if mode=='month' %}4{% else %}3{% endif %}"></td>
           </tr>
         </tfoot>
         {% endif %}
@@ -227,25 +345,18 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════
-     MOTIVATIONAL BANNERS
-═══════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════
+     MINI BADGES PER EMPLOYEE
+═══════════════════════════════════════════════════ -->
 {% if employee_data %}
 <div class="row g-2 mb-4 no-print">
   {% for row in employee_data %}
   <div class="col-12 col-md-6 col-xl-4">
-    <div class="alert {% if row.badge == 'success' %}alert-success{% elif row.badge == 'warning' %}alert-warning{% else %}alert-danger{% endif %} d-flex align-items-center gap-2 py-2 mb-0" role="alert">
-      <i class="bi {% if row.badge == 'success' %}bi-check-circle-fill{% elif row.badge == 'warning' %}bi-exclamation-circle-fill{% else %}bi-x-circle-fill{% endif %}"></i>
+    <div class="alert alert-{{ row.badge }} d-flex align-items-center gap-2 py-2 mb-0">
+      <i class="bi {% if row.badge=='success' %}bi-check-circle-fill{% elif row.badge=='warning' %}bi-exclamation-circle-fill{% else %}bi-x-circle-fill{% endif %}"></i>
       <div class="small">
-        <strong>{{ row.employee.name }}</strong>
-        —
-        {% if row.badge == 'success' %}
-          {{ row.progress_pct }}% {{ _('On Track') }}
-        {% elif row.badge == 'warning' %}
-          {{ row.progress_pct }}% {{ _('Needs Push') }}
-        {% else %}
-          {{ row.progress_pct }}% {{ _('Behind') }}
-        {% endif %}
+        <strong>{{ row.employee.name }}</strong> — {{ row.progress_pct }}%
+        {% if row.badge=='success' %}على المسار{% elif row.badge=='warning' %}يحتاج دفعة{% else %}متأخر{% endif %}
       </div>
     </div>
   </div>
@@ -253,27 +364,24 @@
 </div>
 {% endif %}
 
-<!-- ═══════════════════════════
-     CHARTS ROW
-═══════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════
+     CHARTS
+═══════════════════════════════════════════════════ -->
 <div class="row g-3 mb-4">
-  <!-- Top Performers Bar Chart -->
   <div class="col-12 col-lg-7">
     <div class="card h-100">
       <div class="card-header py-3">
-        <i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>{{ _('Top Performers') }}
+        <i class="bi bi-bar-chart-line-fill me-2 text-primary"></i>أفضل الأداء
       </div>
       <div class="card-body">
         <canvas id="topChart"></canvas>
       </div>
     </div>
   </div>
-
-  <!-- Achievement Donut -->
   <div class="col-12 col-lg-5">
     <div class="card h-100">
       <div class="card-header py-3">
-        <i class="bi bi-bullseye me-2 text-success"></i>{{ _('Achievement Overview') }}
+        <i class="bi bi-bullseye me-2 text-success"></i>نظرة عامة على الإنجاز
       </div>
       <div class="card-body d-flex align-items-center justify-content-center">
         <canvas id="achieveChart" style="max-height:240px;"></canvas>
@@ -282,35 +390,28 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════
+<!-- ═══════════════════════════════════════════════════
      QUICK LINKS
-═══════════════════════════ -->
-<div class="row g-3 mb-4 no-print">
-  <div class="col-12">
-    <h6 class="fw-bold text-muted mb-2 text-uppercase small">{{ _('Quick Links') }}</h6>
-  </div>
+═══════════════════════════════════════════════════ -->
+<div class="row g-3 mb-2 no-print">
   <div class="col-6 col-md-3">
     <a href="{{ url_for('uploads.index') }}" class="quick-link-card">
-      <i class="bi bi-cloud-upload-fill text-primary"></i>
-      <span>{{ _('Upload Data') }}</span>
+      <i class="bi bi-cloud-upload-fill text-primary"></i><span>رفع البيانات</span>
     </a>
   </div>
   <div class="col-6 col-md-3">
     <a href="{{ url_for('targets.index') }}" class="quick-link-card">
-      <i class="bi bi-bullseye text-danger"></i>
-      <span>{{ _('Set Targets') }}</span>
+      <i class="bi bi-bullseye text-danger"></i><span>تحديد الأهداف</span>
     </a>
   </div>
   <div class="col-6 col-md-3">
     <a href="{{ url_for('reports.index') }}" class="quick-link-card">
-      <i class="bi bi-bar-chart-line-fill text-success"></i>
-      <span>{{ _('Reports') }}</span>
+      <i class="bi bi-bar-chart-line-fill text-success"></i><span>التقارير</span>
     </a>
   </div>
   <div class="col-6 col-md-3">
     <a href="{{ url_for('invoices.index') }}" class="quick-link-card">
-      <i class="bi bi-receipt-cutoff text-warning"></i>
-      <span>{{ _('Invoices') }}</span>
+      <i class="bi bi-receipt-cutoff text-warning"></i><span>الفواتير</span>
     </a>
   </div>
 </div>
@@ -320,11 +421,23 @@
 {% block scripts %}
 <script>
 (function () {
-  // ── Build data from Jinja ────────────────────────────────────────────────
-  const employeeData = [
+
+  /* ── Mode switcher ──────────────────────────────────────── */
+  function setMode(m) {
+    document.getElementById('modeInput').value = m;
+    ['day','month','range'].forEach(function(id) {
+      document.getElementById('tab-' + id).classList.toggle('active', id === m);
+      var inp = document.getElementById('inputs-' + id);
+      if (inp) inp.classList.toggle('show', id === m);
+    });
+  }
+  window.setMode = setMode;
+
+  /* ── Chart data ─────────────────────────────────────────── */
+  var employeeData = [
     {% for row in employee_data %}
     {
-      name: "{{ row.employee.name | replace('"', '') }}",
+      name: {{ row.employee.name | tojson }},
       achieved: {{ row.achieved }},
       target: {{ row.target_amount }},
       pct: {{ row.progress_pct }},
@@ -333,36 +446,31 @@
     {% endfor %}
   ];
 
-  const topN = employeeData.slice(0, 8);
-  const isRTL = document.documentElement.dir === 'rtl';
+  var topN = employeeData.slice(0, 8);
 
-  // Chart defaults
-  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
-  Chart.defaults.color = '#6b7280';
-
-  // ── Top Performers Horizontal Bar ────────────────────────────────────────
-  const topCtx = document.getElementById('topChart');
+  /* ── Top Performers Bar ─────────────────────────────────── */
+  var topCtx = document.getElementById('topChart');
   if (topCtx && topN.length) {
     new Chart(topCtx, {
       type: 'bar',
       data: {
-        labels: topN.map(d => d.name),
+        labels: topN.map(function(d){ return d.name; }),
         datasets: [
           {
-            label: '{{ _("Achieved") }}',
-            data: topN.map(d => d.achieved),
-            backgroundColor: topN.map(d =>
-              d.badge === 'success' ? 'rgba(5,122,85,.75)' :
-              d.badge === 'warning' ? 'rgba(194,120,3,.75)' :
-                                     'rgba(200,30,30,.65)'
-            ),
+            label: 'المحقق',
+            data: topN.map(function(d){ return d.achieved; }),
+            backgroundColor: topN.map(function(d){
+              return d.badge === 'success' ? 'rgba(5,122,85,.75)'
+                   : d.badge === 'warning' ? 'rgba(194,120,3,.75)'
+                   : 'rgba(200,30,30,.65)';
+            }),
             borderRadius: 6,
           },
           {
-            label: '{{ _("Target") }}',
-            data: topN.map(d => d.target),
-            backgroundColor: 'rgba(107,114,128,.15)',
-            borderColor: 'rgba(107,114,128,.4)',
+            label: 'الهدف',
+            data: topN.map(function(d){ return d.target; }),
+            backgroundColor: 'rgba(148,163,184,.2)',
+            borderColor: 'rgba(148,163,184,.5)',
             borderWidth: 1,
             borderRadius: 6,
           }
@@ -374,34 +482,30 @@
         maintainAspectRatio: false,
         plugins: {
           legend: { position: 'top' },
-          tooltip: {
-            callbacks: {
-              label: ctx => ` ${Number(ctx.raw).toLocaleString()}`
-            }
-          }
+          tooltip: { callbacks: { label: function(c){ return ' ' + Number(c.raw).toLocaleString(); } } }
         },
         scales: {
-          x: { grid: { color: 'rgba(0,0,0,.05)' } },
+          x: { grid: { color: 'rgba(148,163,184,.15)' } },
           y: { grid: { display: false } }
         }
       }
     });
   }
 
-  // ── Achievement Donut ────────────────────────────────────────────────────
-  const achieveCtx = document.getElementById('achieveChart');
-  const achieved = {{ kpis.monthly_sales }};
-  const companyTarget = {{ kpis.company_target }};
-  const remaining = Math.max(companyTarget - achieved, 0);
+  /* ── Achievement Donut ──────────────────────────────────── */
+  var achieveCtx = document.getElementById('achieveChart');
+  var achieved     = {{ kpis.period_sales }};
+  var companyTgt   = {{ kpis.company_target }};
+  var remainingTgt = Math.max(companyTgt - achieved, 0);
 
   if (achieveCtx) {
     new Chart(achieveCtx, {
       type: 'doughnut',
       data: {
-        labels: ['{{ _("Achieved") }}', '{{ _("Remaining") }}'],
+        labels: ['المحقق','المتبقي'],
         datasets: [{
-          data: companyTarget > 0 ? [achieved, remaining] : [0, 1],
-          backgroundColor: ['#057a55', '#fee2e2'],
+          data: companyTgt > 0 ? [achieved, remainingTgt] : [0, 1],
+          backgroundColor: ['#057a55','#334155'],
           borderWidth: 0,
           hoverOffset: 8,
         }]
@@ -410,29 +514,27 @@
         cutout: '72%',
         plugins: {
           legend: { position: 'bottom' },
-          tooltip: {
-            callbacks: {
-              label: ctx => ` ${Number(ctx.raw).toLocaleString()}`
-            }
-          }
+          tooltip: { callbacks: { label: function(c){ return ' ' + Number(c.raw).toLocaleString(); } } }
         }
       },
       plugins: [{
         id: 'centerText',
-        afterDraw(chart) {
-          const { ctx, chartArea: { width, height, left, top } } = chart;
-          const pct = companyTarget > 0 ? Math.min(Math.round(achieved / companyTarget * 100), 100) : 0;
-          ctx.save();
-          ctx.font = 'bold 1.6rem Inter, Cairo, sans-serif';
-          ctx.fillStyle = '#111827';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(`${pct}%`, left + width / 2, top + height / 2);
-          ctx.restore();
+        afterDraw: function(chart) {
+          var ca = chart.chartArea;
+          var ctx2 = chart.ctx;
+          var pct = companyTgt > 0 ? Math.min(Math.round(achieved / companyTgt * 100), 100) : 0;
+          ctx2.save();
+          ctx2.font = 'bold 1.6rem Cairo, Inter, sans-serif';
+          ctx2.fillStyle = '#f1f5f9';
+          ctx2.textAlign = 'center';
+          ctx2.textBaseline = 'middle';
+          ctx2.fillText(pct + '%', ca.left + ca.width / 2, ca.top + ca.height / 2);
+          ctx2.restore();
         }
       }]
     });
   }
+
 })();
 </script>
 {% endblock %}
