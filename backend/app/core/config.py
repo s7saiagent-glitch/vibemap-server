@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # AI Providers
     ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
-    DEFAULT_AI_MODEL: str = "claude-sonnet-4-6"
+    DEFAULT_AI_MODEL: str = "claude-haiku-4-5"
     DEFAULT_AI_PROVIDER: str = "anthropic"
 
     # Vector DB
