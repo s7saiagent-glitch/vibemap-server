@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Invoice No') }} {{ invoice.invoice_no }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{{ url_for('invoices.index') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-{% if current_locale == 'ar' %}right{% else %}left{% endif %}"></i>
+  </a>
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-receipt-cutoff text-primary me-2"></i>
+      {{ _('Invoice No') }}: {{ invoice.invoice_no }}
+    </h1>
+    <p class="text-muted small mb-0">{{ invoice.description }}</p>
+  </div>
+  <div class="ms-auto">
+    {% if invoice.status == 'pending' %}
+      <span class="badge bg-warning text-dark fs-6">{{ _('Pending') }}</span>
+    {% elif invoice.status == 'resolved' %}
+      <span class="badge bg-success fs-6">{{ _('Resolved') }}</span>
+    {% else %}
+      <span class="badge bg-secondary fs-6">{{ invoice.status }}</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Invoice Details -->
+  <div class="col-md-5">
+    <div class="card h-100">
+      <div class="card-header fw-semibold">{{ _('Invoice Details') }}</div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless mb-0">
+          <tr><th class="text-muted w-50">{{ _('Invoice No') }}</th><td class="fw-semibold">{{ invoice.invoice_no }}</td></tr>
+          <tr><th class="text-muted">{{ _('Invoice Date') }}</th><td>{{ invoice.invoice_date.strftime('%Y-%m-%d') if invoice.invoice_date else '—' }}</td></tr>
+          <tr><th class="text-muted">{{ _('Employee') }}</th><td>{{ invoice.employee.name if invoice.employee else '—' }}</td></tr>
+          <tr><th class="text-muted">{{ _('Description') }}</th><td>{{ invoice.description or '—' }}</td></tr>
+          <tr><th class="text-muted">{{ _('Item Code') }}</th><td><code>{{ invoice.item_code or '—' }}</code></td></tr>
+          <tr><th class="text-muted">{{ _('Price') }}</th><td>{{ '{:,.2f}'.format(invoice.price) }} SAR</td></tr>
+          <tr><th class="text-muted">{{ _('Net Amount') }}</th><td class="fw-bold text-primary">{{ '{:,.2f}'.format(invoice.net) }} SAR</td></tr>
+          <tr><th class="text-muted">{{ _('Tax') }}</th><td>{{ '{:,.2f}'.format(invoice.tax) }} SAR</td></tr>
+          <tr><th class="text-muted">{{ _('Discount') }}</th><td>{{ '{:,.2f}'.format(invoice.discount) }} SAR</td></tr>
+          <tr><th class="text-muted">{{ _('Branch') }}</th><td>{{ invoice.branch or '—' }}</td></tr>
+        </table>
+      </div>
+      {% if invoice.status == 'pending' %}
+      <div class="card-footer">
+        <form method="POST" action="{{ url_for('invoices.resolve_invoice', invoice_id=invoice.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-success btn-sm w-100">
+            <i class="bi bi-check2-all me-1"></i>{{ _('Mark as Resolved') }}
+          </button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="col-md-7">
+    <div class="card mb-3">
+      <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+        {{ _('Notes') }}
+        <span class="badge bg-primary">{{ notes|length }}</span>
+      </div>
+      <div class="card-body p-0">
+        {% if notes %}
+        <ul class="list-group list-group-flush">
+          {% for note in notes %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between mb-1">
+              <span class="fw-semibold small">{{ note.employee.name if note.employee else _('System') }}</span>
+              <span class="text-muted small">{{ note.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+            {% if note.reason_code %}
+            <span class="badge bg-secondary-subtle text-secondary me-1">{{ note.reason_code }}</span>
+            {% endif %}
+            <p class="mb-0 small">{{ note.note }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-4">{{ _('No notes yet') }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Add Note Form -->
+    <div class="card">
+      <div class="card-header fw-semibold"><i class="bi bi-chat-dots-fill me-2 text-primary"></i>{{ _('Add Note') }}</div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('invoices.add_note', invoice_id=invoice.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">{{ _('Employee') }}</label>
+            <select name="employee_id" class="form-select form-select-sm">
+              <option value="">— {{ _('Select') }} —</option>
+              {% for emp in employees %}
+              <option value="{{ emp.id }}">{{ emp.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ _('Reason') }}</label>
+            <select name="reason_code" class="form-select form-select-sm">
+              <option value="">— {{ _('Select') }} —</option>
+              {% for code in reason_codes %}
+              <option value="{{ code }}">{{ code }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ _('Note') }}</label>
+            <textarea name="note" class="form-control form-control-sm" rows="3" required
+                      placeholder="{{ _('Type your note...') }}"></textarea>
+          </div>
+          <button class="btn btn-primary btn-sm w-100">
+            <i class="bi bi-send-fill me-1"></i>{{ _('Save Note') }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

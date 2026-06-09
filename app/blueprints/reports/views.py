@@ -131,6 +131,12 @@ def index():
 @bp.route('/employee/<int:emp_id>')
 def employee_report(emp_id):
     """Full individual employee sales dashboard."""
+    if emp_id == 0:
+        first = Employee.query.filter_by(is_active=True).order_by(Employee.name).first()
+        if first:
+            return redirect(url_for('reports.employee_report', emp_id=first.id,
+                                    **request.args.to_dict()))
+        return redirect(url_for('reports.index'))
     emp = Employee.query.get_or_404(emp_id)
     today = date.today()
     year = request.args.get('year', today.year, type=int)
