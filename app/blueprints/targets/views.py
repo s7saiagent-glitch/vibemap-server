@@ -127,7 +127,8 @@ def set_targets():
     if request.method == 'POST':
         year = request.form.get('year', today.year, type=int)
         month = request.form.get('month', today.month, type=int)
-        total_target = request.form.get('total_target', 0, type=float)
+        total_target = request.form.get('company_total', 0, type=float)
+        working_days = request.form.get('working_days', working_days, type=int)
         notes = request.form.get('notes', '').strip()
         branch = request.form.get('branch', '').strip()
 
