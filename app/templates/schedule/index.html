@@ -1,48 +1,60 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('Work Schedule') }} | {{ _('القحطاني برو') }}{% endblock %}
+{% block title %}جدول العمل | {{ _('القحطاني برو') }}{% endblock %}
 
 {% block extra_css %}
 <style>
-  /* Calendar grid */
+  /* ── Shift pill colour map ───────────────────────────────── */
+  .sp-morning  { background: #1e3a5f; color: #93c5fd; }
+  .sp-evening  { background: #164e63; color: #67e8f9; }
+  .sp-split    { background: #374151; color: #d1d5db; }
+  .sp-day_off  { background: #1f2937; color: #6b7280; }
+  .sp-holiday  { background: #78350f; color: #fcd34d; }
+  .sp-sick     { background: #7f1d1d; color: #fca5a5; }
+  .sp-annual   { background: #14532d; color: #86efac; }
+
+  /* ── Calendar grid ──────────────────────────────────────── */
   .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 2px;
-    background: #e5e7eb;
-    border-radius: 8px;
+    background: var(--border);
+    border-radius: 10px;
     overflow: hidden;
   }
+
   .cal-day-header {
-    background: #1a56db;
+    background: var(--primary);
     color: #fff;
     text-align: center;
     font-weight: 700;
-    font-size: .73rem;
+    font-size: .72rem;
     padding: .5rem .25rem;
-    text-transform: uppercase;
+    letter-spacing: .03em;
   }
+
   .cal-day {
-    background: #fff;
-    min-height: 90px;
+    background: var(--bg-card);
+    min-height: 92px;
     padding: .35rem .4rem;
     position: relative;
-    font-size: .76rem;
+    font-size: .74rem;
     cursor: pointer;
     transition: background .12s;
   }
-  .cal-day:hover { background: #f0f9ff; }
-  .cal-day.empty   { background: #f9fafb; cursor: default; }
-  .cal-day.today   { background: #eff6ff; }
-  .cal-day.weekend { background: #fafafa; }
-  .cal-day .day-num {
+  .cal-day:hover        { background: var(--bg-hover); }
+  .cal-day.empty        { background: var(--bg-page); cursor: default; }
+  .cal-day.today        { background: #172554; }
+  .cal-day.weekend      { background: #1a2233; }
+
+  .day-num {
     font-weight: 700;
     font-size: .8rem;
-    color: #374151;
+    color: var(--text-primary);
     display: inline-flex;
     align-items: center; justify-content: center;
-    width: 22px; height: 22px;
-    margin-bottom: .15rem;
+    width: 24px; height: 24px;
+    margin-bottom: .2rem;
   }
   .cal-day.today .day-num {
     background: var(--primary);
@@ -51,159 +63,168 @@
     font-size: .75rem;
   }
 
-  /* Shift pills */
+  /* ── Shift pills inside cells ───────────────────────────── */
   .shift-pill {
     display: block;
-    padding: .1rem .3rem;
+    padding: .1rem .35rem;
     border-radius: 4px;
-    font-size: .65rem;
+    font-size: .63rem;
     font-weight: 600;
     margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.4;
   }
-  .bg-primary.shift-pill   { background: #dbeafe !important; color: #1e40af; }
-  .bg-info.shift-pill      { background: #e0f2fe !important; color: #0369a1; }
-  .bg-secondary.shift-pill { background: #f3f4f6 !important; color: #4b5563; }
-  .bg-light.shift-pill     { background: #f9fafb !important; color: #9ca3af; }
-  .bg-warning.shift-pill   { background: #fef3c7 !important; color: #92400e; }
-  .bg-danger.shift-pill    { background: #fee2e2 !important; color: #991b1b; }
-  .bg-success.shift-pill   { background: #d1fae5 !important; color: #065f46; }
-  /* Morning=green(success), Evening=blue(info), Day Off=red(danger), Sick=orange(warning), Annual Leave=purple */
-  .bg-purple.shift-pill    { background: #ede9fe !important; color: #5b21b6; }
-  .bg-purple               { background-color: #7c3aed !important; }
 
+  /* ── Legend pills ───────────────────────────────────────── */
   .legend-pill {
-    display: inline-flex; align-items: center; gap: .3rem;
-    padding: .2rem .6rem; border-radius: 6px; font-size: .75rem; font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .22rem .65rem;
+    border-radius: 6px;
+    font-size: .75rem;
+    font-weight: 600;
     margin: .15rem;
   }
 
-  @media (max-width: 767px) {
-    .cal-day { min-height: 58px; }
-    .shift-pill { font-size: .58rem; }
+  /* ── Controls card inputs ───────────────────────────────── */
+  .controls-card .form-select,
+  .controls-card .form-control {
+    background: var(--bg-page);
+    border-color: var(--border);
+    color: var(--text-primary);
   }
+
+  /* ── Responsive ─────────────────────────────────────────── */
+  @media (max-width: 767px) {
+    .cal-day         { min-height: 60px; }
+    .shift-pill      { font-size: .56rem; }
+    .cal-day-header  { font-size: .65rem; padding: .35rem .1rem; }
+  }
+
   @media print {
-    .no-print { display: none !important; }
-    .cal-grid  { gap: 1px; }
-    .cal-day   { min-height: 60px; }
+    .no-print        { display: none !important; }
+    .cal-grid        { gap: 1px; background: #ccc; }
+    .cal-day         { min-height: 62px; background: #fff !important; color: #000 !important; }
+    .cal-day-header  { background: #374151 !important; -webkit-print-color-adjust: exact; }
+    .shift-pill      { font-size: .58rem; border: 1px solid #ccc; }
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Header -->
+
+{# ── Page header ─────────────────────────────────────────── #}
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2 no-print">
   <div>
     <h1 class="h4 fw-bold mb-0">
       <i class="bi bi-calendar3 text-primary me-2"></i>
-      {{ _('Work Schedule') }} / جدول العمل
+      جدول العمل الشهري
     </h1>
-    <p class="text-muted small mb-0">{{ _('Monthly shift calendar for all employees') }}</p>
+    <p class="text-muted small mb-0">التقويم الشهري لجميع الموظفين النشطين</p>
   </div>
   <div class="d-flex gap-2">
     <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-printer-fill me-1"></i>{{ _('Print') }}
+      <i class="bi bi-printer-fill me-1"></i>طباعة
     </button>
   </div>
 </div>
 
-<!-- View switcher -->
-<div class="btn-group mb-3 no-print">
-  <a href="{{ url_for('schedule.index', year=year, month=month) }}" class="btn btn-primary btn-sm">
-    <i class="bi bi-calendar3 me-1"></i>Monthly / شهري
+{# ── View switcher ───────────────────────────────────────── #}
+<div class="btn-group mb-3 no-print" role="group" aria-label="عرض">
+  <a href="{{ url_for('schedule.index', year=year, month=month) }}"
+     class="btn btn-primary btn-sm">
+    <i class="bi bi-calendar3 me-1"></i>شهري
   </a>
-  <a href="{{ url_for('schedule.weekly_view') }}" class="btn btn-outline-primary btn-sm">
-    <i class="bi bi-calendar-week me-1"></i>Weekly / أسبوعي
+  <a href="{{ url_for('schedule.weekly_view') }}"
+     class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-calendar-week me-1"></i>أسبوعي
   </a>
 </div>
 
-<!-- Controls: Month/Year selector + employee filter -->
-<div class="card mb-4 no-print">
-  <div class="card-body">
+{# ── Month / Year selector ───────────────────────────────── #}
+<div class="card controls-card mb-4 no-print">
+  <div class="card-body py-3">
     <form method="GET" class="row g-3 align-items-end">
       <div class="col-6 col-md-2">
-        <label class="form-label fw-semibold small">{{ _('Year') }}</label>
+        <label class="form-label fw-semibold small mb-1">السنة</label>
         <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
-          {% for y in range(2023, 2028) %}
+          {% for y in range(2023, 2029) %}
             <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
           {% endfor %}
         </select>
       </div>
       <div class="col-6 col-md-3">
-        <label class="form-label fw-semibold small">{{ _('Month') }}</label>
+        <label class="form-label fw-semibold small mb-1">الشهر</label>
         <select name="month" class="form-select form-select-sm" onchange="this.form.submit()">
+          {% set ar_months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو',
+                              'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'] %}
           {% for m_num, m_name in months %}
             <option value="{{ m_num }}" {% if m_num == month %}selected{% endif %}>
-              {{ m_num }} — {{ m_name }}
+              {{ ar_months[m_num - 1] }}
             </option>
           {% endfor %}
         </select>
       </div>
       <div class="col-12 col-md-2">
         <button type="submit" class="btn btn-primary btn-sm w-100">
-          <i class="bi bi-search me-1"></i>{{ _('Apply') }}
+          <i class="bi bi-search me-1"></i>عرض
         </button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Shift legend -->
-<div class="mb-3 no-print">
+{# ── Shift legend ────────────────────────────────────────── #}
+<div class="mb-3 no-print d-flex flex-wrap align-items-center gap-1">
+  <span class="text-muted small fw-semibold ms-1 ms-md-0 me-2">الأنواع:</span>
   {% for code, label in shift_choices %}
-    {% set badge = shift_badge.get(code, 'secondary') %}
-    <span class="legend-pill bg-{{ badge }} bg-opacity-25 text-{{ badge }}"
-          style="border: 1px solid currentColor; opacity: .85;">
-      {{ label }}
-    </span>
+    <span class="legend-pill sp-{{ code }}">{{ label }}</span>
   {% endfor %}
 </div>
 
-<!-- Month title -->
-<h5 class="fw-bold mb-3 text-center">
-  {% for m_num, m_name in months %}{% if m_num == month %}{{ m_name }}{% endif %}{% endfor %}
-  {{ year }}
+{# ── Month title ─────────────────────────────────────────── #}
+{% set ar_months_title = ['يناير','فبراير','مارس','أبريل','مايو','يونيو',
+                          'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'] %}
+<h5 class="fw-bold mb-3 text-center" style="color: var(--text-heading);">
+  {{ ar_months_title[month - 1] }} {{ year }}
 </h5>
 
-<!-- Calendar grid -->
+{# ── Calendar grid ───────────────────────────────────────── #}
 <div class="cal-grid mb-4">
 
-  <!-- Day-of-week headers (Sun first, as calendar uses firstweekday=6) -->
-  {% set day_headers = [_('Sun'), _('Mon'), _('Tue'), _('Wed'), _('Thu'), _('Fri'), _('Sat')] %}
-  {% for dh in day_headers %}
+  {# Day-of-week headers — Sun first (firstweekday=6) #}
+  {% set day_headers_ar = ['أح', 'إث', 'ث', 'أر', 'خ', 'ج', 'س'] %}
+  {% for dh in day_headers_ar %}
     <div class="cal-day-header">{{ dh }}</div>
   {% endfor %}
 
-  <!-- Weeks -->
+  {# Weeks #}
   {% for week in calendar_weeks %}
     {% for day_date in week %}
       {% if day_date is none %}
         <div class="cal-day empty"></div>
       {% else %}
-        {% set is_today = (day_date == today) %}
-        {% set is_weekend = (day_date.weekday() in [4, 5]) %}{# Fri/Sat weekend #}
-        <div class="cal-day
-          {% if is_today %}today{% endif %}
-          {% if is_weekend %}weekend{% endif %}"
-          data-date="{{ day_date.isoformat() }}"
-          onclick="openShiftModal('{{ day_date.isoformat() }}')">
+        {% set is_today   = (day_date == today) %}
+        {% set is_weekend = (day_date.weekday() in [4, 5]) %}
+        <div class="cal-day{% if is_today %} today{% endif %}{% if is_weekend %} weekend{% endif %}"
+             data-date="{{ day_date.isoformat() }}"
+             onclick="openShiftModal('{{ day_date.isoformat() }}')">
 
           <span class="day-num">{{ day_date.day }}</span>
 
-          <!-- Show a pill for each employee scheduled on this day -->
           {% for emp in employees %}
             {% set sched = schedule_map.get((emp.id, day_date)) %}
             {% if sched %}
-              {% set badge = shift_badge.get(sched.shift, 'secondary') %}
-              <span class="shift-pill bg-{{ badge }} bg-opacity-25"
-                    style="color: var(--bs-{{ badge }}, #333);"
-                    title="{{ emp.name }} — {{ sched.shift }}{% if sched.start_time %} ({{ sched.start_time }}–{{ sched.end_time }}){% endif %}">
-                {{ emp.name[:6] }}{% if sched.start_time %} {{ sched.start_time }}{% endif %}
+              <span class="shift-pill sp-{{ sched.shift }}"
+                    title="{{ emp.name }} — {% for c, l in shift_choices %}{% if c == sched.shift %}{{ l }}{% endif %}{% endfor %}{% if sched.start_time %} ({{ sched.start_time }}–{{ sched.end_time }}){% endif %}">
+                {{ emp.name[:7] }}{% if sched.start_time %} {{ sched.start_time[:5] }}{% endif %}
               </span>
             {% endif %}
           {% endfor %}
+
         </div>
       {% endif %}
     {% endfor %}
@@ -211,21 +232,26 @@
 
 </div>
 
-<!-- Monthly summary table -->
+{# ── Monthly summary table ───────────────────────────────── #}
 <div class="card">
   <div class="card-header d-flex align-items-center justify-content-between py-3">
-    <span><i class="bi bi-calendar-week-fill me-2 text-primary"></i>{{ _('Monthly Summary') }}</span>
-    <span class="badge bg-secondary">{{ employees|length }} {{ _('employees') }}</span>
+    <span>
+      <i class="bi bi-calendar-week-fill me-2 text-primary"></i>
+      ملخص الشهر
+    </span>
+    <span class="badge bg-secondary">{{ employees|length }} موظف</span>
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0 small">
         <thead>
           <tr>
-            <th>{{ _('Employee') }}</th>
-            <th class="text-center">{{ _('Working Days') }}</th>
+            <th>الموظف</th>
+            <th class="text-center">أيام العمل</th>
             {% for code, label in shift_choices %}
-              <th class="text-center">{{ label }}</th>
+              <th class="text-center">
+                <span class="legend-pill sp-{{ code }}" style="font-size:.65rem; padding:.1rem .4rem;">{{ label }}</span>
+              </th>
             {% endfor %}
           </tr>
         </thead>
@@ -237,7 +263,6 @@
               {% set _ = shift_counts.update({code: 0}) %}
             {% endfor %}
 
-            {# Count shifts for this employee in the month #}
             {% for week in calendar_weeks %}
               {% for day_date in week %}
                 {% if day_date is not none %}
@@ -252,26 +277,25 @@
               {% endfor %}
             {% endfor %}
 
-          <tr>
-            <td>
-              <div class="fw-semibold">{{ emp.name }}</div>
-              {% if emp.name_ar %}
-                <div class="text-muted small" dir="rtl">{{ emp.name_ar }}</div>
-              {% endif %}
-            </td>
-            <td class="text-center fw-bold text-success">{{ ns.working }}</td>
-            {% for code, label in shift_choices %}
-              <td class="text-center">
-                {% set cnt = shift_counts.get(code, 0) %}
-                {% if cnt > 0 %}
-                  {% set badge = shift_badge.get(code, 'secondary') %}
-                  <span class="badge bg-{{ badge }} bg-opacity-75">{{ cnt }}</span>
-                {% else %}
-                  <span class="text-muted">—</span>
+            <tr>
+              <td>
+                <div class="fw-semibold" dir="rtl">{{ emp.name }}</div>
+                {% if emp.name_ar %}
+                  <div class="text-muted small" dir="rtl">{{ emp.name_ar }}</div>
                 {% endif %}
               </td>
-            {% endfor %}
-          </tr>
+              <td class="text-center fw-bold" style="color: #86efac;">{{ ns.working }}</td>
+              {% for code, label in shift_choices %}
+                <td class="text-center">
+                  {% set cnt = shift_counts.get(code, 0) %}
+                  {% if cnt > 0 %}
+                    <span class="sp-{{ code }}" style="display:inline-block; border-radius: 5px; padding: .15rem .4rem; font-size:.72rem; font-weight:700;">{{ cnt }}</span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
           {% endfor %}
         </tbody>
       </table>
@@ -279,25 +303,37 @@
   </div>
 </div>
 
-<!-- Set Shift Modal -->
-<div class="modal fade" id="shiftModal" tabindex="-1" aria-labelledby="shiftModalLabel" aria-hidden="true">
+{# ── Set Shift Modal ──────────────────────────────────────── #}
+<div class="modal fade" id="shiftModal" tabindex="-1"
+     aria-labelledby="shiftModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="shiftModalLabel">
-          <i class="bi bi-calendar3 me-2 text-primary"></i>
-          {{ _('Set Shift') }} / تحديد الوردية
+    <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary);">
+
+      <div class="modal-header" style="border-bottom-color: var(--border);">
+        <h5 class="modal-title fw-bold" id="shiftModalLabel">
+          <i class="bi bi-pencil-square me-2 text-primary"></i>
+          تحديد الوردية
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close btn-close-white"
+                data-bs-dismiss="modal"></button>
       </div>
+
       <form method="POST" action="{{ url_for('schedule.set_schedule') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="date" id="modalDate">
+
         <div class="modal-body">
+
+          <div class="alert alert-info py-2 small mb-3" style="background:rgba(59,130,246,.12); border-color:rgba(59,130,246,.3); color:#93c5fd;">
+            <i class="bi bi-calendar-event me-1"></i>
+            التاريخ: <strong id="modalDateDisplay"></strong>
+          </div>
+
           <div class="mb-3">
-            <label class="form-label fw-semibold">{{ _('Employee') }} / الموظف</label>
-            <select name="employee_id" class="form-select" required>
-              <option value="">— {{ _('Select Employee') }} —</option>
+            <label class="form-label fw-semibold">الموظف</label>
+            <select name="employee_id" class="form-select" required
+                    style="background: var(--bg-page); border-color: var(--border); color: var(--text-primary);">
+              <option value="">— اختر موظفاً —</option>
               {% for emp in employees %}
                 <option value="{{ emp.id }}">
                   {{ emp.name }}{% if emp.name_ar %} — {{ emp.name_ar }}{% endif %}
@@ -305,54 +341,85 @@
               {% endfor %}
             </select>
           </div>
+
           <div class="mb-3">
-            <label class="form-label fw-semibold">{{ _('Shift') }} / الوردية</label>
-            <select name="shift" class="form-select" required>
+            <label class="form-label fw-semibold">نوع الوردية</label>
+            <select name="shift" id="modalShiftSelect" class="form-select" required
+                    style="background: var(--bg-page); border-color: var(--border); color: var(--text-primary);"
+                    onchange="updateShiftPreview(this.value)">
               {% for code, label in shift_choices %}
                 <option value="{{ code }}">{{ label }}</option>
               {% endfor %}
             </select>
+            <div id="shiftPreview" class="mt-2 d-flex flex-wrap gap-1">
+              {% for code, label in shift_choices %}
+                <span class="legend-pill sp-{{ code }} shift-preview-pill"
+                      data-shift="{{ code }}"
+                      style="cursor:pointer; opacity:.4; transition:opacity .15s;"
+                      onclick="selectShift('{{ code }}')">{{ label }}</span>
+              {% endfor %}
+            </div>
           </div>
+
           <div class="row g-3">
             <div class="col-6">
-              <label class="form-label fw-semibold small">{{ _('Start Time') }}</label>
-              <input type="time" name="start_time" class="form-control">
+              <label class="form-label fw-semibold small">وقت البدء</label>
+              <input type="time" name="start_time" class="form-control"
+                     style="background: var(--bg-page); border-color: var(--border); color: var(--text-primary);">
             </div>
             <div class="col-6">
-              <label class="form-label fw-semibold small">{{ _('End Time') }}</label>
-              <input type="time" name="end_time" class="form-control">
+              <label class="form-label fw-semibold small">وقت الانتهاء</label>
+              <input type="time" name="end_time" class="form-control"
+                     style="background: var(--bg-page); border-color: var(--border); color: var(--text-primary);">
             </div>
           </div>
+
           <div class="mt-3">
-            <label class="form-label fw-semibold small">{{ _('Notes') }}</label>
+            <label class="form-label fw-semibold small">ملاحظات</label>
             <input type="text" name="notes" class="form-control form-control-sm"
-                   placeholder="{{ _('Optional notes…') }}">
+                   placeholder="ملاحظات اختيارية…"
+                   style="background: var(--bg-page); border-color: var(--border); color: var(--text-primary);">
           </div>
-          <div class="mt-2 text-muted small">
-            {{ _('Date') }}: <strong id="modalDateDisplay"></strong>
-          </div>
+
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-            {{ _('Cancel') }}
-          </button>
+
+        <div class="modal-footer" style="border-top-color: var(--border);">
+          <button type="button" class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal">إلغاء</button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check2-all me-1"></i>{{ _('Save Shift') }}
+            <i class="bi bi-check2-all me-1"></i>حفظ الوردية
           </button>
         </div>
       </form>
+
     </div>
   </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
   function openShiftModal(dateStr) {
     document.getElementById('modalDate').value = dateStr;
-    document.getElementById('modalDateDisplay').textContent = dateStr;
+    // Format date for display in Arabic-friendly way
+    const parts = dateStr.split('-');
+    document.getElementById('modalDateDisplay').textContent = parts[2] + '/' + parts[1] + '/' + parts[0];
+    updateShiftPreview(document.getElementById('modalShiftSelect').value);
     const modal = new bootstrap.Modal(document.getElementById('shiftModal'));
     modal.show();
+  }
+
+  function updateShiftPreview(val) {
+    document.querySelectorAll('.shift-preview-pill').forEach(el => {
+      el.style.opacity = (el.dataset.shift === val) ? '1' : '.35';
+      el.style.outline = (el.dataset.shift === val) ? '2px solid #fff4' : 'none';
+    });
+  }
+
+  function selectShift(code) {
+    document.getElementById('modalShiftSelect').value = code;
+    updateShiftPreview(code);
   }
 </script>
 {% endblock %}

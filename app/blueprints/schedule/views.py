@@ -17,13 +17,13 @@ from app.models import Employee, Schedule
 bp = Blueprint('schedule', __name__)
 
 SHIFT_CHOICES = [
-    ('morning',   _l('Morning')),
-    ('evening',   _l('Evening')),
-    ('split',     _l('Split')),
-    ('day_off',   _l('Day Off')),
-    ('holiday',   _l('Holiday')),
-    ('sick',      _l('Sick Leave')),
-    ('annual',    _l('Annual Leave')),
+    ('morning', 'صباحي'),
+    ('evening', 'مسائي'),
+    ('split',   'مزدوج'),
+    ('day_off', 'إجازة'),
+    ('holiday', 'عطلة رسمية'),
+    ('sick',    'إجازة مرضية'),
+    ('annual',  'إجازة سنوية'),
 ]
 
 SHIFT_BADGE = {
