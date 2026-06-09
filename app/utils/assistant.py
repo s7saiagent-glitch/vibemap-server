@@ -1,141 +1,307 @@
 """
-Al-Qahtani Pro: Rule-based intelligent assistant with optional LLM fallback.
+البدوي برو – مساعد ذكي لتحليل بيانات المبيعات.
+يجيب على أي سؤال عن الموظفين، المبيعات، الأهداف، والفواتير.
 """
 import re
 from datetime import date, timedelta
-from sqlalchemy import func, extract
-from app import db
-from app.models import (Employee, SaleRecord, SalesTarget, CompanyTarget,
-                        PendingInvoice, SalesProductivityRecord)
+import calendar
 
+from sqlalchemy import func
+
+from app import db
+from app.models import (
+    Employee, SaleRecord, SalesTarget, CompanyTarget,
+    PendingInvoice, SalesProductivityRecord,
+)
+
+# ─── helpers ──────────────────────────────────────────────────────────────────
+
+def _fmt(n) -> str:
+    try:
+        return f'{float(n):,.0f}'
+    except Exception:
+        return '0'
+
+
+def _pct(achieved, target) -> float:
+    if not target:
+        return 0.0
+    return round(float(achieved) / float(target) * 100, 1)
+
+
+def _sales_between(d_from, d_to, employee_id=None) -> float:
+    q = db.session.query(func.sum(SaleRecord.value)).filter(
+        SaleRecord.sale_date >= d_from,
+        SaleRecord.sale_date <= d_to,
+    )
+    if employee_id:
+        q = q.filter(SaleRecord.employee_id == employee_id)
+    return float(q.scalar() or 0)
+
+
+def _this_month():
+    t = date.today()
+    last = calendar.monthrange(t.year, t.month)[1]
+    return date(t.year, t.month, 1), date(t.year, t.month, last)
+
+
+def _this_week():
+    t = date.today()
+    days_since_sun = (t.weekday() + 1) % 7
+    start = t - timedelta(days=days_since_sun)
+    return start, start + timedelta(days=6)
+
+
+def _extract_employee_from_q(question: str):
+    """Match any active employee name found inside the question text."""
+    employees = Employee.query.filter_by(is_active=True).all()
+    best = None
+    best_len = 0
+    for emp in employees:
+        tokens = [emp.name] + emp.name.split()
+        for token in tokens:
+            if len(token) > 2 and token in question and len(token) > best_len:
+                best = emp
+                best_len = len(token)
+    remainder = question.replace(best.name, '').strip() if best else question
+    return best, remainder
+
+
+# ─── intent patterns ───────────────────────────────────────────────────────────
+
+PATTERNS = [
+    # help
+    (r'^مساعد|^مساعدة|^help$|^وش تعرف|^ماذا تعرف|^شو تعرف',
+     '_show_help'),
+    # employees list
+    (r'قائمة الموظف|كل الموظف|جميع الموظف|عدد الموظف|list.*employee|all employee',
+     '_employees_list'),
+    # top sellers
+    (r'أفضل|الأول|أكثر.*مبيع|top.*sell|best.*sell|أعلى.*مبيع|من.*باع|مين.*باع',
+     '_top_sellers'),
+    # today
+    (r'اليوم|today',
+     '_today_stats'),
+    # this week
+    (r'هذا الأسبوع|الأسبوع الحالي|أسبوع.*حالي|this week|أسبوع',
+     '_week_stats'),
+    # pending invoices – match both فاتورة/فواتير roots
+    (r'فاتور|فواتير|pending invoice|معلق.*فاتور|فاتور.*معلق',
+     '_pending_invoices_summary'),
+    # oldest invoices
+    (r'قديم.*فاتور|أقدم|oldest invoice',
+     '_oldest_invoices'),
+    # remaining target
+    (r'متبقي|باقي.*هدف|هدف.*باقي|remaining.*target|يومي.*مستهدف|هدف.*يومي|كم.*هدف|هدف.*كم',
+     '_remaining_targets'),
+    # achievement
+    (r'نسبة|إنجاز|تحقيق.*هدف|هدف.*تحقيق|achievement|progress',
+     '_achievement_overview'),
+    # ranking
+    (r'ترتيب|مقارنة|ranking|compare|أضعف|أقل.*مبيع|من.*أقل',
+     '_employee_ranking'),
+    # products
+    (r'منتج|product|فئة|category|صنف|item',
+     '_product_analysis'),
+    # productivity
+    (r'إنتاج|productivity|كفاء',
+     '_productivity_summary'),
+    # monthly / general sales
+    (r'مبيعات|sales|شهر|month|ملخص|summary|إجمالي|total|أداء',
+     '_monthly_summary'),
+    # employee catch-all
+    (r'موظف|employee',
+     '_employee_query'),
+]
+
+
+# ─── assistant class ───────────────────────────────────────────────────────────
 
 class AlQahtaniPro:
-    def __init__(self, openai_key: str = None):
-        self.openai_key = openai_key
 
     def answer(self, question: str, lang: str = 'ar') -> str:
-        q = question.strip().lower()
+        q = question.strip()
+        if not q:
+            return self._help_message()
 
-        handlers = [
-            (r'top seller|أفضل بائع|أكثر مبيعا', self._top_seller),
-            (r'pending invoice|فاتور.*معلق', self._pending_invoices),
-            (r'remaining target|هدف.*متبقي|تارجت.*متبقي|باقي.*هدف', self._remaining_target),
-            (r'performance|أداء|performance.*month|شهر', self._employee_performance),
-            (r'target.*achiev|نسبة.*تحقيق|تحقيق.*هدف', self._target_achievement),
-        ]
+        emp, remainder = _extract_employee_from_q(q)
 
-        for pattern, handler in handlers:
-            if re.search(pattern, question, re.IGNORECASE):
+        # Question is just an employee name → full profile
+        if emp and len(remainder) < 4:
+            return self._employee_profile(emp)
+
+        for pattern, method_name in PATTERNS:
+            if re.search(pattern, q, re.IGNORECASE | re.UNICODE):
+                handler = getattr(self, method_name)
                 try:
-                    result = handler(question, lang)
+                    result = handler(q, emp=emp)
                     if result:
                         return result
                 except Exception:
                     pass
 
-        return self._generic_stats(lang)
+        return self._monthly_summary(q)
 
-    def _top_seller(self, question: str, lang: str) -> str:
-        today = date.today()
-        result = (
-            db.session.query(
-                Employee.name,
-                func.sum(SaleRecord.value).label('total')
-            )
+    # ── handlers ───────────────────────────────────────────────────────────────
+
+    def _show_help(self, q, **kw):
+        return self._help_message()
+
+    def _employees_list(self, q, **kw):
+        emps = Employee.query.filter_by(is_active=True).order_by(Employee.name).all()
+        if not emps:
+            return 'لا يوجد موظفون مسجلون بعد.'
+        d_from, d_to = _this_month()
+        lines = [f'👥 **الموظفون النشطون ({len(emps)})**\n']
+        for i, emp in enumerate(emps, 1):
+            sales = _sales_between(d_from, d_to, emp.id)
+            lines.append(f'{i}. {emp.name} — {_fmt(sales)} ريال')
+        return '\n'.join(lines)
+
+    def _top_sellers(self, q, **kw):
+        d_from, d_to = _this_month()
+        n_match = re.search(r'(\d+)', q)
+        n = min(int(n_match.group(1)), 20) if n_match else 5
+        results = (
+            db.session.query(Employee.name, func.sum(SaleRecord.value).label('total'))
             .join(SaleRecord)
-            .filter(
-                extract('year', SaleRecord.sale_date) == today.year,
-                extract('month', SaleRecord.sale_date) == today.month,
-            )
+            .filter(SaleRecord.sale_date >= d_from, SaleRecord.sale_date <= d_to)
             .group_by(Employee.id)
             .order_by(func.sum(SaleRecord.value).desc())
-            .first()
+            .limit(n)
+            .all()
         )
-        if not result:
-            return ('لا توجد بيانات مبيعات للشهر الحالي.' if lang == 'ar'
-                    else 'No sales data for current month.')
-        if lang == 'ar':
-            return f'أفضل بائع هذا الشهر: {result.name} بإجمالي {result.total:,.0f} ريال.'
-        return f'Top seller this month: {result.name} with total {result.total:,.0f} SAR.'
+        if not results:
+            return 'لا توجد بيانات مبيعات لهذا الشهر.'
+        medals = ['🥇', '🥈', '🥉'] + ['🏅'] * 20
+        lines = [f'🏆 **أفضل البائعين – {d_from.strftime("%B %Y")}**\n']
+        for i, (name, total) in enumerate(results):
+            lines.append(f'{medals[i]} {name}: {_fmt(total)} ريال')
+        return '\n'.join(lines)
 
-    def _pending_invoices(self, question: str, lang: str) -> str:
-        # Extract employee name from question
-        emp_name = self._extract_name(question)
-        query = db.session.query(func.count(PendingInvoice.id), func.sum(PendingInvoice.net))
-        if emp_name:
-            emp = Employee.query.filter(Employee.name.ilike(f'%{emp_name}%')).first()
-            if emp:
-                query = query.filter(PendingInvoice.employee_id == emp.id)
-        count, total = query.one()
-        count = count or 0
-        total = total or 0
-        if lang == 'ar':
-            suffix = f' للموظف {emp_name}' if emp_name else ''
-            return f'عدد الفواتير المعلقة{suffix}: {count} فاتورة بإجمالي {total:,.0f} ريال.'
-        suffix = f' for {emp_name}' if emp_name else ''
-        return f'Pending invoices{suffix}: {count} invoices totaling {total:,.0f} SAR.'
-
-    def _remaining_target(self, question: str, lang: str) -> str:
+    def _today_stats(self, q, emp=None, **kw):
         today = date.today()
-        emp_name = self._extract_name(question)
-        emp = None
-        if emp_name:
-            emp = Employee.query.filter(Employee.name.ilike(f'%{emp_name}%')).first()
+        if emp:
+            total = _sales_between(today, today, emp.id)
+            t_row = SalesTarget.query.filter_by(
+                employee_id=emp.id, year=today.year, month=today.month
+            ).first()
+            daily = (float(t_row.target_amount) / (t_row.working_days or 26)) if t_row else 0
+            return (f'📅 **مبيعات اليوم – {emp.name}**\n'
+                    f'المحقق: {_fmt(total)} ريال\n'
+                    f'الهدف اليومي: {_fmt(daily)} ريال\n'
+                    f'النسبة: {_pct(total, daily)}%')
+        results = (
+            db.session.query(Employee.name, func.sum(SaleRecord.value).label('total'))
+            .join(SaleRecord)
+            .filter(SaleRecord.sale_date == today)
+            .group_by(Employee.id)
+            .order_by(func.sum(SaleRecord.value).desc())
+            .all()
+        )
+        if not results:
+            return f'📅 لا توجد مبيعات مسجلة اليوم ({today}).'
+        grand = sum(r.total for r in results)
+        lines = [f'📅 **مبيعات اليوم – {today}**\nالإجمالي: {_fmt(grand)} ريال\n']
+        for name, total in results:
+            lines.append(f'• {name}: {_fmt(total)} ريال')
+        return '\n'.join(lines)
 
+    def _week_stats(self, q, emp=None, **kw):
+        d_from, d_to = _this_week()
+        if emp:
+            total = _sales_between(d_from, d_to, emp.id)
+            return (f'📆 **مبيعات الأسبوع – {emp.name}**\n'
+                    f'{d_from.strftime("%d/%m")} – {d_to.strftime("%d/%m/%Y")}\n'
+                    f'الإجمالي: {_fmt(total)} ريال')
+        results = (
+            db.session.query(Employee.name, func.sum(SaleRecord.value).label('total'))
+            .join(SaleRecord)
+            .filter(SaleRecord.sale_date >= d_from, SaleRecord.sale_date <= d_to)
+            .group_by(Employee.id)
+            .order_by(func.sum(SaleRecord.value).desc())
+            .all()
+        )
+        if not results:
+            return 'لا توجد مبيعات هذا الأسبوع.'
+        grand = sum(r.total for r in results)
+        lines = [f'📆 **مبيعات الأسبوع الحالي**\n'
+                 f'{d_from.strftime("%d/%m")} – {d_to.strftime("%d/%m/%Y")}\n'
+                 f'الإجمالي: {_fmt(grand)} ريال\n']
+        for name, total in results:
+            lines.append(f'• {name}: {_fmt(total)} ريال')
+        return '\n'.join(lines)
+
+    def _pending_invoices_summary(self, q, emp=None, **kw):
+        if emp:
+            count, total = db.session.query(
+                func.count(PendingInvoice.id), func.sum(PendingInvoice.net)
+            ).filter(PendingInvoice.employee_id == emp.id,
+                     PendingInvoice.status == 'pending').one()
+            return (f'📋 **الفواتير المعلقة – {emp.name}**\n'
+                    f'العدد: {count or 0} فاتورة\n'
+                    f'الإجمالي: {_fmt(total or 0)} ريال')
+        results = (
+            db.session.query(Employee.name,
+                             func.count(PendingInvoice.id).label('cnt'),
+                             func.sum(PendingInvoice.net).label('total'))
+            .join(PendingInvoice, PendingInvoice.employee_id == Employee.id)
+            .filter(PendingInvoice.status == 'pending')
+            .group_by(Employee.id)
+            .order_by(func.sum(PendingInvoice.net).desc())
+            .all()
+        )
+        if not results:
+            return '✅ لا توجد فواتير معلقة حالياً.'
+        grand_c = sum(r.cnt for r in results)
+        grand_t = sum(r.total or 0 for r in results)
+        lines = [f'📋 **الفواتير المعلقة**\n'
+                 f'الإجمالي: {grand_c} فاتورة | {_fmt(grand_t)} ريال\n']
+        for name, cnt, total in results:
+            lines.append(f'• {name}: {cnt} فاتورة – {_fmt(total or 0)} ريال')
+        return '\n'.join(lines)
+
+    def _oldest_invoices(self, q, **kw):
+        invs = (PendingInvoice.query.filter_by(status='pending')
+                .order_by(PendingInvoice.invoice_date).limit(5).all())
+        if not invs:
+            return '✅ لا توجد فواتير معلقة.'
+        lines = ['📋 **أقدم الفواتير المعلقة**\n']
+        for inv in invs:
+            e = Employee.query.get(inv.employee_id) if inv.employee_id else None
+            lines.append(f'• {inv.invoice_no} | {inv.invoice_date} | '
+                         f'{e.name if e else "—"} | {_fmt(inv.net)} ريال')
+        return '\n'.join(lines)
+
+    def _remaining_targets(self, q, emp=None, **kw):
+        today = date.today()
+        d_from, d_to = _this_month()
+        days_left = max(calendar.monthrange(today.year, today.month)[1] - today.day, 1)
         targets = SalesTarget.query.filter_by(year=today.year, month=today.month)
         if emp:
             targets = targets.filter_by(employee_id=emp.id)
         targets = targets.all()
-
-        lines = []
+        if not targets:
+            return 'لا توجد أهداف محددة لهذا الشهر.'
+        lines = [f'🎯 **الهدف المتبقي – {today.strftime("%B %Y")}**\n'
+                 f'أيام متبقية: {days_left}\n']
         for t in targets:
-            achieved = db.session.query(func.sum(SaleRecord.value)).filter(
-                SaleRecord.employee_id == t.employee_id,
-                extract('year', SaleRecord.sale_date) == today.year,
-                extract('month', SaleRecord.sale_date) == today.month,
-            ).scalar() or 0
-            remaining = t.target_amount - achieved
-            working_days = t.working_days or 26
-            days_elapsed = today.day
-            daily_needed = remaining / max(working_days - days_elapsed + 1, 1)
+            achieved  = _sales_between(d_from, d_to, t.employee_id)
+            remaining = max(float(t.target_amount) - achieved, 0)
+            daily     = remaining / days_left
+            pct       = _pct(achieved, t.target_amount)
             e = Employee.query.get(t.employee_id)
-            lines.append(f'{e.name}: متبقي {remaining:,.0f} ريال (يومي: {daily_needed:,.0f} ريال)'
-                         if lang == 'ar' else
-                         f'{e.name}: Remaining {remaining:,.0f} SAR (Daily: {daily_needed:,.0f} SAR)')
-
-        if not lines:
-            return ('لا توجد أهداف محددة لهذا الشهر.' if lang == 'ar'
-                    else 'No targets set for this month.')
+            icon = '✅' if pct >= 100 else ('⚠️' if pct >= 80 else '🔴')
+            lines.append(
+                f'{icon} {e.name if e else "?"}\n'
+                f'   المحقق: {_fmt(achieved)} | المتبقي: {_fmt(remaining)}\n'
+                f'   الهدف اليومي المطلوب: {_fmt(daily)} | النسبة: {pct}%'
+            )
         return '\n'.join(lines)
 
-    def _employee_performance(self, question: str, lang: str) -> str:
+    def _achievement_overview(self, q, **kw):
         today = date.today()
-        emp_name = self._extract_name(question)
-        query = db.session.query(Employee.name, func.sum(SaleRecord.value))
-        query = query.join(SaleRecord)
-        query = query.filter(
-            extract('year', SaleRecord.sale_date) == today.year,
-            extract('month', SaleRecord.sale_date) == today.month,
-        )
-        if emp_name:
-            query = query.filter(Employee.name.ilike(f'%{emp_name}%'))
-        results = query.group_by(Employee.id).all()
-        if not results:
-            return ('لا توجد بيانات.' if lang == 'ar' else 'No data available.')
-        lines = []
-        for name, total in results:
-            target = db.session.query(func.sum(SalesTarget.target_amount)).filter(
-                SalesTarget.year == today.year,
-                SalesTarget.month == today.month,
-            ).scalar() or 0
-            pct = (total / target * 100) if target else 0
-            lines.append(f'{name}: {total:,.0f} ريال ({pct:.1f}% من الهدف)'
-                         if lang == 'ar' else
-                         f'{name}: {total:,.0f} SAR ({pct:.1f}% of target)')
-        return '\n'.join(lines)
-
-    def _target_achievement(self, question: str, lang: str) -> str:
-        today = date.today()
+        d_from, d_to = _this_month()
         results = (
             db.session.query(
                 Employee.name,
@@ -147,63 +313,172 @@ class AlQahtaniPro:
             .filter(
                 SalesTarget.year == today.year,
                 SalesTarget.month == today.month,
-                extract('year', SaleRecord.sale_date) == today.year,
-                extract('month', SaleRecord.sale_date) == today.month,
+                SaleRecord.sale_date >= d_from,
+                SaleRecord.sale_date <= d_to,
             )
             .group_by(Employee.id)
+            .order_by(func.sum(SaleRecord.value).desc())
             .all()
         )
         if not results:
-            return ('لا توجد بيانات مقارنة.' if lang == 'ar' else 'No comparison data.')
-        lines = []
+            return 'لا توجد بيانات كافية لعرض نسب الإنجاز.'
+        lines = [f'📊 **نسب الإنجاز – {d_from.strftime("%B %Y")}**\n']
         for name, achieved, target in results:
-            pct = (achieved / target * 100) if target else 0
+            pct  = _pct(achieved, target)
+            filled = int(pct / 10)
+            bar  = '█' * filled + '░' * (10 - filled)
             icon = '✅' if pct >= 100 else ('⚠️' if pct >= 80 else '🔴')
-            lines.append(f'{icon} {name}: {pct:.1f}%')
+            lines.append(f'{icon} {name}: {pct}%  [{bar}]')
+            lines.append(f'   {_fmt(achieved)} / {_fmt(target)} ريال')
         return '\n'.join(lines)
 
-    def _generic_stats(self, lang: str) -> str:
+    def _employee_ranking(self, q, **kw):
+        d_from, d_to = _this_month()
+        want_lowest = bool(re.search(r'أضعف|أقل|ضعيف|lowest|worst', q, re.IGNORECASE))
+        order = func.sum(SaleRecord.value).asc() if want_lowest else func.sum(SaleRecord.value).desc()
+        results = (
+            db.session.query(Employee.name, func.sum(SaleRecord.value).label('total'))
+            .join(SaleRecord)
+            .filter(SaleRecord.sale_date >= d_from, SaleRecord.sale_date <= d_to)
+            .group_by(Employee.id).order_by(order).all()
+        )
+        if not results:
+            return 'لا توجد بيانات لهذا الشهر.'
+        medals = ['🥇', '🥈', '🥉'] + ['🏅'] * 20
+        title = '📉 **ترتيب الأداء (الأقل أولاً)**' if want_lowest else '📈 **ترتيب الأداء**'
+        lines = [f'{title} – {d_from.strftime("%B %Y")}\n']
+        for i, (name, total) in enumerate(results):
+            prefix = str(i + 1) + '.' if want_lowest else medals[i]
+            lines.append(f'{prefix} {name}: {_fmt(total)} ريال')
+        return '\n'.join(lines)
+
+    def _product_analysis(self, q, **kw):
+        d_from, d_to = _this_month()
+        results = (
+            db.session.query(
+                SaleRecord.product_category,
+                func.sum(SaleRecord.value).label('total'),
+                func.count(SaleRecord.id).label('cnt'),
+            )
+            .filter(
+                SaleRecord.sale_date >= d_from,
+                SaleRecord.sale_date <= d_to,
+                SaleRecord.product_category.isnot(None),
+                SaleRecord.product_category != '',
+            )
+            .group_by(SaleRecord.product_category)
+            .order_by(func.sum(SaleRecord.value).desc())
+            .limit(10).all()
+        )
+        if not results:
+            return 'لا توجد بيانات منتجات لهذا الشهر.'
+        lines = [f'📦 **أفضل الفئات – {d_from.strftime("%B %Y")}**\n']
+        for cat, total, cnt in results:
+            lines.append(f'• {cat}: {_fmt(total)} ريال ({cnt} فاتورة)')
+        return '\n'.join(lines)
+
+    def _productivity_summary(self, q, emp=None, **kw):
         today = date.today()
-        emp_count = Employee.query.filter_by(is_active=True).count()
-        sales_count = db.session.query(func.count(SaleRecord.id)).filter(
-            extract('year', SaleRecord.sale_date) == today.year,
-            extract('month', SaleRecord.sale_date) == today.month,
-        ).scalar() or 0
-        total_sales = db.session.query(func.sum(SaleRecord.value)).filter(
-            extract('year', SaleRecord.sale_date) == today.year,
-            extract('month', SaleRecord.sale_date) == today.month,
-        ).scalar() or 0
+        qs = SalesProductivityRecord.query.filter_by(year=today.year, month=today.month)
+        if emp:
+            qs = qs.filter_by(employee_id=emp.id)
+        records = qs.order_by(SalesProductivityRecord.value.desc()).limit(10).all()
+        if not records:
+            return 'لا توجد بيانات إنتاجية لهذا الشهر.'
+        lines = [f'⚡ **بيانات الإنتاجية – {today.strftime("%B %Y")}**\n']
+        for r in records:
+            e = Employee.query.get(r.employee_id)
+            lines.append(f'• {e.name if e else "?"}: {_fmt(r.value)}')
+        return '\n'.join(lines)
 
-        if lang == 'ar':
-            return (f'مرحبا! أنا البدوي برو. إليك ملخص هذا الشهر:\n'
-                    f'• عدد الموظفين النشطين: {emp_count}\n'
-                    f'• عدد فواتير هذا الشهر: {sales_count}\n'
-                    f'• إجمالي المبيعات: {total_sales:,.0f} ريال\n'
-                    f'يمكنك سؤالي عن: أفضل بائع، الفواتير المعلقة، الهدف المتبقي، أداء موظف معين.')
-        return (f'Hi! I\'m Al-Qahtani Pro. Monthly snapshot:\n'
-                f'• Active employees: {emp_count}\n'
-                f'• Invoices this month: {sales_count}\n'
-                f'• Total sales: {total_sales:,.0f} SAR\n'
-                f'Ask me about: top seller, pending invoices, remaining target, employee performance.')
+    def _monthly_summary(self, q, emp=None, **kw):
+        if emp:
+            return self._employee_profile(emp)
+        today   = date.today()
+        d_from, d_to = _this_month()
+        total   = _sales_between(d_from, d_to)
+        n_emp   = Employee.query.filter_by(is_active=True).count()
+        p_cnt   = PendingInvoice.query.filter_by(status='pending').count()
+        p_amt   = db.session.query(func.sum(PendingInvoice.net)).filter_by(status='pending').scalar() or 0
+        ct      = CompanyTarget.query.filter_by(year=today.year, month=today.month).first()
+        target  = float(ct.total_target) if ct else 0
+        top     = (
+            db.session.query(Employee.name, func.sum(SaleRecord.value).label('t'))
+            .join(SaleRecord)
+            .filter(SaleRecord.sale_date >= d_from, SaleRecord.sale_date <= d_to)
+            .group_by(Employee.id).order_by(func.sum(SaleRecord.value).desc()).first()
+        )
+        lines = [f'📊 **ملخص {d_from.strftime("%B %Y")}**\n',
+                 f'👥 الموظفون: {n_emp}',
+                 f'💰 إجمالي المبيعات: {_fmt(total)} ريال']
+        if target:
+            lines.append(f'🎯 الهدف: {_fmt(target)} ريال | النسبة: {_pct(total, target)}%')
+        if top:
+            lines.append(f'🏆 أفضل بائع: {top.name} ({_fmt(top.t)} ريال)')
+        lines.append(f'📋 فواتير معلقة: {p_cnt} ({_fmt(p_amt)} ريال)')
+        lines.append(f'\n💬 اسألني عن:\nأفضل بائع | هدف موظف | مبيعات اليوم | فواتير معلقة | ترتيب الموظفين | نسبة الإنجاز')
+        return '\n'.join(lines)
 
-    @staticmethod
-    def _extract_name(text: str) -> str:
-        patterns = [
-            r'employee\s+([A-Za-z؀-ۿ\s]+)',
-            r'للموظف\s+([A-Za-z؀-ۿ\s]+)',
-            r'موظف\s+([A-Za-z؀-ۿ\s]+)',
-            r'for\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)',
-        ]
-        for pat in patterns:
-            m = re.search(pat, text, re.IGNORECASE)
-            if m:
-                return m.group(1).strip()
-        return ''
+    def _employee_query(self, q, emp=None, **kw):
+        if emp:
+            return self._employee_profile(emp)
+        return self._employees_list(q)
 
+    def _employee_profile(self, emp: Employee) -> str:
+        today   = date.today()
+        d_from, d_to = _this_month()
+        wk_from, wk_to = _this_week()
+        days_left = max(calendar.monthrange(today.year, today.month)[1] - today.day, 1)
+
+        achieved    = _sales_between(d_from, d_to, emp.id)
+        today_sales = _sales_between(today, today, emp.id)
+        week_sales  = _sales_between(wk_from, wk_to, emp.id)
+
+        t_row    = SalesTarget.query.filter_by(employee_id=emp.id, year=today.year, month=today.month).first()
+        target   = float(t_row.target_amount) if t_row else 0
+        remaining = max(target - achieved, 0)
+        daily    = remaining / days_left if days_left else 0
+        pct      = _pct(achieved, target)
+
+        p_cnt, p_amt = db.session.query(
+            func.count(PendingInvoice.id), func.sum(PendingInvoice.net)
+        ).filter_by(employee_id=emp.id, status='pending').one()
+
+        icon = '✅' if pct >= 100 else ('⚠️' if pct >= 80 else '🔴')
+        lines = [f'👤 **{emp.name}**\n',
+                 f'📅 مبيعات اليوم:        {_fmt(today_sales)} ريال',
+                 f'📆 مبيعات الأسبوع:      {_fmt(week_sales)} ريال',
+                 f'📈 مبيعات الشهر:        {_fmt(achieved)} ريال']
+        if target:
+            lines += [
+                f'🎯 الهدف الشهري:        {_fmt(target)} ريال',
+                f'{icon} نسبة الإنجاز:        {pct}%',
+                f'🔺 المتبقي:             {_fmt(remaining)} ريال',
+                f'📌 الهدف اليومي المطلوب: {_fmt(daily)} ريال',
+            ]
+        lines.append(f'📋 فواتير معلقة:        {p_cnt or 0} ({_fmt(p_amt or 0)} ريال)')
+        return '\n'.join(lines)
+
+    def _help_message(self) -> str:
+        return (
+            'مرحباً! أنا البدوي برو 🤖\n\n'
+            'يمكنني الإجابة على أي سؤال عن البيانات:\n\n'
+            '• **أفضل بائع** أو **أفضل 3 بائعين**\n'
+            '• **مبيعات اليوم** / **مبيعات الأسبوع** / **مبيعات الشهر**\n'
+            '• **هدف [اسم الموظف]** – مثال: هدف أحمد\n'
+            '• **فواتير معلقة** أو **فواتير معلقة أحمد**\n'
+            '• **ترتيب الموظفين** أو **من الأضعف**\n'
+            '• **نسبة الإنجاز** لكل موظف\n'
+            '• **قائمة الموظفين**\n'
+            '• **[اسم الموظف] مباشرة** – تقرير كامل\n'
+        )
+
+
+# ─── advice cards ─────────────────────────────────────────────────────────────
 
 def generate_sales_advice(lang: str = 'ar') -> list[dict]:
-    """Generate automated rule-based sales advice cards."""
     today = date.today()
+    d_from, d_to = _this_month()
     advice = []
 
     def _card(type_: str, employee, msg_ar: str, msg_en: str) -> dict:
@@ -211,94 +486,72 @@ def generate_sales_advice(lang: str = 'ar') -> list[dict]:
         return {'type': type_, 'level': type_, 'employee': employee,
                 'message': msg, 'message_ar': msg_ar, 'message_en': msg_en}
 
-    # Rule 1: Under 80% target for 2 consecutive months
     employees = Employee.query.filter_by(is_active=True).all()
-    for emp in employees:
-        low_months = 0
-        for months_back in [1, 2]:
-            check_date = today.replace(day=1) - timedelta(days=months_back * 28)
-            target = SalesTarget.query.filter_by(
-                employee_id=emp.id, year=check_date.year, month=check_date.month
-            ).first()
-            if not target or target.target_amount == 0:
-                continue
-            achieved = db.session.query(func.sum(SaleRecord.value)).filter(
-                SaleRecord.employee_id == emp.id,
-                extract('year', SaleRecord.sale_date) == check_date.year,
-                extract('month', SaleRecord.sale_date) == check_date.month,
-            ).scalar() or 0
-            if achieved / float(target.target_amount) < 0.80:
-                low_months += 1
-        if low_months >= 2:
-            advice.append(_card(
-                'warning', emp.name,
-                f'الموظف {emp.name} أداؤه أقل من 80% لشهرين متتاليين — يُنصح بمراجعة الأداء وتقديم الدعم.',
-                f'{emp.name} underperformed (<80%) for 2 consecutive months — recommend performance review.',
-            ))
 
-    # Rule 2: Employees currently above target
-    top_emps = (
+    # Rule 1: below 80% for 2 months
+    for emp in employees:
+        low = 0
+        for mb in [1, 2]:
+            check = today.replace(day=1) - timedelta(days=mb * 28)
+            t = SalesTarget.query.filter_by(
+                employee_id=emp.id, year=check.year, month=check.month
+            ).first()
+            if not t or not t.target_amount:
+                continue
+            last = calendar.monthrange(check.year, check.month)[1]
+            a = _sales_between(date(check.year, check.month, 1),
+                               date(check.year, check.month, last), emp.id)
+            if a / float(t.target_amount) < 0.80:
+                low += 1
+        if low >= 2:
+            advice.append(_card('warning', emp.name,
+                f'الموظف {emp.name} أداؤه أقل من 80% لشهرين متتاليين.',
+                f'{emp.name} underperformed (<80%) for 2 consecutive months.'))
+
+    # Rule 2: top performer
+    top = (
         db.session.query(Employee.name, func.sum(SaleRecord.value).label('total'))
         .join(SaleRecord)
-        .filter(
-            extract('year', SaleRecord.sale_date) == today.year,
-            extract('month', SaleRecord.sale_date) == today.month,
-        )
-        .group_by(Employee.id)
-        .order_by(func.sum(SaleRecord.value).desc())
-        .all()
+        .filter(SaleRecord.sale_date >= d_from, SaleRecord.sale_date <= d_to)
+        .group_by(Employee.id).order_by(func.sum(SaleRecord.value).desc()).first()
     )
-    if top_emps:
-        top = top_emps[0]
-        advice.append(_card(
-            'success', top.name,
-            f'🏆 أفضل أداء هذا الشهر: {top.name} بإجمالي {top.total:,.0f} ريال.',
-            f'🏆 Top performer this month: {top.name} with {top.total:,.0f} SAR.',
-        ))
+    if top:
+        advice.append(_card('success', top.name,
+            f'🏆 أفضل أداء هذا الشهر: {top.name} بإجمالي {_fmt(top.total)} ريال.',
+            f'🏆 Top performer: {top.name} with {_fmt(top.total)} SAR.'))
 
-    # Rule 3: Employees with no sales this month
-    emp_ids_with_sales = {r.employee_id for r in (
+    # Rule 3: no sales this month
+    ids_with_sales = {r.employee_id for r in
         db.session.query(SaleRecord.employee_id)
-        .filter(
-            extract('year', SaleRecord.sale_date) == today.year,
-            extract('month', SaleRecord.sale_date) == today.month,
-        ).all()
-    )}
+        .filter(SaleRecord.sale_date >= d_from, SaleRecord.sale_date <= d_to).all()}
     for emp in employees:
-        if emp.id not in emp_ids_with_sales:
-            advice.append(_card(
-                'danger', emp.name,
+        if emp.id not in ids_with_sales:
+            advice.append(_card('danger', emp.name,
                 f'⚠️ لا توجد مبيعات مسجلة للموظف {emp.name} هذا الشهر.',
-                f'⚠️ No sales recorded for {emp.name} this month.',
-            ))
+                f'⚠️ No sales for {emp.name} this month.'))
 
-    # Rule 4: Product declining trend
+    # Rule 4: declining categories
     from sqlalchemy import text
     try:
-        declining = db.session.execute(text("""
+        rows = db.session.execute(text("""
             SELECT product_category,
-                   SUM(CASE WHEN strftime('%Y-%m', sale_date) = strftime('%Y-%m', 'now', '-1 month') THEN value ELSE 0 END) AS prev_month,
-                   SUM(CASE WHEN strftime('%Y-%m', sale_date) = strftime('%Y-%m', 'now') THEN value ELSE 0 END) AS curr_month
+                   SUM(CASE WHEN strftime('%Y-%m',sale_date)=strftime('%Y-%m','now','-1 month') THEN value ELSE 0 END) prev,
+                   SUM(CASE WHEN strftime('%Y-%m',sale_date)=strftime('%Y-%m','now') THEN value ELSE 0 END) curr
             FROM sale_records
             WHERE product_category IS NOT NULL AND product_category != ''
             GROUP BY product_category
-            HAVING prev_month > 0 AND curr_month < prev_month * 0.8
+            HAVING prev > 0 AND curr < prev * 0.8
         """)).fetchall()
-        for row in declining:
-            advice.append(_card(
-                'info', None,
-                f'📉 انخفاض مبيعات "{row[0]}" بأكثر من 20% — يُنصح بحملة ترويجية.',
-                f'📉 "{row[0]}" sales down >20% vs last month — suggest a promotional campaign.',
-            ))
+        for row in rows:
+            advice.append(_card('info', None,
+                f'📉 انخفاض مبيعات "{row[0]}" بأكثر من 20% مقارنة بالشهر الماضي.',
+                f'📉 "{row[0]}" sales down >20% vs last month.'))
     except Exception:
         pass
 
-    # If no data at all, show a welcome message
     if not advice:
-        advice.append(_card(
-            'info', None,
-            'لا توجد بيانات كافية بعد. قم برفع ملفات المبيعات أولاً لتظهر التوصيات.',
-            'Not enough data yet. Upload your sales files first to see recommendations.',
-        ))
+        advice.append(_card('info', None,
+            'لا توجد بيانات كافية بعد. قم برفع ملفات المبيعات لتظهر التوصيات.',
+            'Not enough data yet. Upload sales files to see recommendations.'))
 
     return advice
