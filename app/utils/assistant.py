@@ -1,5 +1,5 @@
 """
-Sahs Pro: Rule-based intelligent assistant with optional LLM fallback.
+Al-Qahtani Pro: Rule-based intelligent assistant with optional LLM fallback.
 """
 import re
 from datetime import date, timedelta
@@ -9,7 +9,7 @@ from app.models import (Employee, SaleRecord, SalesTarget, CompanyTarget,
                         PendingInvoice, SalesProductivityRecord)
 
 
-class SahsPro:
+class AlQahtaniPro:
     def __init__(self, openai_key: str = None):
         self.openai_key = openai_key
 
@@ -175,12 +175,12 @@ class SahsPro:
         ).scalar() or 0
 
         if lang == 'ar':
-            return (f'مرحبا! أنا ساهس برو. إليك ملخص هذا الشهر:\n'
+            return (f'مرحبا! أنا البدوي برو. إليك ملخص هذا الشهر:\n'
                     f'• عدد الموظفين النشطين: {emp_count}\n'
                     f'• عدد فواتير هذا الشهر: {sales_count}\n'
                     f'• إجمالي المبيعات: {total_sales:,.0f} ريال\n'
                     f'يمكنك سؤالي عن: أفضل بائع، الفواتير المعلقة، الهدف المتبقي، أداء موظف معين.')
-        return (f'Hi! I\'m Sahs Pro. Monthly snapshot:\n'
+        return (f'Hi! I\'m Al-Qahtani Pro. Monthly snapshot:\n'
                 f'• Active employees: {emp_count}\n'
                 f'• Invoices this month: {sales_count}\n'
                 f'• Total sales: {total_sales:,.0f} SAR\n'

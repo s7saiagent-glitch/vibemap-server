@@ -182,7 +182,7 @@ def index():
 
 @bp.route('/advice')
 def advice():
-    """Sales advice page powered by SahsPro rule engine."""
+    """Sales advice page powered by AlQahtaniPro rule engine."""
     lang = 'ar'  # will be overridden by babel locale in template if needed
     advice_list = generate_sales_advice(lang=lang)
     return render_template(

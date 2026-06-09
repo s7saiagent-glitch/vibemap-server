@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ current_locale }}" {% if current_locale == 'ar' %}dir="rtl"{% else %}dir="ltr"{% endif %}>
+<html lang="{{ current_locale }}" {% if current_locale == 'ar' %}dir="rtl"{% else %}dir="ltr"{% endif %} data-bs-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{{ _('Sahs Pro | ساهس برو') }}{% endblock %}</title>
+  <title>{% block title %}{{ _('Al-Qahtani Pro | القحطاني برو') }}{% endblock %}</title>
 
   {% if current_locale == 'ar' %}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
@@ -11,65 +11,83 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   {% endif %}
 
-  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-  <!-- Google Fonts: Arabic (Cairo) + Latin (Inter) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
+    /* ══════════════════ DARK MODE THEME ══════════════════ */
     :root {
-      --primary:     #1a56db;
-      --primary-dk:  #1648c0;
-      --success:     #057a55;
-      --warning:     #c27803;
-      --danger:      #c81e1e;
-      --info:        #1c64f2;
-      --sidebar-bg:  #111827;
-      --sidebar-w:   240px;
-      --topbar-h:    60px;
-      --card-radius: 12px;
+      --primary:      #3b82f6;
+      --primary-dk:   #2563eb;
+      --success:      #10b981;
+      --warning:      #f59e0b;
+      --danger:       #ef4444;
+      --info:         #6366f1;
+
+      --bg-page:      #0f172a;
+      --bg-card:      #1e293b;
+      --bg-navbar:    #0f172a;
+      --bg-input:     #1e293b;
+      --bg-table-th:  #1a2744;
+      --bg-hover:     #263352;
+
+      --text-primary: #f1f5f9;
+      --text-muted:   #94a3b8;
+      --text-heading: #e2e8f0;
+
+      --border:       #334155;
+      --border-light: #1e293b;
+
+      --card-radius:  12px;
+      --topbar-h:     60px;
     }
+
+    * { box-sizing: border-box; }
 
     body {
       font-family: {% if current_locale == 'ar' %}'Cairo'{% else %}'Inter'{% endif %}, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
+      background: var(--bg-page);
+      color: var(--text-primary);
       direction: {% if current_locale == 'ar' %}rtl{% else %}ltr{% endif %};
     }
 
-    /* ── Navbar ──────────────────────────────────── */
+    /* ── Scrollbar ───────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-page); }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* ── Top Navbar ──────────────────────────────────── */
     .top-navbar {
       height: var(--topbar-h);
-      background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
+      background: var(--bg-navbar);
+      border-bottom: 1px solid var(--border);
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       z-index: 1040;
       display: flex;
       align-items: center;
       padding: 0 1.25rem;
       gap: 1rem;
-      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      box-shadow: 0 2px 12px rgba(0,0,0,.4);
     }
 
     .top-navbar .brand {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 800;
       color: var(--primary);
       text-decoration: none;
       white-space: nowrap;
+      letter-spacing: .01em;
     }
 
     .top-navbar .nav-link {
-      color: #374151;
+      color: var(--text-muted);
       font-weight: 500;
-      font-size: .875rem;
-      padding: .4rem .7rem;
+      font-size: .865rem;
+      padding: .4rem .65rem;
       border-radius: 8px;
       transition: background .15s, color .15s;
       white-space: nowrap;
@@ -77,32 +95,37 @@
 
     .top-navbar .nav-link:hover,
     .top-navbar .nav-link.active {
-      background: #eff6ff;
+      background: rgba(59,130,246,.15);
       color: var(--primary);
     }
 
-    .top-navbar .nav-link i {
-      font-size: 1rem;
-    }
+    .top-navbar .nav-link i { font-size: 1rem; }
 
-    /* ── Main content ────────────────────────────── */
+    /* ── Main content ────────────────────────────────── */
     .main-content {
       margin-top: var(--topbar-h);
       padding: 1.75rem 1.5rem;
       min-height: calc(100vh - var(--topbar-h));
     }
 
-    /* ── Cards ───────────────────────────────────── */
+    /* ── Cards ───────────────────────────────────────── */
     .card {
-      border: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: var(--card-radius);
-      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
     }
 
     .card-header {
-      background: transparent;
-      border-bottom: 1px solid #f3f4f6;
+      background: rgba(255,255,255,.03);
+      border-bottom: 1px solid var(--border);
       font-weight: 600;
+      color: var(--text-heading);
+    }
+
+    .card-footer {
+      background: rgba(255,255,255,.03);
+      border-top: 1px solid var(--border);
     }
 
     /* KPI cards */
@@ -113,51 +136,114 @@
       position: relative;
       overflow: hidden;
     }
-
     .kpi-card .kpi-icon {
       font-size: 2.5rem;
-      opacity: .25;
+      opacity: .2;
       position: absolute;
       bottom: -0.5rem;
       {% if current_locale == 'ar' %}left{% else %}right{% endif %}: 1rem;
     }
+    .kpi-card .kpi-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .kpi-card .kpi-label { font-size: .8rem; opacity: .88; margin-top: .3rem; }
 
-    .kpi-card .kpi-value {
-      font-size: 2rem;
-      font-weight: 800;
-      line-height: 1;
+    /* ── Tables ──────────────────────────────────────── */
+    .table {
+      color: var(--text-primary);
+      --bs-table-bg: transparent;
+      --bs-table-hover-bg: var(--bg-hover);
+      --bs-table-border-color: var(--border);
     }
-
-    .kpi-card .kpi-label {
-      font-size: .8rem;
-      opacity: .88;
-      margin-top: .3rem;
-    }
-
-    /* ── Tables ──────────────────────────────────── */
     .table th {
       font-size: .78rem;
       text-transform: uppercase;
       letter-spacing: .04em;
-      color: #6b7280;
+      color: var(--text-muted);
       font-weight: 600;
-      background: #f9fafb;
+      background: var(--bg-table-th);
+      border-bottom: 1px solid var(--border);
     }
-
     .table td {
       vertical-align: middle;
       font-size: .875rem;
+      border-color: var(--border);
+    }
+    .table-light { --bs-table-bg: var(--bg-table-th); color: var(--text-primary); }
+
+    /* ── Forms ───────────────────────────────────────── */
+    .form-control, .form-select {
+      background: var(--bg-input);
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+    .form-control:focus, .form-select:focus {
+      background: var(--bg-input);
+      border-color: var(--primary);
+      color: var(--text-primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.2);
+    }
+    .form-control::placeholder { color: var(--text-muted); }
+    .form-label { color: var(--text-heading); font-weight: 500; }
+    .form-text { color: var(--text-muted); }
+    .input-group-text {
+      background: var(--bg-table-th);
+      border-color: var(--border);
+      color: var(--text-muted);
     }
 
-    /* ── Badges / pills ──────────────────────────── */
-    .badge-success { background: #d1fae5; color: #065f46; }
-    .badge-warning { background: #fef3c7; color: #92400e; }
-    .badge-danger  { background: #fee2e2; color: #991b1b; }
-    .badge-info    { background: #dbeafe; color: #1e40af; }
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn { border-radius: 8px; font-weight: 500; }
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dk); border-color: var(--primary-dk); }
+    .btn-outline-secondary {
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+    .btn-outline-secondary:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+    .btn-outline-danger { color: #ef4444; border-color: #ef4444; }
+    .btn-outline-danger:hover { background: rgba(239,68,68,.15); }
 
-    /* ── Language switcher ───────────────────────── */
+    /* ── Badges ──────────────────────────────────────── */
+    .badge-success { background: rgba(16,185,129,.2); color: #10b981; }
+    .badge-warning { background: rgba(245,158,11,.2); color: #f59e0b; }
+    .badge-danger  { background: rgba(239,68,68,.2);  color: #ef4444; }
+    .badge-info    { background: rgba(99,102,241,.2);  color: #818cf8; }
+
+    /* Achievement colors */
+    .achievement-high { color: #10b981 !important; }
+    .achievement-med  { color: #f59e0b !important; }
+    .achievement-low  { color: #ef4444 !important; }
+
+    /* ── List groups ─────────────────────────────────── */
+    .list-group-item {
+      background: var(--bg-card);
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+
+    /* ── Modal ───────────────────────────────────────── */
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    .modal-header { border-bottom-color: var(--border); }
+    .modal-footer { border-top-color: var(--border); }
+
+    /* ── Dropdown ────────────────────────────────────── */
+    .dropdown-menu {
+      background: var(--bg-card);
+      border-color: var(--border);
+    }
+    .dropdown-item { color: var(--text-primary); }
+    .dropdown-item:hover { background: var(--bg-hover); color: var(--primary); }
+
+    /* ── Language switcher ───────────────────────────── */
     .lang-btn {
-      border: 2px solid #e5e7eb;
+      border: 1.5px solid var(--border);
       border-radius: 8px;
       padding: .25rem .6rem;
       font-size: .8rem;
@@ -165,21 +251,16 @@
       cursor: pointer;
       text-decoration: none;
       transition: all .15s;
-      line-height: 1.5;
+      color: var(--text-muted);
+      background: transparent;
     }
-
     .lang-btn.active, .lang-btn:hover {
       border-color: var(--primary);
       color: var(--primary);
-      background: #eff6ff;
+      background: rgba(59,130,246,.12);
     }
 
-    .lang-btn:not(.active) {
-      color: #6b7280;
-      background: #fff;
-    }
-
-    /* ── Flash messages ──────────────────────────── */
+    /* ── Flash messages ──────────────────────────────── */
     .flash-container {
       position: fixed;
       top: calc(var(--topbar-h) + .75rem);
@@ -189,25 +270,60 @@
       max-width: 420px;
     }
 
-    /* ── Progress bar ────────────────────────────── */
-    .progress { border-radius: 99px; }
-
-    /* ── Buttons ─────────────────────────────────── */
-    .btn { border-radius: 8px; font-weight: 500; }
-    .btn-primary { background: var(--primary); border-color: var(--primary); }
-    .btn-primary:hover { background: var(--primary-dk); border-color: var(--primary-dk); }
-
-    /* ── Mobile hamburger ────────────────────────── */
-    @media (max-width: 991px) {
-      .nav-links-collapse { display: none; }
-      .nav-links-collapse.show { display: flex; flex-direction: column; position: fixed; top: var(--topbar-h); left: 0; right: 0; background: #fff; border-bottom: 1px solid #e5e7eb; padding: .75rem 1rem; z-index: 1039; }
+    /* ── Progress ────────────────────────────────────── */
+    .progress {
+      border-radius: 99px;
+      background: rgba(255,255,255,.08);
     }
 
-    /* ── Print ───────────────────────────────────── */
+    /* ── Text helpers ────────────────────────────────── */
+    .text-muted { color: var(--text-muted) !important; }
+    h1,h2,h3,h4,h5,h6 { color: var(--text-heading); }
+    small { color: var(--text-muted); }
+    code {
+      background: rgba(255,255,255,.08);
+      color: #93c5fd;
+      padding: .15rem .35rem;
+      border-radius: 4px;
+    }
+    hr { border-color: var(--border); }
+
+    /* ── Pagination ──────────────────────────────────── */
+    .page-link {
+      background: var(--bg-card);
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+    .page-item.active .page-link { background: var(--primary); border-color: var(--primary); }
+    .page-item.disabled .page-link { background: var(--bg-card); color: var(--text-muted); }
+
+    /* ── Alerts ──────────────────────────────────────── */
+    .alert-success { background: rgba(16,185,129,.15); border-color: rgba(16,185,129,.3); color: #6ee7b7; }
+    .alert-danger  { background: rgba(239,68,68,.15);  border-color: rgba(239,68,68,.3);  color: #fca5a5; }
+    .alert-warning { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.3); color: #fcd34d; }
+    .alert-info    { background: rgba(99,102,241,.15); border-color: rgba(99,102,241,.3); color: #a5b4fc; }
+
+    /* ── Mobile ──────────────────────────────────────── */
+    @media (max-width: 991px) {
+      .nav-links-collapse { display: none; }
+      .nav-links-collapse.show {
+        display: flex; flex-direction: column;
+        position: fixed; top: var(--topbar-h); left: 0; right: 0;
+        background: var(--bg-navbar);
+        border-bottom: 1px solid var(--border);
+        padding: .75rem 1rem; z-index: 1039;
+      }
+    }
+
+    /* ── Print ───────────────────────────────────────── */
     @media print {
       .top-navbar, .no-print { display: none !important; }
       .main-content { margin-top: 0; padding: 0; }
-      body { background: #fff; }
+      body { background: #fff !important; color: #000 !important; }
+      .card { background: #fff !important; border: 1px solid #ddd !important; box-shadow: none !important; }
+      .table { color: #000 !important; }
+      .table th { background: #f3f4f6 !important; color: #374151 !important; }
+      .table td { border-color: #e5e7eb !important; }
     }
   </style>
 
@@ -215,22 +331,18 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════
-     TOP NAVBAR
-═══════════════════════════════════════════════════ -->
+<!-- ═══════════ TOP NAVBAR ═══════════ -->
 <nav class="top-navbar no-print">
 
-  <!-- Hamburger (mobile) -->
-  <button class="btn btn-sm btn-light d-lg-none me-2" id="navToggle" aria-label="Menu">
+  <button class="btn btn-sm d-lg-none me-2" id="navToggle" aria-label="Menu"
+          style="background:rgba(255,255,255,.08); color:var(--text-primary); border:1px solid var(--border);">
     <i class="bi bi-three-dots-vertical fs-5"></i>
   </button>
 
-  <!-- Brand -->
   <a href="{{ url_for('dashboard.index') }}" class="brand">
-    ساهس برو <span class="text-secondary fw-normal" style="font-size:.9rem;">| Sahs Pro</span>
+    <i class="bi bi-gem me-1" style="color:#f59e0b;"></i>القحطاني برو
   </a>
 
-  <!-- Nav links (desktop) -->
   <div class="d-none d-lg-flex align-items-center gap-1 flex-grow-1 {% if current_locale == 'ar' %}me-3{% else %}ms-3{% endif %}" id="navLinks">
     <a class="nav-link {% if request.endpoint and 'dashboard' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('dashboard.index') }}">
@@ -266,21 +378,16 @@
     </a>
   </div>
 
-  <!-- Language switcher -->
   <div class="d-flex align-items-center gap-1 {% if current_locale == 'ar' %}me-auto{% else %}ms-auto{% endif %} no-print">
     <a href="{{ url_for('set_language', lang='ar') }}"
-       class="lang-btn {% if current_locale == 'ar' %}active{% endif %}">
-      🇸🇦 AR
-    </a>
+       class="lang-btn {% if current_locale == 'ar' %}active{% endif %}">🇸🇦 AR</a>
     <a href="{{ url_for('set_language', lang='en') }}"
-       class="lang-btn {% if current_locale == 'en' %}active{% endif %}">
-      🇬🇧 EN
-    </a>
+       class="lang-btn {% if current_locale == 'en' %}active{% endif %}">🇬🇧 EN</a>
   </div>
 
 </nav>
 
-<!-- Mobile nav collapse -->
+<!-- Mobile nav -->
 <div class="nav-links-collapse d-lg-none no-print" id="mobileNav">
   <a class="nav-link py-2 {% if request.endpoint and 'dashboard' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('dashboard.index') }}"><i class="bi bi-speedometer2 me-2"></i>{{ _('Dashboard') }}</a>
   <a class="nav-link py-2 {% if request.endpoint and 'employees' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('employees.index') }}"><i class="bi bi-people-fill me-2"></i>{{ _('Employees') }}</a>
@@ -292,19 +399,12 @@
   <a class="nav-link py-2 {% if request.endpoint and 'assistant' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('assistant.index') }}"><i class="bi bi-robot me-2"></i>{{ _('Assistant') }}</a>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     FLASH MESSAGES
-═══════════════════════════════════════════════════ -->
+<!-- Flash Messages -->
 <div class="flash-container no-print" id="flashContainer">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
-      {% set alert_class = {
-          'success': 'alert-success',
-          'error':   'alert-danger',
-          'warning': 'alert-warning',
-          'info':    'alert-info'
-        }.get(category, 'alert-info') %}
-      <div class="alert {{ alert_class }} alert-dismissible fade show shadow-sm mb-2" role="alert">
+      {% set alert_class = {'success':'alert-success','error':'alert-danger','warning':'alert-warning','info':'alert-info'}.get(category,'alert-info') %}
+      <div class="alert {{ alert_class }} alert-dismissible fade show shadow mb-2" role="alert">
         {{ message }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
@@ -312,33 +412,28 @@
   {% endwith %}
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     MAIN CONTENT
-═══════════════════════════════════════════════════ -->
+<!-- Main Content -->
 <main class="main-content">
   {% block content %}{% endblock %}
 </main>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
 <script>
-  // Mobile nav toggle
   document.getElementById('navToggle')?.addEventListener('click', function () {
-    const nav = document.getElementById('mobileNav');
-    nav.classList.toggle('show');
+    document.getElementById('mobileNav').classList.toggle('show');
   });
-
-  // Auto-dismiss flash messages after 5s
   setTimeout(() => {
     document.querySelectorAll('#flashContainer .alert').forEach(el => {
-      const bsAlert = bootstrap.Alert.getOrCreateInstance(el);
-      bsAlert.close();
+      bootstrap.Alert.getOrCreateInstance(el).close();
     });
   }, 5000);
-</script>
 
+  // Dark mode Chart.js defaults
+  Chart.defaults.color = '#94a3b8';
+  Chart.defaults.borderColor = '#334155';
+  Chart.defaults.plugins.legend.labels.color = '#94a3b8';
+</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

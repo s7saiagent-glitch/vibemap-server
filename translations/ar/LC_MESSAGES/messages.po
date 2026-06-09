@@ -34,11 +34,11 @@ msgstr "الجدول الزمني"
 msgid "Assistant"
 msgstr "المساعد"
 
-msgid "Sahs Pro | ساهس برو"
-msgstr "ساهس برو"
+msgid "Al-Qahtani Pro | القحطاني برو"
+msgstr "القحطاني برو"
 
-msgid "Sahs Pro Assistant"
-msgstr "مساعد ساهس برو"
+msgid "Al-Badawi Pro"
+msgstr "البدوي برو"
 
 msgid "Total Employees"
 msgstr "إجمالي الموظفين"

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('Assistant') }} | {{ _('Sahs Pro | ساهس برو') }}{% endblock %}
+{% block title %}{{ _('Assistant') }} | {{ _('القحطاني برو') }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -170,10 +170,10 @@
           <i class="bi bi-robot"></i>
         </div>
         <div>
-          <div class="fw-bold">{{ _('Sahs Pro Assistant') }}</div>
+          <div class="fw-bold">{{ _('Al-Qahtani Pro Assistant') }}</div>
           <div class="text-muted small d-flex align-items-center gap-1">
             <span class="badge bg-success" style="width:8px;height:8px;border-radius:50%;padding:0;"></span>
-            {{ _('Online — ask me anything about sales') }}
+            {{ _('مساعدك الذكي للمبيعات') }}
           </div>
         </div>
         <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearChat()" title="{{ _('Clear chat') }}">
@@ -189,7 +189,7 @@
           <div class="bubble bot">
             <div>
               {% if current_locale == 'ar' %}
-                مرحباً! أنا مساعد ساهس برو. يمكنني مساعدتك في:
+                مرحباً! أنا مساعد القحطاني برو. يمكنني مساعدتك في:
                 <ul class="mb-1 mt-1 ps-3">
                   <li>تحليل أداء المبيعات</li>
                   <li>معرفة أفضل البائعين</li>
@@ -198,7 +198,7 @@
                 </ul>
                 ما الذي تريد معرفته؟
               {% else %}
-                Hello! I'm the Sahs Pro Assistant. I can help you with:
+                Hello! I'm the Al-Qahtani Pro Assistant. I can help you with:
                 <ul class="mb-1 mt-1 ps-3">
                   <li>Sales performance analysis</li>
                   <li>Top performers ranking</li>

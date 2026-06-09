@@ -1,17 +1,17 @@
 """
-Assistant blueprint – SahsPro bilingual sales assistant chat interface.
+Assistant blueprint – AlQahtaniPro bilingual sales assistant chat interface.
 """
 from flask import (
     Blueprint, render_template, request, jsonify, session,
 )
 from flask_babel import lazy_gettext as _l
 
-from app.utils.assistant import SahsPro, generate_sales_advice
+from app.utils.assistant import AlQahtaniPro, generate_sales_advice
 
 bp = Blueprint('assistant', __name__)
 
 # Module-level assistant instance (stateless, safe to share)
-_assistant = SahsPro()
+_assistant = AlQahtaniPro()
 
 
 def _get_lang() -> str:
@@ -33,10 +33,10 @@ def index():
 
     # Greeting message in correct language
     if lang == 'ar':
-        greeting = ('مرحباً! أنا ساهس برو، مساعدك الذكي لتحليل المبيعات. '
+        greeting = ('مرحباً! أنا القحطاني برو، مساعدك الذكي لتحليل المبيعات. '
                     'يمكنك سؤالي عن المبيعات، الأهداف، الفواتير المعلقة، وأداء الموظفين.')
     else:
-        greeting = ('Hello! I\'m Sahs Pro, your intelligent sales analysis assistant. '
+        greeting = ('Hello! I\'m Al-Qahtani Pro, your intelligent sales analysis assistant. '
                     'Ask me about sales, targets, pending invoices, or employee performance.')
 
     return render_template(
@@ -44,7 +44,7 @@ def index():
         greeting=greeting,
         advice_list=advice_list,
         lang=lang,
-        page_title=_l('Sahs Pro Assistant'),
+        page_title=_l('Al-Qahtani Pro Assistant'),
     )
 
 
