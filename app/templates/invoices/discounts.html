@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Discounts Analysis') }} | {{ _('القحطاني برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .disc-badge { font-size: .75rem; padding: .2rem .6rem; border-radius: 20px; font-weight: 700; }
+  .emp-disc-bar { height: 6px; background: rgba(255,255,255,.08); border-radius: 99px; overflow: hidden; }
+  .emp-disc-fill { height: 100%; border-radius: 99px; background: var(--danger, #ef4444); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-percent text-danger me-2"></i>{{ _('Discounts Analysis') }}
+    </h1>
+    <p class="text-muted small mb-0">{{ _('Invoice discounts breakdown by employee') }}</p>
+  </div>
+  <a href="{{ url_for('invoices.index') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-receipt-cutoff me-1"></i>{{ _('All Invoices') }}
+  </a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label fw-semibold small text-muted">{{ _('Employee') }}</label>
+        <select name="employee_id" class="form-select form-select-sm">
+          <option value="0">{{ _('All Employees') }}</option>
+          {% for emp in employees %}
+          <option value="{{ emp.id }}" {% if emp.id == employee_id %}selected{% endif %}>{{ emp.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label fw-semibold small text-muted">{{ _('From Date') }}</label>
+        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label fw-semibold small text-muted">{{ _('To Date') }}</label>
+        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label fw-semibold small text-muted">{{ _('Min Discount') }}</label>
+        <input type="number" name="min_discount" class="form-control form-control-sm"
+               value="{{ min_discount if min_discount else '' }}" min="0" step="10" placeholder="0">
+      </div>
+      <div class="col-md-1">
+        <button type="submit" class="btn btn-primary btn-sm w-100">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+      <div class="col-md-2">
+        <a href="{{ url_for('invoices.discounts') }}" class="btn btn-outline-secondary btn-sm w-100">
+          <i class="bi bi-x-circle me-1"></i>{{ _('Clear') }}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="text-muted small">{{ _('Total Discounts') }}</div>
+      <div class="fw-bold fs-5 text-danger">{{ '{:,.0f}'.format(total_discount) }}</div>
+      <div class="text-muted" style="font-size:.7rem;">SAR</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="text-muted small">{{ _('Invoices with Discount') }}</div>
+      <div class="fw-bold fs-5 text-warning">{{ total_discount_count }}</div>
+      <div class="text-muted" style="font-size:.7rem;">{{ _('invoices') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="text-muted small">{{ _('Avg Discount') }}</div>
+      <div class="fw-bold fs-5 text-info">{{ '{:,.0f}'.format(avg_discount) }}</div>
+      <div class="text-muted" style="font-size:.7rem;">SAR</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="text-muted small">{{ _('Employees') }}</div>
+      <div class="fw-bold fs-5 text-primary">{{ by_employee|length }}</div>
+      <div class="text-muted" style="font-size:.7rem;">{{ _('with discounts') }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- By employee summary -->
+  {% if by_employee %}
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">
+        <i class="bi bi-people-fill me-2 text-danger"></i>{{ _('By Employee') }}
+      </div>
+      <div class="card-body p-0">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>{{ _('Employee') }}</th>
+              <th class="text-center">{{ _('Count') }}</th>
+              <th class="text-end">{{ _('Total Discount') }}</th>
+              <th style="width:80px">%</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set max_disc = by_employee[0].disc_total if by_employee else 1 %}
+            {% for row in by_employee %}
+            <tr>
+              <td class="fw-semibold">{{ row.name }}</td>
+              <td class="text-center">
+                <span class="badge bg-warning text-dark">{{ row.cnt }}</span>
+              </td>
+              <td class="text-end text-danger fw-bold">{{ '{:,.0f}'.format(row.disc_total or 0) }}</td>
+              <td>
+                <div class="emp-disc-bar">
+                  <div class="emp-disc-fill" style="width:{{ ((row.disc_total or 0) / (max_disc or 1) * 100)|round(1) }}%"></div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Invoice list -->
+  <div class="col-lg-{% if by_employee %}7{% else %}12{% endif %}">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-receipt me-2 text-danger"></i>{{ _('Discounted Invoices') }}</span>
+        <span class="text-muted small">{{ invoices.total }} {{ _('total') }}</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>{{ _('Invoice') }}</th>
+              <th>{{ _('Date') }}</th>
+              <th>{{ _('Employee') }}</th>
+              <th>{{ _('Customer') }}</th>
+              <th class="text-end">{{ _('Price') }}</th>
+              <th class="text-end" style="color:#ef4444;">{{ _('Discount') }}</th>
+              <th class="text-end">{{ _('Net') }}</th>
+              <th>{{ _('Status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in invoices.items %}
+            <tr>
+              <td>
+                <a href="{{ url_for('invoices.detail', invoice_id=inv.id) }}"
+                   class="fw-semibold text-primary text-decoration-none">
+                  {{ inv.invoice_no }}
+                </a>
+              </td>
+              <td class="text-muted small">{{ inv.invoice_date or '—' }}</td>
+              <td>
+                {% if inv.employee %}
+                  <span class="fw-semibold">{{ inv.employee.name }}</span>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="text-muted small" style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
+                  title="{{ inv.customer_name or '' }}">
+                {{ inv.customer_name or '—' }}
+              </td>
+              <td class="text-end text-muted">{{ '{:,.0f}'.format(inv.price or 0) }}</td>
+              <td class="text-end fw-bold" style="color:#ef4444;">
+                -{{ '{:,.0f}'.format(inv.discount or 0) }}
+              </td>
+              <td class="text-end fw-semibold">{{ '{:,.0f}'.format(inv.net or 0) }}</td>
+              <td>
+                {% set status_map = {'pending': ('warning', _('Pending')), 'resolved': ('success', _('Resolved')), 'in_progress': ('info', _('In Progress')), 'cancelled': ('secondary', _('Cancelled'))} %}
+                {% set sc = status_map.get(inv.status, ('secondary', inv.status)) %}
+                <span class="badge bg-{{ sc[0] }}">{{ sc[1] }}</span>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8" class="text-center py-4 text-muted">
+                <i class="bi bi-check2-circle fs-3 d-block mb-2 text-success"></i>
+                {{ _('No discounted invoices found for this filter.') }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if invoices.pages > 1 %}
+      <div class="card-footer d-flex justify-content-center">
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            {% if invoices.has_prev %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('invoices.discounts', page=invoices.prev_num, employee_id=employee_id, date_from=date_from, date_to=date_to, min_discount=min_discount) }}">
+                &laquo;
+              </a>
+            </li>
+            {% endif %}
+            {% for p in invoices.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+              {% if p %}
+              <li class="page-item {% if p == invoices.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('invoices.discounts', page=p, employee_id=employee_id, date_from=date_from, date_to=date_to, min_discount=min_discount) }}">{{ p }}</a>
+              </li>
+              {% else %}
+              <li class="page-item disabled"><span class="page-link">…</span></li>
+              {% endif %}
+            {% endfor %}
+            {% if invoices.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('invoices.discounts', page=invoices.next_num, employee_id=employee_id, date_from=date_from, date_to=date_to, min_discount=min_discount) }}">
+                &raquo;
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

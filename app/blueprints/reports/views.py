@@ -128,6 +128,82 @@ def index():
     )
 
 
+@bp.route('/products')
+def products():
+    """Product category sales analysis with date and employee filters."""
+    today = date.today()
+    year = request.args.get('year', today.year, type=int)
+    month = request.args.get('month', today.month, type=int)
+    employee_id = request.args.get('employee_id', 0, type=int)
+    date_from_str = request.args.get('date_from', '')
+    date_to_str = request.args.get('date_to', '')
+    mode = request.args.get('mode', 'month')
+
+    if mode == 'range' and date_from_str and date_to_str:
+        try:
+            d_from = date.fromisoformat(date_from_str)
+            d_to = date.fromisoformat(date_to_str)
+            if d_from > d_to:
+                d_from, d_to = d_to, d_from
+        except ValueError:
+            mode = 'month'
+
+    if mode != 'range':
+        d_from = date(year, month, 1)
+        d_to = date(year, month, calendar.monthrange(year, month)[1])
+
+    q = db.session.query(
+        SaleRecord.product_category,
+        func.sum(SaleRecord.value).label('total'),
+        func.sum(SaleRecord.qty).label('qty'),
+        func.count(SaleRecord.id).label('cnt'),
+        func.count(func.distinct(SaleRecord.employee_id)).label('emp_cnt'),
+    ).filter(
+        SaleRecord.sale_date >= d_from,
+        SaleRecord.sale_date <= d_to,
+        SaleRecord.product_category.isnot(None),
+        SaleRecord.product_category != '',
+    )
+    if employee_id:
+        q = q.filter(SaleRecord.employee_id == employee_id)
+
+    rows = q.group_by(SaleRecord.product_category).order_by(func.sum(SaleRecord.value).desc()).all()
+
+    grand_total = float(sum(r.total or 0 for r in rows))
+    categories = [
+        {
+            'name': r.product_category,
+            'total': float(r.total or 0),
+            'qty': float(r.qty or 0),
+            'cnt': int(r.cnt),
+            'emp_cnt': int(r.emp_cnt),
+            'pct': round(float(r.total or 0) / grand_total * 100, 1) if grand_total else 0.0,
+        }
+        for r in rows
+    ]
+
+    employees = Employee.query.filter_by(is_active=True).order_by(Employee.name).all()
+    months = [(i, calendar.month_name[i]) for i in range(1, 13)]
+
+    return render_template(
+        'reports/products.html',
+        categories=categories,
+        grand_total=grand_total,
+        employees=employees,
+        employee_id=employee_id,
+        d_from=d_from,
+        d_to=d_to,
+        year=year,
+        month=month,
+        months=months,
+        mode=mode,
+        date_from=date_from_str,
+        date_to=date_to_str,
+        today=today,
+        page_title=_l('Product Analysis'),
+    )
+
+
 @bp.route('/employee/<int:emp_id>')
 def employee_report(emp_id):
     """Full individual employee sales dashboard."""

@@ -1,6 +1,6 @@
 """
 البدوي برو – مساعد ذكي لتحليل بيانات المبيعات.
-يجيب على أي سؤال عن الموظفين، المبيعات، الأهداف، والفواتير.
+يجيب على أي سؤال عن الموظفين، المبيعات، الأهداف، الفواتير، الخصومات، والمنتجات.
 """
 import re
 from datetime import date, timedelta
@@ -67,7 +67,7 @@ def _extract_employee_from_q(question: str):
     return best, remainder
 
 
-# ─── intent patterns ───────────────────────────────────────────────────────────
+# ─── intent patterns (priority-ordered) ────────────────────────────────────────
 
 PATTERNS = [
     # help
@@ -85,27 +85,33 @@ PATTERNS = [
     # this week
     (r'هذا الأسبوع|الأسبوع الحالي|أسبوع.*حالي|this week|أسبوع',
      '_week_stats'),
-    # pending invoices – match both فاتورة/فواتير roots
+    # discounts – before invoices so it takes priority
+    (r'خصم|خصومات|discount|تخفيض|حسم',
+     '_discounts_analysis'),
+    # pending invoices
     (r'فاتور|فواتير|pending invoice|معلق.*فاتور|فاتور.*معلق',
      '_pending_invoices_summary'),
     # oldest invoices
-    (r'قديم.*فاتور|أقدم|oldest invoice',
+    (r'قديم.*فاتور|أقدم.*فاتور|oldest invoice',
      '_oldest_invoices'),
-    # remaining target
+    # remaining target / daily target
     (r'متبقي|باقي.*هدف|هدف.*باقي|remaining.*target|يومي.*مستهدف|هدف.*يومي|كم.*هدف|هدف.*كم',
      '_remaining_targets'),
-    # achievement
-    (r'نسبة|إنجاز|تحقيق.*هدف|هدف.*تحقيق|achievement|progress',
+    # achievement %
+    (r'نسبة|إنجاز|تحقيق.*هدف|هدف.*تحقيق|achievement|progress|أداء.*هدف',
      '_achievement_overview'),
-    # ranking
-    (r'ترتيب|مقارنة|ranking|compare|أضعف|أقل.*مبيع|من.*أقل',
+    # ranking / comparison
+    (r'ترتيب|مقارنة|ranking|compare|أضعف|أقل.*مبيع|من.*أقل|الأدنى',
      '_employee_ranking'),
-    # products
-    (r'منتج|product|فئة|category|صنف|item',
+    # products / categories
+    (r'منتج|منتجات|product|فئة|فئات|category|صنف|أصناف|item',
      '_product_analysis'),
     # productivity
-    (r'إنتاج|productivity|كفاء',
+    (r'إنتاج|إنتاجية|productivity|كفاءة',
      '_productivity_summary'),
+    # customer
+    (r'عميل|عملاء|customer|زبون',
+     '_customer_analysis'),
     # monthly / general sales
     (r'مبيعات|sales|شهر|month|ملخص|summary|إجمالي|total|أداء',
      '_monthly_summary'),
@@ -140,7 +146,8 @@ class AlQahtaniPro:
                 except Exception:
                     pass
 
-        return self._monthly_summary(q)
+        # Nothing matched – try monthly summary or suggest help
+        return self._unknown_fallback(q)
 
     # ── handlers ───────────────────────────────────────────────────────────────
 
@@ -230,6 +237,50 @@ class AlQahtaniPro:
                  f'الإجمالي: {_fmt(grand)} ريال\n']
         for name, total in results:
             lines.append(f'• {name}: {_fmt(total)} ريال')
+        return '\n'.join(lines)
+
+    def _discounts_analysis(self, q, emp=None, **kw):
+        """Analyse discounts from PendingInvoice table."""
+        base = PendingInvoice.query.filter(PendingInvoice.discount > 0)
+        if emp:
+            base = base.filter_by(employee_id=emp.id)
+
+        total_disc = db.session.query(func.sum(PendingInvoice.discount)).filter(
+            PendingInvoice.discount > 0,
+            *([PendingInvoice.employee_id == emp.id] if emp else [])
+        ).scalar() or 0
+        count = base.count()
+
+        if count == 0:
+            if emp:
+                return f'لا توجد خصومات مسجلة للموظف {emp.name}.'
+            return 'لا توجد فواتير بها خصومات في قاعدة البيانات.'
+
+        if emp:
+            avg = float(total_disc) / count if count else 0
+            return (f'💸 **خصومات – {emp.name}**\n'
+                    f'عدد الفواتير: {count}\n'
+                    f'إجمالي الخصومات: {_fmt(total_disc)} ريال\n'
+                    f'متوسط الخصم: {_fmt(avg)} ريال')
+
+        # By employee breakdown
+        by_emp = (
+            db.session.query(
+                Employee.name,
+                func.count(PendingInvoice.id).label('cnt'),
+                func.sum(PendingInvoice.discount).label('disc'),
+            )
+            .join(PendingInvoice, PendingInvoice.employee_id == Employee.id)
+            .filter(PendingInvoice.discount > 0)
+            .group_by(Employee.id)
+            .order_by(func.sum(PendingInvoice.discount).desc())
+            .all()
+        )
+        avg = float(total_disc) / count if count else 0
+        lines = [f'💸 **تحليل الخصومات**\n'
+                 f'إجمالي: {_fmt(total_disc)} ريال | عدد الفواتير: {count} | متوسط: {_fmt(avg)} ريال\n']
+        for row in by_emp:
+            lines.append(f'• {row.name}: {row.cnt} فاتورة — {_fmt(row.disc or 0)} ريال')
         return '\n'.join(lines)
 
     def _pending_invoices_summary(self, q, emp=None, **kw):
@@ -334,7 +385,7 @@ class AlQahtaniPro:
 
     def _employee_ranking(self, q, **kw):
         d_from, d_to = _this_month()
-        want_lowest = bool(re.search(r'أضعف|أقل|ضعيف|lowest|worst', q, re.IGNORECASE))
+        want_lowest = bool(re.search(r'أضعف|أقل|ضعيف|الأدنى|lowest|worst', q, re.IGNORECASE))
         order = func.sum(SaleRecord.value).asc() if want_lowest else func.sum(SaleRecord.value).desc()
         results = (
             db.session.query(Employee.name, func.sum(SaleRecord.value).label('total'))
@@ -352,43 +403,79 @@ class AlQahtaniPro:
             lines.append(f'{prefix} {name}: {_fmt(total)} ريال')
         return '\n'.join(lines)
 
-    def _product_analysis(self, q, **kw):
+    def _product_analysis(self, q, emp=None, **kw):
         d_from, d_to = _this_month()
-        results = (
-            db.session.query(
-                SaleRecord.product_category,
-                func.sum(SaleRecord.value).label('total'),
-                func.count(SaleRecord.id).label('cnt'),
-            )
-            .filter(
-                SaleRecord.sale_date >= d_from,
-                SaleRecord.sale_date <= d_to,
-                SaleRecord.product_category.isnot(None),
-                SaleRecord.product_category != '',
-            )
-            .group_by(SaleRecord.product_category)
-            .order_by(func.sum(SaleRecord.value).desc())
-            .limit(10).all()
+        base = db.session.query(
+            SaleRecord.product_category,
+            func.sum(SaleRecord.value).label('total'),
+            func.count(SaleRecord.id).label('cnt'),
+        ).filter(
+            SaleRecord.sale_date >= d_from,
+            SaleRecord.sale_date <= d_to,
+            SaleRecord.product_category.isnot(None),
+            SaleRecord.product_category != '',
         )
+        if emp:
+            base = base.filter(SaleRecord.employee_id == emp.id)
+        results = base.group_by(SaleRecord.product_category).order_by(
+            func.sum(SaleRecord.value).desc()
+        ).limit(10).all()
+
         if not results:
-            return 'لا توجد بيانات منتجات لهذا الشهر.'
-        lines = [f'📦 **أفضل الفئات – {d_from.strftime("%B %Y")}**\n']
+            return ('لا توجد بيانات منتجات لهذا الشهر.' if not emp
+                    else f'لا توجد بيانات منتجات لـ{emp.name} هذا الشهر.')
+        title = f'📦 **أفضل الفئات – {d_from.strftime("%B %Y")}**'
+        if emp:
+            title += f'\n({emp.name})'
+        lines = [title + '\n']
+        grand = sum(r.total or 0 for r in results)
         for cat, total, cnt in results:
-            lines.append(f'• {cat}: {_fmt(total)} ريال ({cnt} فاتورة)')
+            pct = round(float(total or 0) / grand * 100, 1) if grand else 0
+            lines.append(f'• {cat}: {_fmt(total)} ريال ({pct}%) — {cnt} سجل')
         return '\n'.join(lines)
 
     def _productivity_summary(self, q, emp=None, **kw):
+        """Summarize SalesProductivityRecord for the current month period."""
         today = date.today()
-        qs = SalesProductivityRecord.query.filter_by(year=today.year, month=today.month)
+        d_from = date(today.year, today.month, 1)
+        qs = SalesProductivityRecord.query.filter(
+            SalesProductivityRecord.period_from >= d_from,
+        )
         if emp:
-            qs = qs.filter_by(employee_id=emp.id)
-        records = qs.order_by(SalesProductivityRecord.value.desc()).limit(10).all()
+            qs = qs.filter(SalesProductivityRecord.employee_id == emp.id)
+        records = qs.order_by(SalesProductivityRecord.amount.desc()).limit(10).all()
         if not records:
-            return 'لا توجد بيانات إنتاجية لهذا الشهر.'
+            # Fallback: show regular sales summary since productivity records may not exist
+            return self._product_analysis(q, emp=emp)
         lines = [f'⚡ **بيانات الإنتاجية – {today.strftime("%B %Y")}**\n']
         for r in records:
             e = Employee.query.get(r.employee_id)
-            lines.append(f'• {e.name if e else "?"}: {_fmt(r.value)}')
+            lines.append(f'• {e.name if e else "?"} | {r.product_category}: {_fmt(r.amount)} ريال ({r.qty} وحدة)')
+        return '\n'.join(lines)
+
+    def _customer_analysis(self, q, emp=None, **kw):
+        """Top customers by pending invoice net value."""
+        base = db.session.query(
+            PendingInvoice.customer_name,
+            func.count(PendingInvoice.id).label('cnt'),
+            func.sum(PendingInvoice.net).label('total'),
+        ).filter(
+            PendingInvoice.customer_name.isnot(None),
+            PendingInvoice.customer_name != '',
+        )
+        if emp:
+            base = base.filter(PendingInvoice.employee_id == emp.id)
+        results = base.group_by(PendingInvoice.customer_name).order_by(
+            func.sum(PendingInvoice.net).desc()
+        ).limit(10).all()
+        if not results:
+            return 'لا توجد بيانات عملاء في الفواتير.'
+        title = '🧾 **أكبر العملاء (بالفواتير المعلقة)**'
+        if emp:
+            title += f'\n({emp.name})'
+        lines = [title + '\n']
+        for name, cnt, total in results:
+            lines.append(f'• {name}: {cnt} فاتورة — {_fmt(total or 0)} ريال')
         return '\n'.join(lines)
 
     def _monthly_summary(self, q, emp=None, **kw):
@@ -416,7 +503,7 @@ class AlQahtaniPro:
         if top:
             lines.append(f'🏆 أفضل بائع: {top.name} ({_fmt(top.t)} ريال)')
         lines.append(f'📋 فواتير معلقة: {p_cnt} ({_fmt(p_amt)} ريال)')
-        lines.append(f'\n💬 اسألني عن:\nأفضل بائع | هدف موظف | مبيعات اليوم | فواتير معلقة | ترتيب الموظفين | نسبة الإنجاز')
+        lines.append(f'\n💬 اسألني عن:\nأفضل بائع | هدف موظف | مبيعات اليوم | فواتير معلقة | خصومات | منتجات | ترتيب الموظفين')
         return '\n'.join(lines)
 
     def _employee_query(self, q, emp=None, **kw):
@@ -444,6 +531,11 @@ class AlQahtaniPro:
             func.count(PendingInvoice.id), func.sum(PendingInvoice.net)
         ).filter_by(employee_id=emp.id, status='pending').one()
 
+        disc_total = db.session.query(func.sum(PendingInvoice.discount)).filter(
+            PendingInvoice.employee_id == emp.id,
+            PendingInvoice.discount > 0,
+        ).scalar() or 0
+
         icon = '✅' if pct >= 100 else ('⚠️' if pct >= 80 else '🔴')
         lines = [f'👤 **{emp.name}**\n',
                  f'📅 مبيعات اليوم:        {_fmt(today_sales)} ريال',
@@ -457,7 +549,31 @@ class AlQahtaniPro:
                 f'📌 الهدف اليومي المطلوب: {_fmt(daily)} ريال',
             ]
         lines.append(f'📋 فواتير معلقة:        {p_cnt or 0} ({_fmt(p_amt or 0)} ريال)')
+        if disc_total > 0:
+            lines.append(f'💸 إجمالي الخصومات:     {_fmt(disc_total)} ريال')
         return '\n'.join(lines)
+
+    def _unknown_fallback(self, q) -> str:
+        """Try monthly summary first; if no data, return helpful guidance."""
+        today = date.today()
+        d_from, d_to = _this_month()
+        has_data = bool(db.session.query(SaleRecord.id).filter(
+            SaleRecord.sale_date >= d_from
+        ).first())
+        if has_data:
+            return self._monthly_summary(q)
+        return (
+            'لم أفهم سؤالك. 🤔\n\n'
+            'جرب أحد هذه الأسئلة:\n'
+            '• أفضل بائع هذا الشهر\n'
+            '• مبيعات [اسم الموظف]\n'
+            '• الفواتير المعلقة\n'
+            '• خصومات الفواتير\n'
+            '• أفضل المنتجات\n'
+            '• نسبة الإنجاز\n'
+            '• ترتيب الموظفين\n'
+            '• مساعد  (لرؤية كل الأوامر)'
+        )
 
     def _help_message(self) -> str:
         return (
@@ -467,10 +583,13 @@ class AlQahtaniPro:
             '• **مبيعات اليوم** / **مبيعات الأسبوع** / **مبيعات الشهر**\n'
             '• **هدف [اسم الموظف]** – مثال: هدف أحمد\n'
             '• **فواتير معلقة** أو **فواتير معلقة أحمد**\n'
+            '• **خصومات** أو **خصومات أحمد** – تحليل الخصومات\n'
+            '• **منتجات** أو **أفضل الفئات** – تحليل المنتجات\n'
+            '• **عملاء** – أكبر العملاء بالفواتير\n'
             '• **ترتيب الموظفين** أو **من الأضعف**\n'
             '• **نسبة الإنجاز** لكل موظف\n'
             '• **قائمة الموظفين**\n'
-            '• **[اسم الموظف] مباشرة** – تقرير كامل\n'
+            '• **[اسم الموظف] مباشرة** – تقرير كامل للموظف\n'
         )
 
 
@@ -530,7 +649,26 @@ def generate_sales_advice(lang: str = 'ar') -> list[dict]:
                 f'⚠️ لا توجد مبيعات مسجلة للموظف {emp.name} هذا الشهر.',
                 f'⚠️ No sales for {emp.name} this month.'))
 
-    # Rule 4: declining categories
+    # Rule 4: high discounts warning
+    disc_result = (
+        db.session.query(
+            Employee.name,
+            func.sum(PendingInvoice.discount).label('disc'),
+            func.sum(PendingInvoice.net).label('net'),
+        )
+        .join(PendingInvoice, PendingInvoice.employee_id == Employee.id)
+        .filter(PendingInvoice.discount > 0)
+        .group_by(Employee.id)
+        .having(func.sum(PendingInvoice.discount) > func.sum(PendingInvoice.net) * 0.1)
+        .all()
+    )
+    for row in disc_result:
+        pct = round(float(row.disc or 0) / float(row.net or 1) * 100, 1)
+        advice.append(_card('warning', row.name,
+            f'💸 خصومات {row.name} مرتفعة: {_fmt(row.disc)} ريال ({pct}% من صافي الفواتير).',
+            f'💸 {row.name} has high discounts: {_fmt(row.disc)} SAR ({pct}% of net).'))
+
+    # Rule 5: declining categories (SQLite-specific)
     from sqlalchemy import text
     try:
         rows = db.session.execute(text("""

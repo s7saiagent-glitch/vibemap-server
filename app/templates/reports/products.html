@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Product Analysis') }} | {{ _('القحطاني برو') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .cat-bar-track {
+    height: 8px;
+    background: rgba(255,255,255,.08);
+    border-radius: 99px;
+    overflow: hidden;
+    min-width: 80px;
+  }
+  .cat-bar-fill { height: 100%; border-radius: 99px; background: var(--primary, #3b82f6); transition: width .4s; }
+  .rank-badge {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 700; flex-shrink: 0;
+  }
+  .kpi-strip .card { border-radius: 10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-boxes text-primary me-2"></i>{{ _('Product Analysis') }}
+    </h1>
+    <p class="text-muted small mb-0">{{ _('Sales breakdown by product category') }}</p>
+  </div>
+  <a href="{{ url_for('reports.index') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-{% if current_locale == 'ar' %}right{% else %}left{% endif %} me-1"></i>
+    {{ _('Reports') }}
+  </a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+
+      <!-- Mode tabs -->
+      <div class="col-12">
+        <div class="btn-group btn-group-sm" role="group">
+          <a href="?mode=month&year={{ year }}&month={{ month }}&employee_id={{ employee_id }}"
+             class="btn {% if mode != 'range' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            <i class="bi bi-calendar3 me-1"></i>{{ _('Month') }}
+          </a>
+          <a href="?mode=range&date_from={{ date_from }}&date_to={{ date_to }}&employee_id={{ employee_id }}"
+             class="btn {% if mode == 'range' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            <i class="bi bi-calendar-range me-1"></i>{{ _('Date Range') }}
+          </a>
+        </div>
+      </div>
+
+      {% if mode != 'range' %}
+      <div class="col-6 col-md-2">
+        <label class="form-label fw-semibold small text-muted">{{ _('Year') }}</label>
+        <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+          {% for y in range(2023, 2028) %}
+          <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+        <input type="hidden" name="mode" value="month">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label fw-semibold small text-muted">{{ _('Month') }}</label>
+        <select name="month" class="form-select form-select-sm" onchange="this.form.submit()">
+          {% for m_num, m_name in months %}
+          <option value="{{ m_num }}" {% if m_num == month %}selected{% endif %}>{{ m_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% else %}
+      <input type="hidden" name="mode" value="range">
+      <div class="col-6 col-md-3">
+        <label class="form-label fw-semibold small text-muted">{{ _('From') }}</label>
+        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label fw-semibold small text-muted">{{ _('To') }}</label>
+        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+      </div>
+      {% endif %}
+
+      <div class="col-md-3">
+        <label class="form-label fw-semibold small text-muted">{{ _('Employee') }}</label>
+        <select name="employee_id" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="0">{{ _('All Employees') }}</option>
+          {% for emp in employees %}
+          <option value="{{ emp.id }}" {% if emp.id == employee_id %}selected{% endif %}>{{ emp.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-1">
+        <button type="submit" class="btn btn-primary btn-sm w-100">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Period badge -->
+<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+  <span class="badge bg-primary fs-6 px-3 py-2">
+    <i class="bi bi-calendar3 me-1"></i>
+    {{ d_from.strftime('%Y-%m-%d') }} → {{ d_to.strftime('%Y-%m-%d') }}
+  </span>
+  {% if employee_id %}
+  <span class="badge bg-secondary fs-6 px-3 py-2">
+    <i class="bi bi-person-fill me-1"></i>
+    {% for emp in employees %}{% if emp.id == employee_id %}{{ emp.name }}{% endif %}{% endfor %}
+  </span>
+  {% endif %}
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-4 kpi-strip">
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="text-muted small">{{ _('Total Sales') }}</div>
+      <div class="fw-bold fs-5 text-primary">{{ '{:,.0f}'.format(grand_total) }}</div>
+      <div class="text-muted" style="font-size:.7rem;">SAR</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="text-muted small">{{ _('Categories') }}</div>
+      <div class="fw-bold fs-5 text-info">{{ categories|length }}</div>
+      <div class="text-muted" style="font-size:.7rem;">{{ _('distinct') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="text-muted small">{{ _('Total Items') }}</div>
+      <div class="fw-bold fs-5 text-success">{{ '{:,.0f}'.format(categories|sum(attribute='cnt')) }}</div>
+      <div class="text-muted" style="font-size:.7rem;">{{ _('records') }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center py-3">
+      <div class="text-muted small">{{ _('Total Qty') }}</div>
+      <div class="fw-bold fs-5 text-warning">{{ '{:,.0f}'.format(categories|sum(attribute='qty')) }}</div>
+      <div class="text-muted" style="font-size:.7rem;">{{ _('units') }}</div>
+    </div>
+  </div>
+</div>
+
+{% if categories %}
+<!-- Chart -->
+<div class="card mb-4">
+  <div class="card-header">
+    <i class="bi bi-bar-chart-horizontal-fill me-2 text-primary"></i>{{ _('Top Categories') }}
+  </div>
+  <div class="card-body" style="height:280px;">
+    <canvas id="catChart"></canvas>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-table me-2 text-primary"></i>{{ _('Category Breakdown') }}</span>
+    <span class="text-muted small">{{ categories|length }} {{ _('categories') }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th>{{ _('Category') }}</th>
+          <th class="text-end">{{ _('Sales (SAR)') }}</th>
+          <th class="text-end">{{ _('Qty') }}</th>
+          <th class="text-end">{{ _('Records') }}</th>
+          <th class="text-end">{{ _('Employees') }}</th>
+          <th style="width:150px">{{ _('Share') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        {% set colors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#6366f1','#06b6d4','#84cc16','#f97316','#ec4899','#8b5cf6'] %}
+        <tr>
+          <td>
+            <div class="rank-badge" style="background:{{ colors[loop.index0 % colors|length] }}22; color:{{ colors[loop.index0 % colors|length] }};">
+              {{ loop.index }}
+            </div>
+          </td>
+          <td>
+            <div class="fw-semibold" style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
+                 title="{{ cat.name }}">{{ cat.name }}</div>
+          </td>
+          <td class="text-end fw-bold" style="color:{{ colors[loop.index0 % colors|length] }}">
+            {{ '{:,.0f}'.format(cat.total) }}
+          </td>
+          <td class="text-end text-muted">{{ '{:,.1f}'.format(cat.qty) }}</td>
+          <td class="text-end text-muted">{{ cat.cnt }}</td>
+          <td class="text-end text-muted">{{ cat.emp_cnt }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="cat-bar-track flex-grow-1">
+                <div class="cat-bar-fill" style="width:{{ cat.pct }}%; background:{{ colors[loop.index0 % colors|length] }};"></div>
+              </div>
+              <span class="small fw-semibold" style="width:38px; text-align:end;">{{ cat.pct }}%</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="fw-bold">
+          <td colspan="2" class="text-muted">{{ _('Total') }}</td>
+          <td class="text-end text-primary">{{ '{:,.0f}'.format(grand_total) }}</td>
+          <td class="text-end text-muted">{{ '{:,.1f}'.format(categories|sum(attribute='qty')) }}</td>
+          <td class="text-end text-muted">{{ categories|sum(attribute='cnt') }}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+{% else %}
+<div class="card text-center py-5">
+  <div class="card-body">
+    <i class="bi bi-boxes fs-1 text-muted d-block mb-3"></i>
+    <h5 class="fw-bold text-muted">{{ _('No product data for this period') }}</h5>
+    <p class="text-muted small">{{ _('Upload sales files that include product category information.') }}</p>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if categories %}
+<script>
+(function() {
+  const COLORS = ['#3b82f6','#10b981','#f59e0b','#ef4444','#6366f1','#06b6d4','#84cc16','#f97316','#ec4899','#8b5cf6'];
+  const data = {{ categories[:15] | tojson }};
+  const labels = data.map(d => d.name.length > 30 ? d.name.slice(0, 28) + '…' : d.name);
+  const totals = data.map(d => d.total);
+
+  new Chart(document.getElementById('catChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'SAR',
+        data: totals,
+        backgroundColor: data.map((_, i) => COLORS[i % COLORS.length] + '99'),
+        borderColor: data.map((_, i) => COLORS[i % COLORS.length]),
+        borderWidth: 1.5,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ' + Math.round(ctx.parsed.x).toLocaleString() + ' SAR',
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+        y: { grid: { display: false }, ticks: { color: '#f1f5f9', font: { size: 11 } } },
+      }
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

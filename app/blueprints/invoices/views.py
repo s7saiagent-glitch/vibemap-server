@@ -8,6 +8,7 @@ from flask import (
     url_for, flash, jsonify,
 )
 from flask_babel import lazy_gettext as _l
+from sqlalchemy import func
 
 from app import db
 from app.models import Employee, PendingInvoice, InvoiceNote
@@ -99,6 +100,76 @@ def index():
         search=search,
         today=date.today(),
         page_title=_l('Pending Invoices'),
+    )
+
+
+@bp.route('/discounts')
+def discounts():
+    """Invoices with discount > 0 – summary by employee and detail list."""
+    employee_id = request.args.get('employee_id', 0, type=int)
+    date_from_str = request.args.get('date_from', '')
+    date_to_str = request.args.get('date_to', '')
+    min_discount = request.args.get('min_discount', 0.0, type=float)
+    page = request.args.get('page', 1, type=int)
+    today = date.today()
+
+    base_q = PendingInvoice.query.filter(PendingInvoice.discount > 0)
+    if employee_id:
+        base_q = base_q.filter(PendingInvoice.employee_id == employee_id)
+    if date_from_str:
+        try:
+            base_q = base_q.filter(PendingInvoice.invoice_date >= date.fromisoformat(date_from_str))
+        except ValueError:
+            pass
+    if date_to_str:
+        try:
+            base_q = base_q.filter(PendingInvoice.invoice_date <= date.fromisoformat(date_to_str))
+        except ValueError:
+            pass
+    if min_discount > 0:
+        base_q = base_q.filter(PendingInvoice.discount >= min_discount)
+
+    invoices = base_q.order_by(PendingInvoice.discount.desc()).paginate(
+        page=page, per_page=50, error_out=False
+    )
+
+    # Global stats (no filters – full picture)
+    total_discount = db.session.query(func.sum(PendingInvoice.discount)).filter(
+        PendingInvoice.discount > 0
+    ).scalar() or 0.0
+    total_discount_count = PendingInvoice.query.filter(PendingInvoice.discount > 0).count()
+    avg_discount = (float(total_discount) / total_discount_count) if total_discount_count else 0.0
+
+    by_employee = (
+        db.session.query(
+            Employee.name,
+            func.count(PendingInvoice.id).label('cnt'),
+            func.sum(PendingInvoice.discount).label('disc_total'),
+            func.sum(PendingInvoice.net).label('net_total'),
+        )
+        .join(PendingInvoice, PendingInvoice.employee_id == Employee.id)
+        .filter(PendingInvoice.discount > 0)
+        .group_by(Employee.id)
+        .order_by(func.sum(PendingInvoice.discount).desc())
+        .all()
+    )
+
+    employees = Employee.query.filter_by(is_active=True).order_by(Employee.name).all()
+
+    return render_template(
+        'invoices/discounts.html',
+        invoices=invoices,
+        employees=employees,
+        by_employee=by_employee,
+        total_discount=float(total_discount),
+        total_discount_count=total_discount_count,
+        avg_discount=avg_discount,
+        employee_id=employee_id,
+        date_from=date_from_str,
+        date_to=date_to_str,
+        min_discount=min_discount,
+        today=today,
+        page_title=_l('Discounts Analysis'),
     )
 
 

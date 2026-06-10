@@ -360,14 +360,30 @@
        href="{{ url_for('targets.index') }}">
       <i class="bi bi-bullseye"></i> {{ _('Targets') }}
     </a>
-    <a class="nav-link {% if request.endpoint and 'reports' in (request.endpoint or '') %}active{% endif %}"
-       href="{{ url_for('reports.index') }}">
-      <i class="bi bi-bar-chart-line-fill"></i> {{ _('Reports') }}
-    </a>
-    <a class="nav-link {% if request.endpoint and 'invoices' in (request.endpoint or '') %}active{% endif %}"
-       href="{{ url_for('invoices.index') }}">
-      <i class="bi bi-receipt-cutoff"></i> {{ _('Invoices') }}
-    </a>
+    <!-- Reports dropdown -->
+    <div class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle {% if request.endpoint and 'reports' in (request.endpoint or '') %}active{% endif %}"
+         href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-bar-chart-line-fill"></i> {{ _('Reports') }}
+      </a>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{{ url_for('reports.index') }}"><i class="bi bi-grid me-2"></i>{{ _('All Reports') }}</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('reports.products') }}"><i class="bi bi-boxes me-2"></i>{{ _('Products') }}</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('reports.comparison') }}"><i class="bi bi-people me-2"></i>{{ _('Comparison') }}</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('reports.actual_vs_target') }}"><i class="bi bi-bullseye me-2"></i>{{ _('vs Target') }}</a></li>
+      </ul>
+    </div>
+    <!-- Invoices dropdown -->
+    <div class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle {% if request.endpoint and 'invoices' in (request.endpoint or '') %}active{% endif %}"
+         href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-receipt-cutoff"></i> {{ _('Invoices') }}
+      </a>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{{ url_for('invoices.index') }}"><i class="bi bi-receipt me-2"></i>{{ _('Pending Invoices') }}</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('invoices.discounts') }}"><i class="bi bi-percent me-2"></i>{{ _('Discounts') }}</a></li>
+      </ul>
+    </div>
     <a class="nav-link {% if request.endpoint and 'schedule' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('schedule.index') }}">
       <i class="bi bi-calendar-week-fill"></i> {{ _('Schedule') }}
@@ -394,7 +410,9 @@
   <a class="nav-link py-2 {% if request.endpoint and 'uploads' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('uploads.index') }}"><i class="bi bi-cloud-upload-fill me-2"></i>{{ _('Uploads') }}</a>
   <a class="nav-link py-2 {% if request.endpoint and 'targets' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('targets.index') }}"><i class="bi bi-bullseye me-2"></i>{{ _('Targets') }}</a>
   <a class="nav-link py-2 {% if request.endpoint and 'reports' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('reports.index') }}"><i class="bi bi-bar-chart-line-fill me-2"></i>{{ _('Reports') }}</a>
+  <a class="nav-link py-2 ps-4 text-muted small" href="{{ url_for('reports.products') }}"><i class="bi bi-boxes me-2"></i>{{ _('Products') }}</a>
   <a class="nav-link py-2 {% if request.endpoint and 'invoices' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('invoices.index') }}"><i class="bi bi-receipt-cutoff me-2"></i>{{ _('Invoices') }}</a>
+  <a class="nav-link py-2 ps-4 text-muted small" href="{{ url_for('invoices.discounts') }}"><i class="bi bi-percent me-2"></i>{{ _('Discounts') }}</a>
   <a class="nav-link py-2 {% if request.endpoint and 'schedule' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('schedule.index') }}"><i class="bi bi-calendar-week-fill me-2"></i>{{ _('Schedule') }}</a>
   <a class="nav-link py-2 {% if request.endpoint and 'assistant' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('assistant.index') }}"><i class="bi bi-robot me-2"></i>{{ _('Assistant') }}</a>
 </div>
