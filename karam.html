@@ -1249,7 +1249,7 @@ let lang = 'ar', theme = 'dark';
 let currentScreen = 'splash', prevScreen = null;
 let activeTab = 'home';
 let activeCat = 'all';
-let obPhase = 'lang', obSlide = 0;
+let obSlide = 0;
 let activeItem = ITEMS[0];
 let activeConvo = CONVOS[0];
 let laItem = ITEMS[0], laEndTime = ITEMS[0].endTime, laChip = 0;
@@ -1529,7 +1529,6 @@ function renderMessages() {
       </div>
       ${c.unread>0?`<div class="msg-unread">${c.unread}</div>`:''}
     </div>`).join('');
-  document.getElementById('topbar-logo-ar')||null;
   const el = document.querySelector('#messages .topbar-logo-ar');
   if(el) el.textContent = t('msgs_title');
 }
@@ -1729,7 +1728,7 @@ function renderLiveAuction() {
   document.getElementById('la-h-l').textContent = t('hours');
   document.getElementById('la-m-l').textContent = t('minutes');
   document.getElementById('la-s-l').textContent = t('seconds');
-  document.getElementById('la-back-b').textContent = lang==='ar'?'→':'←';
+  const backBtnLA = document.getElementById('live-back-b'); if(backBtnLA) backBtnLA.textContent = lang==='ar'?'→':'←';
   document.getElementById('la-cur-bid').textContent = fmtSAR(item.currentBid||item.price);
   renderLAChips();
   renderLABidList();
@@ -1785,7 +1784,7 @@ function placeLABid(amount, who) {
     setTimeout(()=>snipe.classList.remove('show'),3000);
   }
   laItem.attendees = (laItem.attendees||147) + Math.floor(Math.random()*3);
-  document.getElementById('la-att').textContent = laItem.attendees;
+  const laAttEl = document.getElementById('la-att'); if(laAttEl) laAttEl.textContent = laItem.attendees;
   renderLABidList();
 }
 
@@ -1929,7 +1928,7 @@ function setLang(l) {
   document.getElementById('s-en-ck').style.display=l==='en'?'':'none';
   document.getElementById('s-ar-lbl').style.color=l==='ar'?'var(--gold)':'var(--t1)';
   document.getElementById('s-en-lbl').style.color=l==='en'?'var(--gold)':'var(--t1)';
-  document.getElementById('explore-input').placeholder=t('search_ph');
+  const expInp=document.getElementById('explore-input'); if(expInp) expInp.placeholder=t('search_ph');
   applyAllTrans();
   if(currentScreen==='home') renderHome();
   if(currentScreen==='explore') renderExplore();
