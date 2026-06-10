@@ -49,22 +49,18 @@ msgid "Reports"
 msgstr "التقارير"
 
 #: app/templates/base.html:370
-#, fuzzy
 msgid "All Reports"
 msgstr "التقارير"
 
 #: app/templates/base.html:371 app/templates/base.html:413
-#, fuzzy
 msgid "Products"
 msgstr "الإنتاجية"
 
 #: app/templates/base.html:372
-#, fuzzy
 msgid "Comparison"
 msgstr "المقارنة الأسبوعية"
 
 #: app/templates/base.html:373
-#, fuzzy
 msgid "vs Target"
 msgstr "الهدف"
 
@@ -80,7 +76,6 @@ msgid "Pending Invoices"
 msgstr "الفواتير المعلقة"
 
 #: app/templates/base.html:384 app/templates/base.html:415
-#, fuzzy
 msgid "Discounts"
 msgstr "الخصم"
 
@@ -127,7 +122,6 @@ msgstr "حرج"
 
 #: app/templates/assistant/advice.html:60
 #: app/templates/dashboard/advice.html:107
-#, fuzzy
 msgid "Warnings"
 msgstr "صباحي"
 
@@ -138,7 +132,6 @@ msgstr "معلومة"
 
 #: app/templates/assistant/advice.html:72
 #: app/templates/dashboard/advice.html:119
-#, fuzzy
 msgid "Positive"
 msgstr "غير نشط"
 
@@ -152,12 +145,10 @@ msgid "No alerts at this time. Keep up the excellent work!"
 msgstr "لا تنبيهات حالياً. استمر في العمل الرائع!"
 
 #: app/templates/assistant/advice.html:111
-#, fuzzy
 msgid "Upload Sales Data"
 msgstr "رفع البيانات"
 
 #: app/templates/assistant/advice.html:120
-#, fuzzy
 msgid "Chat with Al-Qahtani Pro"
 msgstr "تحدث مع ساهس برو"
 
@@ -166,7 +157,6 @@ msgid "AI-powered recommendations based on current performance"
 msgstr "توصيات ذكية بناءً على الأداء الحالي"
 
 #: app/templates/dashboard/advice.html:43
-#, fuzzy
 msgid "Back to Dashboard"
 msgstr "الذهاب للوحة التحكم"
 
@@ -175,12 +165,10 @@ msgid "No alerts or recommendations at this time. Keep up the excellent work!"
 msgstr "لا تنبيهات أو توصيات حالياً. استمر في العمل الرائع!"
 
 #: app/templates/dashboard/index.html:83
-#, fuzzy
 msgid "Today"
 msgstr "عطلة رسمية"
 
 #: app/templates/employees/edit.html:3
-#, fuzzy
 msgid "Edit Employee"
 msgstr "إضافة موظف"
 
@@ -190,7 +178,6 @@ msgid "Edit"
 msgstr "تعديل"
 
 #: app/templates/employees/edit.html:38
-#, fuzzy
 msgid "Edit Employee Details"
 msgstr "تفاصيل الجدول"
 
@@ -199,7 +186,6 @@ msgid "Name (English)"
 msgstr "الاسم (إنجليزي)"
 
 #: app/templates/employees/edit.html:50
-#, fuzzy
 msgid "Employee English name"
 msgstr "اسم الموظف"
 
@@ -217,7 +203,6 @@ msgid "Optional SAP system ID"
 msgstr "رقم SAP (اختياري)"
 
 #: app/templates/employees/edit.html:72
-#, fuzzy
 msgid "Active Employee"
 msgstr "إضافة موظف"
 
@@ -226,7 +211,6 @@ msgid "Inactive employees are hidden from reports but history is preserved."
 msgstr "الموظفون غير النشطين مخفيون من التقارير لكن سجلاتهم محفوظة."
 
 #: app/templates/employees/edit.html:80
-#, fuzzy
 msgid "Save Changes"
 msgstr "حفظ الأهداف"
 
@@ -235,7 +219,6 @@ msgid "Cancel"
 msgstr "إلغاء"
 
 #: app/templates/employees/edit.html:95
-#, fuzzy
 msgid "Alias Names"
 msgstr "الأسماء البديلة"
 
@@ -246,17 +229,14 @@ msgid ""
 msgstr ""
 
 #: app/templates/employees/edit.html:112
-#, fuzzy
 msgid "Remove alias"
 msgstr "قائمة الموظفين"
 
 #: app/templates/employees/edit.html:114
-#, fuzzy
 msgid "Remove"
 msgstr "محلول"
 
 #: app/templates/employees/edit.html:121
-#, fuzzy
 msgid "No aliases yet."
 msgstr "لا توجد ملفات مرفوعة بعد."
 
@@ -265,7 +245,6 @@ msgid "New alias name…"
 msgstr "اسم بديل جديد..."
 
 #: app/templates/employees/edit.html:140
-#, fuzzy
 msgid "Employee Info"
 msgstr "اسم الموظف"
 
@@ -298,12 +277,10 @@ msgid "Inactive"
 msgstr "غير نشط"
 
 #: app/templates/employees/edit.html:173
-#, fuzzy
 msgid "Unlock Employee"
 msgstr "اختر موظفاً"
 
 #: app/templates/employees/edit.html:173
-#, fuzzy
 msgid "Lock Employee"
 msgstr "اختر موظفاً"
 
@@ -332,7 +309,6 @@ msgid "e.g. Ahmed Ali"
 msgstr "مثال: أحمد علي"
 
 #: app/templates/employees/index.html:61
-#, fuzzy
 msgid "Optional"
 msgstr "ملاحظات اختيارية..."
 
@@ -341,7 +317,6 @@ msgid "Employee List"
 msgstr "قائمة الموظفين"
 
 #: app/templates/employees/index.html:77
-#, fuzzy
 msgid "Search..."
 msgstr "بحث"
 
@@ -367,7 +342,6 @@ msgstr "لا يوجد"
 
 #: app/templates/employees/index.html:130 app/templates/invoices/index.html:128
 #: app/templates/reports/products.html:140
-#, fuzzy
 msgid "records"
 msgstr "التقارير"
 
@@ -380,7 +354,6 @@ msgid "Lock"
 msgstr "تأمين"
 
 #: app/templates/employees/index.html:165
-#, fuzzy
 msgid "Delete employee"
 msgstr "اختر موظفاً"
 
@@ -484,7 +457,6 @@ msgid "Add Note"
 msgstr "إضافة ملاحظة"
 
 #: app/templates/invoices/detail.html:96 app/templates/invoices/detail.html:105
-#, fuzzy
 msgid "Select"
 msgstr "حذف"
 
@@ -506,7 +478,6 @@ msgstr "حفظ الملاحظة"
 
 #: app/templates/invoices/discounts.html:2
 #: app/templates/invoices/discounts.html:17
-#, fuzzy
 msgid "Discounts Analysis"
 msgstr "تحليل المبيعات"
 
@@ -515,7 +486,6 @@ msgid "Invoice discounts breakdown by employee"
 msgstr "تحليل خصومات الفواتير حسب الموظف"
 
 #: app/templates/invoices/discounts.html:22
-#, fuzzy
 msgid "All Invoices"
 msgstr "الفواتير"
 
@@ -525,67 +495,54 @@ msgid "All Employees"
 msgstr "جميع الموظفين"
 
 #: app/templates/invoices/discounts.html:40
-#, fuzzy
 msgid "From Date"
 msgstr "من"
 
 #: app/templates/invoices/discounts.html:44
-#, fuzzy
 msgid "To Date"
 msgstr "التاريخ"
 
 #: app/templates/invoices/discounts.html:48
-#, fuzzy
 msgid "Min Discount"
 msgstr "الخصم"
 
 #: app/templates/invoices/discounts.html:59
-#, fuzzy
 msgid "Clear"
 msgstr "السنة"
 
 #: app/templates/invoices/discounts.html:70
-#, fuzzy
 msgid "Total Discounts"
 msgstr "الخصم"
 
 #: app/templates/invoices/discounts.html:77
-#, fuzzy
 msgid "Invoices with Discount"
 msgstr "قائمة الفواتير"
 
 #: app/templates/invoices/discounts.html:79
-#, fuzzy
 msgid "invoices"
 msgstr "الفواتير"
 
 #: app/templates/invoices/discounts.html:84
-#, fuzzy
 msgid "Avg Discount"
 msgstr "الخصم"
 
 #: app/templates/invoices/discounts.html:93
-#, fuzzy
 msgid "with discounts"
 msgstr "الخصم"
 
 #: app/templates/invoices/discounts.html:105
-#, fuzzy
 msgid "By Employee"
 msgstr "الموظف"
 
 #: app/templates/invoices/discounts.html:112
-#, fuzzy
 msgid "Count"
 msgstr "الخصم"
 
 #: app/templates/invoices/discounts.html:113
-#, fuzzy
 msgid "Total Discount"
 msgstr "الخصم"
 
 #: app/templates/invoices/discounts.html:144
-#, fuzzy
 msgid "Discounted Invoices"
 msgstr "الفواتير المفتوحة"
 
@@ -595,7 +552,6 @@ msgstr "الإجمالي"
 
 #: app/templates/invoices/discounts.html:151
 #: app/templates/invoices/index.html:289
-#, fuzzy
 msgid "Invoice"
 msgstr "الفواتير"
 
@@ -668,7 +624,6 @@ msgid "Search"
 msgstr "بحث"
 
 #: app/templates/invoices/index.html:109
-#, fuzzy
 msgid "Invoice / customer…"
 msgstr "قائمة الفواتير"
 
@@ -681,22 +636,18 @@ msgid "Net (SAR)"
 msgstr "الصافي (ريال)"
 
 #: app/templates/invoices/index.html:191
-#, fuzzy
 msgid "notes"
 msgstr "ملاحظات"
 
 #: app/templates/invoices/index.html:212
-#, fuzzy
 msgid "No invoices found."
 msgstr "الفواتير المفتوحة"
 
 #: app/templates/invoices/index.html:296
-#, fuzzy
 msgid "Select reason"
 msgstr "اختر موظفاً"
 
 #: app/templates/invoices/index.html:308
-#, fuzzy
 msgid "Enter note details…"
 msgstr "تفاصيل الفاتورة"
 
@@ -715,7 +666,6 @@ msgid "Actual vs Target"
 msgstr "الفعلي مقابل الهدف"
 
 #: app/templates/reports/actual_vs_target.html:39
-#, fuzzy
 msgid "Monthly achievement comparison"
 msgstr "نظرة عامة على الإنجاز"
 
@@ -787,17 +737,14 @@ msgstr "متأخر عن الهدف"
 
 #: app/templates/reports/actual_vs_target.html:102
 #: app/templates/reports/employee.html:122
-#, fuzzy
 msgid "Target (SAR)"
 msgstr "الأهداف"
 
 #: app/templates/reports/actual_vs_target.html:103
-#, fuzzy
 msgid "Achieved (SAR)"
 msgstr "المحقق"
 
 #: app/templates/reports/actual_vs_target.html:104
-#, fuzzy, python-format
 msgid "Achievement %%"
 msgstr "الإنجاز"
 
@@ -810,18 +757,15 @@ msgid "No data found for the selected period."
 msgstr "لا توجد بيانات للفترة المحددة."
 
 #: app/templates/reports/actual_vs_target.html:169
-#, fuzzy
 msgid "Company Total"
 msgstr "هدف الشركة"
 
 #: app/templates/reports/actual_vs_target.html:206
-#, fuzzy
 msgid "On Target"
 msgstr "الهدف"
 
 #: app/templates/reports/comparison.html:2
 #: app/templates/reports/comparison.html:18
-#, fuzzy
 msgid "Employee Comparison"
 msgstr "المقارنة الأسبوعية"
 
@@ -863,55 +807,45 @@ msgid "Select Employee"
 msgstr "اختر موظفاً"
 
 #: app/templates/reports/employee.html:116
-#, fuzzy
 msgid "Total Sales (SAR)"
 msgstr "مبيعات الشهر"
 
 #: app/templates/reports/employee.html:136
-#, fuzzy
 msgid "Daily Target Remaining"
 msgstr "الهدف اليومي"
 
 #: app/templates/reports/employee.html:145
-#, fuzzy
 msgid "Monthly Progress"
 msgstr "قيد المعالجة"
 
 #: app/templates/reports/employee.html:156
-#, fuzzy
 msgid "days left"
 msgstr "يوم إجازة"
 
 #: app/templates/reports/employee.html:167
-#, fuzzy
 msgid "Daily Sales vs Target"
 msgstr "الهدف اليومي"
 
 #: app/templates/reports/employee.html:179
-#, fuzzy
 msgid "By Category"
 msgstr "فئة المنتج"
 
 #: app/templates/reports/employee.html:191
 #: app/templates/reports/employee.html:284
-#, fuzzy
 msgid "Daily Sales"
 msgstr "الهدف اليومي"
 
 #: app/templates/reports/employee.html:192
-#, fuzzy
 msgid "days with sales"
 msgstr "مبيعات هذا الشهر"
 
 #: app/templates/reports/employee.html:199
 #: app/templates/reports/employee.html:207
-#, fuzzy
 msgid "Day"
 msgstr "عطلة رسمية"
 
 #: app/templates/reports/employee.html:200
 #: app/templates/reports/products.html:175
-#, fuzzy
 msgid "Sales (SAR)"
 msgstr "المبيعات"
 
@@ -920,7 +854,6 @@ msgid "No sales records found for the selected period."
 msgstr "لا توجد سجلات مبيعات للفترة المحددة."
 
 #: app/templates/reports/employee.html:239
-#, fuzzy
 msgid "Select an Employee"
 msgstr "اختر موظفاً"
 
@@ -931,7 +864,6 @@ msgid ""
 msgstr ""
 
 #: app/templates/reports/employee.html:293
-#, fuzzy
 msgid "Cumulative"
 msgstr "نشط"
 
@@ -1006,12 +938,10 @@ msgid "View calendar"
 msgstr "عرض التقويم"
 
 #: app/templates/reports/products.html:2 app/templates/reports/products.html:28
-#, fuzzy
 msgid "Product Analysis"
 msgstr "فئة المنتج"
 
 #: app/templates/reports/products.html:30
-#, fuzzy
 msgid "Sales breakdown by product category"
 msgstr "فئة المنتج"
 
@@ -1020,7 +950,6 @@ msgid "Date Range"
 msgstr "نطاق التاريخ"
 
 #: app/templates/reports/products.html:124
-#, fuzzy
 msgid "Total Sales"
 msgstr "مبيعات الشهر"
 
@@ -1029,12 +958,10 @@ msgid "Categories"
 msgstr "الفئات"
 
 #: app/templates/reports/products.html:133
-#, fuzzy
 msgid "distinct"
 msgstr "الخصم"
 
 #: app/templates/reports/products.html:138
-#, fuzzy
 msgid "Total Items"
 msgstr "إجمالي الموظفين"
 
@@ -1043,12 +970,10 @@ msgid "Total Qty"
 msgstr "إجمالي الكمية"
 
 #: app/templates/reports/products.html:147
-#, fuzzy
 msgid "units"
 msgstr "ملاحظات"
 
 #: app/templates/reports/products.html:156
-#, fuzzy
 msgid "Top Categories"
 msgstr "فئة المنتج"
 
@@ -1061,7 +986,6 @@ msgid "categories"
 msgstr "فئة"
 
 #: app/templates/reports/products.html:174
-#, fuzzy
 msgid "Category"
 msgstr "فئة المنتج"
 
@@ -1070,12 +994,10 @@ msgid "Qty"
 msgstr "الكمية"
 
 #: app/templates/reports/products.html:177
-#, fuzzy
 msgid "Records"
 msgstr "التقارير"
 
 #: app/templates/reports/products.html:179
-#, fuzzy
 msgid "Share"
 msgstr "النسبة المئوية"
 
@@ -1092,7 +1014,6 @@ msgid "Week-by-week sales breakdown within the selected month"
 msgstr "تفصيل المبيعات أسبوعاً بأسبوع خلال الشهر المحدد"
 
 #: app/templates/reports/weekly.html:113
-#, fuzzy
 msgid "Great progress!"
 msgstr "التقدم"
 
@@ -1111,7 +1032,6 @@ msgid "Sales are down %(pct)s%% vs the previous week. Push harder!"
 msgstr "المبيعات انخفضت %(pct)s%% مقارنةً بالأسبوع الماضي. اجتهد أكثر!"
 
 #: app/templates/reports/weekly.html:127
-#, fuzzy
 msgid "Weekly Sales by Employee"
 msgstr "اختر موظفاً"
 
@@ -1120,12 +1040,10 @@ msgid "W"
 msgstr "أ"
 
 #: app/templates/reports/weekly.html:140
-#, fuzzy
 msgid "Monthly Total"
 msgstr "مبيعات الشهر"
 
 #: app/templates/reports/weekly.html:141
-#, fuzzy
 msgid "Trend"
 msgstr "إرسال"
 
@@ -1150,7 +1068,6 @@ msgid "Slight decline — push harder"
 msgstr "انخفاض طفيف — اجتهد أكثر"
 
 #: app/templates/reports/weekly.html:198
-#, fuzzy
 msgid "Stable performance"
 msgstr "أداء الموظف"
 
@@ -1230,7 +1147,6 @@ msgid "No schedule entries this month"
 msgstr "لا توجد إدخالات في الجدول هذا الشهر"
 
 #: app/templates/targets/index.html:81
-#, fuzzy
 msgid "Sales Targets"
 msgstr "حفظ الأهداف"
 
@@ -1239,7 +1155,6 @@ msgid "Set monthly targets and allocate percentages per employee"
 msgstr "حدد الأهداف الشهرية ووزّع النسب على الموظفين"
 
 #: app/templates/targets/index.html:86
-#, fuzzy
 msgid "Edit Targets"
 msgstr "تحديد الأهداف"
 
@@ -1292,12 +1207,10 @@ msgid "Add employees first, then come back to set targets."
 msgstr "أضف الموظفين أولاً، ثم عد لتحديد الأهداف."
 
 #: app/templates/targets/set.html:75
-#, fuzzy
 msgid "Go to Employees"
 msgstr "إجمالي الموظفين"
 
 #: app/templates/targets/set.html:114
-#, fuzzy
 msgid "Remaining days this month"
 msgstr "هدفي اليومي المتبقي؟"
 
@@ -1351,7 +1264,6 @@ msgid "Error"
 msgstr "خطأ"
 
 #: app/templates/uploads/history.html:49
-#, fuzzy
 msgid "No uploads yet"
 msgstr "لا توجد ملفات مرفوعة بعد."
 
@@ -1424,12 +1336,10 @@ msgid "batches"
 msgstr "دفعات"
 
 #: app/templates/uploads/index.html:141
-#, fuzzy
 msgid "Type"
 msgstr "نوع الملف"
 
 #: app/templates/uploads/index.html:143
-#, fuzzy
 msgid "Skipped"
 msgstr "السجلات المتخطاة"
 
@@ -1604,3 +1514,140 @@ msgstr "خطأ في الشبكة. يرجى المحاولة مرة أخرى."
 #~ msgid "Split"
 #~ msgstr "مزدوج"
 
+msgid "Achievement %"
+msgstr "نسبة الإنجاز %"
+
+msgid "Alias cannot be empty."
+msgstr "الاسم البديل لا يمكن أن يكون فارغاً."
+
+msgid "Alias removed."
+msgstr "تم حذف الاسم البديل."
+
+msgid "An employee with this name already exists."
+msgstr "يوجد موظف بهذا الاسم مسبقاً."
+
+msgid "Another employee with this name already exists."
+msgstr "يوجد موظف آخر بهذا الاسم."
+
+msgid "Batch record deleted."
+msgstr "تم حذف سجل الدفعة."
+
+msgid "Below"
+msgstr "أقل من الهدف"
+
+msgid "Company target must be greater than zero."
+msgstr "يجب أن يكون هدف الشركة أكبر من صفر."
+
+msgid "Could not save schedule entry."
+msgstr "تعذر حفظ إدخال الجدول."
+
+msgid "Date is required."
+msgstr "التاريخ مطلوب."
+
+msgid "Employee is required."
+msgstr "الموظف مطلوب."
+
+msgid "Employee name is required."
+msgstr "اسم الموظف مطلوب."
+
+msgid "Employee not found."
+msgstr "الموظف غير موجود."
+
+msgid "Employee updated successfully."
+msgstr "تم تحديث بيانات الموظف بنجاح."
+
+msgid "Error saving targets. Please try again."
+msgstr "خطأ في حفظ الأهداف. يرجى المحاولة مرة أخرى."
+
+msgid "Invalid date format."
+msgstr "تنسيق التاريخ غير صحيح."
+
+msgid "Invalid date."
+msgstr "التاريخ غير صحيح."
+
+msgid "Invalid file type. Allowed: xls, xlsx, xlsm."
+msgstr "نوع الملف غير مدعوم. المسموح به: xls, xlsx, xlsm."
+
+msgid "Invalid week."
+msgstr "الأسبوع غير صحيح."
+
+msgid "Monthly Sales (SAR)"
+msgstr "المبيعات الشهرية (ريال)"
+
+msgid "N/A"
+msgstr "غير متاح"
+
+msgid "Near"
+msgstr "قريب من الهدف"
+
+msgid "No file part in the request."
+msgstr "لا يوجد ملف في الطلب."
+
+msgid "No file selected."
+msgstr "لم يتم اختيار ملف."
+
+msgid "No records found in file."
+msgstr "لا توجد سجلات في الملف."
+
+msgid "Note cannot be empty."
+msgstr "الملاحظة لا يمكن أن تكون فارغة."
+
+msgid "Please enter a message."
+msgstr "يرجى إدخال رسالة."
+
+msgid "Ret Qty"
+msgstr "كمية المرتجع"
+
+msgid "Ret Val"
+msgstr "قيمة المرتجع"
+
+msgid "Target deleted."
+msgstr "تم حذف الهدف."
+
+msgid "That name belongs to an existing employee."
+msgstr "هذا الاسم مسجل لموظف آخر."
+
+msgid "Uncategorized"
+msgstr "غير مصنف"
+
+msgid "Unknown report type."
+msgstr "نوع التقرير غير معروف."
+
+msgid "Value"
+msgstr "القيمة"
+
+msgid "Variance (SAR)"
+msgstr "الفارق (ريال)"
+
+msgid "Weekly"
+msgstr "أسبوعي"
+
+msgid "Weekly Performance"
+msgstr "الأداء الأسبوعي"
+
+msgid "openpyxl is required for Excel export. Install it with: pip install openpyxl"
+msgstr "مكتبة openpyxl مطلوبة لتصدير Excel."
+
+msgid "locked"
+msgstr "مؤمَّن"
+
+msgid "unlocked"
+msgstr "غير مؤمَّن"
+
+msgid "Aliases help the system automatically match employee names from uploaded Excel files."
+msgstr "الأسماء البديلة تساعد النظام على مطابقة أسماء الموظفين تلقائياً من ملفات Excel."
+
+msgid "Choose an employee from the dropdown above to view their performance report."
+msgstr "اختر موظفاً من القائمة أعلاه لعرض تقرير أدائه."
+
+msgid "Compare actual monthly sales against targets. Color-coded achievement status."
+msgstr "قارن المبيعات الشهرية الفعلية بالأهداف مع رموز ألوان لحالة الإنجاز."
+
+msgid "Individual sales trends, KPIs, monthly chart, and product category breakdown."
+msgstr "اتجاهات المبيعات، مؤشرات الأداء، الرسم البياني الشهري، وتوزيع فئات المنتجات."
+
+msgid "Al-Qahtani Pro Assistant"
+msgstr "مساعد القحطاني برو"
+
+msgid "Employee Report – %(name)s"
+msgstr "تقرير %(name)s"

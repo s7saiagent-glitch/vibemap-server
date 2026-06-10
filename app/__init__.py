@@ -14,10 +14,8 @@ csrf = CSRFProtect()
 
 
 def get_locale_selector():
-    lang = session.get('language')
-    if lang and lang in ['ar', 'en']:
-        return lang
-    return request.accept_languages.best_match(['ar', 'en'], default='ar')
+    # Arabic only mode – ignore browser language preference
+    return 'ar'
 
 
 def create_app(config_name=None):
