@@ -3,237 +3,1521 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SahsPro 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-05 00:00+0000\n"
+"POT-Creation-Date: 2026-06-10 17:20+0000\n"
 "PO-Revision-Date: 2026-06-05 00:00+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
 
+#: app/templates/base.html:6
+msgid "Al-Qahtani Pro | القحطاني برو"
+msgstr "Al-Qahtani Pro"
+
+#: app/templates/base.html:349 app/templates/base.html:408
+#: app/templates/dashboard/index.html:2 app/templates/dashboard/index.html:81
 msgid "Dashboard"
 msgstr "Dashboard"
 
+#: app/templates/base.html:353 app/templates/base.html:409
+#: app/templates/employees/edit.html:27 app/templates/employees/index.html:3
+#: app/templates/employees/index.html:34
+#: app/templates/invoices/discounts.html:91
+#: app/templates/reports/index.html:144 app/templates/reports/products.html:178
 msgid "Employees"
 msgstr "Employees"
 
+#: app/templates/base.html:357 app/templates/base.html:410
+#: app/templates/reports/index.html:152
 msgid "Uploads"
 msgstr "Uploads"
 
+#: app/templates/base.html:361 app/templates/base.html:411
+#: app/templates/reports/index.html:160 app/templates/targets/index.html:3
 msgid "Targets"
 msgstr "Targets"
 
+#: app/templates/base.html:367 app/templates/base.html:412
+#: app/templates/reports/index.html:3 app/templates/reports/index.html:41
+#: app/templates/reports/products.html:34
 msgid "Reports"
 msgstr "Reports"
 
+#: app/templates/base.html:370
+#, fuzzy
+msgid "All Reports"
+msgstr "Reports"
+
+#: app/templates/base.html:371 app/templates/base.html:413
+msgid "Products"
+msgstr "Products"
+
+#: app/templates/base.html:372
+msgid "Comparison"
+msgstr "Comparison"
+
+#: app/templates/base.html:373
+#, fuzzy
+msgid "vs Target"
+msgstr "Target"
+
+#: app/templates/base.html:380 app/templates/base.html:414
+#: app/templates/uploads/index.html:166
 msgid "Invoices"
 msgstr "Invoices"
 
-msgid "Schedule"
-msgstr "Schedule"
-
-msgid "Assistant"
-msgstr "Assistant"
-
-msgid "Total Employees"
-msgstr "Total Employees"
-
-msgid "Monthly Sales"
-msgstr "Monthly Sales"
-
-msgid "Target Achievement"
-msgstr "Target Achievement"
-
+#: app/templates/base.html:383 app/templates/invoices/index.html:3
+#: app/templates/invoices/index.html:31 app/templates/reports/index.html:97
+#: app/templates/uploads/index.html:86
 msgid "Pending Invoices"
 msgstr "Pending Invoices"
 
-msgid "Employee Name"
-msgstr "Employee Name"
+#: app/templates/base.html:384 app/templates/base.html:415
+msgid "Discounts"
+msgstr "Discounts"
 
-msgid "Target"
-msgstr "Target"
+#: app/templates/base.html:389 app/templates/base.html:416
+#: app/templates/reports/index.html:168
+msgid "Schedule"
+msgstr "Schedule"
 
-msgid "Achieved"
-msgstr "Achieved"
+#: app/templates/assistant/index.html:3 app/templates/base.html:393
+#: app/templates/base.html:417
+msgid "Assistant"
+msgstr "Assistant"
 
-msgid "Remaining"
-msgstr "Remaining"
-
-msgid "Daily Target"
-msgstr "Daily Target"
-
-msgid "Progress"
-msgstr "Progress"
-
-msgid "Save"
-msgstr "Save"
-
-msgid "Cancel"
-msgstr "Cancel"
-
-msgid "Delete"
-msgstr "Delete"
-
-msgid "Edit"
-msgstr "Edit"
-
-msgid "Add"
-msgstr "Add"
-
-msgid "Search"
-msgstr "Search"
-
-msgid "Export Excel"
-msgstr "Export Excel"
-
-msgid "Print"
-msgstr "Print"
-
-msgid "Send Email"
-msgstr "Send Email"
-
-msgid "Upload File"
-msgstr "Upload File"
-
-msgid "Sales Detail"
-msgstr "Sales Detail"
-
-msgid "Productivity Report"
-msgstr "Productivity Report"
-
-msgid "Auto-detect"
-msgstr "Auto-detect"
-
-msgid "Percentage"
-msgstr "Percentage"
-
-msgid "Amount"
-msgstr "Amount"
-
-msgid "Working Days"
-msgstr "Working Days"
-
-msgid "Company Target"
-msgstr "Company Target"
-
-msgid "Month"
-msgstr "Month"
-
-msgid "Year"
-msgstr "Year"
-
-msgid "Date Range"
-msgstr "Date Range"
-
-msgid "From"
-msgstr "From"
-
-msgid "To"
-msgstr "To"
-
-msgid "Product Category"
-msgstr "Product Category"
-
-msgid "Region"
-msgstr "Region"
-
-msgid "Sales Analysis"
-msgstr "Sales Analysis"
-
-msgid "Weekly Performance"
-msgstr "Weekly Performance"
-
-msgid "Actual vs Target"
-msgstr "Actual vs Target"
-
-msgid "Top Performer"
-msgstr "Top Performer"
-
-msgid "Motivational Message"
-msgstr "Motivational Message"
-
-msgid "Keep up the great work!"
-msgstr "Keep up the great work!"
-
-msgid "You need to catch up on your target."
-msgstr "You need to catch up on your target."
-
-msgid "Chat with Sahs Pro"
-msgstr "Chat with Sahs Pro"
-
-msgid "Type your question..."
-msgstr "Type your question..."
-
-msgid "Send"
-msgstr "Send"
-
-msgid "Lock"
-msgstr "Lock"
-
-msgid "Unlock"
-msgstr "Unlock"
-
-msgid "Add Alias"
-msgstr "Add Alias"
-
-msgid "SAP ID"
-msgstr "SAP ID"
-
-msgid "Status"
-msgstr "Status"
-
-msgid "Active"
-msgstr "Active"
-
-msgid "Inactive"
-msgstr "Inactive"
-
-msgid "Locked"
-msgstr "Locked"
-
-msgid "Actions"
-msgstr "Actions"
-
-msgid "Note"
-msgstr "Note"
-
-msgid "Add Note"
-msgstr "Add Note"
-
-msgid "Reason"
-msgstr "Reason"
-
-msgid "Invoice No"
-msgstr "Invoice No"
-
-msgid "Invoice Date"
-msgstr "Invoice Date"
-
-msgid "Customer"
-msgstr "Customer"
-
-msgid "Net Amount"
-msgstr "Net Amount"
-
+#: app/templates/assistant/advice.html:2 app/templates/assistant/advice.html:35
+#: app/templates/dashboard/advice.html:3 app/templates/dashboard/advice.html:38
+#: app/templates/dashboard/index.html:86 app/templates/reports/index.html:125
 msgid "Sales Advice"
 msgstr "Sales Advice"
 
+#: app/templates/assistant/advice.html:2 app/templates/assistant/index.html:3
+#: app/templates/dashboard/advice.html:3 app/templates/dashboard/index.html:2
+#: app/templates/employees/edit.html:3 app/templates/employees/index.html:3
+#: app/templates/invoices/detail.html:2 app/templates/invoices/discounts.html:2
+#: app/templates/invoices/index.html:3
+#: app/templates/reports/actual_vs_target.html:3
+#: app/templates/reports/comparison.html:2
+#: app/templates/reports/employee.html:3 app/templates/reports/index.html:3
+#: app/templates/reports/products.html:2 app/templates/reports/weekly.html:3
+#: app/templates/schedule/employee.html:2 app/templates/schedule/index.html:3
+#: app/templates/schedule/weekly.html:3 app/templates/targets/index.html:3
+#: app/templates/targets/set.html:2 app/templates/uploads/history.html:2
+#: app/templates/uploads/index.html:3
+msgid "القحطاني برو"
+msgstr "Al-Qahtani Pro"
+
+#: app/templates/assistant/advice.html:37
+msgid "Automated recommendations based on current sales data"
+msgstr "Automated recommendations based on current sales data"
+
+#: app/templates/assistant/advice.html:54
+#: app/templates/dashboard/advice.html:101
+msgid "Critical"
+msgstr "Critical"
+
+#: app/templates/assistant/advice.html:60
+#: app/templates/dashboard/advice.html:107
+#, fuzzy
+msgid "Warnings"
+msgstr "Morning"
+
+#: app/templates/assistant/advice.html:66
+#: app/templates/dashboard/advice.html:113
+msgid "Info"
+msgstr "Info"
+
+#: app/templates/assistant/advice.html:72
+#: app/templates/dashboard/advice.html:119
+#, fuzzy
+msgid "Positive"
+msgstr "Inactive"
+
+#: app/templates/assistant/advice.html:108
+#: app/templates/dashboard/advice.html:86
+msgid "All Looking Good!"
+msgstr "All Looking Good!"
+
+#: app/templates/assistant/advice.html:109
+msgid "No alerts at this time. Keep up the excellent work!"
+msgstr "No alerts at this time. Keep up the excellent work!"
+
+#: app/templates/assistant/advice.html:111
+#, fuzzy
+msgid "Upload Sales Data"
+msgstr "Upload File"
+
+#: app/templates/assistant/advice.html:120
+#, fuzzy
+msgid "Chat with Al-Qahtani Pro"
+msgstr "Chat with Sahs Pro"
+
+#: app/templates/dashboard/advice.html:40
+msgid "AI-powered recommendations based on current performance"
+msgstr "AI-powered recommendations based on current performance"
+
+#: app/templates/dashboard/advice.html:43
+#, fuzzy
+msgid "Back to Dashboard"
+msgstr "Dashboard"
+
+#: app/templates/dashboard/advice.html:87
+msgid "No alerts or recommendations at this time. Keep up the excellent work!"
+msgstr "No alerts or recommendations at this time. Keep up the excellent work!"
+
+#: app/templates/dashboard/index.html:83
+msgid "Today"
+msgstr "Today"
+
+#: app/templates/employees/edit.html:3
+#, fuzzy
+msgid "Edit Employee"
+msgstr "Employees"
+
+#: app/templates/employees/edit.html:29 app/templates/employees/index.html:152
+#: app/templates/targets/index.html:127
+msgid "Edit"
+msgstr "Edit"
+
+#: app/templates/employees/edit.html:38
+#, fuzzy
+msgid "Edit Employee Details"
+msgstr "Total Employees"
+
+#: app/templates/employees/edit.html:46 app/templates/employees/index.html:52
+msgid "Name (English)"
+msgstr "Name (English)"
+
+#: app/templates/employees/edit.html:50
+#, fuzzy
+msgid "Employee English name"
+msgstr "Employee Name"
+
+#: app/templates/employees/edit.html:54 app/templates/employees/index.html:56
+msgid "Name (Arabic) / الاسم بالعربي"
+msgstr "Name (Arabic)"
+
+#: app/templates/employees/edit.html:61 app/templates/employees/edit.html:147
+#: app/templates/employees/index.html:60 app/templates/employees/index.html:86
+msgid "SAP ID"
+msgstr "SAP ID"
+
+#: app/templates/employees/edit.html:64
+msgid "Optional SAP system ID"
+msgstr "Optional SAP system ID"
+
+#: app/templates/employees/edit.html:72
+#, fuzzy
+msgid "Active Employee"
+msgstr "Total Employees"
+
+#: app/templates/employees/edit.html:75
+msgid "Inactive employees are hidden from reports but history is preserved."
+msgstr "Inactive employees are hidden from reports but history is preserved."
+
+#: app/templates/employees/edit.html:80
+#, fuzzy
+msgid "Save Changes"
+msgstr "Date Range"
+
+#: app/templates/employees/edit.html:83 app/templates/invoices/index.html:324
+msgid "Cancel"
+msgstr "Cancel"
+
+#: app/templates/employees/edit.html:95
+msgid "Alias Names"
+msgstr "Alias Names"
+
+#: app/templates/employees/edit.html:100
+msgid ""
+"Aliases help the system automatically match employee names from uploaded "
+"Excel files."
+msgstr ""
+
+#: app/templates/employees/edit.html:112
+msgid "Remove alias"
+msgstr "Remove alias"
+
+#: app/templates/employees/edit.html:114
+msgid "Remove"
+msgstr "Remove"
+
+#: app/templates/employees/edit.html:121
+msgid "No aliases yet."
+msgstr "No aliases yet."
+
+#: app/templates/employees/edit.html:129
+msgid "New alias name…"
+msgstr "New alias name…"
+
+#: app/templates/employees/edit.html:140
+#, fuzzy
+msgid "Employee Info"
+msgstr "Employee Name"
+
+#: app/templates/employees/edit.html:143
+msgid "ID"
+msgstr "ID"
+
+#: app/templates/employees/edit.html:151
+msgid "Created"
+msgstr "Created"
+
+#: app/templates/employees/edit.html:155 app/templates/employees/index.html:89
+#: app/templates/invoices/discounts.html:158
+#: app/templates/invoices/index.html:97 app/templates/invoices/index.html:141
+#: app/templates/reports/actual_vs_target.html:105
+#: app/templates/uploads/history.html:25 app/templates/uploads/index.html:144
+msgid "Status"
+msgstr "Status"
+
+#: app/templates/employees/edit.html:158 app/templates/employees/index.html:140
+msgid "Locked"
+msgstr "Locked"
+
+#: app/templates/employees/edit.html:160 app/templates/employees/index.html:144
+msgid "Active"
+msgstr "Active"
+
+#: app/templates/employees/edit.html:162 app/templates/employees/index.html:137
+msgid "Inactive"
+msgstr "Inactive"
+
+#: app/templates/employees/edit.html:173
+#, fuzzy
+msgid "Unlock Employee"
+msgstr "Total Employees"
+
+#: app/templates/employees/edit.html:173
+#, fuzzy
+msgid "Lock Employee"
+msgstr "Employees"
+
+#: app/templates/employees/index.html:36
+#: app/templates/reports/comparison.html:119
+#: app/templates/reports/employee.html:222
+#: app/templates/reports/products.html:214 app/templates/targets/index.html:245
+#: app/templates/targets/set.html:123
+msgid "Total"
+msgstr "Total"
+
+#: app/templates/employees/index.html:36
+#, fuzzy
+msgid "employees"
+msgstr "Employees"
+
+#: app/templates/employees/index.html:39
+#, fuzzy
+msgid "Add Employee"
+msgstr "Employees"
+
+#: app/templates/employees/index.html:46
+#, fuzzy
+msgid "Add New Employee"
+msgstr "Total Employees"
+
+#: app/templates/employees/index.html:53
+msgid "e.g. Ahmed Ali"
+msgstr "e.g. Ahmed Ali"
+
+#: app/templates/employees/index.html:61
+msgid "Optional"
+msgstr "Optional"
+
+#: app/templates/employees/index.html:75
+#, fuzzy
+msgid "Employee List"
+msgstr "Employees"
+
+#: app/templates/employees/index.html:77
+#, fuzzy
+msgid "Search..."
+msgstr "Search"
+
+#: app/templates/employees/index.html:85
+msgid "Name"
+msgstr "Name"
+
+#: app/templates/employees/index.html:87
+#, fuzzy
+msgid "Aliases"
+msgstr "Add Alias"
+
+#: app/templates/employees/index.html:88
+#, fuzzy
+msgid "This Month Sales"
+msgstr "Monthly Sales"
+
+#: app/templates/employees/index.html:90 app/templates/invoices/index.html:143
+msgid "Actions"
+msgstr "Actions"
+
+#: app/templates/employees/index.html:124
+#, fuzzy
+msgid "None"
+msgstr "Note"
+
+#: app/templates/employees/index.html:130 app/templates/invoices/index.html:128
+#: app/templates/reports/products.html:140
+#, fuzzy
+msgid "records"
+msgstr "Reports"
+
+#: app/templates/employees/index.html:159
+msgid "Unlock"
+msgstr "Unlock"
+
+#: app/templates/employees/index.html:159
+msgid "Lock"
+msgstr "Lock"
+
+#: app/templates/employees/index.html:165
+#, fuzzy
+msgid "Delete employee"
+msgstr "Total Employees"
+
+#: app/templates/employees/index.html:167
+msgid "Delete"
+msgstr "Delete"
+
+#: app/templates/employees/index.html:179
+msgid "No employees yet. Add the first one above."
+msgstr "No employees yet. Add the first one above."
+
+#: app/templates/invoices/detail.html:2 app/templates/invoices/detail.html:11
+#: app/templates/invoices/detail.html:33 app/templates/invoices/index.html:135
+msgid "Invoice No"
+msgstr "Invoice No"
+
+#: app/templates/invoices/detail.html:17
+#: app/templates/invoices/discounts.html:188
+#: app/templates/invoices/index.html:100 app/templates/invoices/index.html:184
+#: app/templates/invoices/index.html:315
+#, fuzzy
+msgid "Pending"
+msgstr "Evening"
+
+#: app/templates/invoices/detail.html:19
+#: app/templates/invoices/discounts.html:188
+#: app/templates/invoices/index.html:101 app/templates/invoices/index.html:178
+#: app/templates/invoices/index.html:317
+msgid "Resolved"
+msgstr "Resolved"
+
+#: app/templates/invoices/detail.html:30
+#, fuzzy
+msgid "Invoice Details"
+msgstr "Invoice Date"
+
+#: app/templates/invoices/detail.html:34
+msgid "Invoice Date"
+msgstr "Invoice Date"
+
+#: app/templates/invoices/detail.html:35 app/templates/invoices/detail.html:94
+#: app/templates/invoices/discounts.html:31
+#: app/templates/invoices/discounts.html:111
+#: app/templates/invoices/discounts.html:153
+#: app/templates/invoices/index.html:75 app/templates/invoices/index.html:137
+#: app/templates/reports/actual_vs_target.html:101
+#: app/templates/reports/employee.html:54
+#: app/templates/reports/products.html:88 app/templates/reports/weekly.html:136
+#: app/templates/targets/index.html:170
+#, fuzzy
+msgid "Employee"
+msgstr "Employees"
+
+#: app/templates/invoices/detail.html:36 app/templates/invoices/index.html:139
+msgid "Description"
+msgstr "Description"
+
+#: app/templates/invoices/detail.html:37
+msgid "Item Code"
+msgstr "Item Code"
+
+#: app/templates/invoices/detail.html:38
+#: app/templates/invoices/discounts.html:155
+#, fuzzy
+msgid "Price"
+msgstr "Print"
+
+#: app/templates/invoices/detail.html:39
+msgid "Net Amount"
+msgstr "Net Amount"
+
+#: app/templates/invoices/detail.html:40
+msgid "Tax"
+msgstr "Tax"
+
+#: app/templates/invoices/detail.html:41
+#: app/templates/invoices/discounts.html:156
+msgid "Discount"
+msgstr "Discount"
+
+#: app/templates/invoices/detail.html:42
+msgid "Branch"
+msgstr "Branch"
+
+#: app/templates/invoices/detail.html:50
+msgid "Mark as Resolved"
+msgstr "Mark as Resolved"
+
+#: app/templates/invoices/detail.html:62 app/templates/invoices/index.html:142
+#: app/templates/schedule/employee.html:166
+#, fuzzy
+msgid "Notes"
+msgstr "Note"
+
+#: app/templates/invoices/detail.html:71
+msgid "System"
+msgstr "System"
+
+#: app/templates/invoices/detail.html:82
+msgid "No notes yet"
+msgstr "No notes yet"
+
+#: app/templates/invoices/detail.html:89 app/templates/invoices/index.html:202
+#: app/templates/invoices/index.html:280
+msgid "Add Note"
+msgstr "Add Note"
+
+#: app/templates/invoices/detail.html:96 app/templates/invoices/detail.html:105
+#, fuzzy
+msgid "Select"
+msgstr "Delete"
+
+#: app/templates/invoices/detail.html:103 app/templates/invoices/index.html:294
+msgid "Reason"
+msgstr "Reason"
+
+#: app/templates/invoices/detail.html:112 app/templates/invoices/index.html:305
+msgid "Note"
+msgstr "Note"
+
+#: app/templates/invoices/detail.html:114
+#, fuzzy
+msgid "Type your note..."
+msgstr "Type your question..."
+
+#: app/templates/invoices/detail.html:117 app/templates/invoices/index.html:327
+#, fuzzy
+msgid "Save Note"
+msgstr "Add Note"
+
+#: app/templates/invoices/discounts.html:2
+#: app/templates/invoices/discounts.html:17
+#, fuzzy
+msgid "Discounts Analysis"
+msgstr "Sales Analysis"
+
+#: app/templates/invoices/discounts.html:19
+msgid "Invoice discounts breakdown by employee"
+msgstr "Invoice discounts breakdown by employee"
+
+#: app/templates/invoices/discounts.html:22
+#, fuzzy
+msgid "All Invoices"
+msgstr "Invoices"
+
+#: app/templates/invoices/discounts.html:33
+#: app/templates/invoices/index.html:78 app/templates/reports/products.html:90
+#, fuzzy
+msgid "All Employees"
+msgstr "Total Employees"
+
+#: app/templates/invoices/discounts.html:40
+#, fuzzy
+msgid "From Date"
+msgstr "From"
+
+#: app/templates/invoices/discounts.html:44
+#, fuzzy
+msgid "To Date"
+msgstr "Invoice Date"
+
+#: app/templates/invoices/discounts.html:48
+msgid "Min Discount"
+msgstr "Min Discount"
+
+#: app/templates/invoices/discounts.html:59
+#, fuzzy
+msgid "Clear"
+msgstr "Year"
+
+#: app/templates/invoices/discounts.html:70
+msgid "Total Discounts"
+msgstr "Total Discounts"
+
+#: app/templates/invoices/discounts.html:77
+msgid "Invoices with Discount"
+msgstr "Invoices with Discount"
+
+#: app/templates/invoices/discounts.html:79
+#, fuzzy
+msgid "invoices"
+msgstr "Invoices"
+
+#: app/templates/invoices/discounts.html:84
+msgid "Avg Discount"
+msgstr "Avg Discount"
+
+#: app/templates/invoices/discounts.html:93
+msgid "with discounts"
+msgstr "with discounts"
+
+#: app/templates/invoices/discounts.html:105
+#, fuzzy
+msgid "By Employee"
+msgstr "Employees"
+
+#: app/templates/invoices/discounts.html:112
+#, fuzzy
+msgid "Count"
+msgstr "Amount"
+
+#: app/templates/invoices/discounts.html:113
+msgid "Total Discount"
+msgstr "Total Discount"
+
+#: app/templates/invoices/discounts.html:144
+#, fuzzy
+msgid "Discounted Invoices"
+msgstr "Pending Invoices"
+
+#: app/templates/invoices/discounts.html:145
+msgid "total"
+msgstr "total"
+
+#: app/templates/invoices/discounts.html:151
+#: app/templates/invoices/index.html:289
+#, fuzzy
+msgid "Invoice"
+msgstr "Invoices"
+
+#: app/templates/invoices/discounts.html:152
+#: app/templates/invoices/index.html:136
+#: app/templates/schedule/employee.html:162
+#: app/templates/uploads/history.html:26 app/templates/uploads/index.html:145
+#, fuzzy
+msgid "Date"
+msgstr "Delete"
+
+#: app/templates/invoices/discounts.html:154
+#: app/templates/invoices/index.html:138
+msgid "Customer"
+msgstr "Customer"
+
+#: app/templates/invoices/discounts.html:157
+msgid "Net"
+msgstr "Net"
+
+#: app/templates/invoices/discounts.html:188
+#: app/templates/invoices/index.html:102 app/templates/invoices/index.html:180
+#: app/templates/invoices/index.html:316 app/templates/uploads/history.html:41
+#, fuzzy
+msgid "In Progress"
+msgstr "Progress"
+
+#: app/templates/invoices/discounts.html:188
+#: app/templates/invoices/index.html:103 app/templates/invoices/index.html:182
+#: app/templates/invoices/index.html:318
+#, fuzzy
+msgid "Cancelled"
+msgstr "Cancel"
+
+#: app/templates/invoices/discounts.html:197
+msgid "No discounted invoices found for this filter."
+msgstr "No discounted invoices found for this filter."
+
+#: app/templates/invoices/index.html:34
+msgid "Track and manage open invoices by employee, date, and status"
+msgstr "Track and manage open invoices by employee, date, and status"
+
+#: app/templates/invoices/index.html:44
+#, fuzzy
+msgid "Open Invoices"
+msgstr "Pending Invoices"
+
+#: app/templates/invoices/index.html:52
+msgid "Total Net (SAR)"
+msgstr "Total Net (SAR)"
+
+#: app/templates/invoices/index.html:58
+#, fuzzy
+msgid "Filtered Results"
+msgstr "Import Results"
+
+#: app/templates/invoices/index.html:64
+#, fuzzy
+msgid "Pages"
+msgstr "Targets"
+
+#: app/templates/invoices/index.html:87 app/templates/reports/products.html:78
+msgid "From"
+msgstr "From"
+
+#: app/templates/invoices/index.html:92 app/templates/reports/products.html:82
+msgid "To"
+msgstr "To"
+
+#: app/templates/invoices/index.html:99
+msgid "Pending (default)"
+msgstr "Pending (default)"
+
+#: app/templates/invoices/index.html:107
+msgid "Search"
+msgstr "Search"
+
+#: app/templates/invoices/index.html:109
+#, fuzzy
+msgid "Invoice / customer…"
+msgstr "Invoice Date"
+
+#: app/templates/invoices/index.html:127
+#, fuzzy
+msgid "Invoice List"
+msgstr "Invoices"
+
+#: app/templates/invoices/index.html:140
+msgid "Net (SAR)"
+msgstr "Net (SAR)"
+
+#: app/templates/invoices/index.html:191
+#, fuzzy
+msgid "notes"
+msgstr "Note"
+
+#: app/templates/invoices/index.html:212
+#, fuzzy
+msgid "No invoices found."
+msgstr "Invoice No"
+
+#: app/templates/invoices/index.html:296
+#, fuzzy
+msgid "Select reason"
+msgstr "Reason"
+
+#: app/templates/invoices/index.html:308
+msgid "Enter note details…"
+msgstr "Enter note details…"
+
+#: app/templates/invoices/index.html:312
+#, fuzzy
+msgid "Update Status"
+msgstr "Status"
+
+#: app/templates/invoices/index.html:314
+msgid "Keep current"
+msgstr "Keep current"
+
+#: app/templates/reports/actual_vs_target.html:3
+#: app/templates/reports/actual_vs_target.html:37
+#: app/templates/reports/index.html:69
+msgid "Actual vs Target"
+msgstr "Actual vs Target"
+
+#: app/templates/reports/actual_vs_target.html:39
+msgid "Monthly achievement comparison"
+msgstr "Monthly achievement comparison"
+
+#: app/templates/reports/actual_vs_target.html:43
+#: app/templates/reports/comparison.html:52
+#: app/templates/reports/employee.html:35 app/templates/reports/weekly.html:45
+#: app/templates/schedule/employee.html:74
+msgid "Print"
+msgstr "Print"
+
+#: app/templates/reports/actual_vs_target.html:47
+#: app/templates/reports/comparison.html:49
+#: app/templates/reports/employee.html:40 app/templates/reports/weekly.html:49
+msgid "Export Excel"
+msgstr "Export Excel"
+
+#: app/templates/reports/actual_vs_target.html:50
+#: app/templates/reports/employee.html:44 app/templates/reports/weekly.html:52
+msgid "Back"
+msgstr "Back"
+
+#: app/templates/reports/actual_vs_target.html:60
+#: app/templates/reports/comparison.html:28
+#: app/templates/reports/employee.html:66
+#: app/templates/reports/products.html:59 app/templates/reports/weekly.html:62
+#: app/templates/schedule/employee.html:84 app/templates/targets/index.html:95
+#: app/templates/targets/set.html:89
+msgid "Year"
+msgstr "Year"
+
+#: app/templates/reports/actual_vs_target.html:68
+#: app/templates/reports/comparison.html:36
+#: app/templates/reports/employee.html:74
+#: app/templates/reports/products.html:48
+#: app/templates/reports/products.html:68 app/templates/reports/weekly.html:70
+#: app/templates/schedule/employee.html:92 app/templates/targets/index.html:103
+#: app/templates/targets/set.html:97
+msgid "Month"
+msgstr "Month"
+
+#: app/templates/reports/actual_vs_target.html:79
+#: app/templates/reports/comparison.html:44
+#: app/templates/reports/employee.html:85 app/templates/reports/weekly.html:81
+msgid "Apply"
+msgstr "Apply"
+
+#: app/templates/reports/actual_vs_target.html:88
+#: app/templates/reports/actual_vs_target.html:116
+#: app/templates/reports/actual_vs_target.html:177
+#: app/templates/reports/comparison.html:76
+#: app/templates/reports/comparison.html:145
+#: app/templates/targets/index.html:144 app/templates/targets/index.html:175
+msgid "Achieved"
+msgstr "Achieved"
+
+#: app/templates/reports/actual_vs_target.html:89
+#: app/templates/reports/actual_vs_target.html:120
+#: app/templates/reports/actual_vs_target.html:179
+#: app/templates/reports/actual_vs_target.html:212
+msgid "Needs Push"
+msgstr "Needs Push"
+
+#: app/templates/reports/actual_vs_target.html:90
+#: app/templates/reports/actual_vs_target.html:124
+#: app/templates/reports/actual_vs_target.html:181
+#: app/templates/reports/actual_vs_target.html:218
+#, fuzzy
+msgid "Behind"
+msgstr "Send"
+
+#: app/templates/reports/actual_vs_target.html:102
+#: app/templates/reports/employee.html:122
+#, fuzzy
+msgid "Target (SAR)"
+msgstr "Targets"
+
+#: app/templates/reports/actual_vs_target.html:103
+#, fuzzy
+msgid "Achieved (SAR)"
+msgstr "Achieved"
+
+#: app/templates/reports/actual_vs_target.html:104
+#, fuzzy, python-format
+msgid "Achievement %%"
+msgstr "Target Achievement"
+
+#: app/templates/reports/actual_vs_target.html:106
+msgid "Variance"
+msgstr "Variance"
+
+#: app/templates/reports/actual_vs_target.html:160
+msgid "No data found for the selected period."
+msgstr "No data found for the selected period."
+
+#: app/templates/reports/actual_vs_target.html:169
+#, fuzzy
+msgid "Company Total"
+msgstr "Company Target"
+
+#: app/templates/reports/actual_vs_target.html:206
+#, fuzzy
+msgid "On Target"
+msgstr "Target"
+
+#: app/templates/reports/comparison.html:2
+#: app/templates/reports/comparison.html:18
+#, fuzzy
+msgid "Employee Comparison"
+msgstr "Employees"
+
+#: app/templates/reports/comparison.html:19
+msgid "Side-by-side performance comparison"
+msgstr "Side-by-side performance comparison"
+
+#: app/templates/reports/comparison.html:74 app/templates/targets/set.html:145
+msgid "Employee Name"
+msgstr "Employee Name"
+
+#: app/templates/reports/comparison.html:75
+#: app/templates/reports/comparison.html:144
+#: app/templates/reports/employee.html:304
+msgid "Target"
+msgstr "Target"
+
+#: app/templates/reports/comparison.html:77
+#: app/templates/reports/employee.html:155 app/templates/targets/index.html:176
+msgid "Remaining"
+msgstr "Remaining"
+
+#: app/templates/reports/comparison.html:78
+#: app/templates/reports/employee.html:130 app/templates/targets/index.html:148
+#, fuzzy
+msgid "Achievement"
+msgstr "Target Achievement"
+
+#: app/templates/reports/comparison.html:113
+msgid "No data available"
+msgstr "No data available"
+
+#: app/templates/reports/employee.html:3 app/templates/reports/employee.html:29
+#: app/templates/reports/index.html:55
+#, fuzzy
+msgid "Employee Performance"
+msgstr "Weekly Performance"
+
+#: app/templates/reports/employee.html:57
+#, fuzzy
+msgid "Select Employee"
+msgstr "Total Employees"
+
+#: app/templates/reports/employee.html:116
+#, fuzzy
+msgid "Total Sales (SAR)"
+msgstr "Monthly Sales"
+
+#: app/templates/reports/employee.html:136
+#, fuzzy
+msgid "Daily Target Remaining"
+msgstr "Daily Target"
+
+#: app/templates/reports/employee.html:145
+#, fuzzy
+msgid "Monthly Progress"
+msgstr "Monthly Sales"
+
+#: app/templates/reports/employee.html:156
+#, fuzzy
+msgid "days left"
+msgstr "Day Off"
+
+#: app/templates/reports/employee.html:167
+#, fuzzy
+msgid "Daily Sales vs Target"
+msgstr "Daily Target"
+
+#: app/templates/reports/employee.html:179
+#, fuzzy
+msgid "By Category"
+msgstr "Product Category"
+
+#: app/templates/reports/employee.html:191
+#: app/templates/reports/employee.html:284
+#, fuzzy
+msgid "Daily Sales"
+msgstr "Daily Target"
+
+#: app/templates/reports/employee.html:192
+#, fuzzy
+msgid "days with sales"
+msgstr "Chat with Sahs Pro"
+
+#: app/templates/reports/employee.html:199
+#: app/templates/reports/employee.html:207
+#, fuzzy
+msgid "Day"
+msgstr "Day Off"
+
+#: app/templates/reports/employee.html:200
+#: app/templates/reports/products.html:175
+#, fuzzy
+msgid "Sales (SAR)"
+msgstr "Sales Detail"
+
+#: app/templates/reports/employee.html:214
+msgid "No sales records found for the selected period."
+msgstr "No sales records found for the selected period."
+
+#: app/templates/reports/employee.html:239
+#, fuzzy
+msgid "Select an Employee"
+msgstr "Total Employees"
+
+#: app/templates/reports/employee.html:241
+msgid ""
+"Choose an employee from the dropdown above to view their performance "
+"report."
+msgstr ""
+
+#: app/templates/reports/employee.html:293
+#, fuzzy
+msgid "Cumulative"
+msgstr "Active"
+
+#: app/templates/reports/index.html:43
+msgid "Detailed analysis and performance reports"
+msgstr "Detailed analysis and performance reports"
+
+#: app/templates/reports/index.html:56
+msgid ""
+"Individual sales trends, KPIs, monthly chart, and product category "
+"breakdown."
+msgstr ""
+
+#: app/templates/reports/index.html:58 app/templates/reports/index.html:72
+#: app/templates/reports/index.html:86 app/templates/reports/index.html:100
+#, fuzzy
+msgid "View Report"
+msgstr "Reports"
+
+#: app/templates/reports/index.html:70
+msgid ""
+"Compare actual monthly sales against targets. Color-coded achievement "
+"status."
+msgstr ""
+
+#: app/templates/reports/index.html:83 app/templates/reports/weekly.html:3
+#: app/templates/reports/weekly.html:39
+#, fuzzy
+msgid "Weekly Comparison"
+msgstr "Weekly Performance"
+
+#: app/templates/reports/index.html:84
+msgid "Current week vs previous week performance with trend indicators."
+msgstr "Current week vs previous week performance with trend indicators."
+
+#: app/templates/reports/index.html:98
+msgid "Track and manage open/pending invoices by employee, date, and status."
+msgstr "Track and manage open/pending invoices by employee, date, and status."
+
+#: app/templates/reports/index.html:111
+#, fuzzy
+msgid "Live Dashboard"
+msgstr "Dashboard"
+
+#: app/templates/reports/index.html:112
+msgid "Real-time KPIs, daily progress, and team performance overview."
+msgstr "Real-time KPIs, daily progress, and team performance overview."
+
+#: app/templates/reports/index.html:114
+#, fuzzy
+msgid "Go to Dashboard"
+msgstr "Dashboard"
+
+#: app/templates/reports/index.html:126
+msgid "AI-powered recommendations and alerts based on current performance data."
+msgstr "AI-powered recommendations and alerts based on current performance data."
+
+#: app/templates/reports/index.html:128
+#, fuzzy
+msgid "View Advice"
+msgstr "Sales Advice"
+
+#: app/templates/reports/index.html:147
+msgid "Manage team"
+msgstr "Manage team"
+
+#: app/templates/reports/index.html:155
+#, fuzzy
+msgid "Import data"
+msgstr "Import Results"
+
+#: app/templates/reports/index.html:163
+msgid "Set goals"
+msgstr "Set goals"
+
+#: app/templates/reports/index.html:171
+msgid "View calendar"
+msgstr "View calendar"
+
+#: app/templates/reports/products.html:2 app/templates/reports/products.html:28
+#, fuzzy
+msgid "Product Analysis"
+msgstr "Product Category"
+
+#: app/templates/reports/products.html:30
+#, fuzzy
+msgid "Sales breakdown by product category"
+msgstr "Product Category"
+
+#: app/templates/reports/products.html:52
+msgid "Date Range"
+msgstr "Date Range"
+
+#: app/templates/reports/products.html:124
+#, fuzzy
+msgid "Total Sales"
+msgstr "Monthly Sales"
+
+#: app/templates/reports/products.html:131
+msgid "Categories"
+msgstr "Categories"
+
+#: app/templates/reports/products.html:133
+msgid "distinct"
+msgstr "distinct"
+
+#: app/templates/reports/products.html:138
+#, fuzzy
+msgid "Total Items"
+msgstr "Total Employees"
+
+#: app/templates/reports/products.html:145
+msgid "Total Qty"
+msgstr "Total Qty"
+
+#: app/templates/reports/products.html:147
+msgid "units"
+msgstr "units"
+
+#: app/templates/reports/products.html:156
+#, fuzzy
+msgid "Top Categories"
+msgstr "Product Category"
+
+#: app/templates/reports/products.html:166
+msgid "Category Breakdown"
+msgstr "Category Breakdown"
+
+#: app/templates/reports/products.html:167
+msgid "categories"
+msgstr "categories"
+
+#: app/templates/reports/products.html:174
+#, fuzzy
+msgid "Category"
+msgstr "Product Category"
+
+#: app/templates/reports/products.html:176
+msgid "Qty"
+msgstr "Qty"
+
+#: app/templates/reports/products.html:177
+#, fuzzy
+msgid "Records"
+msgstr "Reports"
+
+#: app/templates/reports/products.html:179
+#, fuzzy
+msgid "Share"
+msgstr "Save"
+
+#: app/templates/reports/products.html:229
+msgid "No product data for this period"
+msgstr "No product data for this period"
+
+#: app/templates/reports/products.html:230
+msgid "Upload sales files that include product category information."
+msgstr "Upload sales files that include product category information."
+
+#: app/templates/reports/weekly.html:41
+msgid "Week-by-week sales breakdown within the selected month"
+msgstr "Week-by-week sales breakdown within the selected month"
+
+#: app/templates/reports/weekly.html:113
+#, fuzzy
+msgid "Great progress!"
+msgstr "Progress"
+
+#: app/templates/reports/weekly.html:114
+#, python-format
+msgid "Sales are up %(pct)s%% vs the previous week. Keep the momentum!"
+msgstr "Sales are up %(pct)s%% vs the previous week. Keep the momentum!"
+
+#: app/templates/reports/weekly.html:116
+msgid "Needs attention!"
+msgstr "Needs attention!"
+
+#: app/templates/reports/weekly.html:117
+#, python-format
+msgid "Sales are down %(pct)s%% vs the previous week. Push harder!"
+msgstr "Sales are down %(pct)s%% vs the previous week. Push harder!"
+
+#: app/templates/reports/weekly.html:127
+msgid "Weekly Sales by Employee"
+msgstr "Weekly Sales by Employee"
+
+#: app/templates/reports/weekly.html:138
+msgid "W"
+msgstr "W"
+
+#: app/templates/reports/weekly.html:140
+#, fuzzy
+msgid "Monthly Total"
+msgstr "Monthly Sales"
+
+#: app/templates/reports/weekly.html:141
+#, fuzzy
+msgid "Trend"
+msgstr "Send"
+
+#: app/templates/reports/weekly.html:142
+msgid "Message"
+msgstr "Message"
+
+#: app/templates/reports/weekly.html:182
+msgid "Strong growth!"
+msgstr "Strong growth!"
+
+#: app/templates/reports/weekly.html:186
+msgid "Improving — keep it up!"
+msgstr "Improving — keep it up!"
+
+#: app/templates/reports/weekly.html:190
+msgid "Significant drop — review needed"
+msgstr "Significant drop — review needed"
+
+#: app/templates/reports/weekly.html:194
+msgid "Slight decline — push harder"
+msgstr "Slight decline — push harder"
+
+#: app/templates/reports/weekly.html:198
+#, fuzzy
+msgid "Stable performance"
+msgstr "Weekly Performance"
+
+#: app/templates/reports/weekly.html:207
+msgid "Week Total"
+msgstr "Week Total"
+
+#: app/templates/reports/weekly.html:232
+msgid "No Data Found"
+msgstr "No Data Found"
+
+#: app/templates/reports/weekly.html:233
+msgid "No sales data for the selected month. Try uploading data first."
+msgstr "No sales data for the selected month. Try uploading data first."
+
+#: app/templates/reports/weekly.html:235 app/templates/uploads/index.html:3
+#: app/templates/uploads/index.html:54
+#, fuzzy
+msgid "Upload Data"
+msgstr "Uploads"
+
+#: app/templates/schedule/employee.html:2
+#: app/templates/schedule/employee.html:70
+#, fuzzy
+msgid "Work Schedule"
+msgstr "Schedule"
+
+#: app/templates/schedule/employee.html:107
+#: app/templates/targets/index.html:121 app/templates/targets/set.html:110
+msgid "Working Days"
+msgstr "Working Days"
+
+#: app/templates/schedule/employee.html:124
+msgid "Sun"
+msgstr "Sun"
+
+#: app/templates/schedule/employee.html:124
+#, fuzzy
+msgid "Mon"
+msgstr "Month"
+
+#: app/templates/schedule/employee.html:124
+msgid "Tue"
+msgstr "Tue"
+
+#: app/templates/schedule/employee.html:124
+msgid "Wed"
+msgstr "Wed"
+
+#: app/templates/schedule/employee.html:124
+msgid "Thu"
+msgstr "Thu"
+
+#: app/templates/schedule/employee.html:124
+msgid "Fri"
+msgstr "Fri"
+
+#: app/templates/schedule/employee.html:124
+#, fuzzy
+msgid "Sat"
+msgstr "Status"
+
+#: app/templates/schedule/employee.html:155
+#, fuzzy
+msgid "Schedule Details"
+msgstr "Sales Detail"
+
+#: app/templates/schedule/employee.html:163
 msgid "Shift"
 msgstr "Shift"
 
-msgid "Morning"
-msgstr "Morning"
+#: app/templates/schedule/employee.html:164
+msgid "Start Time"
+msgstr "Start Time"
 
-msgid "Evening"
-msgstr "Evening"
+#: app/templates/schedule/employee.html:165
+msgid "End Time"
+msgstr "End Time"
 
-msgid "Day Off"
-msgstr "Day Off"
+#: app/templates/schedule/employee.html:184
+msgid "No schedule entries this month"
+msgstr "No schedule entries this month"
 
-msgid "Import Results"
-msgstr "Import Results"
+#: app/templates/targets/index.html:81
+#, fuzzy
+msgid "Sales Targets"
+msgstr "Daily Target"
 
-msgid "Records Imported"
+#: app/templates/targets/index.html:83
+msgid "Set monthly targets and allocate percentages per employee"
+msgstr "Set monthly targets and allocate percentages per employee"
+
+#: app/templates/targets/index.html:86
+#, fuzzy
+msgid "Edit Targets"
+msgstr "Daily Target"
+
+#: app/templates/targets/index.html:113
+#, fuzzy
+msgid "Total Company Target"
+msgstr "Company Target"
+
+#: app/templates/targets/index.html:140 app/templates/targets/set.html:105
+msgid "Company Target"
+msgstr "Company Target"
+
+#: app/templates/targets/index.html:171
+msgid "Pct Share"
+msgstr "Pct Share"
+
+#: app/templates/targets/index.html:172 app/templates/targets/set.html:147
+#, fuzzy
+msgid "Target Amount"
+msgstr "Net Amount"
+
+#: app/templates/targets/index.html:173 app/templates/targets/set.html:148
+msgid "Daily Target"
+msgstr "Daily Target"
+
+#: app/templates/targets/index.html:174
+msgid "Progress"
+msgstr "Progress"
+
+#: app/templates/targets/index.html:231
+msgid "No active employees found."
+msgstr "No active employees found."
+
+#: app/templates/targets/index.html:235
+#, fuzzy
+msgid "Add employees first"
+msgstr "Total Employees"
+
+#: app/templates/targets/set.html:2 app/templates/targets/set.html:62
+#, fuzzy
+msgid "Set Targets"
+msgstr "Targets"
+
+#: app/templates/targets/set.html:63
+msgid "Distribute monthly target among employees"
+msgstr "Distribute monthly target among employees"
+
+#: app/templates/targets/set.html:72
+msgid "No active employees found"
+msgstr "No active employees found"
+
+#: app/templates/targets/set.html:73
+msgid "Add employees first, then come back to set targets."
+msgstr "Add employees first, then come back to set targets."
+
+#: app/templates/targets/set.html:75
+#, fuzzy
+msgid "Go to Employees"
+msgstr "Total Employees"
+
+#: app/templates/targets/set.html:114
+msgid "Remaining days this month"
+msgstr "Remaining days this month"
+
+#: app/templates/targets/set.html:131
+msgid "Equal Split"
+msgstr "Equal Split"
+
+#: app/templates/targets/set.html:134
+#, fuzzy
+msgid "Save Targets"
+msgstr "Targets"
+
+#: app/templates/targets/set.html:146
+msgid "Percentage"
+msgstr "Percentage"
+
+#: app/templates/uploads/history.html:2 app/templates/uploads/history.html:9
+#: app/templates/uploads/index.html:131
+#, fuzzy
+msgid "Upload History"
+msgstr "Uploads"
+
+#: app/templates/uploads/history.html:10
+msgid "All file import batches"
+msgstr "All file import batches"
+
+#: app/templates/uploads/history.html:20 app/templates/uploads/index.html:139
+#, fuzzy
+msgid "Batch ID"
+msgstr "Achieved"
+
+#: app/templates/uploads/history.html:21 app/templates/uploads/index.html:140
+msgid "File"
+msgstr "File"
+
+#: app/templates/uploads/history.html:22 app/templates/uploads/index.html:81
+msgid "File Type"
+msgstr "File Type"
+
+#: app/templates/uploads/history.html:23 app/templates/uploads/index.html:142
+#, fuzzy
+msgid "Imported"
 msgstr "Records Imported"
 
+#: app/templates/uploads/history.html:24
 msgid "Records Skipped"
 msgstr "Records Skipped"
+
+#: app/templates/uploads/history.html:39 app/templates/uploads/index.html:177
+msgid "Done"
+msgstr "Done"
+
+#: app/templates/uploads/history.html:43 app/templates/uploads/index.html:179
+msgid "Error"
+msgstr "Error"
+
+#: app/templates/uploads/history.html:49
+#, fuzzy
+msgid "No uploads yet"
+msgstr "Uploads"
+
+#: app/templates/uploads/index.html:56
+msgid "Import Excel reports: Sales, Productivity, or Pending Invoices"
+msgstr "Import Excel reports: Sales, Productivity, or Pending Invoices"
+
+#: app/templates/uploads/index.html:65
+msgid "Upload File"
+msgstr "Upload File"
+
+#: app/templates/uploads/index.html:74
+msgid "Click to choose file or drag & drop"
+msgstr "Click to choose file or drag & drop"
+
+#: app/templates/uploads/index.html:75
+msgid "Supported formats: .xls, .xlsx, .xlsm"
+msgstr "Supported formats: .xls, .xlsx, .xlsm"
+
+#: app/templates/uploads/index.html:83
+msgid "Auto-detect"
+msgstr "Auto-detect"
+
+#: app/templates/uploads/index.html:84
+#, fuzzy
+msgid "Sales Detail Report"
+msgstr "Sales Detail"
+
+#: app/templates/uploads/index.html:85
+msgid "Productivity Report"
+msgstr "Productivity Report"
+
+#: app/templates/uploads/index.html:88
+msgid "Auto-detect reads the filename to determine type."
+msgstr "Auto-detect reads the filename to determine type."
+
+#: app/templates/uploads/index.html:94
+msgid "Uploading & processing…"
+msgstr "Uploading & processing…"
+
+#: app/templates/uploads/index.html:107 app/templates/uploads/index.html:308
+#, fuzzy
+msgid "Upload & Import"
+msgstr "Upload File"
+
+#: app/templates/uploads/index.html:116
+msgid "Tips"
+msgstr "Tips"
+
+#: app/templates/uploads/index.html:118
+msgid ""
+"Filename containing \"PRODUCTIVITY\" → auto-detected as Productivity "
+"Report"
+msgstr ""
+
+#: app/templates/uploads/index.html:119
+msgid ""
+"Filename containing \"PENDING INVOICE\" → auto-detected as Pending "
+"Invoices"
+msgstr ""
+
+#: app/templates/uploads/index.html:120
+msgid "All other Excel files → Sales Detail Report"
+msgstr "All other Excel files → Sales Detail Report"
+
+#: app/templates/uploads/index.html:121
+msgid "Duplicate records are skipped automatically"
+msgstr "Duplicate records are skipped automatically"
+
+#: app/templates/uploads/index.html:132
+msgid "batches"
+msgstr "batches"
+
+#: app/templates/uploads/index.html:141
+msgid "Type"
+msgstr "Type"
+
+#: app/templates/uploads/index.html:143
+#, fuzzy
+msgid "Skipped"
+msgstr "Records Skipped"
+
+#: app/templates/uploads/index.html:162
+#, fuzzy
+msgid "Sales"
+msgstr "Save"
+
+#: app/templates/uploads/index.html:164
+#, fuzzy
+msgid "Productivity"
+msgstr "Productivity Report"
+
+#: app/templates/uploads/index.html:184
+#, fuzzy
+msgid "Processing"
+msgstr "Progress"
+
+#: app/templates/uploads/index.html:191
+msgid "Delete this batch record?"
+msgstr "Delete this batch record?"
+
+#: app/templates/uploads/index.html:193
+#, fuzzy
+msgid "Delete record"
+msgstr "Delete"
+
+#: app/templates/uploads/index.html:204
+#, fuzzy
+msgid "No uploads yet."
+msgstr "Uploads"
+
+#: app/templates/uploads/index.html:265
+#, fuzzy
+msgid "Processing…"
+msgstr "Progress"
+
+#: app/templates/uploads/index.html:297
+msgid "Unknown error"
+msgstr "Unknown error"
+
+#: app/templates/uploads/index.html:302
+msgid "Network error. Please try again."
+msgstr "Network error. Please try again."
+
+#~ msgid "Add"
+#~ msgstr "Add"
+
+#~ msgid "Send Email"
+#~ msgstr "Send Email"
+
+#~ msgid "Region"
+#~ msgstr "Region"
+
+#~ msgid "Top Performer"
+#~ msgstr "Top Performer"
+
+#~ msgid "Motivational Message"
+#~ msgstr "Motivational Message"
+
+#~ msgid "Keep up the great work!"
+#~ msgstr "Keep up the great work!"
+
+#~ msgid "You need to catch up on your target."
+#~ msgstr "You need to catch up on your target."
+

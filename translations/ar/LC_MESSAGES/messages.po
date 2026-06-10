@@ -3,645 +3,1604 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SahsPro 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-05 00:00+0000\n"
+"POT-Creation-Date: 2026-06-10 17:20+0000\n"
 "PO-Revision-Date: 2026-06-05 00:00+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ar\n"
+"Language-Team: ar <LL@li.org>\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : "
+"n%100>=3 && n%100<=10 ? 3 : n%100>=0 && n%100<=2 ? 4 : 5);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
 
-msgid "Dashboard"
-msgstr "لوحة التحكم"
-
-msgid "Employees"
-msgstr "الموظفون"
-
-msgid "Uploads"
-msgstr "رفع الملفات"
-
-msgid "Targets"
-msgstr "الأهداف"
-
-msgid "Reports"
-msgstr "التقارير"
-
-msgid "Invoices"
-msgstr "الفواتير"
-
-msgid "Schedule"
-msgstr "الجدول الزمني"
-
-msgid "Assistant"
-msgstr "المساعد"
-
+#: app/templates/base.html:6
 msgid "Al-Qahtani Pro | القحطاني برو"
 msgstr "القحطاني برو"
 
-msgid "Al-Badawi Pro"
-msgstr "البدوي برو"
-
-msgid "Total Employees"
-msgstr "إجمالي الموظفين"
-
-msgid "Monthly Sales"
-msgstr "مبيعات الشهر"
-
-msgid "Target Achievement"
-msgstr "نسبة الإنجاز"
-
-msgid "Pending Invoices"
-msgstr "الفواتير المعلقة"
-
-msgid "Employee Name"
-msgstr "اسم الموظف"
-
-msgid "Employee Progress"
-msgstr "تقدم الموظفين"
-
-msgid "Employee List"
-msgstr "قائمة الموظفين"
-
-msgid "Employee"
-msgstr "الموظف"
-
-msgid "Add Employee"
-msgstr "إضافة موظف"
-
-msgid "Add New Employee"
-msgstr "إضافة موظف جديد"
-
-msgid "Add employees first"
-msgstr "أضف الموظفين أولاً"
-
-msgid "Target"
-msgstr "الهدف"
-
-msgid "Target Amount"
-msgstr "مبلغ الهدف"
-
-msgid "Total Company Target"
-msgstr "الهدف الإجمالي للشركة"
-
-msgid "Company Target"
-msgstr "هدف الشركة"
-
-msgid "Achieved"
-msgstr "المحقق"
-
-msgid "Remaining"
-msgstr "المتبقي"
-
-msgid "Daily Target"
-msgstr "الهدف اليومي"
-
-msgid "Progress"
-msgstr "التقدم"
-
-msgid "Achievement Overview"
-msgstr "نظرة عامة على الإنجاز"
-
-msgid "Save"
-msgstr "حفظ"
-
-msgid "Save Targets"
-msgstr "حفظ الأهداف"
-
-msgid "Save Note"
-msgstr "حفظ الملاحظة"
-
-msgid "Save Shift"
-msgstr "حفظ الوردية"
-
-msgid "Cancel"
-msgstr "إلغاء"
-
-msgid "Delete"
-msgstr "حذف"
-
-msgid "Edit"
-msgstr "تعديل"
-
-msgid "Add"
-msgstr "إضافة"
-
-msgid "Apply"
-msgstr "تطبيق"
-
-msgid "Search"
-msgstr "بحث"
-
-msgid "Load"
-msgstr "تحميل"
-
-msgid "Print"
-msgstr "طباعة"
-
-msgid "Export Excel"
-msgstr "تصدير Excel"
-
-msgid "Send Email"
-msgstr "إرسال بريد إلكتروني"
-
-msgid "Upload File"
-msgstr "رفع ملف"
-
-msgid "Upload Data"
-msgstr "رفع البيانات"
-
-msgid "Upload History"
-msgstr "سجل الرفع"
-
-msgid "Click to choose file or drag & drop"
-msgstr "انقر لاختيار ملف أو اسحب وأفلت"
-
-msgid "File"
-msgstr "الملف"
-
-msgid "File Type"
-msgstr "نوع الملف"
-
-msgid "Sales Detail"
-msgstr "تفاصيل المبيعات"
-
-msgid "Productivity Report"
-msgstr "تقرير الإنتاجية"
-
-msgid "Auto-detect"
-msgstr "اكتشاف تلقائي"
-
-msgid "Pct Share"
-msgstr "النسبة المئوية"
-
-msgid "Percentage"
-msgstr "النسبة المئوية"
-
-msgid "Equal Split"
-msgstr "توزيع متساوٍ"
-
-msgid "Amount"
-msgstr "المبلغ"
-
-msgid "Working Days"
-msgstr "أيام العمل"
-
-msgid "Set Targets"
-msgstr "تحديد الأهداف"
-
-msgid "Month"
-msgstr "الشهر"
-
-msgid "Year"
-msgstr "السنة"
-
-msgid "Date"
-msgstr "التاريخ"
-
-msgid "Date Range"
-msgstr "نطاق التاريخ"
-
-msgid "From"
-msgstr "من"
-
-msgid "To"
-msgstr "إلى"
-
-msgid "Product Category"
-msgstr "فئة المنتج"
-
-msgid "Region"
-msgstr "المنطقة"
-
-msgid "Name"
-msgstr "الاسم"
-
-msgid "Notes"
-msgstr "ملاحظات"
-
-msgid "None"
-msgstr "لا يوجد"
-
-msgid "Pages"
-msgstr "الصفحات"
-
-msgid "Sales Analysis"
-msgstr "تحليل المبيعات"
-
-msgid "Weekly Comparison"
-msgstr "المقارنة الأسبوعية"
-
-msgid "Actual vs Target"
-msgstr "الفعلي مقابل الهدف"
-
-msgid "Top Performer"
-msgstr "أفضل موظف"
-
-msgid "Employee Performance"
-msgstr "أداء الموظف"
-
-msgid "Live Dashboard"
-msgstr "لوحة التحكم الحية"
-
-msgid "Sales Advice"
-msgstr "نصائح المبيعات"
-
-msgid "Keep up the great work!"
-msgstr "استمر في العمل الرائع!"
-
-msgid "You need to catch up on your target."
-msgstr "تحتاج إلى اللحاق بهدفك."
-
-msgid "Chat with Sahs Pro"
-msgstr "تحدث مع ساهس برو"
-
-msgid "Type your question..."
-msgstr "اكتب سؤالك هنا..."
-
-msgid "Send"
-msgstr "إرسال"
-
-msgid "Lock"
-msgstr "تأمين"
-
-msgid "Unlock"
-msgstr "إلغاء التأمين"
-
-msgid "Add Alias"
-msgstr "إضافة اسم بديل"
-
-msgid "Aliases"
-msgstr "الأسماء البديلة"
-
-msgid "SAP ID"
-msgstr "رقم SAP"
-
-msgid "Status"
-msgstr "الحالة"
-
-msgid "Active"
-msgstr "نشط"
-
-msgid "Inactive"
-msgstr "غير نشط"
-
-msgid "Locked"
-msgstr "مؤمَّن"
-
-msgid "Actions"
-msgstr "الإجراءات"
-
-msgid "Note"
-msgstr "ملاحظة"
-
-msgid "Add Note"
-msgstr "إضافة ملاحظة"
-
-msgid "Reason"
-msgstr "السبب"
-
-msgid "Invoice No"
-msgstr "رقم الفاتورة"
-
-msgid "Invoice Date"
-msgstr "تاريخ الفاتورة"
-
-msgid "Customer"
-msgstr "العميل"
-
-msgid "Net Amount"
-msgstr "المبلغ الصافي"
-
-msgid "Invoice List"
-msgstr "قائمة الفواتير"
-
-msgid "Open Invoices"
-msgstr "الفواتير المفتوحة"
-
-msgid "Filtered Results"
-msgstr "نتائج التصفية"
-
-msgid "All Employees"
-msgstr "جميع الموظفين"
-
-msgid "Shift"
-msgstr "الوردية"
-
-msgid "Morning"
-msgstr "صباحي"
-
-msgid "Evening"
-msgstr "مسائي"
-
-msgid "Day Off"
-msgstr "يوم إجازة"
-
-msgid "Sick Leave"
-msgstr "إجازة مرضية"
-
-msgid "Annual Leave"
-msgstr "إجازة سنوية"
-
-msgid "Holiday"
-msgstr "عطلة رسمية"
-
-msgid "Monthly Summary"
-msgstr "ملخص شهري"
-
-msgid "Monthly shift calendar for all employees"
-msgstr "جدول الورديات الشهري لجميع الموظفين"
-
-msgid "Start Time"
-msgstr "وقت البداية"
-
-msgid "End Time"
-msgstr "وقت النهاية"
-
-msgid "Import Results"
-msgstr "نتائج الاستيراد"
-
-msgid "Records Imported"
-msgstr "السجلات المستوردة"
-
-msgid "Records Skipped"
-msgstr "السجلات المتخطاة"
-
-msgid "Batch ID"
-msgstr "رقم الدفعة"
-
-msgid "Imported"
-msgstr "مستورد"
-
-msgid "Quick Links"
-msgstr "روابط سريعة"
-
-msgid "Pending"
-msgstr "معلق"
-
-msgid "Resolved"
-msgstr "محلول"
-
-msgid "Cancelled"
-msgstr "ملغي"
-
-msgid "In Progress"
-msgstr "قيد المعالجة"
-
-msgid "Payment Delay"
-msgstr "تأخر السداد"
-
-msgid "Dispute"
-msgstr "نزاع"
-
-msgid "Missing Documents"
-msgstr "وثائق ناقصة"
-
-msgid "Returned Goods"
-msgstr "بضاعة مرتجعة"
-
-msgid "Other"
-msgstr "أخرى"
-
-msgid "Behind"
-msgstr "متأخر عن الهدف"
-
-msgid "This Month Sales"
-msgstr "مبيعات هذا الشهر"
-
-msgid "Description"
-msgstr "الوصف"
-
-msgid "Back"
-msgstr "رجوع"
-
-msgid "View Report"
-msgstr "عرض التقرير"
-
-msgid "Go to Dashboard"
-msgstr "الذهاب للوحة التحكم"
-
-msgid "View Advice"
-msgstr "عرض النصائح"
-
-msgid "Manage team"
-msgstr "إدارة الفريق"
-
-msgid "Import data"
-msgstr "استيراد البيانات"
-
-msgid "Set goals"
-msgstr "تحديد الأهداف"
-
-msgid "View calendar"
-msgstr "عرض التقويم"
-
-msgid "Detailed analysis and performance reports"
-msgstr "تقارير تفصيلية وتحليل الأداء"
-
-msgid "Needs Push"
-msgstr "يحتاج دفعة"
-
-msgid "Achievement"
-msgstr "الإنجاز"
-
-msgid "Variance"
-msgstr "الفارق"
-
-msgid "Chat"
-msgstr "المحادثة"
-
-msgid "Top seller this month?"
-msgstr "أفضل بائع هذا الشهر؟"
-
-msgid "My remaining daily target?"
-msgstr "هدفي اليومي المتبقي؟"
-
-msgid "Target achievement status?"
-msgstr "نسبة تحقيق الأهداف؟"
-
-msgid "Show pending invoices"
-msgstr "عرض الفواتير المعلقة"
-
-msgid "Performance vs last week?"
-msgstr "الأداء مقارنةً بالأسبوع الماضي؟"
-
-msgid "Update Status"
-msgstr "تحديث الحالة"
-
-msgid "Weekly Schedule"
-msgstr "الجدول الأسبوعي"
-
-msgid "Weekly view"
-msgstr "عرض أسبوعي"
-
-msgid "Previous Week"
-msgstr "الأسبوع السابق"
-
-msgid "Next Week"
-msgstr "الأسبوع التالي"
-
-msgid "Current Week"
-msgstr "الأسبوع الحالي"
-
-msgid "Copy to Next Week"
-msgstr "نسخ للأسبوع القادم"
-
-msgid "Copied %(n)d shifts to next week."
-msgstr "تم نسخ %(n)d وردية للأسبوع القادم."
-
-msgid "Weekly schedule saved (%(n)d entries)."
-msgstr "تم حفظ الجدول الأسبوعي (%(n)d إدخال)."
-
-msgid "Apply to All"
-msgstr "تطبيق على الجميع"
-
-msgid "Set Shift"
-msgstr "تحديد الوردية"
-
-msgid "Sun"
-msgstr "أح"
-
-msgid "Mon"
-msgstr "إث"
-
-msgid "Tue"
-msgstr "ث"
-
-msgid "Wed"
-msgstr "أر"
-
-msgid "Thu"
-msgstr "خ"
-
-msgid "Fri"
-msgstr "ج"
-
-msgid "Sat"
-msgstr "س"
-
-msgid "Split"
-msgstr "مزدوج"
-
-msgid "Work Schedule"
-msgstr "جدول العمل"
-
-msgid "Optional notes…"
-msgstr "ملاحظات اختيارية..."
-
-msgid "Select Employee"
-msgstr "اختر موظفاً"
-
-msgid "Schedule Details"
-msgstr "تفاصيل الجدول"
-
-msgid "No schedule entries this month"
-msgstr "لا توجد إدخالات في الجدول هذا الشهر"
-
-msgid "employees"
-msgstr "موظفين"
-
-msgid "batches"
-msgstr "دفعات"
-
-msgid "No uploads yet."
-msgstr "لا توجد ملفات مرفوعة بعد."
-
-msgid "Import Excel reports: Sales, Productivity, or Pending Invoices"
-msgstr "استيراد تقارير Excel: المبيعات، الإنتاجية، أو الفواتير المعلقة"
-
-msgid "Supported formats: .xls, .xlsx, .xlsm"
-msgstr "الصيغ المدعومة: xls. ، xlsx. ، xlsm."
-
-msgid "Auto-detect reads the filename to determine type."
-msgstr "الاكتشاف التلقائي يقرأ اسم الملف لتحديد النوع."
-
-msgid "Uploading & processing…"
-msgstr "جارٍ الرفع والمعالجة..."
-
-msgid "Processing…"
-msgstr "جارٍ المعالجة..."
-
-msgid "Upload & Import"
-msgstr "رفع واستيراد"
-
-msgid "Upload & Import"
-msgstr "رفع واستيراد"
-
-msgid "Filename containing \"PRODUCTIVITY\" → auto-detected as Productivity Report"
-msgstr "اسم الملف يحتوي على \"PRODUCTIVITY\" → يُكتشف تلقائياً كتقرير إنتاجية"
-
-msgid "Filename containing \"PENDING INVOICE\" → auto-detected as Pending Invoices"
-msgstr "اسم الملف يحتوي على \"PENDING INVOICE\" → يُكتشف تلقائياً كفواتير معلقة"
-
-msgid "All other Excel files → Sales Detail Report"
-msgstr "جميع ملفات Excel الأخرى → تقرير تفصيل المبيعات"
-
-msgid "Duplicate records are skipped automatically"
-msgstr "السجلات المكررة تُتجاهل تلقائياً"
-
-msgid "Delete this batch record?"
-msgstr "هل تريد حذف سجل الدفعة؟"
-
-msgid "Delete record"
-msgstr "حذف السجل"
-
-msgid "Network error. Please try again."
-msgstr "خطأ في الشبكة. يرجى المحاولة مرة أخرى."
-
-msgid "Unknown error"
-msgstr "خطأ غير معروف"
-
-msgid "Tips"
-msgstr "نصائح"
-
-msgid "Sales Detail Report"
-msgstr "تقرير تفصيل المبيعات"
-
-msgid "Productivity Report"
-msgstr "تقرير الإنتاجية"
-
-msgid "Pending Invoices"
-msgstr "الفواتير المعلقة"
-
-msgid "Productivity"
+#: app/templates/base.html:349 app/templates/base.html:408
+#: app/templates/dashboard/index.html:2 app/templates/dashboard/index.html:81
+msgid "Dashboard"
+msgstr "لوحة التحكم"
+
+#: app/templates/base.html:353 app/templates/base.html:409
+#: app/templates/employees/edit.html:27 app/templates/employees/index.html:3
+#: app/templates/employees/index.html:34
+#: app/templates/invoices/discounts.html:91
+#: app/templates/reports/index.html:144 app/templates/reports/products.html:178
+msgid "Employees"
+msgstr "الموظفون"
+
+#: app/templates/base.html:357 app/templates/base.html:410
+#: app/templates/reports/index.html:152
+msgid "Uploads"
+msgstr "رفع الملفات"
+
+#: app/templates/base.html:361 app/templates/base.html:411
+#: app/templates/reports/index.html:160 app/templates/targets/index.html:3
+msgid "Targets"
+msgstr "الأهداف"
+
+#: app/templates/base.html:367 app/templates/base.html:412
+#: app/templates/reports/index.html:3 app/templates/reports/index.html:41
+#: app/templates/reports/products.html:34
+msgid "Reports"
+msgstr "التقارير"
+
+#: app/templates/base.html:370
+#, fuzzy
+msgid "All Reports"
+msgstr "التقارير"
+
+#: app/templates/base.html:371 app/templates/base.html:413
+#, fuzzy
+msgid "Products"
 msgstr "الإنتاجية"
 
-msgid "Sales"
-msgstr "المبيعات"
+#: app/templates/base.html:372
+#, fuzzy
+msgid "Comparison"
+msgstr "المقارنة الأسبوعية"
 
+#: app/templates/base.html:373
+#, fuzzy
+msgid "vs Target"
+msgstr "الهدف"
+
+#: app/templates/base.html:380 app/templates/base.html:414
+#: app/templates/uploads/index.html:166
 msgid "Invoices"
 msgstr "الفواتير"
 
-msgid "Processing"
-msgstr "قيد المعالجة"
+#: app/templates/base.html:383 app/templates/invoices/index.html:3
+#: app/templates/invoices/index.html:31 app/templates/reports/index.html:97
+#: app/templates/uploads/index.html:86
+msgid "Pending Invoices"
+msgstr "الفواتير المعلقة"
 
-msgid "Done"
-msgstr "تم"
-
-msgid "Error"
-msgstr "خطأ"
-
-msgid "Mark as Resolved"
-msgstr "تحديد كمحلول"
-
-msgid "No notes yet"
-msgstr "لا توجد ملاحظات بعد"
-
-msgid "Type your note..."
-msgstr "اكتب ملاحظتك هنا..."
-
-msgid "Price"
-msgstr "السعر"
-
-msgid "Tax"
-msgstr "الضريبة"
-
-msgid "Discount"
+#: app/templates/base.html:384 app/templates/base.html:415
+#, fuzzy
+msgid "Discounts"
 msgstr "الخصم"
 
-msgid "Branch"
-msgstr "الفرع"
+#: app/templates/base.html:389 app/templates/base.html:416
+#: app/templates/reports/index.html:168
+msgid "Schedule"
+msgstr "الجدول الزمني"
 
+#: app/templates/assistant/index.html:3 app/templates/base.html:393
+#: app/templates/base.html:417
+msgid "Assistant"
+msgstr "المساعد"
+
+#: app/templates/assistant/advice.html:2 app/templates/assistant/advice.html:35
+#: app/templates/dashboard/advice.html:3 app/templates/dashboard/advice.html:38
+#: app/templates/dashboard/index.html:86 app/templates/reports/index.html:125
+msgid "Sales Advice"
+msgstr "نصائح المبيعات"
+
+#: app/templates/assistant/advice.html:2 app/templates/assistant/index.html:3
+#: app/templates/dashboard/advice.html:3 app/templates/dashboard/index.html:2
+#: app/templates/employees/edit.html:3 app/templates/employees/index.html:3
+#: app/templates/invoices/detail.html:2 app/templates/invoices/discounts.html:2
+#: app/templates/invoices/index.html:3
+#: app/templates/reports/actual_vs_target.html:3
+#: app/templates/reports/comparison.html:2
+#: app/templates/reports/employee.html:3 app/templates/reports/index.html:3
+#: app/templates/reports/products.html:2 app/templates/reports/weekly.html:3
+#: app/templates/schedule/employee.html:2 app/templates/schedule/index.html:3
+#: app/templates/schedule/weekly.html:3 app/templates/targets/index.html:3
+#: app/templates/targets/set.html:2 app/templates/uploads/history.html:2
+#: app/templates/uploads/index.html:3
+msgid "القحطاني برو"
+msgstr "القحطاني برو"
+
+#: app/templates/assistant/advice.html:37
+msgid "Automated recommendations based on current sales data"
+msgstr "توصيات تلقائية بناءً على بيانات المبيعات الحالية"
+
+#: app/templates/assistant/advice.html:54
+#: app/templates/dashboard/advice.html:101
+msgid "Critical"
+msgstr "حرج"
+
+#: app/templates/assistant/advice.html:60
+#: app/templates/dashboard/advice.html:107
+#, fuzzy
+msgid "Warnings"
+msgstr "صباحي"
+
+#: app/templates/assistant/advice.html:66
+#: app/templates/dashboard/advice.html:113
+msgid "Info"
+msgstr "معلومة"
+
+#: app/templates/assistant/advice.html:72
+#: app/templates/dashboard/advice.html:119
+#, fuzzy
+msgid "Positive"
+msgstr "غير نشط"
+
+#: app/templates/assistant/advice.html:108
+#: app/templates/dashboard/advice.html:86
+msgid "All Looking Good!"
+msgstr "كل شيء يسير بشكل جيد!"
+
+#: app/templates/assistant/advice.html:109
+msgid "No alerts at this time. Keep up the excellent work!"
+msgstr "لا تنبيهات حالياً. استمر في العمل الرائع!"
+
+#: app/templates/assistant/advice.html:111
+#, fuzzy
+msgid "Upload Sales Data"
+msgstr "رفع البيانات"
+
+#: app/templates/assistant/advice.html:120
+#, fuzzy
+msgid "Chat with Al-Qahtani Pro"
+msgstr "تحدث مع ساهس برو"
+
+#: app/templates/dashboard/advice.html:40
+msgid "AI-powered recommendations based on current performance"
+msgstr "توصيات ذكية بناءً على الأداء الحالي"
+
+#: app/templates/dashboard/advice.html:43
+#, fuzzy
+msgid "Back to Dashboard"
+msgstr "الذهاب للوحة التحكم"
+
+#: app/templates/dashboard/advice.html:87
+msgid "No alerts or recommendations at this time. Keep up the excellent work!"
+msgstr "لا تنبيهات أو توصيات حالياً. استمر في العمل الرائع!"
+
+#: app/templates/dashboard/index.html:83
+#, fuzzy
+msgid "Today"
+msgstr "عطلة رسمية"
+
+#: app/templates/employees/edit.html:3
+#, fuzzy
+msgid "Edit Employee"
+msgstr "إضافة موظف"
+
+#: app/templates/employees/edit.html:29 app/templates/employees/index.html:152
+#: app/templates/targets/index.html:127
+msgid "Edit"
+msgstr "تعديل"
+
+#: app/templates/employees/edit.html:38
+#, fuzzy
+msgid "Edit Employee Details"
+msgstr "تفاصيل الجدول"
+
+#: app/templates/employees/edit.html:46 app/templates/employees/index.html:52
+msgid "Name (English)"
+msgstr "الاسم (إنجليزي)"
+
+#: app/templates/employees/edit.html:50
+#, fuzzy
+msgid "Employee English name"
+msgstr "اسم الموظف"
+
+#: app/templates/employees/edit.html:54 app/templates/employees/index.html:56
+msgid "Name (Arabic) / الاسم بالعربي"
+msgstr "الاسم بالعربي"
+
+#: app/templates/employees/edit.html:61 app/templates/employees/edit.html:147
+#: app/templates/employees/index.html:60 app/templates/employees/index.html:86
+msgid "SAP ID"
+msgstr "رقم SAP"
+
+#: app/templates/employees/edit.html:64
+msgid "Optional SAP system ID"
+msgstr "رقم SAP (اختياري)"
+
+#: app/templates/employees/edit.html:72
+#, fuzzy
+msgid "Active Employee"
+msgstr "إضافة موظف"
+
+#: app/templates/employees/edit.html:75
+msgid "Inactive employees are hidden from reports but history is preserved."
+msgstr "الموظفون غير النشطين مخفيون من التقارير لكن سجلاتهم محفوظة."
+
+#: app/templates/employees/edit.html:80
+#, fuzzy
+msgid "Save Changes"
+msgstr "حفظ الأهداف"
+
+#: app/templates/employees/edit.html:83 app/templates/invoices/index.html:324
+msgid "Cancel"
+msgstr "إلغاء"
+
+#: app/templates/employees/edit.html:95
+#, fuzzy
+msgid "Alias Names"
+msgstr "الأسماء البديلة"
+
+#: app/templates/employees/edit.html:100
+msgid ""
+"Aliases help the system automatically match employee names from uploaded "
+"Excel files."
+msgstr ""
+
+#: app/templates/employees/edit.html:112
+#, fuzzy
+msgid "Remove alias"
+msgstr "قائمة الموظفين"
+
+#: app/templates/employees/edit.html:114
+#, fuzzy
+msgid "Remove"
+msgstr "محلول"
+
+#: app/templates/employees/edit.html:121
+#, fuzzy
+msgid "No aliases yet."
+msgstr "لا توجد ملفات مرفوعة بعد."
+
+#: app/templates/employees/edit.html:129
+msgid "New alias name…"
+msgstr "اسم بديل جديد..."
+
+#: app/templates/employees/edit.html:140
+#, fuzzy
+msgid "Employee Info"
+msgstr "اسم الموظف"
+
+#: app/templates/employees/edit.html:143
+msgid "ID"
+msgstr "الرقم"
+
+#: app/templates/employees/edit.html:151
+msgid "Created"
+msgstr "تاريخ الإنشاء"
+
+#: app/templates/employees/edit.html:155 app/templates/employees/index.html:89
+#: app/templates/invoices/discounts.html:158
+#: app/templates/invoices/index.html:97 app/templates/invoices/index.html:141
+#: app/templates/reports/actual_vs_target.html:105
+#: app/templates/uploads/history.html:25 app/templates/uploads/index.html:144
+msgid "Status"
+msgstr "الحالة"
+
+#: app/templates/employees/edit.html:158 app/templates/employees/index.html:140
+msgid "Locked"
+msgstr "مؤمَّن"
+
+#: app/templates/employees/edit.html:160 app/templates/employees/index.html:144
+msgid "Active"
+msgstr "نشط"
+
+#: app/templates/employees/edit.html:162 app/templates/employees/index.html:137
+msgid "Inactive"
+msgstr "غير نشط"
+
+#: app/templates/employees/edit.html:173
+#, fuzzy
+msgid "Unlock Employee"
+msgstr "اختر موظفاً"
+
+#: app/templates/employees/edit.html:173
+#, fuzzy
+msgid "Lock Employee"
+msgstr "اختر موظفاً"
+
+#: app/templates/employees/index.html:36
+#: app/templates/reports/comparison.html:119
+#: app/templates/reports/employee.html:222
+#: app/templates/reports/products.html:214 app/templates/targets/index.html:245
+#: app/templates/targets/set.html:123
+msgid "Total"
+msgstr "الإجمالي"
+
+#: app/templates/employees/index.html:36
+msgid "employees"
+msgstr "موظفين"
+
+#: app/templates/employees/index.html:39
+msgid "Add Employee"
+msgstr "إضافة موظف"
+
+#: app/templates/employees/index.html:46
+msgid "Add New Employee"
+msgstr "إضافة موظف جديد"
+
+#: app/templates/employees/index.html:53
+msgid "e.g. Ahmed Ali"
+msgstr "مثال: أحمد علي"
+
+#: app/templates/employees/index.html:61
+#, fuzzy
+msgid "Optional"
+msgstr "ملاحظات اختيارية..."
+
+#: app/templates/employees/index.html:75
+msgid "Employee List"
+msgstr "قائمة الموظفين"
+
+#: app/templates/employees/index.html:77
+#, fuzzy
+msgid "Search..."
+msgstr "بحث"
+
+#: app/templates/employees/index.html:85
+msgid "Name"
+msgstr "الاسم"
+
+#: app/templates/employees/index.html:87
+msgid "Aliases"
+msgstr "الأسماء البديلة"
+
+#: app/templates/employees/index.html:88
+msgid "This Month Sales"
+msgstr "مبيعات هذا الشهر"
+
+#: app/templates/employees/index.html:90 app/templates/invoices/index.html:143
+msgid "Actions"
+msgstr "الإجراءات"
+
+#: app/templates/employees/index.html:124
+msgid "None"
+msgstr "لا يوجد"
+
+#: app/templates/employees/index.html:130 app/templates/invoices/index.html:128
+#: app/templates/reports/products.html:140
+#, fuzzy
+msgid "records"
+msgstr "التقارير"
+
+#: app/templates/employees/index.html:159
+msgid "Unlock"
+msgstr "إلغاء التأمين"
+
+#: app/templates/employees/index.html:159
+msgid "Lock"
+msgstr "تأمين"
+
+#: app/templates/employees/index.html:165
+#, fuzzy
+msgid "Delete employee"
+msgstr "اختر موظفاً"
+
+#: app/templates/employees/index.html:167
+msgid "Delete"
+msgstr "حذف"
+
+#: app/templates/employees/index.html:179
+msgid "No employees yet. Add the first one above."
+msgstr "لا يوجد موظفون بعد. أضف الأول من الأعلى."
+
+#: app/templates/invoices/detail.html:2 app/templates/invoices/detail.html:11
+#: app/templates/invoices/detail.html:33 app/templates/invoices/index.html:135
+msgid "Invoice No"
+msgstr "رقم الفاتورة"
+
+#: app/templates/invoices/detail.html:17
+#: app/templates/invoices/discounts.html:188
+#: app/templates/invoices/index.html:100 app/templates/invoices/index.html:184
+#: app/templates/invoices/index.html:315
+msgid "Pending"
+msgstr "معلق"
+
+#: app/templates/invoices/detail.html:19
+#: app/templates/invoices/discounts.html:188
+#: app/templates/invoices/index.html:101 app/templates/invoices/index.html:178
+#: app/templates/invoices/index.html:317
+msgid "Resolved"
+msgstr "محلول"
+
+#: app/templates/invoices/detail.html:30
 msgid "Invoice Details"
 msgstr "تفاصيل الفاتورة"
 
+#: app/templates/invoices/detail.html:34
+msgid "Invoice Date"
+msgstr "تاريخ الفاتورة"
+
+#: app/templates/invoices/detail.html:35 app/templates/invoices/detail.html:94
+#: app/templates/invoices/discounts.html:31
+#: app/templates/invoices/discounts.html:111
+#: app/templates/invoices/discounts.html:153
+#: app/templates/invoices/index.html:75 app/templates/invoices/index.html:137
+#: app/templates/reports/actual_vs_target.html:101
+#: app/templates/reports/employee.html:54
+#: app/templates/reports/products.html:88 app/templates/reports/weekly.html:136
+#: app/templates/targets/index.html:170
+msgid "Employee"
+msgstr "الموظف"
+
+#: app/templates/invoices/detail.html:36 app/templates/invoices/index.html:139
+msgid "Description"
+msgstr "الوصف"
+
+#: app/templates/invoices/detail.html:37
 msgid "Item Code"
 msgstr "كود المنتج"
+
+#: app/templates/invoices/detail.html:38
+#: app/templates/invoices/discounts.html:155
+msgid "Price"
+msgstr "السعر"
+
+#: app/templates/invoices/detail.html:39
+msgid "Net Amount"
+msgstr "المبلغ الصافي"
+
+#: app/templates/invoices/detail.html:40
+msgid "Tax"
+msgstr "الضريبة"
+
+#: app/templates/invoices/detail.html:41
+#: app/templates/invoices/discounts.html:156
+msgid "Discount"
+msgstr "الخصم"
+
+#: app/templates/invoices/detail.html:42
+msgid "Branch"
+msgstr "الفرع"
+
+#: app/templates/invoices/detail.html:50
+msgid "Mark as Resolved"
+msgstr "تحديد كمحلول"
+
+#: app/templates/invoices/detail.html:62 app/templates/invoices/index.html:142
+#: app/templates/schedule/employee.html:166
+msgid "Notes"
+msgstr "ملاحظات"
+
+#: app/templates/invoices/detail.html:71
+msgid "System"
+msgstr "النظام"
+
+#: app/templates/invoices/detail.html:82
+msgid "No notes yet"
+msgstr "لا توجد ملاحظات بعد"
+
+#: app/templates/invoices/detail.html:89 app/templates/invoices/index.html:202
+#: app/templates/invoices/index.html:280
+msgid "Add Note"
+msgstr "إضافة ملاحظة"
+
+#: app/templates/invoices/detail.html:96 app/templates/invoices/detail.html:105
+#, fuzzy
+msgid "Select"
+msgstr "حذف"
+
+#: app/templates/invoices/detail.html:103 app/templates/invoices/index.html:294
+msgid "Reason"
+msgstr "السبب"
+
+#: app/templates/invoices/detail.html:112 app/templates/invoices/index.html:305
+msgid "Note"
+msgstr "ملاحظة"
+
+#: app/templates/invoices/detail.html:114
+msgid "Type your note..."
+msgstr "اكتب ملاحظتك هنا..."
+
+#: app/templates/invoices/detail.html:117 app/templates/invoices/index.html:327
+msgid "Save Note"
+msgstr "حفظ الملاحظة"
+
+#: app/templates/invoices/discounts.html:2
+#: app/templates/invoices/discounts.html:17
+#, fuzzy
+msgid "Discounts Analysis"
+msgstr "تحليل المبيعات"
+
+#: app/templates/invoices/discounts.html:19
+msgid "Invoice discounts breakdown by employee"
+msgstr "تحليل خصومات الفواتير حسب الموظف"
+
+#: app/templates/invoices/discounts.html:22
+#, fuzzy
+msgid "All Invoices"
+msgstr "الفواتير"
+
+#: app/templates/invoices/discounts.html:33
+#: app/templates/invoices/index.html:78 app/templates/reports/products.html:90
+msgid "All Employees"
+msgstr "جميع الموظفين"
+
+#: app/templates/invoices/discounts.html:40
+#, fuzzy
+msgid "From Date"
+msgstr "من"
+
+#: app/templates/invoices/discounts.html:44
+#, fuzzy
+msgid "To Date"
+msgstr "التاريخ"
+
+#: app/templates/invoices/discounts.html:48
+#, fuzzy
+msgid "Min Discount"
+msgstr "الخصم"
+
+#: app/templates/invoices/discounts.html:59
+#, fuzzy
+msgid "Clear"
+msgstr "السنة"
+
+#: app/templates/invoices/discounts.html:70
+#, fuzzy
+msgid "Total Discounts"
+msgstr "الخصم"
+
+#: app/templates/invoices/discounts.html:77
+#, fuzzy
+msgid "Invoices with Discount"
+msgstr "قائمة الفواتير"
+
+#: app/templates/invoices/discounts.html:79
+#, fuzzy
+msgid "invoices"
+msgstr "الفواتير"
+
+#: app/templates/invoices/discounts.html:84
+#, fuzzy
+msgid "Avg Discount"
+msgstr "الخصم"
+
+#: app/templates/invoices/discounts.html:93
+#, fuzzy
+msgid "with discounts"
+msgstr "الخصم"
+
+#: app/templates/invoices/discounts.html:105
+#, fuzzy
+msgid "By Employee"
+msgstr "الموظف"
+
+#: app/templates/invoices/discounts.html:112
+#, fuzzy
+msgid "Count"
+msgstr "الخصم"
+
+#: app/templates/invoices/discounts.html:113
+#, fuzzy
+msgid "Total Discount"
+msgstr "الخصم"
+
+#: app/templates/invoices/discounts.html:144
+#, fuzzy
+msgid "Discounted Invoices"
+msgstr "الفواتير المفتوحة"
+
+#: app/templates/invoices/discounts.html:145
+msgid "total"
+msgstr "الإجمالي"
+
+#: app/templates/invoices/discounts.html:151
+#: app/templates/invoices/index.html:289
+#, fuzzy
+msgid "Invoice"
+msgstr "الفواتير"
+
+#: app/templates/invoices/discounts.html:152
+#: app/templates/invoices/index.html:136
+#: app/templates/schedule/employee.html:162
+#: app/templates/uploads/history.html:26 app/templates/uploads/index.html:145
+msgid "Date"
+msgstr "التاريخ"
+
+#: app/templates/invoices/discounts.html:154
+#: app/templates/invoices/index.html:138
+msgid "Customer"
+msgstr "العميل"
+
+#: app/templates/invoices/discounts.html:157
+msgid "Net"
+msgstr "الصافي"
+
+#: app/templates/invoices/discounts.html:188
+#: app/templates/invoices/index.html:102 app/templates/invoices/index.html:180
+#: app/templates/invoices/index.html:316 app/templates/uploads/history.html:41
+msgid "In Progress"
+msgstr "قيد المعالجة"
+
+#: app/templates/invoices/discounts.html:188
+#: app/templates/invoices/index.html:103 app/templates/invoices/index.html:182
+#: app/templates/invoices/index.html:318
+msgid "Cancelled"
+msgstr "ملغي"
+
+#: app/templates/invoices/discounts.html:197
+msgid "No discounted invoices found for this filter."
+msgstr "لا توجد فواتير بها خصومات لهذا الفلتر."
+
+#: app/templates/invoices/index.html:34
+msgid "Track and manage open invoices by employee, date, and status"
+msgstr "تتبع وإدارة الفواتير المفتوحة حسب الموظف والتاريخ والحالة"
+
+#: app/templates/invoices/index.html:44
+msgid "Open Invoices"
+msgstr "الفواتير المفتوحة"
+
+#: app/templates/invoices/index.html:52
+msgid "Total Net (SAR)"
+msgstr "إجمالي الصافي (ريال)"
+
+#: app/templates/invoices/index.html:58
+msgid "Filtered Results"
+msgstr "نتائج التصفية"
+
+#: app/templates/invoices/index.html:64
+msgid "Pages"
+msgstr "الصفحات"
+
+#: app/templates/invoices/index.html:87 app/templates/reports/products.html:78
+msgid "From"
+msgstr "من"
+
+#: app/templates/invoices/index.html:92 app/templates/reports/products.html:82
+msgid "To"
+msgstr "إلى"
+
+#: app/templates/invoices/index.html:99
+msgid "Pending (default)"
+msgstr "معلق (افتراضي)"
+
+#: app/templates/invoices/index.html:107
+msgid "Search"
+msgstr "بحث"
+
+#: app/templates/invoices/index.html:109
+#, fuzzy
+msgid "Invoice / customer…"
+msgstr "قائمة الفواتير"
+
+#: app/templates/invoices/index.html:127
+msgid "Invoice List"
+msgstr "قائمة الفواتير"
+
+#: app/templates/invoices/index.html:140
+msgid "Net (SAR)"
+msgstr "الصافي (ريال)"
+
+#: app/templates/invoices/index.html:191
+#, fuzzy
+msgid "notes"
+msgstr "ملاحظات"
+
+#: app/templates/invoices/index.html:212
+#, fuzzy
+msgid "No invoices found."
+msgstr "الفواتير المفتوحة"
+
+#: app/templates/invoices/index.html:296
+#, fuzzy
+msgid "Select reason"
+msgstr "اختر موظفاً"
+
+#: app/templates/invoices/index.html:308
+#, fuzzy
+msgid "Enter note details…"
+msgstr "تفاصيل الفاتورة"
+
+#: app/templates/invoices/index.html:312
+msgid "Update Status"
+msgstr "تحديث الحالة"
+
+#: app/templates/invoices/index.html:314
+msgid "Keep current"
+msgstr "الاحتفاظ بالحالي"
+
+#: app/templates/reports/actual_vs_target.html:3
+#: app/templates/reports/actual_vs_target.html:37
+#: app/templates/reports/index.html:69
+msgid "Actual vs Target"
+msgstr "الفعلي مقابل الهدف"
+
+#: app/templates/reports/actual_vs_target.html:39
+#, fuzzy
+msgid "Monthly achievement comparison"
+msgstr "نظرة عامة على الإنجاز"
+
+#: app/templates/reports/actual_vs_target.html:43
+#: app/templates/reports/comparison.html:52
+#: app/templates/reports/employee.html:35 app/templates/reports/weekly.html:45
+#: app/templates/schedule/employee.html:74
+msgid "Print"
+msgstr "طباعة"
+
+#: app/templates/reports/actual_vs_target.html:47
+#: app/templates/reports/comparison.html:49
+#: app/templates/reports/employee.html:40 app/templates/reports/weekly.html:49
+msgid "Export Excel"
+msgstr "تصدير Excel"
+
+#: app/templates/reports/actual_vs_target.html:50
+#: app/templates/reports/employee.html:44 app/templates/reports/weekly.html:52
+msgid "Back"
+msgstr "رجوع"
+
+#: app/templates/reports/actual_vs_target.html:60
+#: app/templates/reports/comparison.html:28
+#: app/templates/reports/employee.html:66
+#: app/templates/reports/products.html:59 app/templates/reports/weekly.html:62
+#: app/templates/schedule/employee.html:84 app/templates/targets/index.html:95
+#: app/templates/targets/set.html:89
+msgid "Year"
+msgstr "السنة"
+
+#: app/templates/reports/actual_vs_target.html:68
+#: app/templates/reports/comparison.html:36
+#: app/templates/reports/employee.html:74
+#: app/templates/reports/products.html:48
+#: app/templates/reports/products.html:68 app/templates/reports/weekly.html:70
+#: app/templates/schedule/employee.html:92 app/templates/targets/index.html:103
+#: app/templates/targets/set.html:97
+msgid "Month"
+msgstr "الشهر"
+
+#: app/templates/reports/actual_vs_target.html:79
+#: app/templates/reports/comparison.html:44
+#: app/templates/reports/employee.html:85 app/templates/reports/weekly.html:81
+msgid "Apply"
+msgstr "تطبيق"
+
+#: app/templates/reports/actual_vs_target.html:88
+#: app/templates/reports/actual_vs_target.html:116
+#: app/templates/reports/actual_vs_target.html:177
+#: app/templates/reports/comparison.html:76
+#: app/templates/reports/comparison.html:145
+#: app/templates/targets/index.html:144 app/templates/targets/index.html:175
+msgid "Achieved"
+msgstr "المحقق"
+
+#: app/templates/reports/actual_vs_target.html:89
+#: app/templates/reports/actual_vs_target.html:120
+#: app/templates/reports/actual_vs_target.html:179
+#: app/templates/reports/actual_vs_target.html:212
+msgid "Needs Push"
+msgstr "يحتاج دفعة"
+
+#: app/templates/reports/actual_vs_target.html:90
+#: app/templates/reports/actual_vs_target.html:124
+#: app/templates/reports/actual_vs_target.html:181
+#: app/templates/reports/actual_vs_target.html:218
+msgid "Behind"
+msgstr "متأخر عن الهدف"
+
+#: app/templates/reports/actual_vs_target.html:102
+#: app/templates/reports/employee.html:122
+#, fuzzy
+msgid "Target (SAR)"
+msgstr "الأهداف"
+
+#: app/templates/reports/actual_vs_target.html:103
+#, fuzzy
+msgid "Achieved (SAR)"
+msgstr "المحقق"
+
+#: app/templates/reports/actual_vs_target.html:104
+#, fuzzy, python-format
+msgid "Achievement %%"
+msgstr "الإنجاز"
+
+#: app/templates/reports/actual_vs_target.html:106
+msgid "Variance"
+msgstr "الفارق"
+
+#: app/templates/reports/actual_vs_target.html:160
+msgid "No data found for the selected period."
+msgstr "لا توجد بيانات للفترة المحددة."
+
+#: app/templates/reports/actual_vs_target.html:169
+#, fuzzy
+msgid "Company Total"
+msgstr "هدف الشركة"
+
+#: app/templates/reports/actual_vs_target.html:206
+#, fuzzy
+msgid "On Target"
+msgstr "الهدف"
+
+#: app/templates/reports/comparison.html:2
+#: app/templates/reports/comparison.html:18
+#, fuzzy
+msgid "Employee Comparison"
+msgstr "المقارنة الأسبوعية"
+
+#: app/templates/reports/comparison.html:19
+msgid "Side-by-side performance comparison"
+msgstr "مقارنة الأداء جنباً إلى جنب"
+
+#: app/templates/reports/comparison.html:74 app/templates/targets/set.html:145
+msgid "Employee Name"
+msgstr "اسم الموظف"
+
+#: app/templates/reports/comparison.html:75
+#: app/templates/reports/comparison.html:144
+#: app/templates/reports/employee.html:304
+msgid "Target"
+msgstr "الهدف"
+
+#: app/templates/reports/comparison.html:77
+#: app/templates/reports/employee.html:155 app/templates/targets/index.html:176
+msgid "Remaining"
+msgstr "المتبقي"
+
+#: app/templates/reports/comparison.html:78
+#: app/templates/reports/employee.html:130 app/templates/targets/index.html:148
+msgid "Achievement"
+msgstr "الإنجاز"
+
+#: app/templates/reports/comparison.html:113
+msgid "No data available"
+msgstr "لا توجد بيانات"
+
+#: app/templates/reports/employee.html:3 app/templates/reports/employee.html:29
+#: app/templates/reports/index.html:55
+msgid "Employee Performance"
+msgstr "أداء الموظف"
+
+#: app/templates/reports/employee.html:57
+msgid "Select Employee"
+msgstr "اختر موظفاً"
+
+#: app/templates/reports/employee.html:116
+#, fuzzy
+msgid "Total Sales (SAR)"
+msgstr "مبيعات الشهر"
+
+#: app/templates/reports/employee.html:136
+#, fuzzy
+msgid "Daily Target Remaining"
+msgstr "الهدف اليومي"
+
+#: app/templates/reports/employee.html:145
+#, fuzzy
+msgid "Monthly Progress"
+msgstr "قيد المعالجة"
+
+#: app/templates/reports/employee.html:156
+#, fuzzy
+msgid "days left"
+msgstr "يوم إجازة"
+
+#: app/templates/reports/employee.html:167
+#, fuzzy
+msgid "Daily Sales vs Target"
+msgstr "الهدف اليومي"
+
+#: app/templates/reports/employee.html:179
+#, fuzzy
+msgid "By Category"
+msgstr "فئة المنتج"
+
+#: app/templates/reports/employee.html:191
+#: app/templates/reports/employee.html:284
+#, fuzzy
+msgid "Daily Sales"
+msgstr "الهدف اليومي"
+
+#: app/templates/reports/employee.html:192
+#, fuzzy
+msgid "days with sales"
+msgstr "مبيعات هذا الشهر"
+
+#: app/templates/reports/employee.html:199
+#: app/templates/reports/employee.html:207
+#, fuzzy
+msgid "Day"
+msgstr "عطلة رسمية"
+
+#: app/templates/reports/employee.html:200
+#: app/templates/reports/products.html:175
+#, fuzzy
+msgid "Sales (SAR)"
+msgstr "المبيعات"
+
+#: app/templates/reports/employee.html:214
+msgid "No sales records found for the selected period."
+msgstr "لا توجد سجلات مبيعات للفترة المحددة."
+
+#: app/templates/reports/employee.html:239
+#, fuzzy
+msgid "Select an Employee"
+msgstr "اختر موظفاً"
+
+#: app/templates/reports/employee.html:241
+msgid ""
+"Choose an employee from the dropdown above to view their performance "
+"report."
+msgstr ""
+
+#: app/templates/reports/employee.html:293
+#, fuzzy
+msgid "Cumulative"
+msgstr "نشط"
+
+#: app/templates/reports/index.html:43
+msgid "Detailed analysis and performance reports"
+msgstr "تقارير تفصيلية وتحليل الأداء"
+
+#: app/templates/reports/index.html:56
+msgid ""
+"Individual sales trends, KPIs, monthly chart, and product category "
+"breakdown."
+msgstr ""
+
+#: app/templates/reports/index.html:58 app/templates/reports/index.html:72
+#: app/templates/reports/index.html:86 app/templates/reports/index.html:100
+msgid "View Report"
+msgstr "عرض التقرير"
+
+#: app/templates/reports/index.html:70
+msgid ""
+"Compare actual monthly sales against targets. Color-coded achievement "
+"status."
+msgstr ""
+
+#: app/templates/reports/index.html:83 app/templates/reports/weekly.html:3
+#: app/templates/reports/weekly.html:39
+msgid "Weekly Comparison"
+msgstr "المقارنة الأسبوعية"
+
+#: app/templates/reports/index.html:84
+msgid "Current week vs previous week performance with trend indicators."
+msgstr "أداء الأسبوع الحالي مقارنةً بالأسبوع الماضي مع مؤشرات الاتجاه."
+
+#: app/templates/reports/index.html:98
+msgid "Track and manage open/pending invoices by employee, date, and status."
+msgstr "تتبع وإدارة الفواتير المفتوحة حسب الموظف والتاريخ والحالة."
+
+#: app/templates/reports/index.html:111
+msgid "Live Dashboard"
+msgstr "لوحة التحكم الحية"
+
+#: app/templates/reports/index.html:112
+msgid "Real-time KPIs, daily progress, and team performance overview."
+msgstr "مؤشرات الأداء الفورية، والتقدم اليومي، ونظرة عامة على أداء الفريق."
+
+#: app/templates/reports/index.html:114
+msgid "Go to Dashboard"
+msgstr "الذهاب للوحة التحكم"
+
+#: app/templates/reports/index.html:126
+msgid "AI-powered recommendations and alerts based on current performance data."
+msgstr "توصيات وتنبيهات ذكية بناءً على بيانات الأداء الحالية."
+
+#: app/templates/reports/index.html:128
+msgid "View Advice"
+msgstr "عرض النصائح"
+
+#: app/templates/reports/index.html:147
+msgid "Manage team"
+msgstr "إدارة الفريق"
+
+#: app/templates/reports/index.html:155
+msgid "Import data"
+msgstr "استيراد البيانات"
+
+#: app/templates/reports/index.html:163
+msgid "Set goals"
+msgstr "تحديد الأهداف"
+
+#: app/templates/reports/index.html:171
+msgid "View calendar"
+msgstr "عرض التقويم"
+
+#: app/templates/reports/products.html:2 app/templates/reports/products.html:28
+#, fuzzy
+msgid "Product Analysis"
+msgstr "فئة المنتج"
+
+#: app/templates/reports/products.html:30
+#, fuzzy
+msgid "Sales breakdown by product category"
+msgstr "فئة المنتج"
+
+#: app/templates/reports/products.html:52
+msgid "Date Range"
+msgstr "نطاق التاريخ"
+
+#: app/templates/reports/products.html:124
+#, fuzzy
+msgid "Total Sales"
+msgstr "مبيعات الشهر"
+
+#: app/templates/reports/products.html:131
+msgid "Categories"
+msgstr "الفئات"
+
+#: app/templates/reports/products.html:133
+#, fuzzy
+msgid "distinct"
+msgstr "الخصم"
+
+#: app/templates/reports/products.html:138
+#, fuzzy
+msgid "Total Items"
+msgstr "إجمالي الموظفين"
+
+#: app/templates/reports/products.html:145
+msgid "Total Qty"
+msgstr "إجمالي الكمية"
+
+#: app/templates/reports/products.html:147
+#, fuzzy
+msgid "units"
+msgstr "ملاحظات"
+
+#: app/templates/reports/products.html:156
+#, fuzzy
+msgid "Top Categories"
+msgstr "فئة المنتج"
+
+#: app/templates/reports/products.html:166
+msgid "Category Breakdown"
+msgstr "توزيع الفئات"
+
+#: app/templates/reports/products.html:167
+msgid "categories"
+msgstr "فئة"
+
+#: app/templates/reports/products.html:174
+#, fuzzy
+msgid "Category"
+msgstr "فئة المنتج"
+
+#: app/templates/reports/products.html:176
+msgid "Qty"
+msgstr "الكمية"
+
+#: app/templates/reports/products.html:177
+#, fuzzy
+msgid "Records"
+msgstr "التقارير"
+
+#: app/templates/reports/products.html:179
+#, fuzzy
+msgid "Share"
+msgstr "النسبة المئوية"
+
+#: app/templates/reports/products.html:229
+msgid "No product data for this period"
+msgstr "لا توجد بيانات منتجات لهذه الفترة"
+
+#: app/templates/reports/products.html:230
+msgid "Upload sales files that include product category information."
+msgstr "ارفع ملفات المبيعات التي تحتوي على معلومات فئة المنتج."
+
+#: app/templates/reports/weekly.html:41
+msgid "Week-by-week sales breakdown within the selected month"
+msgstr "تفصيل المبيعات أسبوعاً بأسبوع خلال الشهر المحدد"
+
+#: app/templates/reports/weekly.html:113
+#, fuzzy
+msgid "Great progress!"
+msgstr "التقدم"
+
+#: app/templates/reports/weekly.html:114
+#, python-format
+msgid "Sales are up %(pct)s%% vs the previous week. Keep the momentum!"
+msgstr "المبيعات ارتفعت %(pct)s%% مقارنةً بالأسبوع الماضي. استمر!"
+
+#: app/templates/reports/weekly.html:116
+msgid "Needs attention!"
+msgstr "يحتاج انتباهاً!"
+
+#: app/templates/reports/weekly.html:117
+#, python-format
+msgid "Sales are down %(pct)s%% vs the previous week. Push harder!"
+msgstr "المبيعات انخفضت %(pct)s%% مقارنةً بالأسبوع الماضي. اجتهد أكثر!"
+
+#: app/templates/reports/weekly.html:127
+#, fuzzy
+msgid "Weekly Sales by Employee"
+msgstr "اختر موظفاً"
+
+#: app/templates/reports/weekly.html:138
+msgid "W"
+msgstr "أ"
+
+#: app/templates/reports/weekly.html:140
+#, fuzzy
+msgid "Monthly Total"
+msgstr "مبيعات الشهر"
+
+#: app/templates/reports/weekly.html:141
+#, fuzzy
+msgid "Trend"
+msgstr "إرسال"
+
+#: app/templates/reports/weekly.html:142
+msgid "Message"
+msgstr "الرسالة"
+
+#: app/templates/reports/weekly.html:182
+msgid "Strong growth!"
+msgstr "نمو قوي!"
+
+#: app/templates/reports/weekly.html:186
+msgid "Improving — keep it up!"
+msgstr "تحسّن — استمر!"
+
+#: app/templates/reports/weekly.html:190
+msgid "Significant drop — review needed"
+msgstr "انخفاض كبير — يحتاج مراجعة"
+
+#: app/templates/reports/weekly.html:194
+msgid "Slight decline — push harder"
+msgstr "انخفاض طفيف — اجتهد أكثر"
+
+#: app/templates/reports/weekly.html:198
+#, fuzzy
+msgid "Stable performance"
+msgstr "أداء الموظف"
+
+#: app/templates/reports/weekly.html:207
+msgid "Week Total"
+msgstr "إجمالي الأسبوع"
+
+#: app/templates/reports/weekly.html:232
+msgid "No Data Found"
+msgstr "لا توجد بيانات"
+
+#: app/templates/reports/weekly.html:233
+msgid "No sales data for the selected month. Try uploading data first."
+msgstr "لا توجد بيانات مبيعات للشهر المحدد. جرب رفع البيانات أولاً."
+
+#: app/templates/reports/weekly.html:235 app/templates/uploads/index.html:3
+#: app/templates/uploads/index.html:54
+msgid "Upload Data"
+msgstr "رفع البيانات"
+
+#: app/templates/schedule/employee.html:2
+#: app/templates/schedule/employee.html:70
+msgid "Work Schedule"
+msgstr "جدول العمل"
+
+#: app/templates/schedule/employee.html:107
+#: app/templates/targets/index.html:121 app/templates/targets/set.html:110
+msgid "Working Days"
+msgstr "أيام العمل"
+
+#: app/templates/schedule/employee.html:124
+msgid "Sun"
+msgstr "أح"
+
+#: app/templates/schedule/employee.html:124
+msgid "Mon"
+msgstr "إث"
+
+#: app/templates/schedule/employee.html:124
+msgid "Tue"
+msgstr "ث"
+
+#: app/templates/schedule/employee.html:124
+msgid "Wed"
+msgstr "أر"
+
+#: app/templates/schedule/employee.html:124
+msgid "Thu"
+msgstr "خ"
+
+#: app/templates/schedule/employee.html:124
+msgid "Fri"
+msgstr "ج"
+
+#: app/templates/schedule/employee.html:124
+msgid "Sat"
+msgstr "س"
+
+#: app/templates/schedule/employee.html:155
+msgid "Schedule Details"
+msgstr "تفاصيل الجدول"
+
+#: app/templates/schedule/employee.html:163
+msgid "Shift"
+msgstr "الوردية"
+
+#: app/templates/schedule/employee.html:164
+msgid "Start Time"
+msgstr "وقت البداية"
+
+#: app/templates/schedule/employee.html:165
+msgid "End Time"
+msgstr "وقت النهاية"
+
+#: app/templates/schedule/employee.html:184
+msgid "No schedule entries this month"
+msgstr "لا توجد إدخالات في الجدول هذا الشهر"
+
+#: app/templates/targets/index.html:81
+#, fuzzy
+msgid "Sales Targets"
+msgstr "حفظ الأهداف"
+
+#: app/templates/targets/index.html:83
+msgid "Set monthly targets and allocate percentages per employee"
+msgstr "حدد الأهداف الشهرية ووزّع النسب على الموظفين"
+
+#: app/templates/targets/index.html:86
+#, fuzzy
+msgid "Edit Targets"
+msgstr "تحديد الأهداف"
+
+#: app/templates/targets/index.html:113
+msgid "Total Company Target"
+msgstr "الهدف الإجمالي للشركة"
+
+#: app/templates/targets/index.html:140 app/templates/targets/set.html:105
+msgid "Company Target"
+msgstr "هدف الشركة"
+
+#: app/templates/targets/index.html:171
+msgid "Pct Share"
+msgstr "النسبة المئوية"
+
+#: app/templates/targets/index.html:172 app/templates/targets/set.html:147
+msgid "Target Amount"
+msgstr "مبلغ الهدف"
+
+#: app/templates/targets/index.html:173 app/templates/targets/set.html:148
+msgid "Daily Target"
+msgstr "الهدف اليومي"
+
+#: app/templates/targets/index.html:174
+msgid "Progress"
+msgstr "التقدم"
+
+#: app/templates/targets/index.html:231
+msgid "No active employees found."
+msgstr "لا يوجد موظفون نشطون."
+
+#: app/templates/targets/index.html:235
+msgid "Add employees first"
+msgstr "أضف الموظفين أولاً"
+
+#: app/templates/targets/set.html:2 app/templates/targets/set.html:62
+msgid "Set Targets"
+msgstr "تحديد الأهداف"
+
+#: app/templates/targets/set.html:63
+msgid "Distribute monthly target among employees"
+msgstr "توزيع الهدف الشهري على الموظفين"
+
+#: app/templates/targets/set.html:72
+msgid "No active employees found"
+msgstr "لا يوجد موظفون نشطون"
+
+#: app/templates/targets/set.html:73
+msgid "Add employees first, then come back to set targets."
+msgstr "أضف الموظفين أولاً، ثم عد لتحديد الأهداف."
+
+#: app/templates/targets/set.html:75
+#, fuzzy
+msgid "Go to Employees"
+msgstr "إجمالي الموظفين"
+
+#: app/templates/targets/set.html:114
+#, fuzzy
+msgid "Remaining days this month"
+msgstr "هدفي اليومي المتبقي؟"
+
+#: app/templates/targets/set.html:131
+msgid "Equal Split"
+msgstr "توزيع متساوٍ"
+
+#: app/templates/targets/set.html:134
+msgid "Save Targets"
+msgstr "حفظ الأهداف"
+
+#: app/templates/targets/set.html:146
+msgid "Percentage"
+msgstr "النسبة المئوية"
+
+#: app/templates/uploads/history.html:2 app/templates/uploads/history.html:9
+#: app/templates/uploads/index.html:131
+msgid "Upload History"
+msgstr "سجل الرفع"
+
+#: app/templates/uploads/history.html:10
+msgid "All file import batches"
+msgstr "جميع دفعات استيراد الملفات"
+
+#: app/templates/uploads/history.html:20 app/templates/uploads/index.html:139
+msgid "Batch ID"
+msgstr "رقم الدفعة"
+
+#: app/templates/uploads/history.html:21 app/templates/uploads/index.html:140
+msgid "File"
+msgstr "الملف"
+
+#: app/templates/uploads/history.html:22 app/templates/uploads/index.html:81
+msgid "File Type"
+msgstr "نوع الملف"
+
+#: app/templates/uploads/history.html:23 app/templates/uploads/index.html:142
+msgid "Imported"
+msgstr "مستورد"
+
+#: app/templates/uploads/history.html:24
+msgid "Records Skipped"
+msgstr "السجلات المتخطاة"
+
+#: app/templates/uploads/history.html:39 app/templates/uploads/index.html:177
+msgid "Done"
+msgstr "تم"
+
+#: app/templates/uploads/history.html:43 app/templates/uploads/index.html:179
+msgid "Error"
+msgstr "خطأ"
+
+#: app/templates/uploads/history.html:49
+#, fuzzy
+msgid "No uploads yet"
+msgstr "لا توجد ملفات مرفوعة بعد."
+
+#: app/templates/uploads/index.html:56
+msgid "Import Excel reports: Sales, Productivity, or Pending Invoices"
+msgstr "استيراد تقارير Excel: المبيعات، الإنتاجية، أو الفواتير المعلقة"
+
+#: app/templates/uploads/index.html:65
+msgid "Upload File"
+msgstr "رفع ملف"
+
+#: app/templates/uploads/index.html:74
+msgid "Click to choose file or drag & drop"
+msgstr "انقر لاختيار ملف أو اسحب وأفلت"
+
+#: app/templates/uploads/index.html:75
+msgid "Supported formats: .xls, .xlsx, .xlsm"
+msgstr "الصيغ المدعومة: xls. ، xlsx. ، xlsm."
+
+#: app/templates/uploads/index.html:83
+msgid "Auto-detect"
+msgstr "اكتشاف تلقائي"
+
+#: app/templates/uploads/index.html:84
+msgid "Sales Detail Report"
+msgstr "تقرير تفصيل المبيعات"
+
+#: app/templates/uploads/index.html:85
+msgid "Productivity Report"
+msgstr "تقرير الإنتاجية"
+
+#: app/templates/uploads/index.html:88
+msgid "Auto-detect reads the filename to determine type."
+msgstr "الاكتشاف التلقائي يقرأ اسم الملف لتحديد النوع."
+
+#: app/templates/uploads/index.html:94
+msgid "Uploading & processing…"
+msgstr "جارٍ الرفع والمعالجة..."
+
+#: app/templates/uploads/index.html:107 app/templates/uploads/index.html:308
+msgid "Upload & Import"
+msgstr "رفع واستيراد"
+
+#: app/templates/uploads/index.html:116
+msgid "Tips"
+msgstr "نصائح"
+
+#: app/templates/uploads/index.html:118
+msgid ""
+"Filename containing \"PRODUCTIVITY\" → auto-detected as Productivity "
+"Report"
+msgstr "اسم الملف يحتوي على \"PRODUCTIVITY\" → يُكتشف تلقائياً كتقرير إنتاجية"
+
+#: app/templates/uploads/index.html:119
+msgid ""
+"Filename containing \"PENDING INVOICE\" → auto-detected as Pending "
+"Invoices"
+msgstr "اسم الملف يحتوي على \"PENDING INVOICE\" → يُكتشف تلقائياً كفواتير معلقة"
+
+#: app/templates/uploads/index.html:120
+msgid "All other Excel files → Sales Detail Report"
+msgstr "جميع ملفات Excel الأخرى → تقرير تفصيل المبيعات"
+
+#: app/templates/uploads/index.html:121
+msgid "Duplicate records are skipped automatically"
+msgstr "السجلات المكررة تُتجاهل تلقائياً"
+
+#: app/templates/uploads/index.html:132
+msgid "batches"
+msgstr "دفعات"
+
+#: app/templates/uploads/index.html:141
+#, fuzzy
+msgid "Type"
+msgstr "نوع الملف"
+
+#: app/templates/uploads/index.html:143
+#, fuzzy
+msgid "Skipped"
+msgstr "السجلات المتخطاة"
+
+#: app/templates/uploads/index.html:162
+msgid "Sales"
+msgstr "المبيعات"
+
+#: app/templates/uploads/index.html:164
+msgid "Productivity"
+msgstr "الإنتاجية"
+
+#: app/templates/uploads/index.html:184
+msgid "Processing"
+msgstr "قيد المعالجة"
+
+#: app/templates/uploads/index.html:191
+msgid "Delete this batch record?"
+msgstr "هل تريد حذف سجل الدفعة؟"
+
+#: app/templates/uploads/index.html:193
+msgid "Delete record"
+msgstr "حذف السجل"
+
+#: app/templates/uploads/index.html:204
+msgid "No uploads yet."
+msgstr "لا توجد ملفات مرفوعة بعد."
+
+#: app/templates/uploads/index.html:265
+msgid "Processing…"
+msgstr "جارٍ المعالجة..."
+
+#: app/templates/uploads/index.html:297
+msgid "Unknown error"
+msgstr "خطأ غير معروف"
+
+#: app/templates/uploads/index.html:302
+msgid "Network error. Please try again."
+msgstr "خطأ في الشبكة. يرجى المحاولة مرة أخرى."
+
+#~ msgid "Al-Badawi Pro"
+#~ msgstr "البدوي برو"
+
+#~ msgid "Target Achievement"
+#~ msgstr "نسبة الإنجاز"
+
+#~ msgid "Employee Progress"
+#~ msgstr "تقدم الموظفين"
+
+#~ msgid "Save"
+#~ msgstr "حفظ"
+
+#~ msgid "Save Shift"
+#~ msgstr "حفظ الوردية"
+
+#~ msgid "Add"
+#~ msgstr "إضافة"
+
+#~ msgid "Load"
+#~ msgstr "تحميل"
+
+#~ msgid "Send Email"
+#~ msgstr "إرسال بريد إلكتروني"
+
+#~ msgid "Sales Detail"
+#~ msgstr "تفاصيل المبيعات"
+
+#~ msgid "Amount"
+#~ msgstr "المبلغ"
+
+#~ msgid "Region"
+#~ msgstr "المنطقة"
+
+#~ msgid "Top Performer"
+#~ msgstr "أفضل موظف"
+
+#~ msgid "Keep up the great work!"
+#~ msgstr "استمر في العمل الرائع!"
+
+#~ msgid "You need to catch up on your target."
+#~ msgstr "تحتاج إلى اللحاق بهدفك."
+
+#~ msgid "Type your question..."
+#~ msgstr "اكتب سؤالك هنا..."
+
+#~ msgid "Add Alias"
+#~ msgstr "إضافة اسم بديل"
+
+#~ msgid "Evening"
+#~ msgstr "مسائي"
+
+#~ msgid "Sick Leave"
+#~ msgstr "إجازة مرضية"
+
+#~ msgid "Annual Leave"
+#~ msgstr "إجازة سنوية"
+
+#~ msgid "Monthly Summary"
+#~ msgstr "ملخص شهري"
+
+#~ msgid "Monthly shift calendar for all employees"
+#~ msgstr "جدول الورديات الشهري لجميع الموظفين"
+
+#~ msgid "Import Results"
+#~ msgstr "نتائج الاستيراد"
+
+#~ msgid "Records Imported"
+#~ msgstr "السجلات المستوردة"
+
+#~ msgid "Quick Links"
+#~ msgstr "روابط سريعة"
+
+#~ msgid "Payment Delay"
+#~ msgstr "تأخر السداد"
+
+#~ msgid "Dispute"
+#~ msgstr "نزاع"
+
+#~ msgid "Missing Documents"
+#~ msgstr "وثائق ناقصة"
+
+#~ msgid "Returned Goods"
+#~ msgstr "بضاعة مرتجعة"
+
+#~ msgid "Other"
+#~ msgstr "أخرى"
+
+#~ msgid "Chat"
+#~ msgstr "المحادثة"
+
+#~ msgid "Top seller this month?"
+#~ msgstr "أفضل بائع هذا الشهر؟"
+
+#~ msgid "Target achievement status?"
+#~ msgstr "نسبة تحقيق الأهداف؟"
+
+#~ msgid "Show pending invoices"
+#~ msgstr "عرض الفواتير المعلقة"
+
+#~ msgid "Performance vs last week?"
+#~ msgstr "الأداء مقارنةً بالأسبوع الماضي؟"
+
+#~ msgid "Weekly Schedule"
+#~ msgstr "الجدول الأسبوعي"
+
+#~ msgid "Weekly view"
+#~ msgstr "عرض أسبوعي"
+
+#~ msgid "Previous Week"
+#~ msgstr "الأسبوع السابق"
+
+#~ msgid "Next Week"
+#~ msgstr "الأسبوع التالي"
+
+#~ msgid "Current Week"
+#~ msgstr "الأسبوع الحالي"
+
+#~ msgid "Copy to Next Week"
+#~ msgstr "نسخ للأسبوع القادم"
+
+#~ msgid "Copied %(n)d shifts to next week."
+#~ msgstr "تم نسخ %(n)d وردية للأسبوع القادم."
+
+#~ msgid "Weekly schedule saved (%(n)d entries)."
+#~ msgstr "تم حفظ الجدول الأسبوعي (%(n)d إدخال)."
+
+#~ msgid "Apply to All"
+#~ msgstr "تطبيق على الجميع"
+
+#~ msgid "Set Shift"
+#~ msgstr "تحديد الوردية"
+
+#~ msgid "Split"
+#~ msgstr "مزدوج"
+
