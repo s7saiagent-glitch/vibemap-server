@@ -2,1340 +2,2034 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>كرم | Karam — المزادات الفاخرة</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>كرم | Karam</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0A0A0C;
-  --card: #1A1A1E;
-  --border: rgba(212,175,55,0.35);
-  --text1: #F2EFE9;
-  --text2: #B3AEA6;
-  --gold: #D4AF37;
-  --gold-light: rgba(212,175,55,0.13);
-  --countdown-bg: #111114;
-  --surface: #141416;
-  --input-bg: #1E1E23;
-  --success: #4CAF88;
-  --overlay: rgba(0,0,0,0.75);
-  --tab-bar: #111114;
-  --font-en-h: 'Playfair Display', serif;
-  --font-en-b: 'Inter', sans-serif;
-  --font-ar: 'Tajawal', sans-serif;
+:root{
+  --bg:#0A0A0C;--card:#1A1A1E;--border:rgba(212,175,55,.3);
+  --t1:#F2EFE9;--t2:#B3AEA6;--gold:#D4AF37;--goldl:rgba(212,175,55,.12);
+  --surface:#141416;--input:#1E1E23;--success:#3DAA72;--red:#CC2200;
+  --nav:#111114;--nav-border:rgba(212,175,55,.18);--overlay:rgba(0,0,0,.72);
+  --shadow:rgba(0,0,0,.4);
 }
-[data-theme="light"] {
-  --bg: #F9F7F2;
-  --card: #FFFFFF;
-  --border: rgba(184,134,11,0.18);
-  --text1: #1E1C19;
-  --text2: #6B625A;
-  --gold: #B8860B;
-  --gold-light: rgba(184,134,11,0.09);
-  --countdown-bg: #F3EDE4;
-  --surface: #F0EDE6;
-  --input-bg: #EEEBE4;
-  --success: #2E7D4F;
-  --overlay: rgba(0,0,0,0.42);
-  --tab-bar: #FFFFFF;
+[data-theme=light]{
+  --bg:#F9F7F2;--card:#FFFFFF;--border:rgba(184,134,11,.18);
+  --t1:#1E1C19;--t2:#6B625A;--gold:#B8860B;--goldl:rgba(184,134,11,.1);
+  --surface:#F0EDE6;--input:#EEEBE4;--success:#2E7D4F;
+  --nav:#FFFFFF;--nav-border:rgba(184,134,11,.15);--overlay:rgba(0,0,0,.42);
+  --shadow:rgba(184,134,11,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#060608;font-family:"Tajawal",sans-serif}
+[lang=en] body,[lang=en] *{font-family:"Inter",sans-serif}
+[lang=en] h1,[lang=en] h2,[lang=en] h3,[lang=en] .heading{font-family:"Playfair Display",serif}
+
+/* ─── PHONE SHELL ─── */
+.shell{
+  width:390px;height:844px;margin:auto;
+  margin-top:max(0px,calc((100vh - 844px)/2));
+  border-radius:48px;overflow:hidden;position:relative;
+  box-shadow:0 40px 100px rgba(0,0,0,.8),inset 0 0 0 1.5px #2a2a30;
+  display:flex;flex-direction:column;background:var(--bg);
+  transition:background .3s;
+}
+@media(max-height:860px){.shell{margin-top:0;border-radius:0;height:100vh;width:100%}}
+@media(max-width:420px){.shell{border-radius:0;height:100dvh;width:100%;margin-top:0}}
+
+/* ─── DESKTOP BG ─── */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;
+  background:radial-gradient(ellipse 60% 50% at 30% 40%,rgba(212,175,55,.06),transparent),
+             radial-gradient(ellipse 50% 40% at 70% 60%,rgba(212,175,55,.04),transparent),#060608;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--text1); font-family:var(--font-ar); transition:background .35s, color .35s; }
-[lang="en"] body, [lang="en"] * { font-family:var(--font-en-b); }
-[lang="en"] h1,[lang="en"] h2,[lang="en"] h3 { font-family:var(--font-en-h); }
-
-/* ── PHONE SHELL ── */
-.shell {
-  width:390px; height:844px; margin:auto; margin-top:max(0px, calc((100vh - 844px)/2));
-  border-radius:50px; overflow:hidden; position:relative;
-  box-shadow:0 40px 120px rgba(0,0,0,.7), 0 0 0 2px #2a2a2e;
-  display:flex; flex-direction:column;
-  background:var(--bg); transition:background .35s;
+/* ─── STATUS BAR ─── */
+.sbar{
+  height:44px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;flex-shrink:0;background:var(--bg);transition:background .3s;
 }
-@media (max-height:860px){ .shell{ margin-top:0; border-radius:0; height:100vh; width:100%; } }
-@media (max-width:420px){ .shell{ border-radius:0; height:100dvh; width:100%; margin-top:0; } }
+.sbar-time{font-size:15px;font-weight:700;color:var(--t1)}
+.sbar-icons{display:flex;gap:5px;align-items:center;font-size:14px}
 
-/* ── STATUS BAR ── */
-.status-bar {
-  height:44px; display:flex; align-items:center; justify-content:space-between;
-  padding:0 20px; flex-shrink:0; background:var(--bg); transition:background .35s;
-  font-size:12px; font-weight:600; color:var(--text2);
+/* ─── TOAST ─── */
+.toast{
+  position:absolute;top:56px;left:50%;transform:translateX(-50%) translateY(-10px);
+  background:var(--card);border:1px solid var(--gold);border-radius:24px;
+  padding:10px 22px;font-size:13px;font-weight:600;color:var(--t1);
+  white-space:nowrap;opacity:0;pointer-events:none;z-index:999;
+  box-shadow:0 8px 24px var(--shadow);transition:all .3s;
 }
-.status-time { font-size:15px; font-weight:700; color:var(--text1); }
-.status-icons { display:flex; gap:6px; align-items:center; }
-.battery { width:22px; height:11px; border:1.5px solid currentColor; border-radius:3px; position:relative; }
-.battery::after { content:''; position:absolute; right:-5px; top:50%; transform:translateY(-50%); width:3px; height:6px; background:currentColor; border-radius:0 1px 1px 0; }
-.battery-fill { height:100%; background:var(--gold); border-radius:1.5px; width:70%; }
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ── SCREENS ── */
-.screen { position:absolute; inset:0; display:flex; flex-direction:column; overflow:hidden; opacity:0; pointer-events:none; transition:opacity .3s, transform .3s; transform:translateX(30px); }
-.screen.active { opacity:1; pointer-events:all; transform:translateX(0); }
-.screen.slide-left { transform:translateX(-30px); }
-.screen-body { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
-.screen-body::-webkit-scrollbar { display:none; }
-
-/* ── SPLASH ── */
-#splash { background:var(--bg); justify-content:center; align-items:center; gap:0; }
-.splash-logo { text-align:center; animation:splashIn .9s cubic-bezier(.34,1.56,.64,1) forwards; }
-.splash-ar { font-size:80px; font-weight:300; color:var(--gold); letter-spacing:6px; font-family:var(--font-ar); line-height:1; }
-.splash-line { height:1px; background:var(--gold); width:0; margin:14px auto; animation:lineExpand 1s 0.8s ease forwards; }
-.splash-en { font-size:18px; letter-spacing:14px; color:var(--text1); font-family:var(--font-en-h); opacity:0; animation:fadeIn .6s 1.4s forwards; }
-.splash-sub { position:absolute; bottom:80px; font-size:12px; letter-spacing:2px; color:var(--text2); opacity:0; animation:fadeIn .6s 1.8s forwards; }
-@keyframes splashIn { from{opacity:0;transform:scale(.65)} to{opacity:1;transform:scale(1)} }
-@keyframes lineExpand { from{width:0} to{width:180px} }
-@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-
-/* ── ONBOARDING ── */
-#onboarding { background:var(--bg); }
-.ob-center { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:32px; gap:28px; text-align:center; }
-.ob-emoji { font-size:72px; }
-.ob-title { font-size:26px; font-weight:700; color:var(--text1); }
-.lang-row { display:flex; gap:14px; width:100%; }
-.lang-btn { flex:1; padding:20px 16px; border-radius:18px; border:1px solid var(--gold); background:var(--card); cursor:pointer; transition:all .2s; display:flex; flex-direction:column; align-items:center; gap:4px; }
-.lang-btn:hover, .lang-btn.sel { background:var(--gold); }
-.lang-btn-main { font-size:20px; font-weight:700; color:var(--gold); transition:color .2s; }
-.lang-btn:hover .lang-btn-main, .lang-btn.sel .lang-btn-main { color:#000; }
-.lang-btn-sub { font-size:12px; color:var(--text2); transition:color .2s; }
-.lang-btn:hover .lang-btn-sub, .lang-btn.sel .lang-btn-sub { color:#333; }
-
-.theme-col { display:flex; flex-direction:column; gap:12px; width:100%; }
-.theme-btn { display:flex; align-items:center; gap:14px; padding:18px; border-radius:16px; border:1px solid var(--gold); background:var(--card); cursor:pointer; transition:all .2s; }
-.theme-btn:hover, .theme-btn.sel { background:var(--gold); }
-.theme-btn-emoji { font-size:24px; }
-.theme-btn-label { font-size:15px; font-weight:600; color:var(--gold); transition:color .2s; }
-.theme-btn:hover .theme-btn-label, .theme-btn.sel .theme-btn-label { color:#000; }
-
-.ob-slides-wrap { flex:1; display:flex; flex-direction:column; }
-.ob-slides { display:flex; flex:1; transition:transform .4s ease; }
-.ob-slide { min-width:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:40px; gap:24px; }
-.ob-slide-emoji { font-size:88px; }
-.ob-slide-title { font-size:26px; font-weight:700; color:var(--text1); text-align:center; }
-.ob-slide-desc { font-size:15px; line-height:1.7; color:var(--text2); text-align:center; }
-
-.ob-footer { padding:32px; display:flex; flex-direction:column; align-items:center; gap:16px; }
-.ob-dots { display:flex; gap:8px; }
-.ob-dot { width:8px; height:8px; border-radius:50%; background:var(--text2); transition:background .3s, transform .3s; }
-.ob-dot.active { background:var(--gold); transform:scale(1.3); }
-.ob-next { width:100%; padding:18px; border-radius:14px; background:var(--gold); border:none; color:#000; font-size:16px; font-weight:700; cursor:pointer; transition:transform .15s, opacity .15s; font-family:inherit; }
-.ob-next:active { transform:scale(.97); }
-.ob-skip { font-size:14px; color:var(--text2); cursor:pointer; background:none; border:none; font-family:inherit; }
-
-/* ── HEADER ── */
-.top-bar { padding:12px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:0.5px solid var(--border); background:var(--bg); flex-shrink:0; transition:background .35s; }
-.logo-wrap { display:flex; flex-direction:column; }
-.logo-ar { font-size:26px; font-weight:300; color:var(--gold); letter-spacing:2px; font-family:var(--font-ar); line-height:1.1; }
-.logo-en { font-size:10px; letter-spacing:5px; color:var(--text2); font-family:var(--font-en-h); }
-.top-actions { display:flex; gap:8px; }
-.icon-btn { width:36px; height:36px; border-radius:50%; background:var(--gold-light); border:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:700; color:var(--gold); transition:all .2s; }
-.icon-btn:hover { background:var(--gold); color:#000; }
-
-/* ── LIVE BANNER ── */
-.live-banner { margin:14px 16px; border-radius:14px; border:1px solid var(--gold); padding:14px; display:flex; align-items:center; gap:12px; background:var(--card); cursor:pointer; transition:transform .15s; flex-shrink:0; }
-.live-banner:hover { transform:scale(.99); }
-.live-badge { display:flex; align-items:center; gap:5px; background:#CC0000; padding:4px 10px; border-radius:20px; flex-shrink:0; }
-.live-dot { width:6px; height:6px; border-radius:50%; background:#FFF; animation:pulse 1.2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-.live-badge-text { color:#FFF; font-size:11px; font-weight:700; letter-spacing:1px; }
-.live-banner-title { flex:1; font-size:14px; font-weight:600; color:var(--text1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.live-banner-arrow { font-size:16px; color:var(--gold); font-weight:700; }
-
-/* ── TABS ── */
-.tab-bar { display:flex; border-bottom:0.5px solid var(--border); padding:0 16px; flex-shrink:0; }
-.tab { flex:1; padding:12px 4px; text-align:center; cursor:pointer; position:relative; font-size:11.5px; font-weight:600; color:var(--text2); letter-spacing:.5px; transition:color .2s; }
-.tab.active { color:var(--gold); }
-.tab::after { content:''; position:absolute; bottom:0; left:20%; width:60%; height:2px; background:var(--gold); border-radius:1px; opacity:0; transition:opacity .2s; }
-.tab.active::after { opacity:1; }
-
-/* ── AUCTION CARDS ── */
-.cards-list { padding:16px; display:flex; flex-direction:column; gap:16px; }
-.auction-card { background:var(--card); border-radius:16px; border:0.5px solid var(--border); overflow:hidden; cursor:pointer; transition:transform .2s, box-shadow .2s; }
-.auction-card:hover { transform:scale(.99); box-shadow:0 8px 32px rgba(212,175,55,.08); }
-.auction-card.featured { border-width:1px; }
-.card-image { position:relative; height:200px; overflow:hidden; }
-.card-image img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s; }
-.auction-card:hover .card-image img { transform:scale(1.03); }
-.card-live-badge { position:absolute; top:12px; inset-inline-start:12px; display:flex; align-items:center; gap:4px; background:#CC0000; padding:4px 10px; border-radius:20px; }
-.card-cert { position:absolute; bottom:12px; inset-inline-end:12px; background:var(--gold-light); border:0.5px solid var(--gold); padding:3px 8px; border-radius:6px; font-size:10px; font-weight:600; color:var(--gold); }
-.card-body { padding:16px; display:flex; flex-direction:column; gap:12px; }
-.card-name { font-size:16px; font-weight:700; color:var(--text1); line-height:1.35; }
-.card-meta { display:flex; align-items:center; justify-content:space-between; }
-.card-bid-wrap { display:flex; flex-direction:column; }
-.card-bid-label { font-size:10px; text-transform:uppercase; letter-spacing:.8px; color:var(--text2); margin-bottom:2px; }
-.card-bid { font-size:18px; font-weight:800; color:var(--gold); letter-spacing:.5px; }
-.countdown-compact { background:var(--countdown-bg); border-radius:6px; padding:4px 10px; font-size:13px; font-weight:700; letter-spacing:1px; color:var(--gold); font-variant-numeric:tabular-nums; }
-.countdown-compact.urgent { color:#FF4444; animation:blink .5s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.6} }
-.bid-now-btn { width:100%; padding:12px; border-radius:10px; background:var(--gold); border:none; color:#000; font-size:14px; font-weight:700; letter-spacing:.5px; cursor:pointer; transition:transform .15s, opacity .15s; font-family:inherit; }
-.bid-now-btn:active { transform:scale(.97); opacity:.9; }
-
-/* ── BOTTOM NAV ── */
-.bottom-nav { height:80px; background:var(--tab-bar); border-top:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-around; padding-bottom:16px; flex-shrink:0; transition:background .35s; }
-.nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:4px 20px; }
-.nav-icon { font-size:22px; opacity:.5; transition:opacity .2s; }
-.nav-label { font-size:10px; color:var(--text2); font-weight:500; transition:color .2s; }
-.nav-item.active .nav-icon { opacity:1; }
-.nav-item.active .nav-label { color:var(--gold); }
-
-/* ── LIVE AUCTION SCREEN ── */
-.live-header { padding:12px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:0.5px solid var(--border); background:var(--bg); flex-shrink:0; transition:background .35s; }
-.back-btn { font-size:15px; font-weight:600; color:var(--gold); cursor:pointer; background:none; border:none; font-family:inherit; display:flex; align-items:center; gap:4px; }
-.live-screen-badge { display:flex; align-items:center; gap:5px; background:#CC0000; padding:4px 10px; border-radius:20px; }
-.attendees { font-size:13px; color:var(--text2); }
-
-.video-frame { height:220px; background:linear-gradient(135deg,var(--surface),var(--card)); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.video-inner { width:88%; height:180px; border:1px solid var(--gold); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
-.video-emoji { font-size:44px; }
-.video-label { font-size:13px; color:var(--text2); }
-
-.live-content { padding:20px; display:flex; flex-direction:column; gap:18px; }
-.item-title { font-size:21px; font-weight:700; color:var(--text1); line-height:1.4; }
-
-.section-card { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:18px; }
-.section-label { font-size:10.5px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:var(--text2); margin-bottom:14px; }
-
-/* ── COUNTDOWN FULL ── */
-.countdown-full { display:flex; align-items:center; justify-content:center; gap:4px; }
-.cd-unit { display:flex; flex-direction:column; align-items:center; min-width:56px; }
-.cd-box { background:var(--countdown-bg); border-radius:10px; padding:10px 12px; min-width:56px; text-align:center; }
-.cd-val { font-size:30px; font-weight:700; color:var(--gold); letter-spacing:2px; font-variant-numeric:tabular-nums; }
-.cd-val.urgent { color:#FF4444; }
-.cd-label { font-size:9.5px; color:var(--text2); margin-top:5px; text-transform:uppercase; letter-spacing:1px; }
-.cd-sep { font-size:26px; font-weight:700; color:var(--gold); padding-bottom:18px; }
-
-/* ── BID SECTION ── */
-.bid-section { text-align:center; }
-.current-bid { font-size:44px; font-weight:800; color:var(--gold); letter-spacing:1px; transition:transform .3s; display:inline-block; }
-.current-bid.pulse { animation:bidPulse .4s ease; }
-@keyframes bidPulse { 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
-.winning-tag { font-size:13px; font-weight:600; color:var(--success); margin-top:6px; }
-
-/* ── BID CHIPS ── */
-.chips-row { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
-.chip { padding:10px 18px; border-radius:24px; border:1px solid var(--gold); background:var(--gold-light); color:var(--gold); font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; font-family:inherit; }
-.chip:hover, .chip.sel { background:var(--gold); color:#000; }
-
-/* ── PLACE BID BTN ── */
-.place-bid-btn { width:100%; padding:18px; border-radius:14px; background:var(--gold); border:none; color:#000; font-size:17px; font-weight:800; letter-spacing:.5px; cursor:pointer; transition:transform .15s, opacity .2s; font-family:inherit; }
-.place-bid-btn:active { transform:scale(.97); }
-
-/* ── ANTI SNIPE BANNER ── */
-.antsnipe { background:var(--gold-light); border:0.5px solid var(--gold); border-radius:10px; padding:12px; text-align:center; font-size:14px; font-weight:700; color:var(--gold); display:none; }
-.antsnipe.show { display:block; animation:slideDown .3s ease; }
-@keyframes slideDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
-
-/* ── BID LIST ── */
-.bid-list { display:flex; flex-direction:column; }
-.bid-row { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:0.5px solid var(--border); }
-.bid-row:first-child { background:var(--gold-light); }
-.bid-row:last-child { border-bottom:none; }
-.bid-left { display:flex; flex-direction:column; }
-.bid-who { font-size:13px; font-weight:500; color:var(--text2); }
-.bid-time-text { font-size:11px; color:var(--text2); opacity:.7; margin-top:2px; }
-.bid-amount { font-size:15px; font-weight:700; color:var(--text1); }
-.bid-row:first-child .bid-amount { color:var(--gold); }
-
-/* ── ITEM DETAIL ── */
-.detail-header { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:0.5px solid var(--border); background:var(--bg); flex-shrink:0; transition:background .35s; }
-.detail-title { font-size:16px; font-weight:600; color:var(--text1); }
-
-.slider-wrap { position:relative; overflow:hidden; height:300px; }
-.slides-track { display:flex; height:100%; transition:transform .4s ease; }
-.slide-img { min-width:100%; height:100%; object-fit:cover; }
-.slider-dots { position:absolute; bottom:12px; left:0; right:0; display:flex; justify-content:center; gap:6px; }
-.slider-dot { width:6px; height:6px; border-radius:50%; background:var(--text2); transition:background .3s; }
-.slider-dot.active { background:var(--gold); }
-.slide-live-tag { position:absolute; top:12px; inset-inline-start:12px; display:flex; align-items:center; gap:4px; background:#CC0000; padding:4px 10px; border-radius:20px; }
-
-.detail-content { padding:20px; display:flex; flex-direction:column; gap:16px; }
-.detail-name-row { display:flex; align-items:center; gap:12px; }
-.detail-name { font-size:22px; font-weight:700; color:var(--text1); flex:1; line-height:1.35; }
-.cert-circle { width:36px; height:36px; border-radius:50%; border:0.5px solid var(--gold); background:var(--gold-light); display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--gold); flex-shrink:0; }
-
-.bid-info-row { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:16px; display:flex; align-items:center; justify-content:space-between; }
-.bid-info-col { display:flex; flex-direction:column; }
-.bid-info-label { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text2); margin-bottom:4px; }
-.bid-info-val { font-size:24px; font-weight:800; color:var(--gold); }
-
-.info-card { background:var(--card); border:0.5px solid var(--border); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px; }
-.info-card-title { font-size:10.5px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:var(--gold); }
-.info-card-body { font-size:14px; line-height:1.6; color:var(--text1); opacity:.9; }
-
-.cert-card { background:var(--gold-light); border:0.5px solid var(--gold); border-radius:14px; padding:16px; display:flex; align-items:center; gap:12px; }
-.cert-emoji { font-size:34px; }
-.cert-info-title { font-size:14px; font-weight:700; color:var(--gold); }
-.cert-info-sub { font-size:12px; color:var(--text2); }
-
-.cta-btn { width:100%; padding:18px; border-radius:14px; background:var(--gold); border:none; color:#000; font-size:16px; font-weight:700; letter-spacing:.5px; cursor:pointer; transition:all .2s; font-family:inherit; }
-.cta-btn:hover { opacity:.9; }
-.cta-btn:active { transform:scale(.97); }
-.cta-btn.reg { background:var(--gold-light); color:var(--gold); border:1px solid var(--gold); }
-
-/* ── SETTINGS ── */
-.settings-content { padding:20px; display:flex; flex-direction:column; gap:16px; }
-.settings-section { background:var(--card); border:0.5px solid var(--border); border-radius:16px; overflow:hidden; }
-.settings-section-title { font-size:10.5px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:var(--gold); padding:14px 16px 6px; }
-.settings-option { padding:14px 16px; display:flex; align-items:center; justify-content:space-between; border-top:0.5px solid var(--border); cursor:pointer; transition:background .15s; }
-.settings-option:first-of-type { border-top:none; }
-.settings-option:hover { background:var(--gold-light); }
-.settings-opt-label { font-size:15px; font-weight:500; color:var(--text1); }
-.settings-opt-label.active { color:var(--gold); }
-.settings-checkmark { font-size:16px; font-weight:700; color:var(--gold); }
-
-/* ── MODAL ── */
-.modal-overlay { position:absolute; inset:0; background:var(--overlay); display:flex; align-items:flex-end; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity .3s; }
-.modal-overlay.open { opacity:1; pointer-events:all; }
-.modal { width:100%; background:var(--card); border-top-left-radius:26px; border-top-right-radius:26px; border-top:0.5px solid var(--border); border-inline:0.5px solid var(--border); padding:28px; display:flex; flex-direction:column; gap:18px; transform:translateY(100%); transition:transform .35s cubic-bezier(.32,.72,0,1); }
-.modal-overlay.open .modal { transform:translateY(0); }
-.modal-title { font-size:18px; font-weight:700; color:var(--text1); text-align:center; }
-.modal-bid-amount { font-size:38px; font-weight:800; color:var(--gold); text-align:center; }
-.modal-input { background:var(--input-bg); border:0.5px solid var(--border); border-radius:10px; padding:14px; font-size:18px; color:var(--text1); font-family:inherit; width:100%; outline:none; text-align:inherit; }
-.modal-input:focus { border-color:var(--gold); }
-.modal-actions { display:flex; gap:12px; }
-.modal-cancel { flex:1; padding:16px; border-radius:12px; border:0.5px solid var(--border); background:none; color:var(--text2); font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }
-.modal-confirm { flex:1; padding:16px; border-radius:12px; background:var(--gold); border:none; color:#000; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; }
-
-/* ── TOASTER ── */
-.toast { position:absolute; top:60px; left:50%; transform:translateX(-50%) translateY(-20px); background:var(--card); border:0.5px solid var(--gold); border-radius:12px; padding:12px 20px; font-size:14px; font-weight:600; color:var(--text1); white-space:nowrap; opacity:0; transition:all .3s; z-index:200; pointer-events:none; box-shadow:0 8px 24px rgba(0,0,0,.3); }
-.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-
-/* ── GOLD DIVIDER ── */
-.gold-divider { height:0.5px; background:var(--border); margin:0; }
-
-/* ── SCROLLBAR CUSTOM ── */
-.screen-body { scrollbar-width:none; }
-.screen-body::-webkit-scrollbar { display:none; }
-
-/* ── DESKTOP HINT ── */
-.desktop-bg {
-  position:fixed; inset:0; background:radial-gradient(ellipse at 30% 40%, rgba(212,175,55,.07), transparent 60%),
-  radial-gradient(ellipse at 70% 60%, rgba(212,175,55,.05), transparent 60%), #050507;
-  display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:24px;
-  z-index:-1;
+/* ─── SCREEN SYSTEM ─── */
+.screen{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transition:opacity .28s,transform .28s;
+  transform:translateX(28px);background:var(--bg);
 }
-.desktop-title { font-family:var(--font-ar); font-size:22px; color:var(--gold); letter-spacing:3px; opacity:.4; margin-bottom:4px; }
-.desktop-sub { font-family:var(--font-en-h); font-size:11px; letter-spacing:8px; color:rgba(212,175,55,.3); }
-@media (max-width:420px) { .desktop-bg { display:none; } }
+.screen.active{opacity:1;pointer-events:all;transform:translateX(0)}
+.screen.back-enter{transform:translateX(-28px)}
+.scrollable{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.scrollable::-webkit-scrollbar{display:none}
+
+/* ─── TOP BAR ─── */
+.topbar{
+  height:56px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;flex-shrink:0;background:var(--bg);
+  border-bottom:.5px solid var(--border);transition:background .3s;position:relative;z-index:2;
+}
+.topbar-logo-ar{font-size:24px;font-weight:300;color:var(--gold);letter-spacing:2px;line-height:1}
+.topbar-logo-en{font-size:9px;letter-spacing:5px;color:var(--t2);font-family:"Playfair Display",serif}
+.topbar-actions{display:flex;gap:8px}
+.ico-btn{
+  width:34px;height:34px;border-radius:50%;background:var(--goldl);
+  border:.5px solid var(--border);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:14px;color:var(--gold);font-weight:700;transition:all .18s;
+}
+.ico-btn:hover{background:var(--gold);color:#000}
+
+/* ─── SEARCH BAR ─── */
+.search-wrap{padding:10px 16px;flex-shrink:0}
+.search-bar{
+  width:100%;height:42px;border-radius:21px;
+  background:var(--input);border:.5px solid var(--border);
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+}
+.search-icon{font-size:15px;opacity:.5}
+.search-placeholder{font-size:14px;color:var(--t2)}
+
+/* ─── STORIES ─── */
+.stories-wrap{padding:8px 0 10px;flex-shrink:0}
+.stories-row{display:flex;gap:14px;padding:0 16px;overflow-x:auto;scrollbar-width:none}
+.stories-row::-webkit-scrollbar{display:none}
+.story{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;flex-shrink:0}
+.story-ring{
+  width:58px;height:58px;border-radius:50%;padding:2px;
+  background:linear-gradient(135deg,var(--gold),#8B6914);
+}
+.story-avatar{
+  width:100%;height:100%;border-radius:50%;background:var(--card);
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  border:2px solid var(--bg);
+}
+.story-name{font-size:11px;color:var(--t2);max-width:60px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ─── CATEGORY CHIPS ─── */
+.chips-scroll{padding:0 16px 10px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.chips-scroll::-webkit-scrollbar{display:none}
+.chips-row-h{display:flex;gap:8px;width:max-content}
+.chip-cat{
+  padding:7px 16px;border-radius:20px;border:.5px solid var(--border);
+  background:var(--card);font-size:13px;font-weight:600;color:var(--t2);
+  cursor:pointer;white-space:nowrap;transition:all .18s;flex-shrink:0;
+}
+.chip-cat.active{background:var(--gold);color:#000;border-color:var(--gold)}
+.chip-cat:hover:not(.active){background:var(--goldl);color:var(--gold)}
+
+/* ─── SECTION HEADER ─── */
+.sec-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 10px;flex-shrink:0;
+}
+.sec-title{font-size:16px;font-weight:700;color:var(--t1)}
+.sec-link{font-size:13px;color:var(--gold);cursor:pointer}
+
+/* ─── LIVE AUCTIONS STRIP ─── */
+.live-strip{padding:0 16px 16px;overflow-x:auto;scrollbar-width:none}
+.live-strip::-webkit-scrollbar{display:none}
+.live-cards-row{display:flex;gap:12px;width:max-content}
+.live-card{
+  width:200px;background:var(--card);border-radius:16px;
+  border:1px solid var(--gold);overflow:hidden;cursor:pointer;
+  transition:transform .18s;flex-shrink:0;
+}
+.live-card:hover{transform:scale(.98)}
+.live-card-img{height:120px;position:relative;overflow:hidden}
+.live-card-img img{width:100%;height:100%;object-fit:cover}
+.live-card-body{padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.lc-name{font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc-bid{font-size:12px;color:var(--gold);font-weight:700}
+.lc-cd{font-size:11px;color:var(--t2);font-variant-numeric:tabular-nums}
+
+/* ─── LISTINGS GRID ─── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 12px 80px}
+.listing-card{
+  background:var(--card);border-radius:14px;
+  border:.5px solid var(--border);overflow:hidden;cursor:pointer;
+  transition:transform .18s,box-shadow .18s;
+}
+.listing-card:hover{transform:scale(.98);box-shadow:0 8px 24px var(--shadow)}
+.lcard-img{height:140px;position:relative;overflow:hidden}
+.lcard-img img{width:100%;height:100%;object-fit:cover;display:block}
+.type-badge{
+  position:absolute;top:8px;inset-inline-start:8px;
+  padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700;
+}
+.type-badge.auction{background:#CC2200;color:#fff}
+.type-badge.direct{background:rgba(30,30,30,.85);color:var(--gold);border:.5px solid var(--gold)}
+.lcard-body{padding:10px 10px 12px;display:flex;flex-direction:column;gap:5px}
+.lcard-name{font-size:13px;font-weight:700;color:var(--t1);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lcard-price{font-size:15px;font-weight:800;color:var(--gold)}
+.lcard-meta{display:flex;align-items:center;justify-content:space-between}
+.lcard-city{font-size:10px;color:var(--t2)}
+.lcard-cd{font-size:10px;color:var(--t2);font-variant-numeric:tabular-nums}
+
+/* ─── BACK HEADER ─── */
+.back-hdr{
+  height:54px;display:flex;align-items:center;gap:12px;
+  padding:0 16px;border-bottom:.5px solid var(--border);
+  flex-shrink:0;background:var(--bg);transition:background .3s;
+}
+.back-btn{
+  font-size:22px;color:var(--gold);cursor:pointer;background:none;
+  border:none;font-family:inherit;line-height:1;
+}
+.back-hdr-title{font-size:16px;font-weight:600;color:var(--t1)}
+
+/* ─── ITEM DETAIL ─── */
+.slider-wrap{position:relative;overflow:hidden;height:280px;flex-shrink:0}
+.slides-track{display:flex;height:100%;transition:transform .35s ease}
+.slide-img{min-width:100%;height:100%;object-fit:cover;display:block}
+.slider-dots-wrap{position:absolute;bottom:10px;inset-inline-start:0;inset-inline-end:0;display:flex;justify-content:center;gap:6px}
+.slider-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);transition:all .2s}
+.slider-dot.active{background:var(--gold);transform:scale(1.3)}
+
+.detail-content{padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.detail-name{font-size:20px;font-weight:700;color:var(--t1);flex:1;line-height:1.3}
+.fav-btn{
+  width:36px;height:36px;border-radius:50%;background:var(--goldl);
+  border:.5px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;flex-shrink:0;transition:all .18s;
+}
+.fav-btn.active{background:var(--gold)}
+.detail-price{font-size:26px;font-weight:800;color:var(--gold)}
+.detail-price-label{font-size:11px;color:var(--t2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.8px}
+.price-box{background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px 16px}
+
+.seller-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;
+}
+.seller-avatar{width:44px;height:44px;border-radius:50%;background:var(--goldl);display:flex;align-items:center;justify-content:center;font-size:22px;border:.5px solid var(--gold);flex-shrink:0}
+.seller-info{flex:1}
+.seller-name{font-size:14px;font-weight:700;color:var(--t1)}
+.seller-rating{font-size:12px;color:var(--t2);margin-top:2px}
+.follow-btn{padding:6px 16px;border-radius:20px;background:var(--goldl);border:.5px solid var(--gold);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s}
+.follow-btn:hover,.follow-btn.following{background:var(--gold);color:#000}
+
+.info-card{background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.info-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gold)}
+.info-body{font-size:14px;line-height:1.65;color:var(--t1);opacity:.9}
+
+.meta-row{display:flex;gap:10px}
+.meta-chip{
+  flex:1;background:var(--card);border:.5px solid var(--border);border-radius:10px;
+  padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.meta-chip-icon{font-size:18px}
+.meta-chip-label{font-size:10px;color:var(--t2)}
+.meta-chip-val{font-size:13px;font-weight:700;color:var(--t1)}
+
+/* auction inside detail */
+.auction-box{background:var(--card);border:1px solid var(--gold);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px;align-items:center}
+.cd-row{display:flex;align-items:center;gap:4px}
+.cd-blk{display:flex;flex-direction:column;align-items:center;min-width:52px}
+.cd-num{font-size:28px;font-weight:700;color:var(--gold);background:var(--surface);border-radius:8px;padding:8px 10px;min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
+.cd-num.urgent{color:#FF4444;animation:urg .5s infinite}
+@keyframes urg{0%,100%{opacity:1}50%{opacity:.6}}
+.cd-lbl{font-size:9px;color:var(--t2);margin-top:4px;text-transform:uppercase;letter-spacing:.8px}
+.cd-sep{font-size:22px;font-weight:700;color:var(--gold);padding-bottom:16px}
+
+.bid-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.bid-chip{padding:9px 16px;border-radius:20px;border:1px solid var(--gold);background:var(--goldl);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s}
+.bid-chip.sel,.bid-chip:hover{background:var(--gold);color:#000}
+
+.cur-bid-label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--t2)}
+.cur-bid-val{font-size:36px;font-weight:800;color:var(--gold);transition:transform .3s}
+.cur-bid-val.pulse{animation:bpulse .4s ease}
+@keyframes bpulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+
+/* ─── DETAIL CTA ─── */
+.detail-cta-bar{
+  display:flex;gap:10px;padding:12px 16px;
+  border-top:.5px solid var(--border);flex-shrink:0;
+  background:var(--bg);transition:background .3s;
+}
+.cta-main{flex:2;padding:15px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:transform .15s}
+.cta-main:active{transform:scale(.97)}
+.cta-sec{flex:1;padding:15px;border-radius:14px;background:var(--goldl);border:.5px solid var(--gold);color:var(--gold);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.cta-sec:hover{background:var(--gold);color:#000}
+
+/* ─── LIVE AUCTION SCREEN ─── */
+.live-hdr{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:.5px solid var(--border);flex-shrink:0}
+.live-badge-pill{display:flex;align-items:center;gap:5px;background:#CC2200;padding:4px 12px;border-radius:20px}
+.ldot{width:6px;height:6px;border-radius:50%;background:#fff;animation:ldotpulse 1.2s infinite}
+@keyframes ldotpulse{0%,100%{opacity:1}50%{opacity:.3}}
+.live-pill-txt{color:#fff;font-size:11px;font-weight:700}
+.att-txt{font-size:13px;color:var(--t2)}
+.video-ph{height:200px;background:linear-gradient(135deg,var(--surface),var(--card));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.video-ph-inner{width:88%;height:168px;border:1px solid var(--gold);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.antsnipe{margin:0 16px;padding:10px;border-radius:10px;background:var(--goldl);border:.5px solid var(--gold);text-align:center;font-size:13px;font-weight:700;color:var(--gold);display:none}
+.antsnipe.show{display:block;animation:fadeup .3s ease}
+@keyframes fadeup{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.bid-list-card{background:var(--card);border:.5px solid var(--border);border-radius:14px;overflow:hidden;margin:0 16px 16px}
+.bid-row-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:.5px solid var(--border)}
+.bid-row-item:last-child{border-bottom:none}
+.bid-row-item:first-child{background:var(--goldl)}
+.bri-left{display:flex;flex-direction:column}
+.bri-who{font-size:13px;font-weight:600;color:var(--t2)}
+.bri-time{font-size:10px;color:var(--t2);opacity:.7;margin-top:2px}
+.bri-amt{font-size:14px;font-weight:800;color:var(--t1)}
+.bid-row-item:first-child .bri-amt{color:var(--gold)}
+
+/* ─── MODAL ─── */
+.modal-ov{position:absolute;inset:0;background:var(--overlay);display:flex;align-items:flex-end;z-index:90;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-ov.open{opacity:1;pointer-events:all}
+.modal-box{width:100%;background:var(--card);border-top-left-radius:26px;border-top-right-radius:26px;border-top:1px solid var(--border);padding:26px;display:flex;flex-direction:column;gap:16px;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1)}
+.modal-ov.open .modal-box{transform:translateY(0)}
+.modal-title{font-size:18px;font-weight:700;color:var(--t1);text-align:center}
+.modal-amount{font-size:38px;font-weight:800;color:var(--gold);text-align:center}
+.modal-acts{display:flex;gap:10px}
+.m-cancel{flex:1;padding:15px;border-radius:12px;border:.5px solid var(--border);background:none;color:var(--t2);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.m-confirm{flex:1;padding:15px;border-radius:12px;background:var(--gold);border:none;color:#000;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* ─── EXPLORE ─── */
+.explore-search{padding:14px 16px}
+.explore-input{
+  width:100%;height:46px;border-radius:23px;
+  background:var(--input);border:.5px solid var(--border);
+  padding:0 18px;font-size:14px;color:var(--t1);font-family:inherit;outline:none;
+}
+.explore-input:focus{border-color:var(--gold)}
+.explore-input::placeholder{color:var(--t2)}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 16px 16px}
+.cat-card{
+  background:var(--card);border:.5px solid var(--border);border-radius:14px;
+  padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;
+  transition:all .18s;aspect-ratio:1;justify-content:center;
+}
+.cat-card:hover,.cat-card.active{background:var(--goldl);border-color:var(--gold)}
+.cat-icon{font-size:30px}
+.cat-name{font-size:12px;font-weight:700;color:var(--t1);text-align:center}
+
+/* ─── POST ─── */
+.post-step{flex:1;display:flex;flex-direction:column;gap:0;overflow-y:auto}
+.post-step::-webkit-scrollbar{display:none}
+.post-progress{height:3px;background:var(--input);flex-shrink:0}
+.post-progress-fill{height:100%;background:var(--gold);transition:width .4s ease}
+.post-content{padding:24px 16px;display:flex;flex-direction:column;gap:18px;flex:1}
+.post-title{font-size:22px;font-weight:700;color:var(--t1)}
+.post-sub{font-size:14px;color:var(--t2);margin-top:4px}
+.form-field{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:12px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.7px}
+.form-input{
+  width:100%;padding:14px 16px;border-radius:12px;
+  background:var(--input);border:.5px solid var(--border);
+  color:var(--t1);font-family:inherit;font-size:15px;outline:none;
+  transition:border-color .18s;
+}
+.form-input:focus{border-color:var(--gold)}
+.form-select{appearance:none;-webkit-appearance:none;cursor:pointer}
+.type-toggle{display:flex;gap:0;border:.5px solid var(--border);border-radius:12px;overflow:hidden}
+.type-opt{flex:1;padding:13px;text-align:center;font-size:14px;font-weight:600;color:var(--t2);cursor:pointer;background:var(--input);transition:all .18s}
+.type-opt.sel{background:var(--gold);color:#000}
+.post-footer{padding:16px;border-top:.5px solid var(--border);flex-shrink:0}
+.post-btn{width:100%;padding:16px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.success-anim{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px}
+.success-emoji{font-size:80px;animation:pop .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.success-title{font-size:24px;font-weight:700;color:var(--t1);text-align:center}
+.success-sub{font-size:14px;color:var(--t2);text-align:center}
+
+/* ─── MESSAGES ─── */
+.msg-list{padding:8px 0 80px}
+.msg-item{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;transition:background .15s;border-bottom:.5px solid var(--border)}
+.msg-item:hover{background:var(--goldl)}
+.msg-av{width:50px;height:50px;border-radius:50%;background:var(--goldl);display:flex;align-items:center;justify-content:center;font-size:24px;border:.5px solid var(--gold);flex-shrink:0}
+.msg-body{flex:1;min-width:0}
+.msg-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.msg-name{font-size:15px;font-weight:700;color:var(--t1)}
+.msg-time{font-size:11px;color:var(--t2)}
+.msg-last{font-size:13px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg-unread{min-width:20px;height:20px;border-radius:10px;background:var(--gold);color:#000;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0}
+
+/* ─── CHAT ─── */
+.chat-msgs{flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+.chat-msgs::-webkit-scrollbar{display:none}
+.bubble-wrap{display:flex;flex-direction:column;gap:2px}
+.bubble-wrap.mine{align-items:flex-end}
+.bubble-wrap.theirs{align-items:flex-start}
+.bubble{max-width:75%;padding:11px 14px;border-radius:18px;font-size:14px;line-height:1.5;word-break:break-word}
+.bubble.mine{background:var(--gold);color:#000;border-bottom-right-radius:4px}
+[dir=rtl] .bubble.mine{border-bottom-right-radius:18px;border-bottom-left-radius:4px}
+.bubble.theirs{background:var(--card);color:var(--t1);border:.5px solid var(--border);border-bottom-left-radius:4px}
+[dir=rtl] .bubble.theirs{border-bottom-left-radius:18px;border-bottom-right-radius:4px}
+.bubble-time{font-size:10px;color:var(--t2);padding:0 4px}
+.chat-input-bar{padding:10px 12px;border-top:.5px solid var(--border);display:flex;gap:8px;background:var(--bg);flex-shrink:0}
+.chat-input{flex:1;padding:11px 16px;border-radius:22px;background:var(--input);border:.5px solid var(--border);color:var(--t1);font-family:inherit;font-size:14px;outline:none}
+.chat-input:focus{border-color:var(--gold)}
+.chat-send{width:42px;height:42px;border-radius:50%;background:var(--gold);border:none;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0}
+
+/* ─── PROFILE ─── */
+.profile-header{padding:24px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;border-bottom:.5px solid var(--border)}
+.prof-avatar{width:80px;height:80px;border-radius:50%;background:var(--goldl);display:flex;align-items:center;justify-content:center;font-size:40px;border:2px solid var(--gold)}
+.prof-name{font-size:20px;font-weight:700;color:var(--t1)}
+.prof-city{font-size:13px;color:var(--t2)}
+.prof-stats{display:flex;gap:0;margin-top:4px;background:var(--card);border:.5px solid var(--border);border-radius:14px;overflow:hidden;width:100%}
+.prof-stat{flex:1;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;border-inline-end:.5px solid var(--border)}
+.prof-stat:last-child{border-inline-end:none}
+.prof-stat-val{font-size:20px;font-weight:800;color:var(--gold)}
+.prof-stat-lbl{font-size:11px;color:var(--t2);text-align:center}
+.prof-tabs{display:flex;border-bottom:.5px solid var(--border);background:var(--bg)}
+.prof-tab{flex:1;padding:13px;text-align:center;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;position:relative}
+.prof-tab.active{color:var(--gold)}
+.prof-tab.active::after{content:"";position:absolute;bottom:0;left:15%;width:70%;height:2px;background:var(--gold);border-radius:1px}
+.prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 12px 80px}
+
+/* ─── ONBOARDING ─── */
+.ob-full{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:32px;gap:26px;background:var(--bg)}
+.ob-emoji{font-size:68px}
+.ob-title{font-size:26px;font-weight:700;color:var(--t1);text-align:center}
+.lang-row-ob{display:flex;gap:12px;width:100%}
+.lang-btn-ob{flex:1;padding:20px 12px;border-radius:16px;border:1px solid var(--gold);background:var(--card);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .18s}
+.lang-btn-ob.sel,.lang-btn-ob:hover{background:var(--gold)}
+.lang-main{font-size:20px;font-weight:700;color:var(--gold);transition:color .18s}
+.lang-btn-ob.sel .lang-main,.lang-btn-ob:hover .lang-main{color:#000}
+.lang-sub{font-size:12px;color:var(--t2)}
+.theme-col-ob{width:100%;display:flex;flex-direction:column;gap:10px}
+.theme-btn-ob{display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;border:1px solid var(--gold);background:var(--card);cursor:pointer;transition:all .18s}
+.theme-btn-ob.sel,.theme-btn-ob:hover{background:var(--gold)}
+.theme-lbl{font-size:15px;font-weight:600;color:var(--gold);transition:color .18s}
+.theme-btn-ob.sel .theme-lbl,.theme-btn-ob:hover .theme-lbl{color:#000}
+.ob-next-btn{width:100%;padding:17px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+.ob-slides-cont{flex:1;overflow:hidden;position:relative}
+.ob-slides{display:flex;height:100%;transition:transform .4s ease}
+.ob-slide{min-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;gap:20px}
+.ob-slide-emoji{font-size:88px}
+.ob-slide-title{font-size:26px;font-weight:700;color:var(--t1);text-align:center}
+.ob-slide-desc{font-size:15px;line-height:1.7;color:var(--t2);text-align:center}
+.ob-footer-row{padding:28px 28px 20px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.ob-dots-row{display:flex;gap:7px}
+.ob-dot{width:7px;height:7px;border-radius:50%;background:var(--t2);transition:all .25s}
+.ob-dot.active{background:var(--gold);transform:scale(1.3)}
+.ob-skip-btn{font-size:14px;color:var(--t2);background:none;border:none;cursor:pointer;font-family:inherit}
+
+/* ─── SPLASH ─── */
+#splash{justify-content:center;align-items:center;background:var(--bg);z-index:60}
+.sp-ar{font-size:76px;font-weight:300;color:var(--gold);letter-spacing:5px;font-family:"Tajawal",sans-serif;opacity:0;animation:spa .9s cubic-bezier(.34,1.56,.64,1) .2s forwards}
+.sp-line{height:1px;background:var(--gold);width:0;margin:12px auto;animation:spl 1s .9s ease forwards}
+.sp-en{font-size:17px;letter-spacing:12px;color:var(--t1);font-family:"Playfair Display",serif;opacity:0;animation:spf .6s 1.6s forwards}
+.sp-sub{font-size:12px;letter-spacing:2px;color:var(--t2);position:absolute;bottom:80px;opacity:0;animation:spf .6s 2.1s forwards}
+@keyframes spa{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes spl{from{width:0}to{width:160px}}
+@keyframes spf{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── BOTTOM NAV ─── */
+.bottom-nav{
+  height:76px;background:var(--nav);border-top:.5px solid var(--nav-border);
+  display:flex;align-items:center;justify-content:space-around;
+  padding-bottom:12px;flex-shrink:0;transition:background .3s;position:relative;
+}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 16px;transition:transform .15s}
+.bnav-item:active{transform:scale(.92)}
+.bnav-icon{font-size:22px;opacity:.45;transition:opacity .2s}
+.bnav-label{font-size:10px;color:var(--t2);transition:color .2s}
+.bnav-item.active .bnav-icon{opacity:1}
+.bnav-item.active .bnav-label{color:var(--gold)}
+.bnav-post{
+  width:52px;height:52px;border-radius:50%;background:var(--gold);
+  display:flex;align-items:center;justify-content:center;font-size:26px;color:#000;
+  cursor:pointer;box-shadow:0 4px 18px rgba(212,175,55,.4);margin-bottom:6px;
+  transition:transform .18s;
+}
+.bnav-post:hover{transform:scale(1.07)}
 </style>
-</head>
-<body>
+</head><body>
 
-<!-- Desktop Background -->
-<div class="desktop-bg">
-  <div class="desktop-title">كرم</div>
-  <div class="desktop-sub">KARAM</div>
+<div class="shell" id="app">
+<div class="sbar">
+  <span class="sbar-time" id="sbar-time">9:41</span>
+  <div class="sbar-icons"><span>📶</span><span>🔋</span></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- ══ SPLASH ══ -->
+<div class="screen active" id="splash">
+  <div class="sp-ar">كرم</div>
+  <div class="sp-line" id="sp-line"></div>
+  <div class="sp-en">KARAM</div>
+  <div class="sp-sub">Luxury Marketplace • سوق المقتنيات الفاخرة</div>
 </div>
 
-<!-- Phone Shell -->
-<div class="shell" id="app">
+<!-- ══ ONBOARDING ══ -->
+<div class="screen" id="onboarding">
+  <div class="ob-full" id="ob-lang">
+    <div class="ob-emoji">🌐</div>
+    <div class="ob-title" id="ob-lang-t">اختر لغتك</div>
+    <div class="lang-row-ob">
+      <div class="lang-btn-ob sel" id="lbln-ar" onclick="selLang('ar')">
+        <span class="lang-main">العربية</span><span class="lang-sub">Arabic</span>
+      </div>
+      <div class="lang-btn-ob" id="lbln-en" onclick="selLang('en')">
+        <span class="lang-main">English</span><span class="lang-sub">الإنجليزية</span>
+      </div>
+    </div>
+    <button class="ob-next-btn" id="ob-lang-next" onclick="obPhase('theme')">التالي</button>
+  </div>
 
-  <!-- Status Bar -->
-  <div class="status-bar">
-    <span class="status-time" id="statusTime">9:41</span>
-    <div class="status-icons">
-      <span style="font-size:14px">📶</span>
-      <span style="font-size:14px">🔋</span>
+  <div class="ob-full" id="ob-theme" style="display:none">
+    <div class="ob-emoji">✨</div>
+    <div class="ob-title" id="ob-theme-t">اختر المظهر</div>
+    <div class="theme-col-ob">
+      <div class="theme-btn-ob sel" id="th-dark" onclick="selTheme('dark')">
+        <span style="font-size:24px">🌙</span><span class="theme-lbl" id="th-dark-lbl">الوضع الداكن</span>
+      </div>
+      <div class="theme-btn-ob" id="th-light" onclick="selTheme('light')">
+        <span style="font-size:24px">☀️</span><span class="theme-lbl" id="th-light-lbl">الوضع الفاتح</span>
+      </div>
+    </div>
+    <button class="ob-next-btn" id="ob-theme-next" onclick="obPhase('slides')">التالي</button>
+  </div>
+
+  <div style="display:none;flex:1;flex-direction:column" id="ob-slides-wrap">
+    <div class="ob-slides-cont"><div class="ob-slides" id="ob-slides">
+      <div class="ob-slide">
+        <div class="ob-slide-emoji">💎</div>
+        <div class="ob-slide-title" id="ob-s1t">مقتنيات نادرة</div>
+        <div class="ob-slide-desc" id="ob-s1d">اشترِ وبع أندر المقتنيات الفاخرة بثقة وأمان</div>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-slide-emoji">🏷️</div>
+        <div class="ob-slide-title" id="ob-s2t">بيع وشراء مباشر</div>
+        <div class="ob-slide-desc" id="ob-s2d">أضف إعلانك في ثوانٍ وتواصل مع المشترين مباشرة</div>
+      </div>
+      <div class="ob-slide">
+        <div class="ob-slide-emoji">🔨</div>
+        <div class="ob-slide-title" id="ob-s3t">مزادات حصرية</div>
+        <div class="ob-slide-desc" id="ob-s3d">شارك في مزادات مباشرة لأندر القطع الفاخرة</div>
+      </div>
+    </div></div>
+    <div class="ob-footer-row">
+      <div class="ob-dots-row">
+        <div class="ob-dot active" id="od0"></div>
+        <div class="ob-dot" id="od1"></div>
+        <div class="ob-dot" id="od2"></div>
+      </div>
+      <button class="ob-next-btn" id="ob-slide-next" onclick="obSlideNext()">التالي</button>
+      <button class="ob-skip-btn" id="ob-skip" onclick="finishOb()">تخطي</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HOME ══ -->
+<div class="screen" id="home">
+  <div class="topbar">
+    <div>
+      <div class="topbar-logo-ar">كرم</div>
+      <div class="topbar-logo-en">KARAM</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="ico-btn" id="lang-ico" onclick="toggleLang()" title="Language">ع</div>
+      <div class="ico-btn" id="theme-ico" onclick="toggleThemeBtn()">☀️</div>
+      <div class="ico-btn" onclick="goTo('notifications')">🔔</div>
     </div>
   </div>
 
-  <!-- Toast -->
-  <div class="toast" id="toast"></div>
-
-  <!-- ══════════════════ SPLASH ══════════════════ -->
-  <div class="screen active" id="splash" style="position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:center;align-items:center;background:var(--bg)">
-    <div class="splash-logo">
-      <div class="splash-ar">كرم</div>
-      <div class="splash-line" id="splashLine"></div>
-      <div class="splash-en">KARAM</div>
+  <div class="scrollable">
+    <div class="search-wrap" onclick="goTo('explore')">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <span class="search-placeholder" id="home-search-ph">ابحث عن ساعات، مجوهرات...</span>
+      </div>
     </div>
-    <div class="splash-sub">Luxury Auctions • المزادات الفاخرة</div>
+
+    <!-- Stories -->
+    <div class="stories-wrap">
+      <div class="stories-row" id="stories-row"></div>
+    </div>
+
+    <!-- Category chips -->
+    <div class="chips-scroll">
+      <div class="chips-row-h" id="cat-chips"></div>
+    </div>
+
+    <!-- Live Auctions -->
+    <div id="live-section">
+      <div class="sec-hdr">
+        <div class="sec-title" id="live-sec-title">🔴 مزادات مباشرة</div>
+        <div class="sec-link" id="live-sec-link" onclick="showAllLive()">عرض الكل</div>
+      </div>
+      <div class="live-strip"><div class="live-cards-row" id="live-cards-row"></div></div>
+    </div>
+
+    <!-- Listings -->
+    <div class="sec-hdr">
+      <div class="sec-title" id="listings-title">أحدث الإعلانات</div>
+    </div>
+    <div class="grid-2" id="main-grid"></div>
   </div>
 
-  <!-- ══════════════════ ONBOARDING ══════════════════ -->
-  <div class="screen" id="onboarding" style="position:absolute;inset:0;z-index:40;background:var(--bg);flex-direction:column">
-    <!-- Phase 1: Language -->
-    <div class="ob-center" id="ob-lang">
-      <div class="ob-emoji">🌐</div>
-      <div class="ob-title" id="ob-lang-title">اختر اللغة</div>
-      <div class="lang-row">
-        <div class="lang-btn sel" id="lang-ar" onclick="selectLang('ar')">
-          <div class="lang-btn-main">العربية</div>
-          <div class="lang-btn-sub">Arabic</div>
-        </div>
-        <div class="lang-btn" id="lang-en" onclick="selectLang('en')">
-          <div class="lang-btn-main">English</div>
-          <div class="lang-btn-sub">الإنجليزية</div>
-        </div>
-      </div>
-      <button class="ob-next" onclick="obNextPhase('theme')" id="ob-lang-btn">التالي</button>
+  <!-- Bottom Nav -->
+  <div class="bottom-nav" id="bnav-home">
+    <div class="bnav-item active" id="bn-home" onclick="switchTab('home')">
+      <div class="bnav-icon">🏠</div><div class="bnav-label" id="bn-home-lbl">الرئيسية</div>
     </div>
-
-    <!-- Phase 2: Theme -->
-    <div class="ob-center" id="ob-theme" style="display:none">
-      <div class="ob-emoji">✨</div>
-      <div class="ob-title" id="ob-theme-title">اختر المظهر</div>
-      <div class="theme-col">
-        <div class="theme-btn sel" id="theme-dark" onclick="selectTheme('dark')">
-          <span class="theme-btn-emoji">🌙</span>
-          <span class="theme-btn-label" id="t-dark-lbl">الوضع الداكن</span>
-        </div>
-        <div class="theme-btn" id="theme-light" onclick="selectTheme('light')">
-          <span class="theme-btn-emoji">☀️</span>
-          <span class="theme-btn-label" id="t-light-lbl">الوضع الفاتح</span>
-        </div>
-        <div class="theme-btn" id="theme-system" onclick="selectTheme('system')">
-          <span class="theme-btn-emoji">⚙️</span>
-          <span class="theme-btn-label" id="t-sys-lbl">تلقائي</span>
-        </div>
-      </div>
-      <button class="ob-next" onclick="obNextPhase('slides')" id="ob-theme-btn">التالي</button>
+    <div class="bnav-item" id="bn-explore" onclick="switchTab('explore')">
+      <div class="bnav-icon">🔍</div><div class="bnav-label" id="bn-exp-lbl">استكشف</div>
     </div>
-
-    <!-- Phase 3: Slides -->
-    <div style="display:none;flex:1;flex-direction:column" id="ob-slides-wrap">
-      <div class="ob-slides-wrap" style="flex:1;overflow:hidden">
-        <div class="ob-slides" id="ob-slides">
-          <div class="ob-slide">
-            <div class="ob-slide-emoji">💎</div>
-            <div class="ob-slide-title" id="ob-s1-title">مجوهرات نادرة</div>
-            <div class="ob-slide-desc" id="ob-s1-desc">اكتشف أندر المقتنيات الفاخرة من حول العالم</div>
-          </div>
-          <div class="ob-slide">
-            <div class="ob-slide-emoji">🔴</div>
-            <div class="ob-slide-title" id="ob-s2-title">مزادات مباشرة</div>
-            <div class="ob-slide-desc" id="ob-s2-desc">شارك في مزادات حية بتقنية عالية وشفافية كاملة</div>
-          </div>
-          <div class="ob-slide">
-            <div class="ob-slide-emoji">🏛️</div>
-            <div class="ob-slide-title" id="ob-s3-title">ثقة واطمئنان</div>
-            <div class="ob-slide-desc" id="ob-s3-desc">كل قطعة معتمدة وموثقة بشهادة أصالة معتمدة</div>
-          </div>
-        </div>
-      </div>
-      <div class="ob-footer">
-        <div class="ob-dots">
-          <div class="ob-dot active" id="dot-0"></div>
-          <div class="ob-dot" id="dot-1"></div>
-          <div class="ob-dot" id="dot-2"></div>
-        </div>
-        <button class="ob-next" id="ob-slide-btn" onclick="obSlideNext()">التالي</button>
-        <button class="ob-skip" id="ob-skip" onclick="finishOnboarding()">تخطي</button>
-      </div>
+    <div class="bnav-post" onclick="goTo('post')">➕</div>
+    <div class="bnav-item" id="bn-msgs" onclick="switchTab('messages')">
+      <div class="bnav-icon">💬</div><div class="bnav-label" id="bn-msg-lbl">رسائل</div>
+    </div>
+    <div class="bnav-item" id="bn-prof" onclick="switchTab('profile')">
+      <div class="bnav-icon">👤</div><div class="bnav-label" id="bn-prof-lbl">حسابي</div>
     </div>
   </div>
+</div>
 
-  <!-- ══════════════════ HOME ══════════════════ -->
-  <div class="screen" id="home">
-    <div class="top-bar">
-      <div class="logo-wrap">
-        <div class="logo-ar">كرم</div>
-        <div class="logo-en">KARAM</div>
-      </div>
-      <div class="top-actions">
-        <div class="icon-btn" id="lang-toggle" onclick="toggleLang()" title="Language">ع</div>
-        <div class="icon-btn" onclick="toggleThemeBtn()">☀️</div>
-        <div class="icon-btn" onclick="goTo('settings')">⚙️</div>
-      </div>
+<!-- ══ EXPLORE ══ -->
+<div class="screen" id="explore">
+  <div class="topbar">
+    <div><div class="topbar-logo-ar">كرم</div><div class="topbar-logo-en">KARAM</div></div>
+    <div class="topbar-actions">
+      <div class="ico-btn" onclick="toggleLang()">ع</div>
+      <div class="ico-btn" onclick="toggleThemeBtn()">☀️</div>
     </div>
+  </div>
+  <div class="explore-search">
+    <input class="explore-input" id="explore-input" placeholder="ابحث..." oninput="doSearch(this.value)">
+  </div>
+  <div class="scrollable">
+    <div class="sec-hdr"><div class="sec-title" id="exp-cats-title">تصفح حسب الفئة</div></div>
+    <div class="cat-grid" id="cat-grid"></div>
+    <div class="sec-hdr"><div class="sec-title" id="exp-results-title">كل الإعلانات</div></div>
+    <div class="grid-2" id="explore-grid"></div>
+  </div>
+  <div class="bottom-nav">
+    <div class="bnav-item" onclick="switchTab('home')"><div class="bnav-icon">🏠</div><div class="bnav-label" id="bn2-home">الرئيسية</div></div>
+    <div class="bnav-item active"><div class="bnav-icon">🔍</div><div class="bnav-label" id="bn2-exp">استكشف</div></div>
+    <div class="bnav-post" onclick="goTo('post')">➕</div>
+    <div class="bnav-item" onclick="switchTab('messages')"><div class="bnav-icon">💬</div><div class="bnav-label" id="bn2-msg">رسائل</div></div>
+    <div class="bnav-item" onclick="switchTab('profile')"><div class="bnav-icon">👤</div><div class="bnav-label" id="bn2-prof">حسابي</div></div>
+  </div>
+</div>
 
-    <!-- Live Banner -->
-    <div class="live-banner" onclick="goToLive(items[0])" id="live-banner">
-      <div class="live-badge">
-        <div class="live-dot"></div>
-        <span class="live-badge-text" id="live-badge-txt">مباشر</span>
-      </div>
-      <div class="live-banner-title" id="live-banner-title">رولكس دايتونا ١٦٥٢٠</div>
-      <div class="live-banner-arrow" id="live-arrow">←</div>
-    </div>
+<!-- ══ POST ══ -->
+<div class="screen" id="post">
+  <div class="back-hdr">
+    <button class="back-btn" id="post-back" onclick="goBack()">←</button>
+    <div class="back-hdr-title" id="post-hdr-title">إضافة إعلان</div>
+  </div>
+  <div class="post-progress"><div class="post-progress-fill" id="post-fill" style="width:33%"></div></div>
 
-    <!-- Tabs -->
-    <div class="tab-bar">
-      <div class="tab active" id="tab-featured" onclick="switchTab('featured')" data-tab="featured">
-        <span id="t-featured">المميزة</span>
+  <!-- Step 1: Category -->
+  <div class="post-step" id="post-s1">
+    <div class="post-content">
+      <div>
+        <div class="post-title" id="ps1-title">اختر الفئة</div>
+        <div class="post-sub" id="ps1-sub">ما نوع المنتج الذي تريد بيعه؟</div>
       </div>
-      <div class="tab" id="tab-ending_soon" onclick="switchTab('ending_soon')" data-tab="ending_soon">
-        <span id="t-ending">تنتهي قريباً</span>
-      </div>
-      <div class="tab" id="tab-new_arrivals" onclick="switchTab('new_arrivals')" data-tab="new_arrivals">
-        <span id="t-new">وصل حديثاً</span>
-      </div>
-    </div>
-
-    <div class="screen-body">
-      <div class="cards-list" id="cards-list"></div>
-    </div>
-
-    <div class="bottom-nav">
-      <div class="nav-item active">
-        <div class="nav-icon">🏠</div>
-        <div class="nav-label" id="nav-home-lbl">الرئيسية</div>
-      </div>
-      <div class="nav-item" onclick="goTo('settings')">
-        <div class="nav-icon">⚙️</div>
-        <div class="nav-label" id="nav-settings-lbl">الإعدادات</div>
-      </div>
+      <div class="cat-grid" id="post-cat-grid"></div>
     </div>
   </div>
 
-  <!-- ══════════════════ LIVE AUCTION ══════════════════ -->
-  <div class="screen" id="live-auction">
-    <div class="live-header">
-      <button class="back-btn" id="live-back" onclick="goBack()">← <span id="live-back-txt">رجوع</span></button>
-      <div class="live-screen-badge">
-        <div class="live-dot"></div>
-        <span style="color:#FFF;font-size:11px;font-weight:700" id="live-lbl">مباشر</span>
+  <!-- Step 2: Details -->
+  <div class="post-step" id="post-s2" style="display:none">
+    <div class="post-content">
+      <div>
+        <div class="post-title" id="ps2-title">تفاصيل الإعلان</div>
+        <div class="post-sub" id="ps2-sub">أدخل معلومات المنتج بدقة</div>
       </div>
-      <div class="attendees">👥 <span id="attendees-count">147</span></div>
+      <div class="form-field">
+        <label class="form-label" id="fl-name">اسم المنتج</label>
+        <input class="form-input" id="fi-name" placeholder="مثال: رولكس داتجست ٢٠٢٣">
+      </div>
+      <div class="form-field">
+        <label class="form-label" id="fl-price">السعر (ر.س)</label>
+        <input class="form-input" type="number" id="fi-price" placeholder="0">
+      </div>
+      <div class="form-field">
+        <label class="form-label" id="fl-type">نوع البيع</label>
+        <div class="type-toggle">
+          <div class="type-opt sel" id="tt-direct" onclick="selType('direct')"><span id="tt-d-lbl">شراء مباشر</span></div>
+          <div class="type-opt" id="tt-auction" onclick="selType('auction')"><span id="tt-a-lbl">مزاد</span></div>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label" id="fl-cond">الحالة</label>
+        <select class="form-input form-select" id="fi-cond">
+          <option id="fo-mint">مينت — لم تستخدم</option>
+          <option id="fo-exc">ممتازة</option>
+          <option id="fo-vg">جيدة جداً</option>
+          <option id="fo-good">جيدة</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" id="fl-city">المدينة</label>
+        <select class="form-input form-select" id="fi-city">
+          <option>الرياض</option><option>جدة</option><option>الدمام</option>
+          <option>أبوظبي</option><option>دبي</option><option>الكويت</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" id="fl-desc">الوصف</label>
+        <textarea class="form-input" id="fi-desc" rows="3" style="resize:none" placeholder="اكتب وصفاً دقيقاً..."></textarea>
+      </div>
+    </div>
+    <div class="post-footer">
+      <button class="post-btn" id="ps2-btn" onclick="postStep3()">نشر الإعلان</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Success -->
+  <div class="post-step" id="post-s3" style="display:none">
+    <div class="success-anim">
+      <div class="success-emoji">🎉</div>
+      <div class="success-title" id="suc-title">تم نشر إعلانك!</div>
+      <div class="success-sub" id="suc-sub">سيظهر إعلانك للمشترين الآن</div>
+      <button class="ob-next-btn" style="margin-top:20px" id="suc-btn" onclick="finishPost()">العودة للرئيسية</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MESSAGES ══ -->
+<div class="screen" id="messages">
+  <div class="topbar">
+    <div><div class="topbar-logo-ar">رسائل</div></div>
+    <div class="ico-btn" onclick="toggleLang()">ع</div>
+  </div>
+  <div class="scrollable">
+    <div class="msg-list" id="msg-list"></div>
+  </div>
+  <div class="bottom-nav">
+    <div class="bnav-item" onclick="switchTab('home')"><div class="bnav-icon">🏠</div><div class="bnav-label" id="bn3-home">الرئيسية</div></div>
+    <div class="bnav-item" onclick="switchTab('explore')"><div class="bnav-icon">🔍</div><div class="bnav-label" id="bn3-exp">استكشف</div></div>
+    <div class="bnav-post" onclick="goTo('post')">➕</div>
+    <div class="bnav-item active"><div class="bnav-icon">💬</div><div class="bnav-label" id="bn3-msg">رسائل</div></div>
+    <div class="bnav-item" onclick="switchTab('profile')"><div class="bnav-icon">👤</div><div class="bnav-label" id="bn3-prof">حسابي</div></div>
+  </div>
+</div>
+
+<!-- ══ PROFILE ══ -->
+<div class="screen" id="profile">
+  <div class="topbar">
+    <div><div class="topbar-logo-ar">حسابي</div></div>
+    <div class="topbar-actions">
+      <div class="ico-btn" onclick="goTo('settings-screen')">⚙️</div>
+    </div>
+  </div>
+  <div class="scrollable">
+    <div class="profile-header">
+      <div class="prof-avatar">👨‍💼</div>
+      <div class="prof-name" id="prof-name">عبدالله العمري</div>
+      <div class="prof-city" id="prof-city">الرياض، المملكة العربية السعودية</div>
+      <div class="prof-stats">
+        <div class="prof-stat"><div class="prof-stat-val">١٢</div><div class="prof-stat-lbl" id="pst1">إعلاناتي</div></div>
+        <div class="prof-stat"><div class="prof-stat-val">٨</div><div class="prof-stat-lbl" id="pst2">المباعة</div></div>
+        <div class="prof-stat"><div class="prof-stat-val">⭐ ٤.٩</div><div class="prof-stat-lbl" id="pst3">التقييم</div></div>
+      </div>
+    </div>
+    <div class="prof-tabs">
+      <div class="prof-tab active" id="ptab-mine" onclick="profTab('mine')"><span id="pt-mine">إعلاناتي</span></div>
+      <div class="prof-tab" id="ptab-fav" onclick="profTab('fav')"><span id="pt-fav">المفضلة</span></div>
+    </div>
+    <div class="prof-grid" id="prof-grid"></div>
+  </div>
+  <div class="bottom-nav">
+    <div class="bnav-item" onclick="switchTab('home')"><div class="bnav-icon">🏠</div><div class="bnav-label" id="bn4-home">الرئيسية</div></div>
+    <div class="bnav-item" onclick="switchTab('explore')"><div class="bnav-icon">🔍</div><div class="bnav-label" id="bn4-exp">استكشف</div></div>
+    <div class="bnav-post" onclick="goTo('post')">➕</div>
+    <div class="bnav-item" onclick="switchTab('messages')"><div class="bnav-icon">💬</div><div class="bnav-label" id="bn4-msg">رسائل</div></div>
+    <div class="bnav-item active"><div class="bnav-icon">👤</div><div class="bnav-label" id="bn4-prof">حسابي</div></div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS SCREEN ══ -->
+<div class="screen" id="settings-screen">
+  <div class="back-hdr">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="back-hdr-title" id="set-title">الإعدادات</div>
+  </div>
+  <div class="scrollable">
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="background:var(--card);border:.5px solid var(--border);border-radius:16px;overflow:hidden">
+        <div style="padding:14px 16px 6px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold)" id="s-lang-t">اللغة</div>
+        <div style="padding:13px 16px;border-top:.5px solid var(--border);display:flex;justify-content:space-between;cursor:pointer" onclick="setLang('ar')">
+          <span style="font-size:15px;font-weight:500" id="s-ar-lbl">🇸🇦 العربية</span>
+          <span style="color:var(--gold);font-weight:700" id="s-ar-ck">✓</span>
+        </div>
+        <div style="padding:13px 16px;border-top:.5px solid var(--border);display:flex;justify-content:space-between;cursor:pointer" onclick="setLang('en')">
+          <span style="font-size:15px;font-weight:500" id="s-en-lbl">🇺🇸 English</span>
+          <span style="color:var(--gold);font-weight:700;display:none" id="s-en-ck">✓</span>
+        </div>
+      </div>
+      <div style="background:var(--card);border:.5px solid var(--border);border-radius:16px;overflow:hidden">
+        <div style="padding:14px 16px 6px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold)" id="s-theme-t">المظهر</div>
+        <div style="padding:13px 16px;border-top:.5px solid var(--border);display:flex;justify-content:space-between;cursor:pointer" onclick="setThemeSetting('dark')">
+          <span style="font-size:15px;font-weight:500">🌙 <span id="s-dark-lbl">الوضع الداكن</span></span>
+          <span style="color:var(--gold);font-weight:700" id="s-dark-ck">✓</span>
+        </div>
+        <div style="padding:13px 16px;border-top:.5px solid var(--border);display:flex;justify-content:space-between;cursor:pointer" onclick="setThemeSetting('light')">
+          <span style="font-size:15px;font-weight:500">☀️ <span id="s-light-lbl">الوضع الفاتح</span></span>
+          <span style="color:var(--gold);font-weight:700;display:none" id="s-light-ck">✓</span>
+        </div>
+      </div>
+      <div style="background:var(--card);border:.5px solid var(--border);border-radius:16px;overflow:hidden">
+        <div style="padding:13px 16px;display:flex;justify-content:space-between">
+          <span style="font-size:14px;color:var(--t2)">كرم | Karam v2.0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ITEM DETAIL ══ -->
+<div class="screen" id="item-detail">
+  <div class="back-hdr">
+    <button class="back-btn" id="detail-back-btn" onclick="goBack()">←</button>
+    <div class="back-hdr-title" id="detail-hdr-t">تفاصيل الإعلان</div>
+    <div style="width:32px"></div>
+  </div>
+  <div class="scrollable">
+    <div class="slider-wrap" id="detail-slider">
+      <div class="slides-track" id="detail-track"></div>
+      <div class="slider-dots-wrap" id="detail-dots"></div>
+      <div id="live-overlay-tag" style="position:absolute;top:12px;inset-inline-start:12px;display:none">
+        <div class="live-badge-pill"><div class="ldot"></div><span class="live-pill-txt" id="dot-live-txt">مباشر</span></div>
+      </div>
     </div>
 
-    <div class="screen-body">
-      <div class="video-frame">
-        <div class="video-inner">
-          <div class="video-emoji">📺</div>
-          <div class="video-label" id="live-stream-lbl">البث المباشر</div>
+    <div class="detail-content">
+      <div class="detail-top">
+        <div class="detail-name" id="d-name">اسم المنتج</div>
+        <div class="fav-btn" id="d-fav" onclick="toggleFav()">🤍</div>
+      </div>
+
+      <div class="price-box" id="d-price-box">
+        <div class="detail-price-label" id="d-price-label">السعر</div>
+        <div class="detail-price" id="d-price">٠ ر.س</div>
+      </div>
+
+      <!-- Auction box shown for auctions -->
+      <div class="auction-box" id="d-auction-box" style="display:none">
+        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t2);width:100%;text-align:center" id="d-time-left-lbl">الوقت المتبقي</div>
+        <div class="cd-row" id="d-cd-row">
+          <div class="cd-blk"><div class="cd-num" id="dcd-h">00</div><div class="cd-lbl" id="dcd-h-l">ساعات</div></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-blk"><div class="cd-num" id="dcd-m">00</div><div class="cd-lbl" id="dcd-m-l">دقائق</div></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-blk"><div class="cd-num" id="dcd-s">00</div><div class="cd-lbl" id="dcd-s-l">ثواني</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--t2);text-align:center" id="d-cur-bid-lbl">المزايدة الحالية</div>
+        <div class="cur-bid-val" id="d-cur-bid">٠ ر.س</div>
+      </div>
+
+      <div class="seller-row" onclick="goToChat()">
+        <div class="seller-avatar" id="d-seller-av">👤</div>
+        <div class="seller-info">
+          <div class="seller-name" id="d-seller-name">البائع</div>
+          <div class="seller-rating" id="d-seller-rating">⭐⭐⭐⭐⭐ (٢٣ تقييم)</div>
+        </div>
+        <button class="follow-btn" id="d-follow-btn" onclick="event.stopPropagation();toggleFollow(this)">متابعة</button>
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-chip">
+          <div class="meta-chip-icon">📍</div>
+          <div class="meta-chip-label" id="mc-city-lbl">المدينة</div>
+          <div class="meta-chip-val" id="d-city">الرياض</div>
+        </div>
+        <div class="meta-chip">
+          <div class="meta-chip-icon">⭐</div>
+          <div class="meta-chip-label" id="mc-cond-lbl">الحالة</div>
+          <div class="meta-chip-val" id="d-cond">ممتاز</div>
+        </div>
+        <div class="meta-chip">
+          <div class="meta-chip-icon">🏷️</div>
+          <div class="meta-chip-label" id="mc-cat-lbl">الفئة</div>
+          <div class="meta-chip-val" id="d-cat">ساعات</div>
         </div>
       </div>
 
-      <div class="live-content">
-        <div class="item-title" id="live-item-title">رولكس دايتونا ١٦٥٢٠</div>
-
-        <!-- Countdown -->
-        <div class="section-card">
-          <div class="section-label" id="time-left-lbl">الوقت المتبقي</div>
-          <div class="countdown-full" id="cd-full">
-            <div class="cd-unit">
-              <div class="cd-box"><div class="cd-val" id="cd-h">00</div></div>
-              <div class="cd-label" id="cd-h-lbl">ساعات</div>
-            </div>
-            <div class="cd-sep">:</div>
-            <div class="cd-unit">
-              <div class="cd-box"><div class="cd-val" id="cd-m">00</div></div>
-              <div class="cd-label" id="cd-m-lbl">دقائق</div>
-            </div>
-            <div class="cd-sep">:</div>
-            <div class="cd-unit">
-              <div class="cd-box"><div class="cd-val" id="cd-s">00</div></div>
-              <div class="cd-label" id="cd-s-lbl">ثواني</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Anti-snipe -->
-        <div class="antsnipe" id="antsnipe">⏱ <span id="antsnipe-txt">تم تمديد المزاد ٣٠ ثانية</span></div>
-
-        <!-- Current Bid -->
-        <div class="section-card bid-section">
-          <div class="section-label" id="cur-bid-lbl">المزايدة الحالية</div>
-          <div class="current-bid" id="current-bid-val">٢٨٥٬٠٠٠ ر.س</div>
-          <div class="winning-tag" id="winning-tag">أنت الفائز حالياً</div>
-        </div>
-
-        <!-- Bid Chips -->
+      <div class="info-card">
+        <div class="info-title" id="d-desc-t">الوصف</div>
+        <div class="info-body" id="d-desc">وصف المنتج</div>
+      </div>
+      <div class="info-card" style="display:flex;flex-direction:row;align-items:center;gap:12px">
+        <span style="font-size:30px">🏛️</span>
         <div>
-          <div class="section-label" style="margin-bottom:10px" id="bid-inc-lbl">زيادة المزايدة</div>
-          <div class="chips-row" id="chips-row">
-            <button class="chip" onclick="selectChip(500,this)">+٥٠٠ ر.س</button>
-            <button class="chip" onclick="selectChip(1000,this)">+١٬٠٠٠ ر.س</button>
-            <button class="chip" onclick="selectChip(5000,this)">+٥٬٠٠٠ ر.س</button>
-            <button class="chip" onclick="selectChip(10000,this)">+١٠٬٠٠٠ ر.س</button>
-          </div>
+          <div class="info-title" id="d-cert-t">شهادة الأصالة</div>
+          <div style="font-size:13px;color:var(--t2)" id="d-cert-sub">قطعة موثقة ومعتمدة</div>
         </div>
+      </div>
+      <div class="info-card">
+        <div class="info-title" id="d-ship-t">الشحن والتوصيل</div>
+        <div class="info-body">🔒 <span id="d-ship1">شحن آمن ومؤمَّن</span></div>
+        <div class="info-body" style="color:var(--gold)">✈️ <span id="d-ship2">شحن مجاني داخل المملكة</span></div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+  </div>
+  <div class="detail-cta-bar" id="d-cta-bar">
+    <button class="cta-sec" id="d-cta-sec" onclick="goToChat()">💬 <span id="d-cta-sec-txt">تواصل مع البائع</span></button>
+    <button class="cta-main" id="d-cta-main" onclick="detailMainCTA()"><span id="d-cta-main-txt">اشتري الآن</span></button>
+  </div>
+</div>
 
-        <button class="place-bid-btn" onclick="openBidModal()" id="place-bid-btn">ضع مزايدتك</button>
-
-        <!-- Bid List -->
-        <div class="section-card" id="bid-list-card" style="padding:0;overflow:hidden">
-          <div style="padding:14px 16px 6px">
-            <div class="section-label" id="recent-bids-lbl">آخر المزايدات</div>
-          </div>
-          <div class="bid-list" id="bid-list"></div>
-        </div>
-
-        <div style="height:30px"></div>
+<!-- ══ LIVE AUCTION ══ -->
+<div class="screen" id="live-auction">
+  <div class="live-hdr">
+    <button class="back-btn" id="live-back-b" onclick="goBack()">←</button>
+    <div class="live-badge-pill"><div class="ldot"></div><span class="live-pill-txt" id="la-live-txt">مباشر</span></div>
+    <div class="att-txt">👥 <span id="la-att">147</span></div>
+  </div>
+  <div class="scrollable">
+    <div class="video-ph">
+      <div class="video-ph-inner">
+        <span style="font-size:40px">📺</span>
+        <span style="font-size:13px;color:var(--t2)" id="la-stream-txt">البث المباشر</span>
       </div>
     </div>
+    <div style="padding:18px 16px;display:flex;flex-direction:column;gap:16px">
+      <div style="font-size:20px;font-weight:700;color:var(--t1);line-height:1.35" id="la-name">الاسم</div>
 
-    <!-- Bid Modal -->
-    <div class="modal-overlay" id="bid-modal">
-      <div class="modal">
-        <div class="modal-title" id="confirm-bid-title">تأكيد المزايدة</div>
-        <div class="modal-bid-amount" id="modal-bid-amount">٠ ر.س</div>
-        <div class="modal-actions">
-          <button class="modal-cancel" onclick="closeBidModal()" id="cancel-btn">إلغاء</button>
-          <button class="modal-confirm" onclick="confirmBid()" id="confirm-btn">تأكيد</button>
+      <div style="background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:14px">
+        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t2)" id="la-tl-lbl">الوقت المتبقي</div>
+        <div class="cd-row" id="la-cd-row">
+          <div class="cd-blk"><div class="cd-num" id="la-h">00</div><div class="cd-lbl" id="la-h-l">ساعات</div></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-blk"><div class="cd-num" id="la-m">00</div><div class="cd-lbl" id="la-m-l">دقائق</div></div>
+          <div class="cd-sep">:</div>
+          <div class="cd-blk"><div class="cd-num" id="la-s">00</div><div class="cd-lbl" id="la-s-l">ثواني</div></div>
         </div>
+      </div>
+
+      <div class="antsnipe" id="la-antsnipe"><span id="la-ext-txt">⏱ تم تمديد المزاد ٣٠ ثانية</span></div>
+
+      <div style="background:var(--card);border:1px solid var(--gold);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t2)" id="la-cb-lbl">المزايدة الحالية</div>
+        <div class="cur-bid-val" id="la-cur-bid">٠ ر.س</div>
+        <div style="font-size:13px;font-weight:600;color:var(--success)" id="la-win-txt">أنت الفائز حالياً</div>
+      </div>
+
+      <div>
+        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t2);margin-bottom:10px" id="la-inc-lbl">زيادة المزايدة</div>
+        <div class="bid-chips" id="la-chips"></div>
+      </div>
+
+      <button style="width:100%;padding:17px;border-radius:14px;background:var(--gold);border:none;color:#000;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit" id="la-bid-btn" onclick="openLAModal()">زايد الآن</button>
+
+      <div class="bid-list-card" id="la-bid-list-card">
+        <div style="padding:12px 14px 4px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t2)" id="la-rb-lbl">آخر المزايدات</div>
+        <div id="la-bid-list"></div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+  </div>
+  <div class="modal-ov" id="la-modal">
+    <div class="modal-box">
+      <div class="modal-title" id="la-modal-title">تأكيد المزايدة</div>
+      <div class="modal-amount" id="la-modal-amt">٠ ر.س</div>
+      <div class="modal-acts">
+        <button class="m-cancel" onclick="closeLAModal()" id="la-cancel-txt">إلغاء</button>
+        <button class="m-confirm" onclick="confirmBidLA()" id="la-confirm-txt">تأكيد</button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- ══════════════════ ITEM DETAIL ══════════════════ -->
-  <div class="screen" id="item-detail">
-    <div class="detail-header">
-      <button class="back-btn" id="detail-back" onclick="goBack()">←</button>
-      <div class="detail-title" id="item-details-title">تفاصيل القطعة</div>
-      <div style="width:32px"></div>
-    </div>
-
-    <div class="screen-body">
-      <!-- Image Slider -->
-      <div class="slider-wrap" id="slider-wrap">
-        <div class="slides-track" id="slides-track"></div>
-        <div class="slider-dots" id="slider-dots"></div>
-        <div class="slide-live-tag" id="slide-live-tag" style="display:none">
-          <div class="live-dot"></div>
-          <span style="color:#FFF;font-size:11px;font-weight:700" id="slide-live-txt">مباشر</span>
-        </div>
-      </div>
-
-      <div class="detail-content">
-        <div class="detail-name-row">
-          <div class="detail-name" id="detail-name">رولكس دايتونا</div>
-          <div class="cert-circle">✓</div>
-        </div>
-
-        <div class="bid-info-row">
-          <div class="bid-info-col">
-            <div class="bid-info-label" id="cur-bid-lbl2">المزايدة الحالية</div>
-            <div class="bid-info-val" id="detail-bid">٢٨٥٬٠٠٠ ر.س</div>
-          </div>
-          <div>
-            <div class="bid-info-label" id="time-left-lbl2" style="text-align:end">الوقت المتبقي</div>
-            <div class="countdown-compact" id="detail-countdown" style="margin-top:4px">١:٥٩:٠٠</div>
-          </div>
-        </div>
-
-        <div class="section-card">
-          <div class="countdown-full" id="cd-full2">
-            <div class="cd-unit">
-              <div class="cd-box"><div class="cd-val" id="cd2-h">01</div></div>
-              <div class="cd-label" id="cd2-h-lbl">ساعات</div>
-            </div>
-            <div class="cd-sep">:</div>
-            <div class="cd-unit">
-              <div class="cd-box"><div class="cd-val" id="cd2-m">59</div></div>
-              <div class="cd-label" id="cd2-m-lbl">دقائق</div>
-            </div>
-            <div class="cd-sep">:</div>
-            <div class="cd-unit">
-              <div class="cd-box"><div class="cd-val" id="cd2-s">00</div></div>
-              <div class="cd-label" id="cd2-s-lbl">ثواني</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="info-card">
-          <div class="info-card-title" id="desc-title">الوصف</div>
-          <div class="info-card-body" id="item-desc">وصف القطعة</div>
-        </div>
-        <div class="info-card">
-          <div class="info-card-title" id="cond-title">الحالة</div>
-          <div class="info-card-body" id="item-cond">حالة القطعة</div>
-        </div>
-        <div class="info-card">
-          <div class="info-card-title" id="prov-title">المصدر والتاريخ</div>
-          <div class="info-card-body" id="item-prov">مصدر القطعة</div>
-        </div>
-
-        <div class="cert-card">
-          <div class="cert-emoji">🏛️</div>
-          <div>
-            <div class="cert-info-title" id="cert-title">شهادة الأصالة</div>
-            <div class="cert-info-sub" id="cert-sub">معتمد</div>
-          </div>
-        </div>
-
-        <div class="info-card">
-          <div class="info-card-title" id="ship-title">الشحن والتوصيل</div>
-          <div class="info-card-body">🔒 <span id="ship-secure">شحن آمن ومؤمَّن</span></div>
-          <div class="info-card-body" style="color:var(--gold)">✈️ <span id="ship-free">شحن مجاني داخل المملكة</span></div>
-        </div>
-
-        <button class="cta-btn" id="detail-cta" onclick="detailCTA()">سجّل للمزاد</button>
-        <div style="height:30px"></div>
+<!-- ══ CHAT ══ -->
+<div class="screen" id="chat">
+  <div class="back-hdr">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div style="display:flex;align-items:center;gap:10px;flex:1">
+      <div style="width:34px;height:34px;border-radius:50%;background:var(--goldl);display:flex;align-items:center;justify-content:center;font-size:18px;border:.5px solid var(--gold)" id="chat-av">👤</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--t1)" id="chat-name">البائع</div>
+        <div style="font-size:11px;color:var(--success)" id="chat-status">متصل الآن</div>
       </div>
     </div>
   </div>
-
-  <!-- ══════════════════ SETTINGS ══════════════════ -->
-  <div class="screen" id="settings">
-    <div class="detail-header">
-      <button class="back-btn" onclick="goBack()">←</button>
-      <div class="detail-title" id="settings-title">الإعدادات</div>
-      <div style="width:32px"></div>
-    </div>
-    <div class="screen-body">
-      <div class="settings-content">
-        <div class="settings-section">
-          <div class="settings-section-title" id="s-lang-title">إعدادات اللغة</div>
-          <div class="settings-option" onclick="setLang('ar')">
-            <span class="settings-opt-label" id="s-ar" style="color:var(--gold)">🇸🇦 العربية</span>
-            <span class="settings-checkmark" id="s-ar-check">✓</span>
-          </div>
-          <div class="settings-option" onclick="setLang('en')">
-            <span class="settings-opt-label" id="s-en">🇺🇸 English</span>
-            <span class="settings-checkmark" id="s-en-check" style="display:none">✓</span>
-          </div>
-        </div>
-        <div class="settings-section">
-          <div class="settings-section-title" id="s-appear-title">المظهر</div>
-          <div class="settings-option" onclick="setThemeSetting('dark')">
-            <span class="settings-opt-label" id="s-dark" style="color:var(--gold)">🌙 <span id="s-dark-lbl">الوضع الداكن</span></span>
-            <span class="settings-checkmark" id="s-dark-check">✓</span>
-          </div>
-          <div class="settings-option" onclick="setThemeSetting('light')">
-            <span class="settings-opt-label" id="s-light">☀️ <span id="s-light-lbl">الوضع الفاتح</span></span>
-            <span class="settings-checkmark" id="s-light-check" style="display:none">✓</span>
-          </div>
-        </div>
-        <div class="settings-section">
-          <div class="settings-section-title" id="s-about-title">التطبيق</div>
-          <div class="settings-option" style="cursor:default">
-            <span class="settings-opt-label" style="opacity:.6">كرم | Karam — v1.0.0</span>
-          </div>
-          <div class="settings-option" style="cursor:default">
-            <span class="settings-opt-label" style="opacity:.6" id="s-tagline">المزادات الفاخرة</span>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="chat-msgs" id="chat-msgs"></div>
+  <div class="chat-input-bar">
+    <input class="chat-input" id="chat-input" placeholder="اكتب رسالة..." onkeypress="chatEnter(event)">
+    <button class="chat-send" onclick="sendChatMsg()">➤</button>
   </div>
+</div>
+
+<!-- ══ NOTIFICATIONS SCREEN ══ -->
+<div class="screen" id="notifications">
+  <div class="back-hdr">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="back-hdr-title" id="notif-title">الإشعارات</div>
+  </div>
+  <div class="scrollable" id="notif-list" style="padding:12px 16px;display:flex;flex-direction:column;gap:10px"></div>
+</div>
 
 </div><!-- /shell -->
-
 <script>
-// ══════════════════════════════════════════════
-//  DATA
-// ══════════════════════════════════════════════
-const now = Date.now();
-const H = 3600000, D = 86400000;
-const items = [
-  {
-    id:'1', isLive:true, featured:true, certified:true, category:'watch',
-    nameAr:'رولكس دايتونا ١٦٥٢٠', nameEn:'Rolex Daytona 16520',
-    descAr:'ساعة رولكس دايتونا الأسطورية، إصدار ١٩٩٢، هيكل من الستانلس ستيل مع مينا بيضاء نادرة. واحدة من أندر الإصدارات التي يبحث عنها هواة الساعات الفاخرة حول العالم.',
-    descEn:'The legendary Rolex Daytona ref. 16520, 1992 edition, stainless steel with rare white dial. One of the most sought-after references among serious collectors worldwide.',
-    condAr:'ممتازة جداً — مع الصندوق والوثائق الأصلية', condEn:'Excellent — Full set with original box & papers',
-    provAr:'مجموعة خاصة من جنيف، سويسرا', provEn:'Private Geneva collection, Switzerland',
-    currentBid:285000, startBid:200000, reserve:300000, increment:5000,
-    endTime: now + 2*H, attendees:147,
-    images:['https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800','https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=800','https://images.unsplash.com/photo-1609587312208-cea54be969e7?w=800'],
+// ═══════════════════════════════
+//  TRANSLATIONS
+// ═══════════════════════════════
+const T = {
+  ar:{
+    home:'الرئيسية',explore:'استكشف',messages:'رسائل',profile:'حسابي',
+    search_ph:'ابحث عن ساعات، مجوهرات...',
+    live_section:'🔴 مزادات مباشرة',view_all:'عرض الكل',
+    latest:'أحدث الإعلانات',cats_title:'تصفح حسب الفئة',
+    all:'الكل',watches:'⌚ ساعات',jewelry:'💎 مجوهرات',cars:'🚗 سيارات',art:'🎨 فنون',collectibles:'🏺 مقتنيات',
+    direct:'شراء مباشر',auction:'مزاد',certified:'معتمد',
+    current_bid:'المزايدة الحالية',time_left:'الوقت المتبقي',bid_now:'زايد الآن',buy_now:'اشتري الآن',
+    contact_seller:'تواصل مع البائع',register:'سجّل للمزاد',registered:'مسجّل ✓',
+    item_detail:'تفاصيل الإعلان',description:'الوصف',condition:'الحالة',
+    certificate:'شهادة الأصالة',certified_sub:'قطعة موثقة ومعتمدة',
+    shipping:'الشحن والتوصيل',secure_ship:'شحن آمن ومؤمَّن',free_ship:'شحن مجاني داخل المملكة',
+    city:'المدينة',cat:'الفئة',
+    hours:'ساعات',minutes:'دقائق',seconds:'ثواني',
+    live:'مباشر',stream:'البث المباشر',attendees:'المشاركون',
+    bid_inc:'زيادة المزايدة',latest_bids:'آخر المزايدات',winning:'أنت الفائز حالياً',
+    confirm_bid:'تأكيد المزايدة',cancel:'إلغاء',confirm:'تأكيد',
+    extended:'⏱ تم تمديد المزاد ٣٠ ثانية',anon:'مزايد مجهول',
+    bid_placed:'تم وضع مزايدتك ✓',settings:'الإعدادات',
+    language:'اللغة',appearance:'المظهر',dark_mode:'الوضع الداكن',light_mode:'الوضع الفاتح',
+    post_hdr:'إضافة إعلان',choose_cat:'اختر الفئة',choose_cat_sub:'ما نوع المنتج الذي تريد بيعه؟',
+    item_details_lbl:'تفاصيل الإعلان',item_details_sub:'أدخل معلومات المنتج بدقة',
+    name_lbl:'اسم المنتج',price_lbl:'السعر (ر.س)',type_lbl:'نوع البيع',cond_lbl:'الحالة',city_lbl:'المدينة',desc_lbl:'الوصف',
+    post_btn:'نشر الإعلان',success_title:'تم نشر إعلانك!',success_sub:'سيظهر إعلانك للمشترين الآن',back_home:'العودة للرئيسية',
+    msgs_title:'رسائل',prof_title:'حسابي',my_listings:'إعلاناتي',favorites:'المفضلة',sold:'المباعة',rating:'التقييم',
+    follow:'متابعة',following:'متابَع ✓',online:'متصل الآن',write_msg:'اكتب رسالة...',
+    notif_title:'الإشعارات',
+    cond_mint:'مينت — لم تستخدم',cond_exc:'ممتازة',cond_vg:'جيدة جداً',cond_good:'جيدة',
+    sar:'ر.س',
   },
-  {
-    id:'2', isLive:true, featured:true, certified:true, category:'watch',
-    nameAr:'باتيك فيليب نوتيلوس ٥٧١١', nameEn:'Patek Philippe Nautilus 5711',
-    descAr:'باتيك فيليب نوتيلوس المرجع ٥٧١١/١أ، مينا زرقاء مميزة. الساعة التي رفعت معيار الساعات الفاخرة إلى مستوى غير مسبوق.',
-    descEn:'Patek Philippe Nautilus ref. 5711/1A-010, iconic blue dial. The timepiece that redefined luxury sports watches.',
-    condAr:'مينت — لم تُستخدم قط، كامل الملحقات', condEn:'Mint — Unworn, complete set',
-    provAr:'من وكيل معتمد في جنيف ٢٠٢١', provEn:'Authorized dealer Geneva, 2021',
-    currentBid:620000, startBid:500000, reserve:650000, increment:10000,
-    endTime: now + 4*H, attendees:284,
-    images:['https://images.unsplash.com/photo-1619134778706-7015533a6150?w=800','https://images.unsplash.com/photo-1551818255-e7b168f61ac1?w=800'],
-  },
-  {
-    id:'3', isLive:false, featured:false, certified:true, category:'jewelry',
-    nameAr:'سوار الماس تنس', nameEn:'Diamond Tennis Bracelet',
-    descAr:'سوار تنس استثنائي من الذهب الأبيض عيار ١٨ قيراطاً، مرصع بـ ٤٢ حجرة ماس طبيعية بإجمالي وزن ١٥ قيراطاً. تصنيف D، نقاء VVS1.',
-    descEn:'Exceptional 18k white gold tennis bracelet with 42 natural diamonds totaling 15 carats. D color, VVS1 clarity, GIA certified.',
-    condAr:'ممتازة — مع تقرير GIA', condEn:'Excellent — with GIA report',
-    provAr:'دار كارتييه، باريس ٢٠١٨', provEn:'Cartier, Paris, 2018',
-    currentBid:185000, startBid:150000, reserve:200000, increment:5000,
-    endTime: now + 6*H, attendees:89,
-    images:['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800','https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=800'],
-  },
-  {
-    id:'4', isLive:false, featured:false, certified:true, category:'watch',
-    nameAr:'أوديمار بيغيه رويال أوك', nameEn:'Audemars Piguet Royal Oak',
-    descAr:'أوديمار بيغيه رويال أوك المرجع ١٥٢٠٢، فولاذ مصقول مع مينا رمادية. تحفة فنية هندسية تجمع بين الأناقة والقوة.',
-    descEn:'Audemars Piguet Royal Oak ref. 15202ST, polished steel with grey tapisserie dial. A geometric masterpiece.',
-    condAr:'ممتازة جداً — مستعملة بعناية', condEn:'Very Good — Carefully worn',
-    provAr:'مجموعة خاصة، دبي', provEn:'Private collection, Dubai',
-    currentBid:410000, startBid:350000, reserve:450000, increment:10000,
-    endTime: now + D, attendees:156,
-    images:['https://images.unsplash.com/photo-1612817288484-6f916006741a?w=800'],
-  },
-  {
-    id:'5', isLive:false, featured:true, certified:true, category:'jewelry',
-    nameAr:'خاتم الخطوبة الماسي', nameEn:'Diamond Engagement Ring',
-    descAr:'خاتم من البلاتين ٩٥٠، ماسة مركزية ٣.٢٨ قيراط، تصنيف E VS1، مقطوعة وسادة، مع هالة من الماس.',
-    descEn:'Platinum 950 ring, 3.28ct center diamond E VS1 cushion cut, surrounded by diamond halo.',
-    condAr:'مينت — جديدة تماماً', condEn:'Mint — Brand new',
-    provAr:'هاري وينستون، نيويورك', provEn:'Harry Winston, New York',
-    currentBid:95000, startBid:80000, reserve:110000, increment:2500,
-    endTime: now + 2*D, attendees:67,
-    images:['https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800','https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800'],
-  },
-  {
-    id:'6', isLive:false, featured:false, certified:true, category:'watch',
-    nameAr:'ريتشارد ميل RM 011', nameEn:'Richard Mille RM 011',
-    descAr:'ريتشارد ميل RM ٠١١ تيتانيوم، كرونوغراف متطور بهيكل من التيتانيوم والكربون. تحفة من الساعات الفاخرة الحديثة.',
-    descEn:'Richard Mille RM 011 Titanium flyback chronograph, titanium & carbon case, modern haute horlogerie.',
-    condAr:'ممتازة — مع الصندوق والوثائق', condEn:'Excellent — Full set with box & papers',
-    provAr:'مجموعة خاصة أوروبية ٢٠٢٠', provEn:'European private collection, 2020',
-    currentBid:520000, startBid:450000, reserve:580000, increment:10000,
-    endTime: now + 3*D, attendees:203,
-    images:['https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=800'],
-  },
-];
-
-// ══════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════
-let lang = 'ar';
-let theme = 'dark';
-let currentScreen = 'splash';
-let prevScreen = null;
-let activeTab = 'featured';
-let selectedChip = 0;
-let activeLiveItem = items[0];
-let activeDetailItem = items[0];
-let detailSlideIndex = 0;
-let obSlideIndex = 0;
-let obPhase = 'lang';
-let bidHistory = [];
-let liveEndTime = items[0].endTime;
-let detailRegistered = {};
-
-const tr = {
-  ar: {
-    live:'مباشر', bid_now:'زايد الآن', current_bid:'المزايدة الحالية', time_left:'الوقت المتبقي',
-    certified:'معتمد', back:'رجوع', place_bid:'ضع مزايدتك', confirm_bid:'تأكيد المزايدة',
-    cancel:'إلغاء', confirm:'تأكيد', recent_bids:'آخر المزايدات', bid_increment:'زيادة المزايدة',
-    winning:'أنت الفائز حالياً', anonymous:'مزايد مجهول', extended:'تم تمديد المزاد ٣٠ ثانية',
-    video_stream:'البث المباشر', item_details:'تفاصيل القطعة', description:'الوصف', condition:'الحالة',
-    provenance:'المصدر والتاريخ', shipping:'الشحن والتوصيل', secure_shipping:'شحن آمن ومؤمَّن',
-    free_shipping:'شحن مجاني داخل المملكة', certificate:'شهادة الأصالة', register:'سجّل للمزاد',
-    registered:'مسجّل', settings:'الإعدادات', language_settings:'إعدادات اللغة', appearance:'المظهر',
-    dark_mode:'الوضع الداكن', light_mode:'الوضع الفاتح', system_mode:'تلقائي', tagline:'المزادات الفاخرة',
-    featured:'المميزة', ending_soon:'تنتهي قريباً', new_arrivals:'وصل حديثاً',
-    hours:'ساعات', minutes:'دقائق', seconds:'ثواني', days:'أيام', home:'الرئيسية', auctions:'المزادات',
-    live_auction:'المزاد المباشر', choose_language:'اختر اللغة', choose_theme:'اختر المظهر',
-    get_started:'ابدأ الآن', next:'التالي', skip:'تخطي', bid_placed:'تم وضع مزايدتك ✓',
-    min_bid:'الحد الأدنى للمزايدة',
-    ob1_title:'مجوهرات نادرة', ob1_desc:'اكتشف أندر المقتنيات الفاخرة من حول العالم',
-    ob2_title:'مزادات مباشرة', ob2_desc:'شارك في مزادات حية بتقنية عالية وشفافية كاملة',
-    ob3_title:'ثقة واطمئنان', ob3_desc:'كل قطعة معتمدة وموثقة بشهادة أصالة معتمدة',
-  },
-  en: {
-    live:'Live', bid_now:'Bid Now', current_bid:'Current Bid', time_left:'Time Left',
-    certified:'Certified', back:'Back', place_bid:'Place Bid', confirm_bid:'Confirm Bid',
-    cancel:'Cancel', confirm:'Confirm', recent_bids:'Recent Bids', bid_increment:'Bid Increment',
-    winning:"You're Winning", anonymous:'Anonymous Bidder', extended:'Auction extended by 30 seconds',
-    video_stream:'Live Stream', item_details:'Item Details', description:'Description', condition:'Condition',
-    provenance:'Provenance', shipping:'Shipping', secure_shipping:'Secure & Insured Shipping',
-    free_shipping:'Free shipping within KSA', certificate:'Certificate of Authenticity', register:'Register for Auction',
-    registered:'Registered', settings:'Settings', language_settings:'Language', appearance:'Appearance',
-    dark_mode:'Dark Mode', light_mode:'Light Mode', system_mode:'System', tagline:'Luxury Auctions',
-    featured:'Featured', ending_soon:'Ending Soon', new_arrivals:'New Arrivals',
-    hours:'Hours', minutes:'Min', seconds:'Sec', days:'Days', home:'Home', auctions:'Auctions',
-    live_auction:'Live Auction', choose_language:'Choose Language', choose_theme:'Choose Theme',
-    get_started:'Get Started', next:'Next', skip:'Skip', bid_placed:'Bid Placed ✓',
-    min_bid:'Minimum Bid',
-    ob1_title:'Rare Collectibles', ob1_desc:'Discover the world\'s most exclusive luxury pieces',
-    ob2_title:'Live Auctions', ob2_desc:'Participate in live auctions with full transparency',
-    ob3_title:'Trust & Assurance', ob3_desc:'Every piece certified with a verified certificate',
+  en:{
+    home:'Home',explore:'Explore',messages:'Messages',profile:'Profile',
+    search_ph:'Search watches, jewelry...',
+    live_section:'🔴 Live Auctions',view_all:'View All',
+    latest:'Latest Listings',cats_title:'Browse by Category',
+    all:'All',watches:'⌚ Watches',jewelry:'💎 Jewelry',cars:'🚗 Cars',art:'🎨 Art',collectibles:'🏺 Collectibles',
+    direct:'Buy Now',auction:'Auction',certified:'Certified',
+    current_bid:'Current Bid',time_left:'Time Left',bid_now:'Place Bid',buy_now:'Buy Now',
+    contact_seller:'Contact Seller',register:'Register',registered:'Registered ✓',
+    item_detail:'Item Detail',description:'Description',condition:'Condition',
+    certificate:'Certificate of Authenticity',certified_sub:'Verified & certified piece',
+    shipping:'Shipping',secure_ship:'Secure & insured shipping',free_ship:'Free shipping within KSA',
+    city:'City',cat:'Category',
+    hours:'Hours',minutes:'Min',seconds:'Sec',
+    live:'Live',stream:'Live Stream',attendees:'Attendees',
+    bid_inc:'Bid Increment',latest_bids:'Recent Bids',winning:"You're Winning",
+    confirm_bid:'Confirm Bid',cancel:'Cancel',confirm:'Confirm',
+    extended:'⏱ Auction extended 30 seconds',anon:'Anonymous Bidder',
+    bid_placed:'Bid Placed ✓',settings:'Settings',
+    language:'Language',appearance:'Appearance',dark_mode:'Dark Mode',light_mode:'Light Mode',
+    post_hdr:'New Listing',choose_cat:'Choose Category',choose_cat_sub:'What are you selling?',
+    item_details_lbl:'Item Details',item_details_sub:'Enter accurate product details',
+    name_lbl:'Product Name',price_lbl:'Price (SAR)',type_lbl:'Listing Type',cond_lbl:'Condition',city_lbl:'City',desc_lbl:'Description',
+    post_btn:'Publish Listing',success_title:'Listing Published!',success_sub:'Your listing is now live for buyers',back_home:'Back to Home',
+    msgs_title:'Messages',prof_title:'Profile',my_listings:'My Listings',favorites:'Favorites',sold:'Sold',rating:'Rating',
+    follow:'Follow',following:'Following ✓',online:'Online Now',write_msg:'Type a message...',
+    notif_title:'Notifications',
+    cond_mint:'Mint — Never used',cond_exc:'Excellent',cond_vg:'Very Good',cond_good:'Good',
+    sar:'SAR',
   }
 };
-const t = k => tr[lang][k] || k;
+const t = k => (T[lang]||T.ar)[k] || k;
 
-// ══════════════════════════════════════════════
-//  CURRENCY FORMAT
-// ══════════════════════════════════════════════
-function fmtCurrency(n) {
-  if (lang === 'ar') return n.toLocaleString('ar-SA') + ' ر.س';
-  return 'SAR ' + n.toLocaleString('en');
-}
-function fmtChip(n) {
-  if (lang === 'ar') return '+' + n.toLocaleString('ar-SA') + ' ر.س';
-  return '+SAR ' + n.toLocaleString('en');
-}
+// ═══════════════════════════════
+//  DATA
+// ═══════════════════════════════
+const now = Date.now(), H = 3600000, D = 86400000;
+const ITEMS = [
+  {id:'1',type:'auction',cat:'watches',isLive:true,featured:true,certified:true,
+   nameAr:'رولكس دايتونا ١٦٥٢٠',nameEn:'Rolex Daytona 16520',
+   descAr:'ساعة رولكس دايتونا الأسطورية إصدار ١٩٩٢، هيكل ستانلس ستيل مع مينا بيضاء نادرة. مع الصندوق والوثائق الأصلية.',
+   descEn:'Legendary Rolex Daytona ref.16520, 1992, stainless steel, rare white dial. Full set with original box & papers.',
+   condAr:'ممتازة جداً',condEn:'Excellent',city:'الرياض',cityEn:'Riyadh',
+   price:285000,endTime:now+2*H,attendees:147,increment:5000,
+   seller:{av:'👨‍💼',name:'محمد الشمري',nameEn:'Mohammed Al-Shammari',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600','https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=600']},
+  {id:'2',type:'auction',cat:'watches',isLive:true,featured:true,certified:true,
+   nameAr:'باتيك فيليب نوتيلوس ٥٧١١',nameEn:'Patek Philippe Nautilus 5711',
+   descAr:'باتيك فيليب نوتيلوس المرجع ٥٧١١/١أ، مينا زرقاء أيقونية. حركة أوتوماتيكية كاليبر ٣٢٤ SC.',
+   descEn:'Patek Philippe Nautilus ref.5711/1A, iconic blue dial. Self-winding caliber 324 SC.',
+   condAr:'مينت — لم تستخدم',condEn:'Mint — Unworn',city:'جدة',cityEn:'Jeddah',
+   price:620000,endTime:now+4*H,attendees:284,increment:10000,
+   seller:{av:'👩‍💼',name:'سارة القحطاني',nameEn:'Sara Al-Qahtani',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1619134778706-7015533a6150?w=600','https://images.unsplash.com/photo-1551818255-e7b168f61ac1?w=600']},
+  {id:'3',type:'direct',cat:'watches',isLive:false,featured:false,certified:true,
+   nameAr:'أوديمار بيغيه رويال أوك',nameEn:'Audemars Piguet Royal Oak',
+   descAr:'رويال أوك المرجع ١٥٢٠٢، فولاذ مصقول مع مينا رمادية. تحفة هندسية فريدة.',
+   descEn:'Royal Oak ref.15202ST, polished steel, grey tapisserie dial. An iconic geometric masterpiece.',
+   condAr:'جيدة جداً',condEn:'Very Good',city:'الدمام',cityEn:'Dammam',
+   price:410000,endTime:now+D,attendees:156,increment:10000,
+   seller:{av:'👨',name:'فيصل العتيبي',nameEn:'Faisal Al-Otaibi',rating:'⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1612817288484-6f916006741a?w=600']},
+  {id:'4',type:'direct',cat:'watches',isLive:false,featured:false,certified:true,
+   nameAr:'ريتشارد ميل RM 011 تيتانيوم',nameEn:'Richard Mille RM 011 Titanium',
+   descAr:'ريتشارد ميل RM ٠١١ كرونوغراف متطور بهيكل تيتانيوم وكربون. مع الصندوق والوثائق.',
+   descEn:'Richard Mille RM 011 flyback chronograph, titanium & carbon case. Full set.',
+   condAr:'ممتازة',condEn:'Excellent',city:'أبوظبي',cityEn:'Abu Dhabi',
+   price:520000,endTime:now+3*D,attendees:203,increment:10000,
+   seller:{av:'👨‍🦱',name:'خالد النعيمي',nameEn:'Khalid Al-Nuaimi',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=600']},
+  {id:'5',type:'direct',cat:'watches',isLive:false,featured:false,certified:true,
+   nameAr:'رولكس سابماريني ١٢٦٦١٠',nameEn:'Rolex Submariner 126610',
+   descAr:'رولكس سابماريني الجديد ٢٠٢١، هيكل أويستر من الستانلس ستيل، مينا سوداء. لم تستخدم.',
+   descEn:'Rolex Submariner 126610LN 2021, Oystersteel case, black dial. Unworn.',
+   condAr:'مينت — لم تستخدم',condEn:'Mint',city:'الرياض',cityEn:'Riyadh',
+   price:98000,endTime:now+2*D,attendees:89,increment:2000,
+   seller:{av:'🧑',name:'عمر المطيري',nameEn:'Omar Al-Mutairi',rating:'⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1609587312208-cea54be969e7?w=600']},
+  {id:'6',type:'auction',cat:'jewelry',isLive:false,featured:false,certified:true,
+   nameAr:'سوار الماس تنس ١٥ قيراط',nameEn:'Diamond Tennis Bracelet 15ct',
+   descAr:'سوار من الذهب الأبيض ١٨ قيراطاً، ٤٢ ماسة طبيعية وزن إجمالي ١٥ قيراطاً، تصنيف D، نقاء VVS1. شهادة GIA.',
+   descEn:'18k white gold, 42 natural diamonds totaling 15ct, D color, VVS1. GIA certified.',
+   condAr:'ممتازة جداً',condEn:'Excellent',city:'جدة',cityEn:'Jeddah',
+   price:185000,endTime:now+6*H,attendees:89,increment:5000,
+   seller:{av:'👩',name:'نورا السالم',nameEn:'Nora Al-Salem',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600','https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=600']},
+  {id:'7',type:'direct',cat:'jewelry',isLive:false,featured:true,certified:true,
+   nameAr:'خاتم ماسي هاري وينستون ٣.٢ قيراط',nameEn:'Harry Winston Diamond Ring 3.2ct',
+   descAr:'خاتم بلاتين ٩٥٠، ماسة مركزية ٣.٢ قيراط تصنيف E VS1، قطع وسادة مع هالة بافيه.',
+   descEn:'Platinum 950, 3.2ct center diamond E VS1 cushion cut, with pavé halo.',
+   condAr:'مينت — جديد',condEn:'Mint — New',city:'الرياض',cityEn:'Riyadh',
+   price:95000,endTime:now+2*D,attendees:67,increment:2500,
+   seller:{av:'👩‍🦰',name:'منال الحربي',nameEn:'Manal Al-Harbi',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600','https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600']},
+  {id:'8',type:'direct',cat:'jewelry',isLive:false,featured:false,certified:true,
+   nameAr:'قلادة كارتييه لاف ذهب أصفر',nameEn:'Cartier Love Necklace Yellow Gold',
+   descAr:'قلادة كارتييه لاف من الذهب الأصفر عيار ١٨ قيراطاً. من أكثر التصاميم المطلوبة عالمياً.',
+   descEn:'Cartier Love necklace, 18k yellow gold. One of the most sought-after designs worldwide.',
+   condAr:'ممتازة',condEn:'Excellent',city:'دبي',cityEn:'Dubai',
+   price:45000,endTime:now+5*D,attendees:34,increment:1000,
+   seller:{av:'👩‍💼',name:'ليلى المنصور',nameEn:'Layla Al-Mansour',rating:'⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1576022162116-a0bf76a25e58?w=600']},
+  {id:'9',type:'auction',cat:'cars',isLive:false,featured:false,certified:false,
+   nameAr:'بنتلي كونتيننتال GT 2023',nameEn:'Bentley Continental GT 2023',
+   descAr:'بنتلي كونتيننتال GT 2023، لون أسود، داخلية جلد بيضاء. ١٢ اسطوانة، 659 حصان. 0 كيلومتر.',
+   descEn:'Bentley Continental GT 2023, black exterior, white leather interior. W12 659hp. 0km.',
+   condAr:'جديدة ـ ٠ كم',condEn:'New — 0km',city:'الرياض',cityEn:'Riyadh',
+   price:1200000,endTime:now+8*H,attendees:312,increment:20000,
+   seller:{av:'🧑‍💼',name:'تركي العجمي',nameEn:'Turki Al-Ajmi',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?w=600']},
+  {id:'10',type:'direct',cat:'cars',isLive:false,featured:false,certified:false,
+   nameAr:'بورش ٩١١ تارجا ٤S',nameEn:'Porsche 911 Targa 4S',
+   descAr:'بورش ٩١١ تارجا ٤S 2022، لون فضي. مواصفات خليجية. خطأ صفري.',
+   descEn:'Porsche 911 Targa 4S 2022, silver. GCC specs. Zero accidents.',
+   condAr:'ممتازة جداً',condEn:'Very Good',city:'جدة',cityEn:'Jeddah',
+   price:780000,endTime:now+4*D,attendees:156,increment:10000,
+   seller:{av:'👨‍🦳',name:'سعد الغامدي',nameEn:'Saad Al-Ghamdi',rating:'⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600']},
+  {id:'11',type:'auction',cat:'art',isLive:false,featured:false,certified:true,
+   nameAr:'لوحة زيتية أصيلة - فن تجريدي',nameEn:'Original Oil Painting — Abstract Art',
+   descAr:'لوحة زيتية أصيلة للفنان السعودي أحمد الرشيدي، ١٢٠×٩٠ سم. موقعة ومرقمة ١٢/٥٠.',
+   descEn:'Original oil painting by Saudi artist Ahmed Al-Rashidi, 120x90cm. Signed & numbered 12/50.',
+   condAr:'ممتازة — مؤطرة',condEn:'Excellent — Framed',city:'الرياض',cityEn:'Riyadh',
+   price:85000,endTime:now+12*H,attendees:45,increment:2000,
+   seller:{av:'🧑‍🎨',name:'أحمد الرشيدي',nameEn:'Ahmed Al-Rashidi',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=600']},
+  {id:'12',type:'direct',cat:'art',isLive:false,featured:false,certified:true,
+   nameAr:'تمثال برونزي نادر - أسد',nameEn:'Rare Bronze Sculpture — Lion',
+   descAr:'تمثال برونزي نادر يصور أسداً ملكياً، مصنوع يدوياً في إيطاليا. ارتفاع ٤٥ سم.',
+   descEn:'Rare handcrafted bronze lion sculpture made in Italy. Height 45cm.',
+   condAr:'ممتازة',condEn:'Excellent',city:'الدمام',cityEn:'Dammam',
+   price:120000,endTime:now+6*D,attendees:28,increment:5000,
+   seller:{av:'👨‍🎨',name:'يوسف الدوسري',nameEn:'Yousef Al-Dosari',rating:'⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=600']},
+  {id:'13',type:'direct',cat:'collectibles',isLive:false,featured:true,certified:true,
+   nameAr:'حقيبة هيرميس بيركين ٣٥ نادرة',nameEn:'Hermès Birkin 35 Rare Edition',
+   descAr:'حقيبة هيرميس بيركين ٣٥ من جلد كروكو أسود مع أقفال ذهبية. مع الصندوق والوثائق الأصلية.',
+   descEn:'Hermès Birkin 35 black crocodile leather with gold hardware. Full set, box & papers.',
+   condAr:'ممتازة جداً',condEn:'Excellent',city:'جدة',cityEn:'Jeddah',
+   price:180000,endTime:now+3*D,attendees:87,increment:5000,
+   seller:{av:'👩‍💼',name:'هند الزهراني',nameEn:'Hind Al-Zahrani',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600']},
+  {id:'14',type:'auction',cat:'collectibles',isLive:false,featured:false,certified:true,
+   nameAr:'كاميرا لايكا M٣ فينتاج ١٩٥٤',nameEn:'Leica M3 Vintage Camera 1954',
+   descAr:'كاميرا لايكا M3 أصلية من إنتاج عام ١٩٥٤. الحالة مثالية نادراً ما تجده في السوق.',
+   descEn:'Original Leica M3 camera from 1954. Exceptional condition, rarely found in this state.',
+   condAr:'ممتازة جداً',condEn:'Very Good',city:'الرياض',cityEn:'Riyadh',
+   price:25000,endTime:now+18*H,attendees:52,increment:1000,
+   seller:{av:'📸',name:'فارس المالكي',nameEn:'Fares Al-Maliki',rating:'⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1502920514313-52581002a659?w=600']},
+  {id:'15',type:'direct',cat:'collectibles',isLive:false,featured:false,certified:true,
+   nameAr:'طوابع ملكية نادرة - مجموعة',nameEn:'Rare Royal Stamp Collection',
+   descAr:'مجموعة طوابع ملكية نادرة من المملكة العربية السعودية والدول الخليجية، أكثر من ٢٠٠ طابع نادر.',
+   descEn:'Rare royal stamp collection from Saudi Arabia & Gulf states, 200+ rare stamps.',
+   condAr:'ممتازة',condEn:'Excellent',city:'الرياض',cityEn:'Riyadh',
+   price:42000,endTime:now+7*D,attendees:19,increment:1000,
+   seller:{av:'📮',name:'عبدالله الحسن',nameEn:'Abdullah Al-Hassan',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1574236170878-2d4e18b70f5e?w=600']},
+  {id:'16',type:'auction',cat:'collectibles',isLive:false,featured:false,certified:true,
+   nameAr:'عملة ذهبية عثمانية نادرة',nameEn:'Rare Ottoman Gold Coin',
+   descAr:'عملة ذهبية عثمانية نادرة تعود إلى عام ١٢٨٠ هجري، تمثل السلطان عبدالعزيز خان.',
+   descEn:'Rare Ottoman gold coin dated 1280 AH, featuring Sultan Abdulaziz Khan.',
+   condAr:'ممتازة',condEn:'Excellent',city:'الكويت',cityEn:'Kuwait',
+   price:18000,endTime:now+24*H,attendees:67,increment:500,
+   seller:{av:'🪙',name:'ناصر الرشيد',nameEn:'Nasser Al-Rashid',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1560969184-10fe8719e047?w=600']},
+  {id:'17',type:'direct',cat:'jewelry',isLive:false,featured:false,certified:true,
+   nameAr:'أساور بولغاري B.zero1',nameEn:'Bulgari B.zero1 Bracelet',
+   descAr:'أساور بولغاري B.zero1 من الذهب الأصفر عيار ١٨ قيراطاً مع تفاصيل سيراميك أبيض.',
+   descEn:'Bulgari B.zero1 bracelet, 18k yellow gold with white ceramic details.',
+   condAr:'ممتازة — كامل الملحقات',condEn:'Excellent — Full set',city:'دبي',cityEn:'Dubai',
+   price:65000,endTime:now+4*D,attendees:41,increment:2000,
+   seller:{av:'💍',name:'ريم الفارس',nameEn:'Reem Al-Faris',rating:'⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1573408301185-9519f94f5994?w=600']},
+  {id:'18',type:'auction',cat:'watches',isLive:false,featured:false,certified:true,
+   nameAr:'باتيك فيليب كاليترافا ٥١٩٦',nameEn:'Patek Philippe Calatrava 5196',
+   descAr:'باتيك فيليب كاليترافا المرجع ٥١٩٦G، ذهب أبيض ١٨ قيراطاً، مينا بيضاء. أرقى ساعات الدريس.',
+   descEn:'Patek Philippe Calatrava ref.5196G, 18k white gold, white dial. The pinnacle of dress watches.',
+   condAr:'ممتازة جداً',condEn:'Excellent',city:'الرياض',cityEn:'Riyadh',
+   price:185000,endTime:now+30*H,attendees:112,increment:5000,
+   seller:{av:'⌚',name:'محمد الجبر',nameEn:'Mohammed Al-Jabr',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1584703105124-6a89e5de5d20?w=600']},
+  {id:'19',type:'direct',cat:'art',isLive:false,featured:false,certified:true,
+   nameAr:'خط عربي ذهبي - بسم الله',nameEn:'Golden Arabic Calligraphy — Bismillah',
+   descAr:'لوحة خط عربي ذهبي فاخر، نص بسم الله الرحمن الرحيم. ذهب خالص على ورق الجلد، ٦٠×٤٠ سم.',
+   descEn:'Luxury golden Arabic calligraphy, Bismillah text. Pure gold on vellum, 60x40cm.',
+   condAr:'جديدة',condEn:'New',city:'جدة',cityEn:'Jeddah',
+   price:22000,endTime:now+8*D,attendees:23,increment:500,
+   seller:{av:'✍️',name:'إبراهيم القاضي',nameEn:'Ibrahim Al-Qadi',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1612599316791-451087c7fe15?w=600']},
+  {id:'20',type:'auction',cat:'jewelry',isLive:false,featured:false,certified:true,
+   nameAr:'عقد لؤلؤ طبيعي نادر',nameEn:'Rare Natural Pearl Necklace',
+   descAr:'عقد من اللؤلؤ الطبيعي الخليجي النادر، ٤٥ حبة لؤلؤ بحجم متدرج. مع شهادة مختبر جيمولوجيكال.',
+   descEn:'Rare Gulf natural pearl necklace, 45 graduated pearls. With Gemological Laboratory certificate.',
+   condAr:'ممتازة',condEn:'Excellent',city:'البحرين',cityEn:'Bahrain',
+   price:145000,endTime:now+36*H,attendees:78,increment:5000,
+   seller:{av:'🦪',name:'حمد الخليفة',nameEn:'Hamad Al-Khalifa',rating:'⭐⭐⭐⭐⭐'},
+   imgs:['https://images.unsplash.com/photo-1603561600928-f2ea8a32fde9?w=600']},
+];
 
-// ══════════════════════════════════════════════
-//  SCREEN NAVIGATION
-// ══════════════════════════════════════════════
-function goTo(screen, fromRight=true) {
+const STORIES = [
+  {em:'👨‍💼',name:'محمد',nameEn:'Mohammed'},{em:'👩‍💼',name:'سارة',nameEn:'Sara'},
+  {em:'👨',name:'فيصل',nameEn:'Faisal'},{em:'👩',name:'نورا',nameEn:'Noura'},
+  {em:'🧑‍💼',name:'تركي',nameEn:'Turki'},{em:'👩‍🦰',name:'منال',nameEn:'Manal'},
+  {em:'👨‍🦱',name:'خالد',nameEn:'Khalid'},{em:'🧑',name:'عمر',nameEn:'Omar'},
+];
+
+const CONVOS = [
+  {av:'👨‍💼',name:'محمد الشمري',nameEn:'Mohammed Al-Shammari',
+   lastAr:'هل الساعة متاحة للمعاينة؟',lastEn:'Is the watch available for viewing?',time:'٩:٣٢',unread:2,
+   msgs:[
+     {text:'مساء الخير، هل رولكس الدايتونا لا تزال متاحة؟',en:'Good evening, is the Daytona still available?',mine:false,time:'9:28'},
+     {text:'نعم متاحة وبحالة ممتازة',en:'Yes available and in excellent condition',mine:true,time:'9:30'},
+     {text:'هل الساعة متاحة للمعاينة؟',en:'Is the watch available for viewing?',mine:false,time:'9:32'},
+   ]},
+  {av:'👩',name:'نورا السالم',nameEn:'Nora Al-Salem',
+   lastAr:'شكراً للتواصل!',lastEn:'Thanks for reaching out!',time:'أمس',unread:0,
+   msgs:[{text:'مرحباً بك',en:'Welcome',mine:true,time:'Yesterday'}]},
+  {av:'👩‍💼',name:'سارة القحطاني',nameEn:'Sara Al-Qahtani',
+   lastAr:'سأبعث لك صوراً إضافية',lastEn:"I'll send you more photos",time:'أمس',unread:1,
+   msgs:[{text:'سأبعث لك صوراً إضافية',en:"I'll send you more photos",mine:false,time:'Yesterday'}]},
+  {av:'👩‍💼',name:'هند الزهراني',nameEn:'Hind Al-Zahrani',
+   lastAr:'السعر نهائي',lastEn:'Final price',time:'٢ يناير',unread:0,
+   msgs:[{text:'السعر نهائي',en:'Final price',mine:false,time:'Jan 2'}]},
+  {av:'🧑‍💼',name:'تركي العجمي',nameEn:'Turki Al-Ajmi',
+   lastAr:'تم التوصيل بنجاح ✓',lastEn:'Delivered successfully ✓',time:'١ يناير',unread:0,
+   msgs:[{text:'تم التوصيل بنجاح ✓',en:'Delivered successfully ✓',mine:false,time:'Jan 1'}]},
+];
+
+const NOTIFS = [
+  {icon:'🔨',textAr:'تجاوزك مزايد في رولكس دايتونا',textEn:'You were outbid on Rolex Daytona',time:'منذ ٥ دقائق'},
+  {icon:'💬',textAr:'رسالة جديدة من محمد الشمري',textEn:'New message from Mohammed Al-Shammari',time:'منذ ١٥ دقيقة'},
+  {icon:'⭐',textAr:'تقييم جديد على إعلانك',textEn:'New review on your listing',time:'منذ ساعة'},
+  {icon:'🏷️',textAr:'تم نشر إعلانك بنجاح',textEn:'Your listing was published successfully',time:'اليوم'},
+  {icon:'📢',textAr:'مزاد جديد: باتيك فيليب كاليترافا',textEn:'New auction: Patek Philippe Calatrava',time:'اليوم'},
+];
+
+// ═══════════════════════════════
+//  STATE
+// ═══════════════════════════════
+let lang = 'ar', theme = 'dark';
+let currentScreen = 'splash', prevScreen = null;
+let activeTab = 'home';
+let activeCat = 'all';
+let obPhase = 'lang', obSlide = 0;
+let activeItem = ITEMS[0];
+let activeConvo = CONVOS[0];
+let laItem = ITEMS[0], laEndTime = ITEMS[0].endTime, laChip = 0;
+let laBidHistory = [];
+let favs = new Set();
+let postCat = '', postType = 'direct';
+let profActiveTab = 'mine';
+
+// ═══════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════
+function goTo(screen) {
   const old = document.getElementById(currentScreen);
   const next = document.getElementById(screen);
-  if (old) { old.classList.remove('active'); old.classList.add(fromRight ? 'slide-left' : ''); setTimeout(()=>old.classList.remove('slide-left'),300); }
+  if (!next) return;
+  if (old) { old.classList.remove('active'); }
   prevScreen = currentScreen;
   currentScreen = screen;
-  if (next) { next.style.transform = fromRight ? 'translateX(30px)' : 'translateX(-30px)'; next.classList.add('active'); setTimeout(()=>next.style.transform='',10); }
+  next.style.transform = 'translateX(28px)';
+  next.classList.add('active');
+  requestAnimationFrame(() => { next.style.transform = ''; });
 }
-function goBack() { if (prevScreen) goTo(prevScreen, false); }
+function goBack() {
+  if (prevScreen) goTo(prevScreen);
+}
 
-// ══════════════════════════════════════════════
-//  SPLASH → ONBOARDING
-// ══════════════════════════════════════════════
-setTimeout(()=>{
-  const splash = document.getElementById('splash');
-  splash.style.opacity='0'; splash.style.transition='opacity .5s';
-  setTimeout(()=>{ splash.style.display='none'; goTo('onboarding'); }, 500);
+function switchTab(tab) {
+  activeTab = tab;
+  const map = {home:'home',explore:'explore',messages:'messages',profile:'profile'};
+  if (map[tab]) goTo(map[tab]);
+  if (tab === 'home') renderHome();
+  if (tab === 'explore') renderExplore();
+  if (tab === 'messages') renderMessages();
+  if (tab === 'profile') renderProfile();
+}
+
+// ═══════════════════════════════
+//  SPLASH + ONBOARDING
+// ═══════════════════════════════
+setTimeout(() => {
+  const sp = document.getElementById('splash');
+  sp.style.opacity = '0'; sp.style.transition = 'opacity .5s';
+  setTimeout(() => { sp.style.display = 'none'; goTo('onboarding'); }, 500);
 }, 3000);
 
-// ══════════════════════════════════════════════
-//  ONBOARDING
-// ══════════════════════════════════════════════
-function selectLang(l) {
+function selLang(l) {
   lang = l;
   document.documentElement.lang = l;
   document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
-  document.getElementById('lang-ar').classList.toggle('sel', l==='ar');
-  document.getElementById('lang-en').classList.toggle('sel', l==='en');
-  document.getElementById('ob-lang-title').textContent = t('choose_language');
-  document.getElementById('ob-lang-btn').textContent = t('next');
+  document.getElementById('lbln-ar').classList.toggle('sel', l==='ar');
+  document.getElementById('lbln-en').classList.toggle('sel', l==='en');
+  document.getElementById('ob-lang-next').textContent = l==='ar'?'التالي':'Next';
+  document.getElementById('ob-lang-t').textContent = l==='ar'?'اختر لغتك':'Choose Your Language';
 }
-function selectTheme(th) {
-  theme = th;
-  document.documentElement.setAttribute('data-theme', th === 'light' ? 'light' : 'dark');
-  document.getElementById('theme-dark').classList.toggle('sel', th==='dark');
-  document.getElementById('theme-light').classList.toggle('sel', th==='light');
-  document.getElementById('theme-system').classList.toggle('sel', th==='system');
-  updateThemeToggleBtn();
-}
-function obNextPhase(next) {
-  if (next === 'theme') {
-    document.getElementById('ob-lang').style.display='none';
-    document.getElementById('ob-theme').style.display='flex';
-    document.getElementById('ob-theme-title').textContent = t('choose_theme');
-    document.getElementById('ob-theme-btn').textContent = t('next');
-    document.getElementById('t-dark-lbl').textContent = t('dark_mode');
-    document.getElementById('t-light-lbl').textContent = t('light_mode');
-    document.getElementById('t-sys-lbl').textContent = t('system_mode');
-  } else if (next === 'slides') {
-    document.getElementById('ob-theme').style.display='none';
-    const sw = document.getElementById('ob-slides-wrap');
-    sw.style.display='flex';
-    updateObSlide();
-  }
-}
-function updateObSlide() {
-  document.getElementById('ob-s1-title').textContent = t('ob1_title');
-  document.getElementById('ob-s1-desc').textContent = t('ob1_desc');
-  document.getElementById('ob-s2-title').textContent = t('ob2_title');
-  document.getElementById('ob-s2-desc').textContent = t('ob2_desc');
-  document.getElementById('ob-s3-title').textContent = t('ob3_title');
-  document.getElementById('ob-s3-desc').textContent = t('ob3_desc');
-  document.getElementById('ob-skip').textContent = t('skip');
-  const isLast = obSlideIndex === 2;
-  document.getElementById('ob-slide-btn').textContent = isLast ? t('get_started') : t('next');
-  document.getElementById('ob-skip').style.display = isLast ? 'none' : 'block';
-  document.getElementById('ob-slides').style.transform = `translateX(${obSlideIndex * (lang==='ar'?100:-100)}%)`;
-  [0,1,2].forEach(i=>document.getElementById('dot-'+i).classList.toggle('active',i===obSlideIndex));
-}
-function obSlideNext() {
-  if (obSlideIndex < 2) { obSlideIndex++; updateObSlide(); }
-  else finishOnboarding();
-}
-function finishOnboarding() {
-  goTo('home');
-  renderCards();
-  applyAllTranslations();
-  startStatusClock();
-  startLiveBidding();
-}
-
-// ══════════════════════════════════════════════
-//  LANGUAGE TOGGLE
-// ══════════════════════════════════════════════
-function toggleLang() { setLang(lang==='ar'?'en':'ar'); }
-function setLang(l) {
-  lang = l;
-  document.documentElement.lang = l;
-  document.documentElement.dir = l==='ar'?'rtl':'ltr';
-  document.getElementById('lang-toggle').textContent = l==='ar'?'ع':'EN';
-  document.getElementById('s-ar').style.color = l==='ar'?'var(--gold)':'var(--text1)';
-  document.getElementById('s-en').style.color = l==='en'?'var(--gold)':'var(--text1)';
-  document.getElementById('s-ar-check').style.display = l==='ar'?'':'none';
-  document.getElementById('s-en-check').style.display = l==='en'?'':'none';
-  applyAllTranslations();
-  renderCards();
-  if (currentScreen==='live-auction') renderLiveScreen();
-  if (currentScreen==='item-detail') renderDetailScreen();
-  updateLiveBanner();
-}
-
-// ══════════════════════════════════════════════
-//  THEME TOGGLE
-// ══════════════════════════════════════════════
-function toggleThemeBtn() { setThemeSetting(theme==='dark'?'light':'dark'); }
-function setThemeSetting(th) {
+function selTheme(th) {
   theme = th;
   document.documentElement.setAttribute('data-theme', th==='light'?'light':'dark');
-  updateThemeToggleBtn();
-  document.getElementById('s-dark').style.color = th==='dark'?'var(--gold)':'var(--text1)';
-  document.getElementById('s-light').style.color = th==='light'?'var(--gold)':'var(--text1)';
-  document.getElementById('s-dark-check').style.display = th==='dark'?'':'none';
-  document.getElementById('s-light-check').style.display = th==='light'?'':'none';
+  document.getElementById('th-dark').classList.toggle('sel', th==='dark');
+  document.getElementById('th-light').classList.toggle('sel', th==='light');
+  updateThemeIco();
 }
-function updateThemeToggleBtn() {
-  const btns = document.querySelectorAll('.icon-btn');
-  btns[1].textContent = theme==='dark'?'☀️':'🌙';
+function obPhase(ph) {
+  document.getElementById('ob-lang').style.display = 'none';
+  document.getElementById('ob-theme').style.display = 'none';
+  document.getElementById('ob-slides-wrap').style.display = 'none';
+  if (ph==='theme') {
+    document.getElementById('ob-theme').style.display = 'flex';
+    document.getElementById('ob-theme-t').textContent = lang==='ar'?'اختر المظهر':'Choose Theme';
+    document.getElementById('ob-theme-next').textContent = lang==='ar'?'التالي':'Next';
+    document.getElementById('th-dark-lbl').textContent = t('dark_mode');
+    document.getElementById('th-light-lbl').textContent = t('light_mode');
+  } else if (ph==='slides') {
+    const w = document.getElementById('ob-slides-wrap');
+    w.style.display = 'flex';
+    updateObSlides();
+  }
+}
+function updateObSlides() {
+  const slides = [
+    [t('ob1_title')||'مقتنيات نادرة', t('ob1_desc')||'اشترِ وبع أندر المقتنيات الفاخرة بثقة وأمان'],
+    [t('ob2_title')||'بيع وشراء مباشر', t('ob2_desc')||'أضف إعلانك في ثوانٍ وتواصل مع المشترين مباشرة'],
+    [t('ob3_title')||'مزادات حصرية', t('ob3_desc')||'شارك في مزادات مباشرة لأندر القطع الفاخرة'],
+  ];
+  slides.forEach(([title,desc],i) => {
+    const el = document.getElementById('ob-s'+(i+1)+'t');
+    const el2 = document.getElementById('ob-s'+(i+1)+'d');
+    if(el) el.textContent=title; if(el2) el2.textContent=desc;
+  });
+  document.getElementById('ob-slides').style.transform = `translateX(${obSlide*(lang==='ar'?100:-100)}%)`;
+  [0,1,2].forEach(i=>document.getElementById('od'+i).classList.toggle('active',i===obSlide));
+  document.getElementById('ob-slide-next').textContent = obSlide===2?(lang==='ar'?'ابدأ الآن':'Get Started'):(lang==='ar'?'التالي':'Next');
+  document.getElementById('ob-skip').style.display = obSlide===2?'none':'block';
+  document.getElementById('ob-skip').textContent = lang==='ar'?'تخطي':'Skip';
+}
+function obSlideNext() {
+  if (obSlide<2) { obSlide++; updateObSlides(); } else finishOb();
+}
+function finishOb() {
+  goTo('home');
+  renderHome();
+  renderMessages();
+  renderProfile();
+  renderExplore();
+  renderNotifications();
+  startClock();
+  startLiveBidding();
+  applyAllTrans();
 }
 
-// ══════════════════════════════════════════════
-//  STATUS CLOCK
-// ══════════════════════════════════════════════
-function startStatusClock() {
-  const update = () => {
-    const d = new Date();
-    let h = d.getHours(), m = d.getMinutes();
-    if (lang==='ar') {
-      document.getElementById('statusTime').textContent = `${h}:${String(m).padStart(2,'0')}`;
-    } else {
-      const ampm = h>=12?'PM':'AM'; h=h%12||12;
-      document.getElementById('statusTime').textContent = `${h}:${String(m).padStart(2,'0')} ${ampm}`;
-    }
-  };
-  update(); setInterval(update, 30000);
+// ═══════════════════════════════
+//  CLOCK
+// ═══════════════════════════════
+function startClock() {
+  function upd() {
+    const d = new Date(), h = d.getHours(), m = d.getMinutes();
+    document.getElementById('sbar-time').textContent = lang==='ar'
+      ? `${h}:${String(m).padStart(2,'0')}`
+      : `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+  }
+  upd(); setInterval(upd,30000);
 }
 
-// ══════════════════════════════════════════════
-//  COUNTDOWN UTILS
-// ══════════════════════════════════════════════
-function getTimeLeft(endTime) {
-  const diff = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-  return { days:Math.floor(diff/86400), hours:Math.floor((diff%86400)/3600), minutes:Math.floor((diff%3600)/60), seconds:diff%60, total:diff };
+// ═══════════════════════════════
+//  FORMAT
+// ═══════════════════════════════
+function fmtSAR(n) {
+  return lang==='ar' ? n.toLocaleString('ar-SA')+' ر.س' : 'SAR '+n.toLocaleString('en');
+}
+function fmtChip(n) {
+  return lang==='ar' ? '+'+n.toLocaleString('ar-SA')+' ر.س' : '+SAR '+n.toLocaleString('en');
 }
 function pad(n) { return String(n).padStart(2,'0'); }
-function fmtCompact(endTime) {
-  const {days,hours,minutes,seconds} = getTimeLeft(endTime);
-  if (days>0) return pad(days)+'d '+pad(hours)+'h';
-  return pad(hours)+':'+pad(minutes)+':'+pad(seconds);
+function getTimeLeft(end) {
+  const diff = Math.max(0, Math.floor((end - Date.now())/1000));
+  return {d:Math.floor(diff/86400),h:Math.floor((diff%86400)/3600),m:Math.floor((diff%3600)/60),s:diff%60,total:diff};
+}
+function fmtCompact(end) {
+  const r = getTimeLeft(end);
+  if(r.d>0) return pad(r.d)+(lang==='ar'?'ي ':' d ')+pad(r.h)+(lang==='ar'?'س':' h');
+  return pad(r.h)+':'+pad(r.m)+':'+pad(r.s);
+}
+function itemName(item) { return lang==='ar'?item.nameAr:item.nameEn; }
+function itemCity(item) { return lang==='ar'?(item.city||'الرياض'):(item.cityEn||'Riyadh'); }
+function typeBadge(item) {
+  if (item.isLive) return `<div class="type-badge auction">🔴 ${t('live')}</div>`;
+  return item.type==='auction'
+    ? `<div class="type-badge auction">🔨 ${t('auction')}</div>`
+    : `<div class="type-badge direct">🏷️ ${t('direct')}</div>`;
 }
 
-// Update all card countdowns
-setInterval(()=>{
-  document.querySelectorAll('[data-countdown]').forEach(el=>{
-    const id = el.dataset.countdown;
-    const item = items.find(i=>i.id===id);
-    if (!item) return;
-    const t2 = getTimeLeft(item.endTime);
-    el.textContent = fmtCompact(item.endTime);
-    el.classList.toggle('urgent', t2.total<=10);
-  });
-  updateLiveCountdown();
-  updateDetailCountdown();
-}, 1000);
+// ═══════════════════════════════
+//  HOME
+// ═══════════════════════════════
+function renderHome() {
+  applyAllTrans();
+  renderStories();
+  renderCatChips();
+  renderLiveCards();
+  renderMainGrid();
+}
 
-// ══════════════════════════════════════════════
-//  RENDER CARDS
-// ══════════════════════════════════════════════
-function switchTab(tab) {
-  activeTab = tab;
-  document.querySelectorAll('.tab').forEach(t2=>t2.classList.toggle('active', t2.dataset.tab===tab));
-  renderCards();
+function renderStories() {
+  const row = document.getElementById('stories-row');
+  row.innerHTML = STORIES.map(s=>`
+    <div class="story" onclick="showToast('${lang==='ar'?s.name:s.nameEn}')">
+      <div class="story-ring"><div class="story-avatar">${s.em}</div></div>
+      <div class="story-name">${lang==='ar'?s.name:s.nameEn}</div>
+    </div>`).join('');
 }
-function getTabItems() {
-  if (activeTab==='featured') return items.filter(i=>i.featured);
-  if (activeTab==='ending_soon') return [...items].sort((a,b)=>a.endTime-b.endTime).slice(0,4);
-  return [...items].reverse();
+
+function renderCatChips() {
+  const cats = ['all','watches','jewelry','cars','art','collectibles'];
+  const row = document.getElementById('cat-chips');
+  row.innerHTML = cats.map(c=>`
+    <div class="chip-cat${activeCat===c?' active':''}" onclick="setCat('${c}')">${t(c)}</div>`).join('');
 }
-function renderCards() {
-  const list = document.getElementById('cards-list');
-  list.innerHTML = '';
-  getTabItems().forEach(item=>{
-    const name = lang==='ar'?item.nameAr:item.nameEn;
-    const card = document.createElement('div');
-    card.className = 'auction-card' + (item.featured?' featured':'');
-    card.innerHTML = `
-      <div class="card-image">
-        <img src="${item.images[0]}" alt="${name}" loading="lazy">
-        ${item.isLive?`<div class="card-live-badge"><div class="live-dot"></div><span style="color:#FFF;font-size:11px;font-weight:700">${t('live')}</span></div>`:''}
-        ${item.certified?`<div class="card-cert">✓ ${t('certified')}</div>`:''}
-      </div>
-      <div class="card-body">
-        <div class="card-name">${name}</div>
-        <div class="card-meta">
-          <div class="card-bid-wrap">
-            <div class="card-bid-label">${t('current_bid')}</div>
-            <div class="card-bid">${fmtCurrency(item.currentBid)}</div>
-          </div>
-          <div class="countdown-compact" data-countdown="${item.id}">${fmtCompact(item.endTime)}</div>
+
+function setCat(c) {
+  activeCat = c;
+  renderCatChips();
+  renderMainGrid();
+}
+
+function renderLiveCards() {
+  const live = ITEMS.filter(i=>i.isLive);
+  const row = document.getElementById('live-cards-row');
+  row.innerHTML = live.map(item=>`
+    <div class="live-card" onclick="goToLive('${item.id}')">
+      <div class="live-card-img">
+        <img src="${item.imgs[0]}" alt="" loading="lazy">
+        <div style="position:absolute;top:8px;inset-inline-start:8px">
+          <div class="live-badge-pill"><div class="ldot"></div><span class="live-pill-txt">${t('live')}</span></div>
         </div>
-        <button class="bid-now-btn">${t('bid_now')}</button>
-      </div>`;
-    card.querySelector('.card-body').addEventListener('click', e=>{ if(!e.target.matches('.bid-now-btn')) return; goToLive(item); });
-    card.querySelector('.card-image').addEventListener('click', ()=>goToDetail(item));
-    card.querySelector('.card-name').addEventListener('click', ()=>goToDetail(item));
-    list.appendChild(card);
-  });
+      </div>
+      <div class="live-card-body">
+        <div class="lc-name">${itemName(item)}</div>
+        <div class="lc-bid">${fmtSAR(item.currentBid||item.price)}</div>
+        <div class="lc-cd" data-cd="${item.id}">${fmtCompact(item.endTime)}</div>
+      </div>
+    </div>`).join('');
 }
 
-// ══════════════════════════════════════════════
-//  LIVE BANNER
-// ══════════════════════════════════════════════
-function updateLiveBanner() {
-  const live = items.find(i=>i.isLive);
-  if (!live) return;
-  document.getElementById('live-banner-title').textContent = lang==='ar'?live.nameAr:live.nameEn;
-  document.getElementById('live-badge-txt').textContent = t('live');
-  document.getElementById('live-arrow').textContent = lang==='ar'?'←':'→';
+function renderMainGrid() {
+  const filtered = activeCat==='all' ? ITEMS : ITEMS.filter(i=>i.cat===activeCat);
+  const nonLive = filtered.filter(i=>!i.isLive);
+  const grid = document.getElementById('main-grid');
+  grid.innerHTML = nonLive.map(item=>makeListingCard(item)).join('');
 }
-function goToLive(item) {
-  activeLiveItem = item;
-  liveEndTime = item.endTime;
-  selectedChip = 0;
-  renderLiveScreen();
+
+function makeListingCard(item) {
+  return `<div class="listing-card" onclick="goToDetail('${item.id}')">
+    <div class="lcard-img">
+      <img src="${item.imgs[0]}" alt="" loading="lazy">
+      ${typeBadge(item)}
+    </div>
+    <div class="lcard-body">
+      <div class="lcard-name">${itemName(item)}</div>
+      <div class="lcard-price">${fmtSAR(item.price)}</div>
+      <div class="lcard-meta">
+        <div class="lcard-city">📍 ${itemCity(item)}</div>
+        <div class="lcard-cd" data-cd="${item.id}">${fmtCompact(item.endTime)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════
+//  EXPLORE
+// ═══════════════════════════════
+function renderExplore() {
+  const cats = ['all','watches','jewelry','cars','art','collectibles'];
+  const icons = {all:'🔍',watches:'⌚',jewelry:'💎',cars:'🚗',art:'🎨',collectibles:'🏺'};
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = cats.filter(c=>c!=='all').map(c=>`
+    <div class="cat-card" onclick="expCat('${c}')">
+      <div class="cat-icon">${icons[c]}</div>
+      <div class="cat-name">${t(c)}</div>
+    </div>`).join('');
+  renderExploreGrid('');
+}
+
+function expCat(c) {
+  document.getElementById('explore-input').value = '';
+  renderExploreGrid('', c);
+}
+
+function doSearch(v) {
+  renderExploreGrid(v.trim());
+}
+
+function renderExploreGrid(query, cat) {
+  let list = ITEMS;
+  if (cat) list = list.filter(i=>i.cat===cat);
+  if (query) {
+    const q = query.toLowerCase();
+    list = list.filter(i=>i.nameAr.includes(query)||i.nameEn.toLowerCase().includes(q));
+  }
+  const grid = document.getElementById('explore-grid');
+  grid.innerHTML = list.map(item=>makeListingCard(item)).join('');
+  document.getElementById('exp-results-title').textContent = query ? (lang==='ar'?`نتائج "${query}"`:` Results for "${query}"`) : t('latest');
+}
+
+// ═══════════════════════════════
+//  MESSAGES
+// ═══════════════════════════════
+function renderMessages() {
+  const list = document.getElementById('msg-list');
+  list.innerHTML = CONVOS.map((c,i)=>`
+    <div class="msg-item" onclick="openChat(${i})">
+      <div class="msg-av">${c.av}</div>
+      <div class="msg-body">
+        <div class="msg-top">
+          <div class="msg-name">${lang==='ar'?c.name:c.nameEn}</div>
+          <div class="msg-time">${c.time}</div>
+        </div>
+        <div class="msg-last">${lang==='ar'?c.lastAr:c.lastEn}</div>
+      </div>
+      ${c.unread>0?`<div class="msg-unread">${c.unread}</div>`:''}
+    </div>`).join('');
+  document.getElementById('topbar-logo-ar')||null;
+  const el = document.querySelector('#messages .topbar-logo-ar');
+  if(el) el.textContent = t('msgs_title');
+}
+
+function openChat(idx) {
+  activeConvo = CONVOS[idx];
+  document.getElementById('chat-av').textContent = activeConvo.av;
+  document.getElementById('chat-name').textContent = lang==='ar'?activeConvo.name:activeConvo.nameEn;
+  document.getElementById('chat-status').textContent = t('online');
+  renderChatMsgs();
+  goTo('chat');
+}
+
+function renderChatMsgs() {
+  const el = document.getElementById('chat-msgs');
+  el.innerHTML = activeConvo.msgs.map(m=>`
+    <div class="bubble-wrap ${m.mine?'mine':'theirs'}">
+      <div class="bubble ${m.mine?'mine':'theirs'}">${lang==='ar'?m.text:m.en}</div>
+      <div class="bubble-time">${m.time}</div>
+    </div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function sendChatMsg() {
+  const inp = document.getElementById('chat-input');
+  const txt = inp.value.trim();
+  if(!txt) return;
+  const now2 = new Date();
+  const timeStr = `${now2.getHours()}:${String(now2.getMinutes()).padStart(2,'0')}`;
+  activeConvo.msgs.push({text:txt,en:txt,mine:true,time:timeStr});
+  inp.value = '';
+  renderChatMsgs();
+  setTimeout(()=>{
+    activeConvo.msgs.push({text:'شكراً لتواصلك، سأرد قريباً 🙏',en:'Thanks for reaching out, I will reply soon 🙏',mine:false,time:timeStr});
+    renderChatMsgs();
+  },1200);
+}
+function chatEnter(e) { if(e.key==='Enter') sendChatMsg(); }
+function goToChat() { openChat(0); }
+
+// ═══════════════════════════════
+//  PROFILE
+// ═══════════════════════════════
+function renderProfile() {
+  applyProfTrans();
+  const mine = ITEMS.filter((_,i)=>i<6);
+  const favList = ITEMS.filter(i=>favs.has(i.id));
+  const list = profActiveTab==='mine' ? mine : favList;
+  const grid = document.getElementById('prof-grid');
+  grid.innerHTML = list.length ? list.map(item=>makeListingCard(item)).join('') : `<div style="grid-column:span 2;text-align:center;padding:40px;color:var(--t2)">${lang==='ar'?'لا توجد عناصر':'No items'}</div>`;
+}
+
+function profTab(tab) {
+  profActiveTab = tab;
+  document.getElementById('ptab-mine').classList.toggle('active',tab==='mine');
+  document.getElementById('ptab-fav').classList.toggle('active',tab==='fav');
+  renderProfile();
+}
+
+// ═══════════════════════════════
+//  ITEM DETAIL
+// ═══════════════════════════════
+function goToDetail(id) {
+  const item = ITEMS.find(i=>i.id===id);
+  if(!item) return;
+  activeItem = item;
+  populateDetail(item);
+  goTo('item-detail');
+}
+
+function populateDetail(item) {
+  // Slider
+  const track = document.getElementById('detail-track');
+  const dots = document.getElementById('detail-dots');
+  track.innerHTML = item.imgs.map(src=>`<img class="slide-img" src="${src}" loading="lazy">`).join('');
+  dots.innerHTML = item.imgs.map((_,i)=>`<div class="slider-dot${i===0?' active':''}"></div>`).join('');
+
+  let si = 0;
+  let startX = 0;
+  const sw = document.getElementById('detail-slider');
+  sw.ontouchstart = e => { startX = e.touches[0].clientX; };
+  sw.ontouchend = e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if(Math.abs(dx)<30) return;
+    const d = dx<0 ? 1 : -1;
+    const nx = si + (lang==='ar'?-d:d);
+    if(nx>=0 && nx<item.imgs.length) {
+      si=nx;
+      track.style.transform = `translateX(${-si*100*(lang==='ar'?-1:1)}%)`;
+      document.querySelectorAll('.slider-dot').forEach((dot,i)=>dot.classList.toggle('active',i===si));
+    }
+  };
+
+  document.getElementById('live-overlay-tag').style.display = item.isLive?'flex':'none';
+  document.getElementById('dot-live-txt').textContent = t('live');
+  document.getElementById('d-name').textContent = itemName(item);
+  document.getElementById('d-fav').textContent = favs.has(item.id)?'🤍':'🤍';
+  document.getElementById('d-fav').style.background = favs.has(item.id)?'var(--gold)':'var(--goldl)';
+
+  // Price
+  const priceBox = document.getElementById('d-price-box');
+  const auctBox = document.getElementById('d-auction-box');
+  if (item.type==='auction' || item.isLive) {
+    priceBox.style.display='none';
+    auctBox.style.display='flex';
+    document.getElementById('d-cur-bid').textContent = fmtSAR(item.currentBid||item.price);
+    document.getElementById('d-time-left-lbl').textContent = t('time_left');
+    document.getElementById('d-cur-bid-lbl').textContent = t('current_bid');
+    document.getElementById('dcd-h-l').textContent = t('hours');
+    document.getElementById('dcd-m-l').textContent = t('minutes');
+    document.getElementById('dcd-s-l').textContent = t('seconds');
+  } else {
+    priceBox.style.display='block';
+    auctBox.style.display='none';
+    document.getElementById('d-price-label').textContent = lang==='ar'?'السعر':'Price';
+    document.getElementById('d-price').textContent = fmtSAR(item.price);
+  }
+
+  document.getElementById('d-seller-av').textContent = item.seller.av;
+  document.getElementById('d-seller-name').textContent = lang==='ar'?item.seller.name:item.seller.nameEn;
+  document.getElementById('d-seller-rating').textContent = item.seller.rating+(lang==='ar'?' (٢٣ تقييم)':' (23 reviews)');
+
+  document.getElementById('d-city').textContent = itemCity(item);
+  document.getElementById('d-cond').textContent = lang==='ar'?item.condAr:item.condEn;
+  document.getElementById('d-cat').textContent = t(item.cat);
+  document.getElementById('d-desc').textContent = lang==='ar'?item.descAr:item.descEn;
+
+  // Translations
+  document.getElementById('detail-hdr-t').textContent = t('item_detail');
+  document.getElementById('detail-back-btn').textContent = lang==='ar'?'→':'←';
+  document.getElementById('mc-city-lbl').textContent = t('city');
+  document.getElementById('mc-cond-lbl').textContent = t('condition');
+  document.getElementById('mc-cat-lbl').textContent = t('cat');
+  document.getElementById('d-desc-t').textContent = t('description');
+  document.getElementById('d-cert-t').textContent = t('certificate');
+  document.getElementById('d-cert-sub').textContent = t('certified_sub');
+  document.getElementById('d-ship-t').textContent = t('shipping');
+  document.getElementById('d-ship1').textContent = t('secure_ship');
+  document.getElementById('d-ship2').textContent = t('free_ship');
+
+  // CTA
+  const ctaSec = document.getElementById('d-cta-sec-txt');
+  const ctaMain = document.getElementById('d-cta-main-txt');
+  ctaSec.textContent = t('contact_seller');
+  if (item.isLive) {
+    ctaMain.textContent = '🔴 '+t('live');
+    document.getElementById('d-cta-main').onclick = ()=>goToLive(item.id);
+  } else if (item.type==='auction') {
+    ctaMain.textContent = '🔨 '+t('bid_now');
+    document.getElementById('d-cta-main').onclick = ()=>goToLive(item.id);
+  } else {
+    ctaMain.textContent = t('buy_now');
+    document.getElementById('d-cta-main').onclick = ()=>{showToast(lang==='ar'?'✓ تم الشراء':'✓ Purchased');};
+  }
+}
+
+function toggleFav() {
+  const id = activeItem.id;
+  if(favs.has(id)) favs.delete(id); else favs.add(id);
+  document.getElementById('d-fav').style.background = favs.has(id)?'var(--gold)':'var(--goldl)';
+  showToast(favs.has(id)?(lang==='ar'?'أضيف للمفضلة ❤️':'Added to favorites ❤️'):(lang==='ar'?'أزيل من المفضلة':'Removed from favorites'));
+}
+function toggleFollow(btn) {
+  btn.classList.toggle('following');
+  btn.textContent = btn.classList.contains('following')?t('following'):t('follow');
+}
+function detailMainCTA() {}
+
+// ═══════════════════════════════
+//  LIVE AUCTION
+// ═══════════════════════════════
+function goToLive(id) {
+  const item = ITEMS.find(i=>i.id===id);
+  if(!item) return;
+  laItem = item;
+  laEndTime = item.endTime;
+  laChip = 0;
+  if (!item.currentBid) item.currentBid = item.price;
+  laBidHistory = [];
+  renderLiveAuction();
   goTo('live-auction');
 }
 
-// ══════════════════════════════════════════════
-//  LIVE AUCTION SCREEN
-// ══════════════════════════════════════════════
-function renderLiveScreen() {
-  const item = activeLiveItem;
-  document.getElementById('live-item-title').textContent = lang==='ar'?item.nameAr:item.nameEn;
-  document.getElementById('live-item-title').style.textAlign = lang==='ar'?'right':'left';
-  document.getElementById('current-bid-val').textContent = fmtCurrency(item.currentBid);
-  document.getElementById('attendees-count').textContent = item.attendees;
-  document.getElementById('live-back').innerHTML = (lang==='ar'?'→':'←') + ` <span id="live-back-txt">${t('back')}</span>`;
-  document.getElementById('live-lbl').textContent = t('live');
-  document.getElementById('live-stream-lbl').textContent = t('video_stream');
-  document.getElementById('time-left-lbl').textContent = t('time_left');
-  document.getElementById('cur-bid-lbl').textContent = t('current_bid');
-  document.getElementById('winning-tag').textContent = t('winning');
-  document.getElementById('bid-inc-lbl').textContent = t('bid_increment');
-  document.getElementById('recent-bids-lbl').textContent = t('recent_bids');
-  document.getElementById('place-bid-btn').textContent = t('place_bid');
-  document.getElementById('antsnipe-txt').textContent = t('extended');
-  // chips
-  document.getElementById('cd-h-lbl').textContent = t('hours');
-  document.getElementById('cd-m-lbl').textContent = t('minutes');
-  document.getElementById('cd-s-lbl').textContent = t('seconds');
-  renderChips();
-  renderBidList();
-}
-function updateLiveCountdown() {
-  if (currentScreen !== 'live-auction') return;
-  const {hours,minutes,seconds,total} = getTimeLeft(liveEndTime);
-  const urgent = total <= 10;
-  ['cd-h','cd-m','cd-s'].forEach(id=>document.getElementById(id).classList.toggle('urgent',urgent));
-  document.getElementById('cd-h').textContent = pad(hours);
-  document.getElementById('cd-m').textContent = pad(minutes);
-  document.getElementById('cd-s').textContent = pad(seconds);
-}
-function renderChips() {
-  const chips = [500,1000,5000,10000];
-  const row = document.getElementById('chips-row');
-  row.innerHTML='';
-  chips.forEach(c=>{
-    const btn = document.createElement('button');
-    btn.className = 'chip' + (selectedChip===c?' sel':'');
-    btn.textContent = fmtChip(c);
-    btn.onclick = ()=>selectChip(c,btn);
-    row.appendChild(btn);
-  });
-}
-function selectChip(amt, btn) {
-  selectedChip = selectedChip===amt?0:amt;
-  renderChips();
-  if (selectedChip>0) {
-    document.getElementById('modal-bid-amount').textContent = fmtCurrency(activeLiveItem.currentBid+selectedChip);
-  }
-}
-function renderBidList() {
-  const list = document.getElementById('bid-list');
-  list.innerHTML='';
-  if (!bidHistory.length) return;
-  bidHistory.slice(0,8).forEach((b,i)=>{
-    const row = document.createElement('div');
-    row.className='bid-row';
-    const isYou = b.who==='YOU';
-    row.innerHTML=`
-      <div class="bid-left">
-        <div class="bid-who">${isYou?(lang==='ar'?'🏆 أنت':'🏆 You'):`${t('anonymous')} #${b.who}`}</div>
-        <div class="bid-time-text">${b.time}</div>
-      </div>
-      <div class="bid-amount">${fmtCurrency(b.amount)}</div>`;
-    list.appendChild(row);
-  });
+function renderLiveAuction() {
+  const item = laItem;
+  document.getElementById('la-live-txt').textContent = t('live');
+  document.getElementById('la-stream-txt').textContent = t('stream');
+  document.getElementById('la-name').textContent = itemName(item);
+  document.getElementById('la-att').textContent = item.attendees||147;
+  document.getElementById('la-tl-lbl').textContent = t('time_left');
+  document.getElementById('la-cb-lbl').textContent = t('current_bid');
+  document.getElementById('la-win-txt').textContent = t('winning');
+  document.getElementById('la-inc-lbl').textContent = t('bid_inc');
+  document.getElementById('la-rb-lbl').textContent = t('latest_bids');
+  document.getElementById('la-bid-btn').textContent = t('bid_now');
+  document.getElementById('la-ext-txt').textContent = t('extended');
+  document.getElementById('la-h-l').textContent = t('hours');
+  document.getElementById('la-m-l').textContent = t('minutes');
+  document.getElementById('la-s-l').textContent = t('seconds');
+  document.getElementById('la-back-b').textContent = lang==='ar'?'→':'←';
+  document.getElementById('la-cur-bid').textContent = fmtSAR(item.currentBid||item.price);
+  renderLAChips();
+  renderLABidList();
 }
 
-// ══════════════════════════════════════════════
-//  BID MODAL
-// ══════════════════════════════════════════════
-function openBidModal() {
-  const amount = selectedChip>0?activeLiveItem.currentBid+selectedChip:activeLiveItem.currentBid+activeLiveItem.increment;
-  document.getElementById('modal-bid-amount').textContent = fmtCurrency(amount);
-  document.getElementById('confirm-bid-title').textContent = t('confirm_bid');
-  document.getElementById('cancel-btn').textContent = t('cancel');
-  document.getElementById('confirm-btn').textContent = t('confirm');
-  document.getElementById('bid-modal').classList.add('open');
+function renderLAChips() {
+  const chips = [500,1000,5000,10000];
+  document.getElementById('la-chips').innerHTML = chips.map(c=>`
+    <button class="bid-chip${laChip===c?' sel':''}" onclick="selLAChip(${c})">${fmtChip(c)}</button>`).join('');
 }
-function closeBidModal() {
-  document.getElementById('bid-modal').classList.remove('open');
+
+function selLAChip(c) {
+  laChip = laChip===c ? 0 : c;
+  renderLAChips();
+  const amt = (laItem.currentBid||laItem.price) + (laChip||laItem.increment);
+  document.getElementById('la-modal-amt').textContent = fmtSAR(amt);
 }
-function confirmBid() {
-  const increment = selectedChip>0?selectedChip:activeLiveItem.increment;
-  const newBid = activeLiveItem.currentBid + increment;
-  placeBid(newBid, 'YOU');
-  closeBidModal();
+
+function openLAModal() {
+  const amt = (laItem.currentBid||laItem.price) + (laChip||laItem.increment);
+  document.getElementById('la-modal-amt').textContent = fmtSAR(amt);
+  document.getElementById('la-modal-title').textContent = t('confirm_bid');
+  document.getElementById('la-cancel-txt').textContent = t('cancel');
+  document.getElementById('la-confirm-txt').textContent = t('confirm');
+  document.getElementById('la-modal').classList.add('open');
+}
+function closeLAModal() { document.getElementById('la-modal').classList.remove('open'); }
+function confirmBidLA() {
+  const inc = laChip||laItem.increment;
+  const newBid = (laItem.currentBid||laItem.price) + inc;
+  placeLABid(newBid,'YOU');
+  closeLAModal();
   showToast(t('bid_placed'));
 }
-function placeBid(amount, who) {
-  activeLiveItem.currentBid = amount;
+
+function placeLABid(amount, who) {
+  laItem.currentBid = amount;
   const now2 = new Date();
-  const timeStr = now2.toLocaleTimeString(lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  bidHistory.unshift({amount, who, time:timeStr});
-  if (bidHistory.length>20) bidHistory.pop();
-  document.getElementById('current-bid-val').textContent = fmtCurrency(amount);
-  const el = document.getElementById('current-bid-val');
+  const ts = `${now2.getHours()}:${String(now2.getMinutes()).padStart(2,'0')}:${String(now2.getSeconds()).padStart(2,'0')}`;
+  laBidHistory.unshift({amount,who,time:ts});
+  if(laBidHistory.length>20) laBidHistory.pop();
+
+  const el = document.getElementById('la-cur-bid');
+  el.textContent = fmtSAR(amount);
   el.classList.add('pulse');
   setTimeout(()=>el.classList.remove('pulse'),500);
-  renderBidList();
-  // Anti snipe
-  const tl = getTimeLeft(liveEndTime);
-  if (tl.total<=10 && tl.total>0) {
-    liveEndTime += 30000;
-    const snipe = document.getElementById('antsnipe');
+
+  const tl = getTimeLeft(laEndTime);
+  if(tl.total<=10 && tl.total>0) {
+    laEndTime += 30000;
+    const snipe = document.getElementById('la-antsnipe');
     snipe.classList.add('show');
     setTimeout(()=>snipe.classList.remove('show'),3000);
   }
-  // update attendees
-  activeLiveItem.attendees += Math.floor(Math.random()*3);
-  document.getElementById('attendees-count').textContent = activeLiveItem.attendees;
+  laItem.attendees = (laItem.attendees||147) + Math.floor(Math.random()*3);
+  document.getElementById('la-att').textContent = laItem.attendees;
+  renderLABidList();
 }
 
-// ══════════════════════════════════════════════
-//  MOCK WEBSOCKET (setInterval bidding)
-// ══════════════════════════════════════════════
+function renderLABidList() {
+  const el = document.getElementById('la-bid-list');
+  el.innerHTML = laBidHistory.slice(0,8).map((b,i)=>`
+    <div class="bid-row-item">
+      <div class="bri-left">
+        <div class="bri-who">${b.who==='YOU'?(lang==='ar'?'🏆 أنت':'🏆 You'):`${t('anon')} #${b.who}`}</div>
+        <div class="bri-time">${b.time}</div>
+      </div>
+      <div class="bri-amt">${fmtSAR(b.amount)}</div>
+    </div>`).join('');
+}
+
+// Live countdown update
+setInterval(()=>{
+  if(currentScreen==='live-auction') {
+    const r = getTimeLeft(laEndTime);
+    const urg = r.total<=10;
+    ['la-h','la-m','la-s'].forEach(id=>document.getElementById(id)?.classList.toggle('urgent',urg));
+    const el = document.getElementById('la-h'); if(el){ el.textContent=pad(r.h); }
+    const em = document.getElementById('la-m'); if(em){ em.textContent=pad(r.m); }
+    const es = document.getElementById('la-s'); if(es){ es.textContent=pad(r.s); }
+  }
+  if(currentScreen==='item-detail' && (activeItem.type==='auction'||activeItem.isLive)) {
+    const r = getTimeLeft(activeItem.endTime);
+    const urg = r.total<=10;
+    ['dcd-h','dcd-m','dcd-s'].forEach(id=>document.getElementById(id)?.classList.toggle('urgent',urg));
+    const eh = document.getElementById('dcd-h'); if(eh) eh.textContent=pad(r.h);
+    const em2 = document.getElementById('dcd-m'); if(em2) em2.textContent=pad(r.m);
+    const es2 = document.getElementById('dcd-s'); if(es2) es2.textContent=pad(r.s);
+  }
+  // Update all compact countdowns
+  document.querySelectorAll('[data-cd]').forEach(el=>{
+    const item = ITEMS.find(i=>i.id===el.dataset.cd);
+    if(item) { el.textContent=fmtCompact(item.endTime); }
+  });
+},1000);
+
+// ═══════════════════════════════
+//  MOCK LIVE BIDDING
+// ═══════════════════════════════
 function startLiveBidding() {
-  function scheduleNext() {
-    const delay = 8000 + Math.random()*9000;
+  function sched() {
+    const delay = 8000+Math.random()*10000;
     setTimeout(()=>{
-      if (currentScreen==='live-auction' || currentScreen==='home') {
+      if(currentScreen==='live-auction') {
         const inc = [1000,2000,5000,10000][Math.floor(Math.random()*4)];
-        const bidderId = Math.random().toString(36).substring(2,6).toUpperCase();
-        placeBid(activeLiveItem.currentBid+inc, bidderId);
-        // Update home card
-        renderCards();
-        updateLiveBanner();
+        const who = Math.random().toString(36).substring(2,5).toUpperCase();
+        placeLABid((laItem.currentBid||laItem.price)+inc, who);
       }
-      scheduleNext();
+      // Update live item prices for home cards
+      ITEMS.filter(i=>i.isLive).forEach(i=>{
+        const inc=[1000,2000,5000][Math.floor(Math.random()*3)];
+        if(!i.currentBid) i.currentBid=i.price;
+        i.currentBid+=inc;
+      });
+      sched();
     }, delay);
   }
-  scheduleNext();
+  sched();
 }
 
-// ══════════════════════════════════════════════
-//  ITEM DETAIL
-// ══════════════════════════════════════════════
-function goToDetail(item) {
-  activeDetailItem = item;
-  detailSlideIndex = 0;
-  renderDetailScreen();
-  goTo('item-detail');
-}
-function renderDetailScreen() {
-  const item = activeDetailItem;
-  const name = lang==='ar'?item.nameAr:item.nameEn;
-  const desc = lang==='ar'?item.descAr:item.descEn;
-  const cond = lang==='ar'?item.condAr:item.condEn;
-  const prov = lang==='ar'?item.provAr:item.provEn;
-  document.getElementById('item-details-title').textContent = t('item_details');
-  document.getElementById('detail-name').textContent = name;
-  document.getElementById('detail-bid').textContent = fmtCurrency(item.currentBid);
-  document.getElementById('item-desc').textContent = desc;
-  document.getElementById('item-cond').textContent = cond;
-  document.getElementById('item-prov').textContent = prov;
-  document.getElementById('desc-title').textContent = t('description');
-  document.getElementById('cond-title').textContent = t('condition');
-  document.getElementById('prov-title').textContent = t('provenance');
-  document.getElementById('cert-title').textContent = t('certificate');
-  document.getElementById('cert-sub').textContent = t('certified');
-  document.getElementById('ship-title').textContent = t('shipping');
-  document.getElementById('ship-secure').textContent = t('secure_shipping');
-  document.getElementById('ship-free').textContent = t('free_shipping');
-  document.getElementById('cur-bid-lbl2').textContent = t('current_bid');
-  document.getElementById('time-left-lbl2').textContent = t('time_left');
-  document.getElementById('cd2-h-lbl').textContent = t('hours');
-  document.getElementById('cd2-m-lbl').textContent = t('minutes');
-  document.getElementById('cd2-s-lbl').textContent = t('seconds');
-  document.getElementById('detail-back').textContent = lang==='ar'?'→':'←';
-  // Slides
-  const track = document.getElementById('slides-track');
-  track.innerHTML = item.images.map(src=>`<img class="slide-img" src="${src}" alt="${name}" loading="lazy">`).join('');
-  const dotsEl = document.getElementById('slider-dots');
-  dotsEl.innerHTML = item.images.map((_,i)=>`<div class="slider-dot${i===0?' active':''}"></div>`).join('');
-  detailSlideIndex = 0;
-  // Live tag
-  document.getElementById('slide-live-tag').style.display = item.isLive?'flex':'none';
-  document.getElementById('slide-live-txt').textContent = t('live');
-  // CTA
-  const cta = document.getElementById('detail-cta');
-  if (item.isLive) {
-    cta.textContent = '🔴 '+t('live_auction'); cta.className='cta-btn';
-    cta.onclick = ()=>goToLive(item);
-  } else if (detailRegistered[item.id]) {
-    cta.textContent = '✓ '+t('registered'); cta.className='cta-btn reg';
-    cta.onclick = ()=>{};
-  } else {
-    cta.textContent = t('register'); cta.className='cta-btn';
-    cta.onclick = ()=>{ detailRegistered[item.id]=true; cta.textContent='✓ '+t('registered'); cta.className='cta-btn reg'; showToast('✓'); };
-  }
-  // Slider swipe
-  let startX=0;
-  const sw = document.getElementById('slider-wrap');
-  sw.ontouchstart = e=>startX=e.touches[0].clientX;
-  sw.ontouchend = e=>{
-    const dx = e.changedTouches[0].clientX-startX;
-    if (Math.abs(dx)<30) return;
-    const dir = dx<0?1:-1;
-    const next = detailSlideIndex+dir;
-    if (next>=0&&next<item.images.length) {
-      detailSlideIndex=next;
-      track.style.transform=`translateX(${-next*100*(lang==='ar'?-1:1)}%)`;
-      document.querySelectorAll('.slider-dot').forEach((d,i)=>d.classList.toggle('active',i===next));
-    }
-  };
-}
-function updateDetailCountdown() {
-  if (currentScreen!=='item-detail') return;
-  const {hours,minutes,seconds} = getTimeLeft(activeDetailItem.endTime);
-  document.getElementById('cd2-h').textContent=pad(hours);
-  document.getElementById('cd2-m').textContent=pad(minutes);
-  document.getElementById('cd2-s').textContent=pad(seconds);
-  document.getElementById('detail-countdown').textContent=fmtCompact(activeDetailItem.endTime);
-}
-function detailCTA() {}
-
-// ══════════════════════════════════════════════
-//  APPLY TRANSLATIONS
-// ══════════════════════════════════════════════
-function applyAllTranslations() {
-  document.getElementById('live-badge-txt').textContent = t('live');
-  document.getElementById('live-arrow').textContent = lang==='ar'?'←':'→';
-  document.getElementById('t-featured').textContent = t('featured');
-  document.getElementById('t-ending').textContent = t('ending_soon');
-  document.getElementById('t-new').textContent = t('new_arrivals');
-  document.getElementById('nav-home-lbl').textContent = t('home');
-  document.getElementById('nav-settings-lbl').textContent = t('settings');
-  document.getElementById('settings-title').textContent = t('settings');
-  document.getElementById('s-lang-title').textContent = t('language_settings');
-  document.getElementById('s-appear-title').textContent = t('appearance');
-  document.getElementById('s-about-title').textContent = lang==='ar'?'التطبيق':'App';
-  document.getElementById('s-dark-lbl').textContent = t('dark_mode');
-  document.getElementById('s-light-lbl').textContent = t('light_mode');
-  document.getElementById('s-tagline').textContent = t('tagline');
-  updateLiveBanner();
+// ═══════════════════════════════
+//  POST
+// ═══════════════════════════════
+function renderPostCats() {
+  const cats = ['watches','jewelry','cars','art','collectibles'];
+  const icons = {watches:'⌚',jewelry:'💎',cars:'🚗',art:'🎨',collectibles:'🏺'};
+  document.getElementById('post-cat-grid').innerHTML = cats.map(c=>`
+    <div class="cat-card${postCat===c?' active':''}" onclick="selPostCat('${c}')">
+      <div class="cat-icon">${icons[c]}</div>
+      <div class="cat-name">${t(c)}</div>
+    </div>`).join('');
 }
 
-// ══════════════════════════════════════════════
+function selPostCat(c) {
+  postCat=c;
+  renderPostCats();
+  setTimeout(()=>{
+    document.getElementById('post-s1').style.display='none';
+    document.getElementById('post-s2').style.display='flex';
+    document.getElementById('post-fill').style.width='66%';
+    applyPostTrans();
+  },200);
+}
+
+function selType(t2) {
+  postType=t2;
+  document.getElementById('tt-direct').classList.toggle('sel',t2==='direct');
+  document.getElementById('tt-auction').classList.toggle('sel',t2==='auction');
+}
+
+function postStep3() {
+  document.getElementById('post-s2').style.display='none';
+  document.getElementById('post-s3').style.display='flex';
+  document.getElementById('post-fill').style.width='100%';
+  document.getElementById('suc-title').textContent = t('success_title');
+  document.getElementById('suc-sub').textContent = t('success_sub');
+  document.getElementById('suc-btn').textContent = t('back_home');
+}
+
+function finishPost() {
+  document.getElementById('post-s1').style.display='flex';
+  document.getElementById('post-s2').style.display='none';
+  document.getElementById('post-s3').style.display='none';
+  document.getElementById('post-fill').style.width='33%';
+  postCat='';
+  renderPostCats();
+  goTo('home');
+  renderHome();
+}
+
+// ═══════════════════════════════
+//  NOTIFICATIONS
+// ═══════════════════════════════
+function renderNotifications() {
+  const el = document.getElementById('notif-list');
+  el.innerHTML = NOTIFS.map(n=>`
+    <div style="background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center">
+      <div style="font-size:28px">${n.icon}</div>
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--t1)">${lang==='ar'?n.textAr:n.textEn}</div>
+        <div style="font-size:11px;color:var(--t2);margin-top:3px">${n.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════
+//  LANGUAGE / THEME
+// ═══════════════════════════════
+function toggleLang() { setLang(lang==='ar'?'en':'ar'); }
+function setLang(l) {
+  lang=l;
+  document.documentElement.lang=l;
+  document.documentElement.dir=l==='ar'?'rtl':'ltr';
+  document.querySelectorAll('.ico-btn[onclick="toggleLang()"]').forEach(el=>el.textContent=l==='ar'?'ع':'EN');
+  document.getElementById('lang-ico').textContent=l==='ar'?'ع':'EN';
+  document.getElementById('s-ar-ck').style.display=l==='ar'?'':'none';
+  document.getElementById('s-en-ck').style.display=l==='en'?'':'none';
+  document.getElementById('s-ar-lbl').style.color=l==='ar'?'var(--gold)':'var(--t1)';
+  document.getElementById('s-en-lbl').style.color=l==='en'?'var(--gold)':'var(--t1)';
+  document.getElementById('explore-input').placeholder=t('search_ph');
+  applyAllTrans();
+  if(currentScreen==='home') renderHome();
+  if(currentScreen==='explore') renderExplore();
+  if(currentScreen==='messages') renderMessages();
+  if(currentScreen==='profile') renderProfile();
+  if(currentScreen==='item-detail') populateDetail(activeItem);
+  if(currentScreen==='live-auction') renderLiveAuction();
+}
+
+function toggleThemeBtn() { setThemeSetting(theme==='dark'?'light':'dark'); }
+function setThemeSetting(th) {
+  theme=th;
+  document.documentElement.setAttribute('data-theme',th==='light'?'light':'dark');
+  document.getElementById('s-dark-ck').style.display=th==='dark'?'':'none';
+  document.getElementById('s-light-ck').style.display=th==='light'?'':'none';
+  updateThemeIco();
+}
+function updateThemeIco() {
+  const ico = theme==='dark'?'☀️':'🌙';
+  document.querySelectorAll('[onclick="toggleThemeBtn()"]').forEach(el=>el.textContent=ico);
+}
+
+// ═══════════════════════════════
+//  TRANSLATIONS APPLY
+// ═══════════════════════════════
+function applyAllTrans() {
+  document.getElementById('home-search-ph').textContent=t('search_ph');
+  document.getElementById('live-sec-title').textContent=t('live_section');
+  document.getElementById('live-sec-link').textContent=t('view_all');
+  document.getElementById('listings-title').textContent=t('latest');
+  document.getElementById('exp-cats-title').textContent=t('cats_title');
+  document.getElementById('set-title').textContent=t('settings');
+  document.getElementById('s-lang-t').textContent=t('language');
+  document.getElementById('s-theme-t').textContent=t('appearance');
+  document.getElementById('s-dark-lbl').textContent=t('dark_mode');
+  document.getElementById('s-light-lbl').textContent=t('light_mode');
+  document.getElementById('notif-title').textContent=t('notif_title');
+  document.getElementById('post-hdr-title').textContent=t('post_hdr');
+  document.getElementById('post-back').textContent=lang==='ar'?'→':'←';
+  renderCatChips();
+  renderBNLabels();
+  applyPostTrans();
+  applyProfTrans();
+}
+function renderBNLabels() {
+  ['bn-home-lbl','bn2-home','bn3-home','bn4-home'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t('home')});
+  ['bn-exp-lbl','bn2-exp','bn3-exp','bn4-exp'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t('explore')});
+  ['bn-msg-lbl','bn2-msg','bn3-msg','bn4-msg'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t('messages')});
+  ['bn-prof-lbl','bn2-prof','bn3-prof','bn4-prof'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t('profile')});
+}
+function applyPostTrans() {
+  document.getElementById('ps1-title').textContent=t('choose_cat');
+  document.getElementById('ps1-sub').textContent=t('choose_cat_sub');
+  document.getElementById('ps2-title').textContent=t('item_details_lbl');
+  document.getElementById('ps2-sub').textContent=t('item_details_sub');
+  document.getElementById('fl-name').textContent=t('name_lbl');
+  document.getElementById('fl-price').textContent=t('price_lbl');
+  document.getElementById('fl-type').textContent=t('type_lbl');
+  document.getElementById('fl-cond').textContent=t('cond_lbl');
+  document.getElementById('fl-city').textContent=t('city_lbl');
+  document.getElementById('fl-desc').textContent=t('desc_lbl');
+  document.getElementById('ps2-btn').textContent=t('post_btn');
+  document.getElementById('tt-d-lbl').textContent=t('direct');
+  document.getElementById('tt-a-lbl').textContent=t('auction');
+  renderPostCats();
+}
+function applyProfTrans() {
+  document.getElementById('pt-mine').textContent=t('my_listings');
+  document.getElementById('pt-fav').textContent=t('favorites');
+  document.getElementById('pst1').textContent=t('my_listings');
+  document.getElementById('pst2').textContent=t('sold');
+  document.getElementById('pst3').textContent=t('rating');
+  document.getElementById('prof-name').textContent=lang==='ar'?'عبدالله العمري':'Abdullah Al-Omari';
+  document.getElementById('prof-city').textContent=lang==='ar'?'الرياض، المملكة العربية السعودية':'Riyadh, Saudi Arabia';
+}
+function showAllLive() { setCat('all'); }
+
+// ═══════════════════════════════
 //  TOAST
-// ══════════════════════════════════════════════
+// ═══════════════════════════════
 let toastTimer;
 function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>el.classList.remove('show'),2500);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2400);
 }
 
-// ══════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════
-updateThemeToggleBtn();
+// ═══════════════════════════════
+//  INIT (add missing T keys)
+// ═══════════════════════════════
+T.ar.ob1_title='مقتنيات نادرة'; T.ar.ob1_desc='اشترِ وبع أندر المقتنيات الفاخرة بثقة وأمان';
+T.ar.ob2_title='بيع وشراء مباشر'; T.ar.ob2_desc='أضف إعلانك في ثوانٍ وتواصل مع المشترين مباشرة';
+T.ar.ob3_title='مزادات حصرية'; T.ar.ob3_desc='شارك في مزادات مباشرة لأندر القطع الفاخرة';
+T.en.ob1_title='Rare Collectibles'; T.en.ob1_desc='Buy & sell the rarest luxury items with trust and safety';
+T.en.ob2_title='Direct Buy & Sell'; T.en.ob2_desc='Post your listing in seconds and connect with buyers directly';
+T.en.ob3_title='Exclusive Auctions'; T.en.ob3_desc='Join live auctions for the rarest luxury pieces';
+
+updateThemeIco();
+renderPostCats();
 </script>
 </body>
 </html>
