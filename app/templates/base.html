@@ -394,7 +394,7 @@
     </a>
   </div>
 
-  <div class="d-flex align-items-center gap-1 {% if current_locale == 'ar' %}me-auto{% else %}ms-auto{% endif %} no-print">
+  <div class="d-flex align-items-center gap-1 {% if current_locale == 'ar' %}me-auto{% else %}ms-auto{% endif %} no-print" style="display:none !important;">
     <a href="{{ url_for('set_language', lang='ar') }}"
        class="lang-btn {% if current_locale == 'ar' %}active{% endif %}">🇸🇦 AR</a>
     <a href="{{ url_for('set_language', lang='en') }}"
