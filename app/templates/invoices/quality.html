@@ -4,40 +4,76 @@
 {% block extra_css %}
 <style>
   .score-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 1rem;
+  }
+  .score-high   { background: rgba(34,197,94,.18);  color: #22c55e; border: 2px solid rgba(34,197,94,.35); }
+  .score-medium { background: rgba(234,179,8,.18);   color: #eab308; border: 2px solid rgba(234,179,8,.35); }
+  .score-low    { background: rgba(239,68,68,.18);   color: #ef4444; border: 2px solid rgba(239,68,68,.35); }
+
+  .score-badge-sm {
     display: inline-block;
-    min-width: 48px;
-    padding: .25rem .6rem;
+    min-width: 44px;
+    padding: .2rem .5rem;
     border-radius: 20px;
     font-weight: 700;
-    font-size: .8rem;
+    font-size: .78rem;
     text-align: center;
   }
-  .score-high   { background: rgba(34,197,94,.18); color: #22c55e; }
-  .score-medium { background: rgba(234,179,8,.18);  color: #eab308; }
-  .score-low    { background: rgba(239,68,68,.18);  color: #ef4444; }
 
-  .emp-score-bar { height: 6px; background: rgba(255,255,255,.08); border-radius: 99px; overflow: hidden; }
+  .emp-score-bar  { height: 6px; background: rgba(255,255,255,.08); border-radius: 99px; overflow: hidden; }
   .emp-score-fill { height: 100%; border-radius: 99px; }
 
+  .emp-card { transition: transform .15s; }
+  .emp-card:hover { transform: translateY(-2px); }
+
+  .tip-box {
+    border-radius: 10px;
+    padding: .6rem .85rem;
+    font-size: .82rem;
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    margin-top: .75rem;
+  }
+  .tip-box i { margin-top: 1px; flex-shrink: 0; }
+
+  .tip-excellent { background: rgba(34,197,94,.12);  color: #4ade80; border: 1px solid rgba(34,197,94,.25); }
+  .tip-good      { background: rgba(59,130,246,.12); color: #60a5fa; border: 1px solid rgba(59,130,246,.25); }
+  .tip-average   { background: rgba(234,179,8,.12);  color: #fbbf24; border: 1px solid rgba(234,179,8,.25); }
+  .tip-weak      { background: rgba(249,115,22,.12); color: #fb923c; border: 1px solid rgba(249,115,22,.25); }
+  .tip-bad       { background: rgba(239,68,68,.12);  color: #f87171; border: 1px solid rgba(239,68,68,.25); }
+
+  .stat-mini { font-size: .7rem; color: var(--text-muted, #94a3b8); }
+
   .issues-cell {
-    max-width: 180px;
+    max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: .8rem;
+    font-size: .78rem;
     color: var(--text-secondary, #94a3b8);
   }
+
+  .rec-tip { font-size: .75rem; }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Header -->
+
+<!-- ─── Header ─────────────────────────────────────────────────────────────── -->
 <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
   <div>
     <h1 class="h4 fw-bold mb-0">
       <i class="bi bi-patch-check text-info me-2"></i>جودة الفواتير
     </h1>
-    <p class="text-muted small mb-0">تقييم جودة الفواتير ومتابعة المشكلات</p>
+    <p class="text-muted small mb-0">تقييم جودة الفواتير وتوجيه الموظفين</p>
   </div>
   <div class="d-flex gap-2">
     <form method="POST" action="{{ url_for('invoices.generate_quality') }}" class="d-inline">
@@ -52,7 +88,7 @@
   </div>
 </div>
 
-<!-- Filters -->
+<!-- ─── Filters ────────────────────────────────────────────────────────────── -->
 <div class="card mb-4">
   <div class="card-body">
     <form method="GET" class="row g-3 align-items-end">
@@ -84,13 +120,13 @@
         </select>
       </div>
       {% endif %}
-      <div class="col-md-1">
-        <button type="submit" class="btn btn-primary btn-sm w-100">
-          <i class="bi bi-search"></i>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-search me-1"></i>بحث
         </button>
       </div>
-      <div class="col-md-2">
-        <a href="{{ url_for('invoices.quality') }}" class="btn btn-outline-secondary btn-sm w-100">
+      <div class="col-auto">
+        <a href="{{ url_for('invoices.quality') }}" class="btn btn-outline-secondary btn-sm">
           <i class="bi bi-x-circle me-1"></i>مسح
         </a>
       </div>
@@ -98,13 +134,13 @@
   </div>
 </div>
 
-<!-- KPI Cards -->
+<!-- ─── KPI Cards ──────────────────────────────────────────────────────────── -->
 <div class="row g-3 mb-4">
   <div class="col-6 col-md-3">
     <div class="card text-center py-3">
       <div class="text-muted small">إجمالي السجلات</div>
       <div class="fw-bold fs-4 text-info">{{ total_count }}</div>
-      <div class="text-muted" style="font-size:.7rem;">فاتورة</div>
+      <div class="text-muted" style="font-size:.7rem;">فاتورة مُقيَّمة</div>
     </div>
   </div>
   <div class="col-6 col-md-3">
@@ -113,179 +149,232 @@
       <div class="fw-bold fs-4 {% if avg_score >= 80 %}text-success{% elif avg_score >= 60 %}text-warning{% else %}text-danger{% endif %}">
         {{ avg_score }}
       </div>
-      <div class="text-muted" style="font-size:.7rem;">/ 100</div>
+      <div class="text-muted" style="font-size:.7rem;">من 100</div>
     </div>
   </div>
   <div class="col-6 col-md-3">
     <div class="card text-center py-3">
-      <div class="text-muted small">جودة منخفضة (أقل 70)</div>
+      <div class="text-muted small">جودة منخفضة</div>
       <div class="fw-bold fs-4 text-danger">{{ low_quality }}</div>
-      <div class="text-muted" style="font-size:.7rem;">فاتورة</div>
+      <div class="text-muted" style="font-size:.7rem;">أقل من 70</div>
     </div>
   </div>
   <div class="col-6 col-md-3">
     <div class="card text-center py-3">
-      <div class="text-muted small">جودة عالية (80+)</div>
+      <div class="text-muted small">جودة عالية</div>
       <div class="fw-bold fs-4 text-success">{{ total_count - low_quality }}</div>
-      <div class="text-muted" style="font-size:.7rem;">فاتورة</div>
+      <div class="text-muted" style="font-size:.7rem;">80 فأكثر</div>
     </div>
   </div>
 </div>
 
-<div class="row g-4">
+<!-- ─── Employee Cards ─────────────────────────────────────────────────────── -->
+{% if by_employee %}
+<h5 class="fw-bold mb-3">
+  <i class="bi bi-people-fill text-info me-2"></i>تقييم الموظفين والتوجيه
+</h5>
+<div class="row g-3 mb-4">
+  {% for row in by_employee %}
+  {% set score = (row.avg_score or 0) | round(1) %}
 
-  <!-- By employee summary -->
-  {% if by_employee %}
-  <div class="col-lg-4">
-    <div class="card h-100">
-      <div class="card-header">
-        <i class="bi bi-people-fill me-2 text-info"></i>تقييم الموظفين
-      </div>
-      <div class="card-body p-0">
-        <table class="table align-middle mb-0">
-          <thead>
-            <tr>
-              <th>الموظف</th>
-              <th class="text-center">عدد</th>
-              <th class="text-center">المتوسط</th>
-              <th style="width:70px">التقييم</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in by_employee %}
-            {% set score = row.avg_score or 0 %}
-            <tr>
-              <td class="fw-semibold">{{ row.name }}</td>
-              <td class="text-center">
-                <span class="badge bg-secondary">{{ row.cnt }}</span>
-              </td>
-              <td class="text-center">
-                <span class="score-badge {% if score >= 80 %}score-high{% elif score >= 60 %}score-medium{% else %}score-low{% endif %}">
-                  {{ '{:.0f}'.format(score) }}
-                </span>
-              </td>
-              <td>
-                <div class="emp-score-bar">
-                  <div class="emp-score-fill {% if score >= 80 %}bg-success{% elif score >= 60 %}bg-warning{% else %}bg-danger{% endif %}"
-                       style="width:{{ score }}%"></div>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  {# ── tip logic ── #}
+  {% if score >= 90 %}
+    {% set tip_cls  = 'tip-excellent' %}
+    {% set tip_icon = 'bi-trophy-fill' %}
+    {% set tip_text = 'أداء استثنائي! حافظ على هذا المستوى الرائع واستمر في الإلهام.' %}
+  {% elif score >= 80 %}
+    {% set tip_cls  = 'tip-good' %}
+    {% set tip_icon = 'bi-arrow-up-circle-fill' %}
+    {% set tip_text = 'جيد جداً! أنت على المسار الصحيح — تقليل الخصومات أكثر سيرفعك للممتاز.' %}
+  {% elif score >= 70 %}
+    {% set tip_cls  = 'tip-average' %}
+    {% set tip_icon = 'bi-lightbulb-fill' %}
+    {% set tip_text = 'جيد — راجع الفواتير ذات الخصم وقلّل الملاحظات لتحسين تقييمك.' %}
+  {% elif score >= 60 %}
+    {% set tip_cls  = 'tip-weak' %}
+    {% set tip_icon = 'bi-exclamation-circle-fill' %}
+    {% set tip_text = 'مقبول — تقليل الخصومات والتزام أقل بالفواتير المتأخرة سيرفع درجتك بشكل واضح.' %}
+  {% else %}
+    {% set tip_cls  = 'tip-bad' %}
+    {% set tip_icon = 'bi-exclamation-triangle-fill' %}
+    {% set tip_text = 'يحتاج متابعة عاجلة — الرجاء مراجعة أسباب انخفاض الجودة مع الإدارة.' %}
+  {% endif %}
+
+  <div class="col-md-6 col-xl-4">
+    <div class="card emp-card h-100">
+      <div class="card-body">
+
+        <!-- Name + score circle -->
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <span class="score-badge {% if score >= 80 %}score-high{% elif score >= 60 %}score-medium{% else %}score-low{% endif %}">
+            {{ '{:.0f}'.format(score) }}
+          </span>
+          <div class="flex-grow-1 overflow-hidden">
+            <div class="fw-bold text-truncate">{{ row.name }}</div>
+            <div class="text-muted" style="font-size:.72rem;">متوسط الجودة من 100</div>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="emp-score-bar mb-3">
+          <div class="emp-score-fill {% if score >= 80 %}bg-success{% elif score >= 60 %}bg-warning{% else %}bg-danger{% endif %}"
+               style="width:{{ score }}%"></div>
+        </div>
+
+        <!-- Mini stats -->
+        <div class="row g-2 text-center mb-0">
+          <div class="col-4 border-end" style="border-color:rgba(255,255,255,.08)!important;">
+            <div class="stat-mini">فواتير مُقيَّمة</div>
+            <div class="fw-bold">{{ row.cnt }}</div>
+          </div>
+          <div class="col-4 border-end" style="border-color:rgba(255,255,255,.08)!important;">
+            <div class="stat-mini">عملاء</div>
+            <div class="fw-bold text-info">{{ row.cust_cnt or 0 }}</div>
+          </div>
+          <div class="col-4">
+            <div class="stat-mini">جودة منخفضة</div>
+            <div class="fw-bold {% if (row.low_cnt or 0) > 0 %}text-danger{% else %}text-success{% endif %}">
+              {{ row.low_cnt or 0 }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Discount row -->
+        {% if (row.disc_total or 0) > 0 %}
+        <div class="d-flex justify-content-between align-items-center mt-2 pt-2"
+             style="border-top: 1px solid rgba(255,255,255,.08); font-size:.78rem;">
+          <span class="text-muted">إجمالي الخصومات</span>
+          <span class="fw-bold text-danger">{{ '{:,.0f}'.format(row.disc_total) }} ر.س</span>
+        </div>
+        {% endif %}
+
+        <!-- Tip box -->
+        <div class="tip-box {{ tip_cls }}">
+          <i class="bi {{ tip_icon }}"></i>
+          <span>{{ tip_text }}</span>
+        </div>
+
       </div>
     </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ─── Records Table ──────────────────────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-list-check me-2 text-info"></i>سجلات الجودة التفصيلية</span>
+    <span class="text-muted small">{{ records.total }} سجل</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>رقم الفاتورة</th>
+          <th>التاريخ</th>
+          <th>الموظف</th>
+          <th class="text-center">الجودة</th>
+          <th>المشكلات</th>
+          <th>الحالة</th>
+          <th>التوجيه</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rec in records.items %}
+        {% set sc = rec.quality_score or 0 %}
+        <tr>
+          <td class="fw-semibold text-primary">{{ rec.invoice_no or '—' }}</td>
+          <td class="text-muted small">{{ rec.invoice_date or '—' }}</td>
+          <td>
+            {% if rec.employee %}
+              <span class="fw-semibold">{{ rec.employee.name }}</span>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <span class="score-badge-sm {% if sc >= 80 %}score-high{% elif sc >= 60 %}score-medium{% else %}score-low{% endif %}">
+              {{ '{:.0f}'.format(sc) }}
+            </span>
+          </td>
+          <td>
+            {% if rec.issues %}
+              <span class="issues-cell" title="{{ rec.issues }}">{{ rec.issues }}</span>
+            {% else %}
+              <span class="text-success small"><i class="bi bi-check-circle-fill"></i></span>
+            {% endif %}
+          </td>
+          <td>
+            {% set st_map = {'جيد': ('success', 'bi-check-circle-fill'), 'مقبول': ('warning', 'bi-dash-circle-fill'), 'ضعيف': ('danger', 'bi-x-circle-fill')} %}
+            {% set si = st_map.get(rec.status, ('secondary', 'bi-circle')) %}
+            <span class="badge bg-{{ si[0] }}"><i class="bi {{ si[1] }} me-1"></i>{{ rec.status or '—' }}</span>
+          </td>
+          <td class="rec-tip">
+            {% if sc >= 80 %}
+              <span class="text-success"><i class="bi bi-check2-all me-1"></i>ممتاز</span>
+            {% elif sc >= 70 %}
+              <span class="text-info"><i class="bi bi-lightbulb me-1"></i>
+                {% if 'خصم' in (rec.issues or '') %}قلل الخصم{% else %}راجع الملاحظات{% endif %}
+              </span>
+            {% elif sc >= 60 %}
+              <span class="text-warning"><i class="bi bi-exclamation-circle me-1"></i>
+                {% if 'خصم مرتفع' in (rec.issues or '') %}خصم مرتفع جداً
+                {% elif 'معلقة' in (rec.issues or '') %}فاتورة قديمة
+                {% else %}يحتاج مراجعة{% endif %}
+              </span>
+            {% else %}
+              <span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>متابعة عاجلة</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-center py-5">
+            <i class="bi bi-patch-exclamation fs-1 d-block mb-3 text-warning"></i>
+            <div class="fw-semibold mb-1">لا توجد سجلات جودة بعد</div>
+            <div class="text-muted small mb-3">اضغط "توليد / تحديث الجودة" لحساب درجات الجودة من الفواتير المعلقة</div>
+            <form method="POST" action="{{ url_for('invoices.generate_quality') }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-success btn-sm">
+                <i class="bi bi-lightning-charge-fill me-1"></i>توليد سجلات الجودة الآن
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if records.pages > 1 %}
+  <div class="card-footer d-flex justify-content-center">
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        {% if records.has_prev %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('invoices.quality', page=records.prev_num, employee_id=employee_id, date_from=date_from, date_to=date_to, status=status_filter) }}">&laquo;</a>
+        </li>
+        {% endif %}
+        {% for p in records.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+          <li class="page-item {% if p == records.page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('invoices.quality', page=p, employee_id=employee_id, date_from=date_from, date_to=date_to, status=status_filter) }}">{{ p }}</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+        {% if records.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('invoices.quality', page=records.next_num, employee_id=employee_id, date_from=date_from, date_to=date_to, status=status_filter) }}">&raquo;</a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
   </div>
   {% endif %}
 
-  <!-- Records list -->
-  <div class="col-lg-{% if by_employee %}8{% else %}12{% endif %}">
-    <div class="card">
-      <div class="card-header d-flex align-items-center justify-content-between">
-        <span><i class="bi bi-list-check me-2 text-info"></i>سجلات الجودة</span>
-        <span class="text-muted small">{{ records.total }} سجل</span>
-      </div>
-      <div class="table-responsive">
-        <table class="table align-middle mb-0">
-          <thead>
-            <tr>
-              <th>رقم الفاتورة</th>
-              <th>التاريخ</th>
-              <th>الموظف</th>
-              <th class="text-center">الجودة</th>
-              <th>المشكلات</th>
-              <th>الحالة</th>
-              <th>الفرع</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for rec in records.items %}
-            <tr>
-              <td class="fw-semibold text-primary">{{ rec.invoice_no or '—' }}</td>
-              <td class="text-muted small">{{ rec.invoice_date or '—' }}</td>
-              <td>
-                {% if rec.employee %}
-                  <span class="fw-semibold">{{ rec.employee.name }}</span>
-                {% else %}
-                  <span class="text-muted">—</span>
-                {% endif %}
-              </td>
-              <td class="text-center">
-                {% set sc = rec.quality_score or 0 %}
-                <span class="score-badge {% if sc >= 80 %}score-high{% elif sc >= 60 %}score-medium{% else %}score-low{% endif %}">
-                  {{ '{:.0f}'.format(sc) }}
-                </span>
-              </td>
-              <td>
-                {% if rec.issues %}
-                  <span class="issues-cell" title="{{ rec.issues }}">{{ rec.issues }}</span>
-                {% else %}
-                  <span class="text-muted">—</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if rec.status %}
-                  <span class="badge bg-secondary">{{ rec.status }}</span>
-                {% else %}
-                  <span class="text-muted">—</span>
-                {% endif %}
-              </td>
-              <td class="text-muted small">{{ rec.branch or '—' }}</td>
-            </tr>
-            {% else %}
-            <tr>
-              <td colspan="7" class="text-center py-5">
-                <i class="bi bi-patch-exclamation fs-1 d-block mb-3 text-warning"></i>
-                <div class="fw-semibold mb-1">لا توجد سجلات جودة بعد</div>
-                <div class="text-muted small mb-3">اضغط "توليد / تحديث الجودة" لحساب درجات الجودة من الفواتير المعلقة الموجودة</div>
-                <form method="POST" action="{{ url_for('invoices.generate_quality') }}" class="d-inline">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="btn btn-success btn-sm">
-                    <i class="bi bi-lightning-charge-fill me-1"></i>توليد سجلات الجودة الآن
-                  </button>
-                </form>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      {% if records.pages > 1 %}
-      <div class="card-footer d-flex justify-content-center">
-        <nav>
-          <ul class="pagination pagination-sm mb-0">
-            {% if records.has_prev %}
-            <li class="page-item">
-              <a class="page-link" href="{{ url_for('invoices.quality', page=records.prev_num, employee_id=employee_id, date_from=date_from, date_to=date_to, status=status_filter) }}">
-                &laquo;
-              </a>
-            </li>
-            {% endif %}
-            {% for p in records.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-              {% if p %}
-              <li class="page-item {% if p == records.page %}active{% endif %}">
-                <a class="page-link" href="{{ url_for('invoices.quality', page=p, employee_id=employee_id, date_from=date_from, date_to=date_to, status=status_filter) }}">{{ p }}</a>
-              </li>
-              {% else %}
-              <li class="page-item disabled"><span class="page-link">…</span></li>
-              {% endif %}
-            {% endfor %}
-            {% if records.has_next %}
-            <li class="page-item">
-              <a class="page-link" href="{{ url_for('invoices.quality', page=records.next_num, employee_id=employee_id, date_from=date_from, date_to=date_to, status=status_filter) }}">
-                &raquo;
-              </a>
-            </li>
-            {% endif %}
-          </ul>
-        </nav>
-      </div>
-      {% endif %}
-
-    </div>
-  </div>
 </div>
 {% endblock %}

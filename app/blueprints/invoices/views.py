@@ -210,16 +210,34 @@ def quality():
         InvoiceQualityRecord.quality_score < 70
     ).count() if total_count else 0
 
-    # By employee summary
+    # Subquery: customers served + discount per employee (from PendingInvoice)
+    _cust_subq = (
+        db.session.query(
+            PendingInvoice.employee_id,
+            func.count(func.distinct(PendingInvoice.customer_name)).label('cust_cnt'),
+            func.sum(PendingInvoice.discount).label('disc_total'),
+        )
+        .filter(PendingInvoice.employee_id.isnot(None))
+        .group_by(PendingInvoice.employee_id)
+        .subquery()
+    )
+
+    # By employee summary with enriched stats
     by_employee = (
         db.session.query(
             Employee.name,
             func.count(InvoiceQualityRecord.id).label('cnt'),
             func.avg(InvoiceQualityRecord.quality_score).label('avg_score'),
             func.min(InvoiceQualityRecord.quality_score).label('min_score'),
+            func.sum(
+                db.case((InvoiceQualityRecord.quality_score < 70, 1), else_=0)
+            ).label('low_cnt'),
+            func.coalesce(_cust_subq.c.cust_cnt, 0).label('cust_cnt'),
+            func.coalesce(_cust_subq.c.disc_total, 0).label('disc_total'),
         )
         .join(InvoiceQualityRecord, InvoiceQualityRecord.employee_id == Employee.id)
-        .group_by(Employee.id)
+        .outerjoin(_cust_subq, _cust_subq.c.employee_id == Employee.id)
+        .group_by(Employee.id, _cust_subq.c.cust_cnt, _cust_subq.c.disc_total)
         .order_by(func.avg(InvoiceQualityRecord.quality_score).desc())
         .all()
     )
