@@ -17,7 +17,7 @@ msgstr ""
 
 #: app/templates/base.html:6
 msgid "Al-Qahtani Pro | القحطاني برو"
-msgstr "القحطاني برو"
+msgstr "AQ Pro"
 
 #: app/templates/base.html:349 app/templates/base.html:408
 #: app/templates/dashboard/index.html:2 app/templates/dashboard/index.html:81
@@ -109,7 +109,7 @@ msgstr "نصائح المبيعات"
 #: app/templates/targets/set.html:2 app/templates/uploads/history.html:2
 #: app/templates/uploads/index.html:3
 msgid "القحطاني برو"
-msgstr "القحطاني برو"
+msgstr "AQ Pro"
 
 #: app/templates/assistant/advice.html:37
 msgid "Automated recommendations based on current sales data"
@@ -1647,7 +1647,7 @@ msgid "Individual sales trends, KPIs, monthly chart, and product category breakd
 msgstr "اتجاهات المبيعات، مؤشرات الأداء، الرسم البياني الشهري، وتوزيع فئات المنتجات."
 
 msgid "Al-Qahtani Pro Assistant"
-msgstr "مساعد القحطاني برو"
+msgstr "AQ – المساعد الذكي"
 
 msgid "Employee Report – %(name)s"
 msgstr "تقرير %(name)s"
