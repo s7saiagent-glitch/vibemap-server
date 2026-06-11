@@ -87,6 +87,7 @@ def _seed_settings():
         'performance_drop_threshold': '-10',
         'branch_name': 'JED MO Abhour Plaza',
         'company_name': 'Magrabi - KSA',
+        'branch_manager_name': 'أحمد قحطاني',
     }
     for key, val in defaults.items():
         if not AppSetting.query.filter_by(key=key).first():
