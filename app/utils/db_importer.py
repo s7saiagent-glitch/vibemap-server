@@ -1,9 +1,14 @@
 """
 Import parsed Excel data into the database with deduplication.
 """
+from datetime import date as date_cls
+
+from sqlalchemy import func
+
 from app import db
 from app.models import (Employee, EmployeeAlias, SaleRecord,
-                        SalesProductivityRecord, PendingInvoice)
+                        SalesProductivityRecord, PendingInvoice,
+                        InvoiceNote, InvoiceQualityRecord)
 
 
 def _get_or_create_employee(name: str, sap_id: str = None) -> Employee:
@@ -150,4 +155,85 @@ def import_pending_invoices(parsed: dict) -> tuple[int, int]:
         imported += 1
 
     db.session.commit()
+    _refresh_quality_records()
     return imported, skipped
+
+
+def _refresh_quality_records():
+    """Recompute InvoiceQualityRecord for all pending invoices."""
+    today = date_cls.today()
+
+    groups = (
+        db.session.query(
+            PendingInvoice.invoice_no,
+            PendingInvoice.employee_id,
+            PendingInvoice.invoice_date,
+            PendingInvoice.status,
+            PendingInvoice.branch,
+            func.sum(PendingInvoice.discount).label('total_discount'),
+            func.sum(PendingInvoice.net).label('total_net'),
+        )
+        .group_by(PendingInvoice.invoice_no, PendingInvoice.employee_id)
+        .all()
+    )
+
+    for grp in groups:
+        note_count = (
+            db.session.query(func.count(InvoiceNote.id))
+            .join(PendingInvoice, InvoiceNote.invoice_id == PendingInvoice.id)
+            .filter(PendingInvoice.invoice_no == grp.invoice_no)
+            .scalar() or 0
+        )
+
+        score = 100.0
+        issues = []
+
+        if (grp.total_discount or 0) > 0:
+            score -= 15
+            issues.append('خصم مطبق')
+            net = grp.total_net or 0
+            if net > 0 and (grp.total_discount / net) > 0.15:
+                score -= 10
+                issues.append('خصم مرتفع')
+
+        if note_count > 0:
+            score -= min(note_count * 10, 30)
+            issues.append(f'{note_count} ملاحظة')
+
+        if grp.status == 'cancelled':
+            score -= 20
+            issues.append('ملغاة')
+        elif grp.status == 'pending' and grp.invoice_date:
+            days_old = (today - grp.invoice_date).days
+            if days_old > 30:
+                score -= 10
+                issues.append(f'معلقة {days_old} يوم')
+
+        if (grp.total_net or 0) == 0:
+            score -= 10
+            issues.append('مبلغ صفر')
+
+        score = max(0.0, min(100.0, round(score, 1)))
+        q_status = 'جيد' if score >= 80 else ('مقبول' if score >= 60 else 'ضعيف')
+        issues_text = '، '.join(issues) or None
+
+        existing = InvoiceQualityRecord.query.filter_by(invoice_no=grp.invoice_no).first()
+        if existing:
+            existing.quality_score = score
+            existing.issues = issues_text
+            existing.status = q_status
+            existing.employee_id = grp.employee_id
+            existing.invoice_date = grp.invoice_date
+            existing.branch = grp.branch
+        else:
+            db.session.add(InvoiceQualityRecord(
+                invoice_no=grp.invoice_no,
+                employee_id=grp.employee_id,
+                invoice_date=grp.invoice_date,
+                quality_score=score,
+                issues=issues_text,
+                status=q_status,
+                branch=grp.branch,
+            ))
+
+    db.session.commit()
