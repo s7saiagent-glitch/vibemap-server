@@ -343,54 +343,55 @@
     <i class="bi bi-gem me-1" style="color:#f59e0b;"></i>القحطاني برو
   </a>
 
-  <div class="d-none d-lg-flex align-items-center gap-1 flex-grow-1 {% if current_locale == 'ar' %}me-3{% else %}ms-3{% endif %}" id="navLinks">
+  <div class="d-none d-lg-flex align-items-center gap-1 flex-grow-1 me-3" id="navLinks">
     <a class="nav-link {% if request.endpoint and 'dashboard' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('dashboard.index') }}">
-      <i class="bi bi-speedometer2"></i> {{ _('Dashboard') }}
+      <i class="bi bi-speedometer2"></i> لوحة التحكم
     </a>
     <a class="nav-link {% if request.endpoint and 'employees' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('employees.index') }}">
-      <i class="bi bi-people-fill"></i> {{ _('Employees') }}
+      <i class="bi bi-people-fill"></i> الموظفون
     </a>
     <a class="nav-link {% if request.endpoint and 'uploads' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('uploads.index') }}">
-      <i class="bi bi-cloud-upload-fill"></i> {{ _('Uploads') }}
+      <i class="bi bi-cloud-upload-fill"></i> رفع الملفات
     </a>
     <a class="nav-link {% if request.endpoint and 'targets' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('targets.index') }}">
-      <i class="bi bi-bullseye"></i> {{ _('Targets') }}
+      <i class="bi bi-bullseye"></i> الأهداف
     </a>
     <!-- Reports dropdown -->
     <div class="nav-item dropdown">
       <a class="nav-link dropdown-toggle {% if request.endpoint and 'reports' in (request.endpoint or '') %}active{% endif %}"
          href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-bar-chart-line-fill"></i> {{ _('Reports') }}
+        <i class="bi bi-bar-chart-line-fill"></i> التقارير
       </a>
       <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="{{ url_for('reports.index') }}"><i class="bi bi-grid me-2"></i>{{ _('All Reports') }}</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('reports.products') }}"><i class="bi bi-boxes me-2"></i>{{ _('Products') }}</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('reports.comparison') }}"><i class="bi bi-people me-2"></i>{{ _('Comparison') }}</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('reports.actual_vs_target') }}"><i class="bi bi-bullseye me-2"></i>{{ _('vs Target') }}</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('reports.index') }}"><i class="bi bi-grid me-2"></i>كل التقارير</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('reports.products') }}"><i class="bi bi-boxes me-2"></i>المنتجات</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('reports.comparison') }}"><i class="bi bi-people me-2"></i>مقارنة الموظفين</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('reports.actual_vs_target') }}"><i class="bi bi-bullseye me-2"></i>الفعلي مقابل الهدف</a></li>
       </ul>
     </div>
     <!-- Invoices dropdown -->
     <div class="nav-item dropdown">
       <a class="nav-link dropdown-toggle {% if request.endpoint and 'invoices' in (request.endpoint or '') %}active{% endif %}"
          href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-receipt-cutoff"></i> {{ _('Invoices') }}
+        <i class="bi bi-receipt-cutoff"></i> الفواتير
       </a>
       <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="{{ url_for('invoices.index') }}"><i class="bi bi-receipt me-2"></i>{{ _('Pending Invoices') }}</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('invoices.discounts') }}"><i class="bi bi-percent me-2"></i>{{ _('Discounts') }}</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('invoices.index') }}"><i class="bi bi-receipt me-2"></i>الفواتير المعلقة</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('invoices.discounts') }}"><i class="bi bi-percent me-2"></i>الخصومات</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('invoices.quality') }}"><i class="bi bi-patch-check me-2"></i>جودة الفواتير</a></li>
       </ul>
     </div>
     <a class="nav-link {% if request.endpoint and 'schedule' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('schedule.index') }}">
-      <i class="bi bi-calendar-week-fill"></i> {{ _('Schedule') }}
+      <i class="bi bi-calendar-week-fill"></i> الجدول
     </a>
     <a class="nav-link {% if request.endpoint and 'assistant' in (request.endpoint or '') %}active{% endif %}"
        href="{{ url_for('assistant.index') }}">
-      <i class="bi bi-robot"></i> {{ _('Assistant') }}
+      <i class="bi bi-robot"></i> المساعد
     </a>
   </div>
 
@@ -405,16 +406,17 @@
 
 <!-- Mobile nav -->
 <div class="nav-links-collapse d-lg-none no-print" id="mobileNav">
-  <a class="nav-link py-2 {% if request.endpoint and 'dashboard' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('dashboard.index') }}"><i class="bi bi-speedometer2 me-2"></i>{{ _('Dashboard') }}</a>
-  <a class="nav-link py-2 {% if request.endpoint and 'employees' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('employees.index') }}"><i class="bi bi-people-fill me-2"></i>{{ _('Employees') }}</a>
-  <a class="nav-link py-2 {% if request.endpoint and 'uploads' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('uploads.index') }}"><i class="bi bi-cloud-upload-fill me-2"></i>{{ _('Uploads') }}</a>
-  <a class="nav-link py-2 {% if request.endpoint and 'targets' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('targets.index') }}"><i class="bi bi-bullseye me-2"></i>{{ _('Targets') }}</a>
-  <a class="nav-link py-2 {% if request.endpoint and 'reports' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('reports.index') }}"><i class="bi bi-bar-chart-line-fill me-2"></i>{{ _('Reports') }}</a>
-  <a class="nav-link py-2 ps-4 text-muted small" href="{{ url_for('reports.products') }}"><i class="bi bi-boxes me-2"></i>{{ _('Products') }}</a>
-  <a class="nav-link py-2 {% if request.endpoint and 'invoices' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('invoices.index') }}"><i class="bi bi-receipt-cutoff me-2"></i>{{ _('Invoices') }}</a>
-  <a class="nav-link py-2 ps-4 text-muted small" href="{{ url_for('invoices.discounts') }}"><i class="bi bi-percent me-2"></i>{{ _('Discounts') }}</a>
-  <a class="nav-link py-2 {% if request.endpoint and 'schedule' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('schedule.index') }}"><i class="bi bi-calendar-week-fill me-2"></i>{{ _('Schedule') }}</a>
-  <a class="nav-link py-2 {% if request.endpoint and 'assistant' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('assistant.index') }}"><i class="bi bi-robot me-2"></i>{{ _('Assistant') }}</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'dashboard' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('dashboard.index') }}"><i class="bi bi-speedometer2 me-2"></i>لوحة التحكم</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'employees' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('employees.index') }}"><i class="bi bi-people-fill me-2"></i>الموظفون</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'uploads' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('uploads.index') }}"><i class="bi bi-cloud-upload-fill me-2"></i>رفع الملفات</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'targets' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('targets.index') }}"><i class="bi bi-bullseye me-2"></i>الأهداف</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'reports' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('reports.index') }}"><i class="bi bi-bar-chart-line-fill me-2"></i>التقارير</a>
+  <a class="nav-link py-2 ps-4 text-muted small" href="{{ url_for('reports.products') }}"><i class="bi bi-boxes me-2"></i>المنتجات</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'invoices' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('invoices.index') }}"><i class="bi bi-receipt-cutoff me-2"></i>الفواتير</a>
+  <a class="nav-link py-2 ps-4 text-muted small" href="{{ url_for('invoices.discounts') }}"><i class="bi bi-percent me-2"></i>الخصومات</a>
+  <a class="nav-link py-2 ps-4 text-muted small" href="{{ url_for('invoices.quality') }}"><i class="bi bi-patch-check me-2"></i>جودة الفواتير</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'schedule' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('schedule.index') }}"><i class="bi bi-calendar-week-fill me-2"></i>الجدول</a>
+  <a class="nav-link py-2 {% if request.endpoint and 'assistant' in (request.endpoint or '') %}active{% endif %}" href="{{ url_for('assistant.index') }}"><i class="bi bi-robot me-2"></i>المساعد</a>
 </div>
 
 <!-- Flash Messages -->

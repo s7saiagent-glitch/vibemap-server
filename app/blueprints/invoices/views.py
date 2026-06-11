@@ -11,7 +11,7 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy import func
 
 from app import db
-from app.models import Employee, PendingInvoice, InvoiceNote
+from app.models import Employee, PendingInvoice, InvoiceNote, InvoiceQualityRecord
 
 bp = Blueprint('invoices', __name__)
 
@@ -170,6 +170,82 @@ def discounts():
         min_discount=min_discount,
         today=today,
         page_title=_l('Discounts Analysis'),
+    )
+
+
+@bp.route('/quality')
+def quality():
+    """Invoice quality records – scores, issues, and status."""
+    employee_id  = request.args.get('employee_id', 0, type=int)
+    status_filter = request.args.get('status', '')
+    date_from_str = request.args.get('date_from', '')
+    date_to_str   = request.args.get('date_to', '')
+    page = request.args.get('page', 1, type=int)
+    today = date.today()
+
+    q = InvoiceQualityRecord.query
+    if employee_id:
+        q = q.filter(InvoiceQualityRecord.employee_id == employee_id)
+    if status_filter:
+        q = q.filter(InvoiceQualityRecord.status == status_filter)
+    if date_from_str:
+        try:
+            q = q.filter(InvoiceQualityRecord.invoice_date >= date.fromisoformat(date_from_str))
+        except ValueError:
+            pass
+    if date_to_str:
+        try:
+            q = q.filter(InvoiceQualityRecord.invoice_date <= date.fromisoformat(date_to_str))
+        except ValueError:
+            pass
+
+    records = q.order_by(InvoiceQualityRecord.invoice_date.desc()).paginate(
+        page=page, per_page=50, error_out=False
+    )
+
+    # Summary stats
+    total_count = InvoiceQualityRecord.query.count()
+    avg_score = db.session.query(func.avg(InvoiceQualityRecord.quality_score)).scalar() or 0.0
+    low_quality = InvoiceQualityRecord.query.filter(
+        InvoiceQualityRecord.quality_score < 70
+    ).count() if total_count else 0
+
+    # By employee summary
+    by_employee = (
+        db.session.query(
+            Employee.name,
+            func.count(InvoiceQualityRecord.id).label('cnt'),
+            func.avg(InvoiceQualityRecord.quality_score).label('avg_score'),
+            func.min(InvoiceQualityRecord.quality_score).label('min_score'),
+        )
+        .join(InvoiceQualityRecord, InvoiceQualityRecord.employee_id == Employee.id)
+        .group_by(Employee.id)
+        .order_by(func.avg(InvoiceQualityRecord.quality_score).desc())
+        .all()
+    )
+
+    # Distinct statuses for filter
+    statuses = [r[0] for r in db.session.query(
+        InvoiceQualityRecord.status
+    ).filter(InvoiceQualityRecord.status.isnot(None)).distinct().all()]
+
+    employees = Employee.query.filter_by(is_active=True).order_by(Employee.name).all()
+
+    return render_template(
+        'invoices/quality.html',
+        records=records,
+        employees=employees,
+        by_employee=by_employee,
+        total_count=total_count,
+        avg_score=round(float(avg_score), 1),
+        low_quality=low_quality,
+        statuses=statuses,
+        employee_id=employee_id,
+        status_filter=status_filter,
+        date_from=date_from_str,
+        date_to=date_to_str,
+        today=today,
+        page_title='جودة الفواتير',
     )
 
 
