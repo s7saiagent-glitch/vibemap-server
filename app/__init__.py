@@ -77,7 +77,63 @@ def create_app(config_name=None):
         db.create_all()
         _seed_settings()
 
+    _register_cli(app)
     return app
+
+
+def _register_cli(app):
+    import click
+
+    @app.cli.command('dedup-employees')
+    def dedup_employees():
+        """Auto-merge duplicate employee records that share the same SAP ID."""
+        from app.models import (Employee, EmployeeAlias, SaleRecord,
+                                SalesProductivityRecord, PendingInvoice,
+                                SalesTarget, Schedule)
+
+        # Group employees by SAP ID
+        from collections import defaultdict
+        groups = defaultdict(list)
+        for emp in Employee.query.filter(Employee.sap_id.isnot(None)).all():
+            groups[emp.sap_id].append(emp)
+
+        merged_count = 0
+        for sap_id, emps in groups.items():
+            if len(emps) < 2:
+                continue
+
+            # Keep the one with most sales records
+            emps.sort(key=lambda e: SaleRecord.query.filter_by(employee_id=e.id).count(), reverse=True)
+            target = emps[0]
+
+            for source in emps[1:]:
+                click.echo(f'Merging "{source.name}" (id={source.id}) → "{target.name}" (id={target.id}) [SAP {sap_id}]')
+
+                SaleRecord.query.filter_by(employee_id=source.id).update({'employee_id': target.id})
+                SalesProductivityRecord.query.filter_by(employee_id=source.id).update({'employee_id': target.id})
+                PendingInvoice.query.filter_by(employee_id=source.id).update({'employee_id': target.id})
+                SalesTarget.query.filter_by(employee_id=source.id).update({'employee_id': target.id})
+                Schedule.query.filter_by(employee_id=source.id).update({'employee_id': target.id})
+
+                for alias in list(source.aliases):
+                    exists = EmployeeAlias.query.filter_by(alias=alias.alias, employee_id=target.id).first()
+                    if not exists:
+                        alias.employee_id = target.id
+                    else:
+                        db.session.delete(alias)
+
+                if source.name != target.name:
+                    if not EmployeeAlias.query.filter_by(alias=source.name, employee_id=target.id).first():
+                        db.session.add(EmployeeAlias(employee_id=target.id, alias=source.name))
+
+                db.session.delete(source)
+                merged_count += 1
+
+        db.session.commit()
+        if merged_count:
+            click.echo(f'Done. Merged {merged_count} duplicate record(s).')
+        else:
+            click.echo('No duplicates found by SAP ID.')
 
 
 def _seed_settings():
