@@ -87,7 +87,8 @@ def _range_sales_total(d_from, d_to) -> float:
 
 
 def _range_discount_total(d_from, d_to) -> float:
-    total = db.session.query(func.sum(SaleRecord.discount)).filter(
+    # Show ret_val (returns/deductions) as "discount" — SAP encodes discounts in col18 (ret_val)
+    total = db.session.query(func.sum(SaleRecord.ret_val)).filter(
         _sales_filter(d_from, d_to)
     ).scalar()
     return float(total or 0)
@@ -102,7 +103,8 @@ def _employee_range_sales(employee_id: int, d_from, d_to) -> float:
 
 
 def _employee_range_discount(employee_id: int, d_from, d_to) -> float:
-    total = db.session.query(func.sum(SaleRecord.discount)).filter(
+    # Show ret_val (returns/deductions) as "discount" — SAP encodes discounts in col18 (ret_val)
+    total = db.session.query(func.sum(SaleRecord.ret_val)).filter(
         SaleRecord.employee_id == employee_id,
         _sales_filter(d_from, d_to),
     ).scalar()

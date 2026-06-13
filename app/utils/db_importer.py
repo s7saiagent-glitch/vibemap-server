@@ -116,10 +116,10 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
                 aggs[key]['_qty'] = qty
 
         # Always accumulate returns and discounts
-        aggs[key]['_total_ret']  += ret_val
-        aggs[key]['_total_disc'] += discount
+        aggs[key]['_total_ret']  = max(aggs[key]['_total_ret'], ret_val)
+        aggs[key]['_total_disc'] = max(aggs[key]['_total_disc'], discount)
         if ret_qty > 0:
-            aggs[key]['_ret_qty'] = ret_qty
+            aggs[key]['_ret_qty'] = max(aggs[key]['_ret_qty'], ret_qty)
 
     # Build net_records: net = highest_sale_value − returns − discounts
     net_records = []
