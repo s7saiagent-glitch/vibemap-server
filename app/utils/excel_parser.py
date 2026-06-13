@@ -161,6 +161,8 @@ def parse_productivity_report(path: str, batch_id: str = None) -> dict:
             if not emp_name_raw:
                 continue
             if emp_name_raw in ('Salesman Name ', 'Salesman Name', 'Grand Total', 'Total'):
+                if emp_name_raw in ('Total', 'Grand Total'):
+                    cat_col_pairs = []  # stop parsing; summary section follows
                 continue
             # Skip rows that are not employee data (header rows etc.)
             if not cat_col_pairs:
