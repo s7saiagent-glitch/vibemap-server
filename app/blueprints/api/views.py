@@ -203,6 +203,80 @@ def employee_yearly_sales(emp_id):
     })
 
 
+# ─── Diagnostic endpoint ───────────────────────────────────────────────────────
+
+@bp.route('/debug/sales-breakdown')
+def debug_sales_breakdown():
+    """
+    Returns a breakdown of sale records for a month showing gross vs net.
+    Access: /api/debug/sales-breakdown?year=2026&month=6
+    """
+    today = date.today()
+    year  = request.args.get('year',  today.year,  type=int)
+    month = request.args.get('month', today.month, type=int)
+
+    rows = (
+        db.session.query(
+            SaleRecord.sale_date,
+            SaleRecord.invoice_no,
+            SaleRecord.item_code,
+            SaleRecord.description,
+            SaleRecord.product_category,
+            SaleRecord.price,
+            SaleRecord.qty,
+            SaleRecord.value,
+            SaleRecord.discount,
+            SaleRecord.ret_val,
+            SaleRecord.ret_qty,
+            SaleRecord.invoice_type,
+            Employee.name.label('employee'),
+        )
+        .join(Employee, Employee.id == SaleRecord.employee_id)
+        .filter(
+            extract('year',  SaleRecord.sale_date) == year,
+            extract('month', SaleRecord.sale_date) == month,
+        )
+        .order_by(SaleRecord.sale_date, Employee.name, SaleRecord.invoice_no)
+        .all()
+    )
+
+    records = []
+    total_value    = 0.0
+    total_discount = 0.0
+    total_ret_val  = 0.0
+
+    for r in rows:
+        total_value    += float(r.value    or 0)
+        total_discount += float(r.discount or 0)
+        total_ret_val  += float(r.ret_val  or 0)
+        records.append({
+            'date':       str(r.sale_date),
+            'employee':   r.employee,
+            'invoice':    r.invoice_no,
+            'item':       r.item_code,
+            'desc':       r.description,
+            'category':   r.product_category,
+            'price':      r.price,
+            'qty':        r.qty,
+            'value':      r.value,
+            'discount':   r.discount,
+            'ret_val':    r.ret_val,
+            'ret_qty':    r.ret_qty,
+            'inv_type':   r.invoice_type,
+        })
+
+    return jsonify({
+        'year':            year,
+        'month':           month,
+        'count':           len(records),
+        'total_value':     round(total_value, 2),
+        'total_discount':  round(total_discount, 2),
+        'total_ret_val':   round(total_ret_val, 2),
+        'net_sales':       round(total_value, 2),
+        'records':         records,
+    })
+
+
 @bp.route('/employee/<int:emp_id>/weekly-trend')
 def employee_weekly_trend(emp_id):
     """
