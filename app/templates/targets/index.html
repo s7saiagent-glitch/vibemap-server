@@ -131,30 +131,46 @@
   </div>
 </div>
 
-<!-- Company achievement summary -->
-{% if company_target and total_target_amount > 0 %}
-<div class="card mb-4">
-  <div class="card-body py-3">
+<!-- Branch Manager / Branch Target Card -->
+{% if branch_manager %}
+<div class="card mb-4 border-primary">
+  <div class="card-body">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">🏢</div>
+      <div>
+        <div class="fw-bold fs-6">{{ branch_manager.name }}</div>
+        <div class="text-primary small fw-semibold">مدير الفرع — تارقت الفرع الكلي</div>
+      </div>
+      <div class="ms-auto text-end">
+        <div class="text-muted small">التارقت الشهري</div>
+        <div class="fw-bold fs-5 text-primary">{{ '{:,.0f}'.format(branch_target_amount) }} <small class="text-muted fs-6">ر.س</small></div>
+      </div>
+    </div>
     <div class="row g-3 text-center">
       <div class="col-4">
-        <div class="text-muted small">{{ _('Company Target') }}</div>
-        <div class="fw-bold fs-5 text-primary">{{ '{:,.0f}'.format(total_target_amount) }}</div>
+        <div class="text-muted small">تارقت الفرع</div>
+        <div class="fw-bold fs-6 text-primary">{{ '{:,.0f}'.format(branch_target_amount) }}</div>
       </div>
       <div class="col-4">
-        <div class="text-muted small">{{ _('Achieved') }}</div>
-        <div class="fw-bold fs-5 text-success">{{ '{:,.0f}'.format(total_achieved) }}</div>
+        <div class="text-muted small">محقق (الفرع)</div>
+        <div class="fw-bold fs-6 text-success">{{ '{:,.0f}'.format(branch_achieved) }}</div>
       </div>
       <div class="col-4">
-        <div class="text-muted small">{{ _('Achievement') }}</div>
-        <div class="fw-bold fs-5 {% if company_achievement_pct >= 100 %}text-success{% elif company_achievement_pct >= 80 %}text-warning{% else %}text-danger{% endif %}">
-          {{ company_achievement_pct }}%
+        <div class="text-muted small">نسبة الإنجاز</div>
+        <div class="fw-bold fs-6 {% if branch_pct >= 100 %}text-success{% elif branch_pct >= 80 %}text-warning{% else %}text-danger{% endif %}">
+          {{ branch_pct }}%
         </div>
       </div>
     </div>
-    <div class="progress mt-2" style="height:6px;">
-      <div class="progress-bar bg-{% if company_achievement_pct >= 100 %}success{% elif company_achievement_pct >= 80 %}warning{% else %}danger{% endif %}"
-           style="width:{{ [company_achievement_pct, 100]|min }}%"></div>
+    <div class="progress mt-2" style="height:8px;">
+      <div class="progress-bar bg-{% if branch_pct >= 100 %}success{% elif branch_pct >= 80 %}warning{% else %}danger{% endif %}"
+           style="width:{{ [branch_pct, 100]|min }}%"></div>
     </div>
+    {% if branch_target_amount > branch_achieved %}
+    <div class="text-muted small mt-2 text-center">
+      المتبقي لإتمام التارقت: <strong class="text-danger">{{ '{:,.0f}'.format(branch_target_amount - branch_achieved) }} ر.س</strong>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endif %}

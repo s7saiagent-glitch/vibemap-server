@@ -136,8 +136,29 @@
     </div>
   </div>
 
-  <!-- Employee table -->
+  <!-- Branch Manager row (read-only, auto = company total) -->
+  {% if branch_manager %}
+  <div class="card mb-3 border-primary">
+    <div class="card-body py-2 d-flex align-items-center gap-3">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;">🏢</div>
+      <div class="flex-grow-1">
+        <div class="fw-bold">{{ branch_manager.name }}</div>
+        <div class="small text-primary">مدير الفرع — تارقته = تارقت الفرع الكلي (يُضبط تلقائياً)</div>
+      </div>
+      <div class="text-end">
+        <div class="text-muted small">التارقت</div>
+        <div class="fw-bold text-primary" id="mgr-target-display">
+          {{ '{:,.0f}'.format(company_target.total_target if company_target else 0) }} ر.س
+        </div>
+      </div>
+      <span class="badge bg-primary">100%</span>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Employee distribution table -->
   <div class="card">
+    <div class="card-header fw-semibold py-2 text-muted small">توزيع التارقت على الموظفين (المجموع = 100%)</div>
     <div class="table-responsive">
       <table class="table align-middle mb-0 set-table">
         <thead>
@@ -223,7 +244,14 @@
   }
 
   pctInputs.forEach(inp => inp.addEventListener('input', updateTargetAmounts));
-  totalInput.addEventListener('input', updateTargetAmounts);
+  totalInput.addEventListener('input', () => {
+    updateTargetAmounts();
+    const mgrEl = document.getElementById('mgr-target-display');
+    if (mgrEl) {
+      const v = parseFloat(totalInput.value) || 0;
+      mgrEl.textContent = Math.round(v).toLocaleString('ar-SA') + ' ر.س';
+    }
+  });
   workDaysEl.addEventListener('input', updateTargetAmounts);
 
   // Make equalSplit accessible to the inline onclick (already migrated to addEventListener above)
