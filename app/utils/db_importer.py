@@ -95,6 +95,12 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
         qty      = float(rec.get('qty')      or 0)
         discount = float(rec.get('discount') or 0)
 
+        # SAP credit notes store the credit as negative col20 (val) instead of col18 (ret_val).
+        # A negative val would never trigger max_value update → silently ignored → overcounting.
+        if val < 0 and ret_val == 0:
+            ret_val = abs(val)
+            val = 0.0
+
         if key not in aggs:
             aggs[key] = {
                 **rec,
