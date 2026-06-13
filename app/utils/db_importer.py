@@ -181,26 +181,18 @@ def import_pending_invoices(parsed: dict) -> tuple[int, int]:
     """
     Import pending invoice records.
     Dedup key: (invoice_no, item_code).
-    Pre-loads all existing keys into a set for fast lookup.
-    If a matching record exists its numeric fields are refreshed (price may change).
-    Returns (imported, skipped/updated).
+    If a matching record exists, its numeric fields are refreshed (price may change).
+    Returns (imported, updated+skipped).
     """
     records = parsed.get('records', [])
     if not records:
         return 0, 0
 
-    # ── pre-load existing (invoice_no, item_code) → id map ───────────────────
+    # ── pre-load existing full objects by (invoice_no, item_code) ────────────
     existing: dict[tuple, PendingInvoice] = {
         (r.invoice_no, r.item_code or ''): r
-        for r in db.session.query(
-            PendingInvoice.id,
-            PendingInvoice.invoice_no,
-            PendingInvoice.item_code,
-        ).all()
-        # lightweight – only load what we need for the key
+        for r in PendingInvoice.query.all()
     }
-    # reload as full objects only for those that need updating
-    existing_full: dict[tuple, PendingInvoice] = {}
 
     imported = skipped = 0
     for rec in records:
@@ -208,11 +200,18 @@ def import_pending_invoices(parsed: dict) -> tuple[int, int]:
         key = (rec['invoice_no'], rec.get('item_code') or '')
 
         if key in existing:
+            # Update mutable fields — price/discount may change between uploads
+            row = existing[key]
+            row.price    = rec.get('price', row.price)
+            row.net      = rec.get('net', row.net)
+            row.tax      = rec.get('tax', row.tax)
+            row.discount = rec.get('discount', row.discount)
+            if emp and not row.employee_id:
+                row.employee_id = emp.id
             skipped += 1
             continue
 
-        existing[key] = True        # guard against intra-batch duplicates
-        db.session.add(PendingInvoice(
+        new_row = PendingInvoice(
             employee_id=emp.id if emp else None,
             invoice_no=rec['invoice_no'],
             invoice_date=rec.get('invoice_date'),
@@ -225,7 +224,9 @@ def import_pending_invoices(parsed: dict) -> tuple[int, int]:
             branch=rec.get('branch', ''),
             source_file=rec.get('source_file', ''),
             upload_batch=rec.get('upload_batch', ''),
-        ))
+        )
+        db.session.add(new_row)
+        existing[key] = new_row   # guard against intra-batch duplicates
         imported += 1
 
     db.session.commit()
