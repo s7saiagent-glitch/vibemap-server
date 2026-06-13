@@ -265,15 +265,96 @@ def debug_sales_breakdown():
             'inv_type':   r.invoice_type,
         })
 
+    gross_total = total_value + total_ret_val
+
+    # Per-employee summary
+    emp_summary = {}
+    for r in rows:
+        e = r.employee
+        if e not in emp_summary:
+            emp_summary[e] = {'net': 0.0, 'ret_val': 0.0, 'count': 0}
+        emp_summary[e]['net']     += float(r.value   or 0)
+        emp_summary[e]['ret_val'] += float(r.ret_val or 0)
+        emp_summary[e]['count']   += 1
+
     return jsonify({
         'year':            year,
         'month':           month,
         'count':           len(records),
-        'total_value':     round(total_value, 2),
-        'total_discount':  round(total_discount, 2),
+        'total_net':       round(total_value, 2),
         'total_ret_val':   round(total_ret_val, 2),
-        'net_sales':       round(total_value, 2),
+        'total_gross':     round(gross_total, 2),
+        'per_employee':    {e: {
+                                'count':   v['count'],
+                                'net':     round(v['net'], 2),
+                                'ret_val': round(v['ret_val'], 2),
+                                'gross':   round(v['net'] + v['ret_val'], 2),
+                            } for e, v in sorted(emp_summary.items())},
         'records':         records,
+    })
+
+
+@bp.route('/debug/invoice-check')
+def debug_invoice_check():
+    """
+    Detect invoices that appear under more than one employee in a month.
+    These are likely double-counted in the totals.
+    Access: /api/debug/invoice-check?year=2026&month=6
+    """
+    today = date.today()
+    year  = request.args.get('year',  today.year,  type=int)
+    month = request.args.get('month', today.month, type=int)
+
+    rows = (
+        db.session.query(
+            SaleRecord.invoice_no,
+            SaleRecord.item_code,
+            Employee.name.label('employee'),
+            func.sum(SaleRecord.value).label('net'),
+            func.sum(SaleRecord.ret_val).label('ret'),
+            func.count(SaleRecord.id).label('row_count'),
+        )
+        .join(Employee, Employee.id == SaleRecord.employee_id)
+        .filter(
+            extract('year',  SaleRecord.sale_date) == year,
+            extract('month', SaleRecord.sale_date) == month,
+        )
+        .group_by(SaleRecord.invoice_no, SaleRecord.item_code, SaleRecord.employee_id)
+        .all()
+    )
+
+    # Group by (invoice_no, item_code) and collect all employees
+    inv_map: dict[tuple, list] = {}
+    for r in rows:
+        k = (r.invoice_no, r.item_code or '')
+        inv_map.setdefault(k, []).append({
+            'employee': r.employee,
+            'net':      round(float(r.net or 0), 2),
+            'ret_val':  round(float(r.ret or 0), 2),
+            'rows':     r.row_count,
+        })
+
+    # Only invoices with >1 employee
+    duplicates = [
+        {
+            'invoice_no': k[0],
+            'item_code':  k[1],
+            'employees':  v,
+            'total_net':  round(sum(e['net'] for e in v), 2),
+        }
+        for k, v in inv_map.items()
+        if len(v) > 1
+    ]
+    duplicates.sort(key=lambda x: abs(x['total_net']), reverse=True)
+
+    total_duplicate_net = round(sum(d['total_net'] for d in duplicates), 2)
+
+    return jsonify({
+        'year':              year,
+        'month':             month,
+        'duplicate_count':   len(duplicates),
+        'duplicate_net_sum': total_duplicate_net,
+        'duplicates':        duplicates,
     })
 
 
