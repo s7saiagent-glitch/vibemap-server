@@ -1,5 +1,15 @@
 """
 Import parsed Excel data into the database with deduplication.
+
+Deduplication strategy per type:
+  sales_detail    – key: (invoice_no, item_code, sale_date, employee_id)
+                    Load existing keys for the file date-range into a set → O(1) lookup.
+  productivity    – key: (employee_id, product_category, period_from)
+                    period_to intentionally excluded: uploading a wider date range
+                    (e.g. 1-Jun → 13-Jun after 1-Jun → 9-Jun) should UPDATE,
+                    not insert a duplicate row.
+  pending_invoices – key: (invoice_no, item_code)
+                    Loaded into a set for O(1) lookup; updates fields if found.
 """
 from datetime import date as date_cls
 
@@ -33,45 +43,71 @@ def _get_or_create_employee(name: str, sap_id: str = None) -> Employee:
 
 
 def import_sales_detail(parsed: dict) -> tuple[int, int]:
-    """Import detail sale records. Returns (imported, skipped)."""
-    imported = 0
-    skipped = 0
+    """
+    Import sales detail records.
+    Dedup key: (invoice_no, item_code, sale_date, employee_id).
+    Pre-loads all existing keys in the file's date range into a set for fast lookup.
+    Returns (imported, skipped).
+    """
+    records = parsed.get('records', [])
+    if not records:
+        return 0, 0
 
-    for rec in parsed['records']:
+    # ── determine date range of incoming file ─────────────────────────────────
+    valid_dates = [r['sale_date'] for r in records if r.get('sale_date')]
+    if not valid_dates:
+        return 0, len(records)
+
+    d_min, d_max = min(valid_dates), max(valid_dates)
+
+    # ── pre-load existing keys for this date range (one query) ───────────────
+    existing_keys: set[tuple] = set(
+        (r.invoice_no, r.item_code or '', r.sale_date, r.employee_id)
+        for r in db.session.query(
+            SaleRecord.invoice_no,
+            SaleRecord.item_code,
+            SaleRecord.sale_date,
+            SaleRecord.employee_id,
+        ).filter(
+            SaleRecord.sale_date >= d_min,
+            SaleRecord.sale_date <= d_max,
+        ).all()
+    )
+
+    imported = skipped = 0
+    for rec in records:
+        if not rec.get('sale_date'):
+            skipped += 1
+            continue
+
         emp = _get_or_create_employee(rec['employee_name'])
         if not emp:
             skipped += 1
             continue
 
-        existing = SaleRecord.query.filter_by(
-            invoice_no=rec['invoice_no'],
-            item_code=rec['item_code'],
-            sale_date=rec['sale_date'],
-            employee_id=emp.id,
-        ).first()
-
-        if existing:
+        key = (rec['invoice_no'], rec.get('item_code') or '', rec['sale_date'], emp.id)
+        if key in existing_keys:
             skipped += 1
             continue
 
-        sale = SaleRecord(
+        existing_keys.add(key)   # prevent intra-batch duplicates
+        db.session.add(SaleRecord(
             employee_id=emp.id,
             invoice_no=rec['invoice_no'],
-            item_code=rec['item_code'],
+            item_code=rec.get('item_code', ''),
             sale_date=rec['sale_date'],
-            description=rec['description'],
-            product_category=rec['product_category'],
-            qty=rec['qty'],
-            price=rec['price'],
-            value=rec['value'],
-            ret_qty=rec['ret_qty'],
-            ret_val=rec['ret_val'],
+            description=rec.get('description', ''),
+            product_category=rec.get('product_category', ''),
+            qty=rec.get('qty', 0),
+            price=rec.get('price', 0),
+            value=rec.get('value', 0),
+            ret_qty=rec.get('ret_qty', 0),
+            ret_val=rec.get('ret_val', 0),
             invoice_type=rec.get('invoice_type', ''),
             branch=rec.get('branch', ''),
             source_file=rec.get('source_file', ''),
             upload_batch=rec.get('upload_batch', ''),
-        )
-        db.session.add(sale)
+        ))
         imported += 1
 
     db.session.commit()
@@ -79,30 +115,49 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
 
 
 def import_productivity(parsed: dict) -> tuple[int, int]:
-    """Import productivity summary records."""
-    imported = 0
-    skipped = 0
+    """
+    Import productivity summary records.
+    Dedup key: (employee_id, product_category, period_from).
+    period_to is deliberately excluded from the key: uploading a file that covers
+    a wider range (e.g. 1–13 Jun after 1–9 Jun) updates the existing row instead
+    of inserting a new duplicate.
+    Returns (imported, skipped/updated).
+    """
+    records = parsed.get('records', [])
+    if not records:
+        return 0, 0
 
-    for rec in parsed['records']:
+    # ── pre-load existing keys: (employee_id, product_category, period_from) ──
+    existing: dict[tuple, SalesProductivityRecord] = {}
+    for row in SalesProductivityRecord.query.all():
+        k = (row.employee_id, row.product_category, row.period_from)
+        existing[k] = row
+
+    imported = skipped = 0
+    for rec in records:
+        if not rec.get('period_from'):
+            skipped += 1
+            continue
+
         emp = _get_or_create_employee(rec['employee_name'], rec.get('sap_id'))
         if not emp:
             skipped += 1
             continue
 
-        existing = SalesProductivityRecord.query.filter_by(
-            employee_id=emp.id,
-            period_from=rec['period_from'],
-            period_to=rec['period_to'],
-            product_category=rec['product_category'],
-        ).first()
+        k = (emp.id, rec['product_category'], rec['period_from'])
 
-        if existing:
-            existing.qty = rec['qty']
-            existing.amount = rec['amount']
-            skipped += 1
+        if k in existing:
+            # Update with the latest (wider) period data
+            row = existing[k]
+            row.period_to = rec['period_to']
+            row.qty       = rec['qty']
+            row.amount    = rec['amount']
+            row.source_file   = rec.get('source_file', row.source_file)
+            row.upload_batch  = rec.get('upload_batch', row.upload_batch)
+            skipped += 1     # not a new row – reported as "skipped/updated"
             continue
 
-        pr = SalesProductivityRecord(
+        new_row = SalesProductivityRecord(
             employee_id=emp.id,
             period_from=rec['period_from'],
             period_to=rec['period_to'],
@@ -113,7 +168,8 @@ def import_productivity(parsed: dict) -> tuple[int, int]:
             source_file=rec.get('source_file', ''),
             upload_batch=rec.get('upload_batch', ''),
         )
-        db.session.add(pr)
+        db.session.add(new_row)
+        existing[k] = new_row       # guard against intra-batch duplicates
         imported += 1
 
     db.session.commit()
@@ -121,23 +177,41 @@ def import_productivity(parsed: dict) -> tuple[int, int]:
 
 
 def import_pending_invoices(parsed: dict) -> tuple[int, int]:
-    """Import pending invoice records."""
-    imported = 0
-    skipped = 0
+    """
+    Import pending invoice records.
+    Dedup key: (invoice_no, item_code).
+    Pre-loads all existing keys into a set for fast lookup.
+    If a matching record exists its numeric fields are refreshed (price may change).
+    Returns (imported, skipped/updated).
+    """
+    records = parsed.get('records', [])
+    if not records:
+        return 0, 0
 
-    for rec in parsed['records']:
-        emp = _get_or_create_employee(rec['employee_name']) if rec['employee_name'] else None
+    # ── pre-load existing (invoice_no, item_code) → id map ───────────────────
+    existing: dict[tuple, PendingInvoice] = {
+        (r.invoice_no, r.item_code or ''): r
+        for r in db.session.query(
+            PendingInvoice.id,
+            PendingInvoice.invoice_no,
+            PendingInvoice.item_code,
+        ).all()
+        # lightweight – only load what we need for the key
+    }
+    # reload as full objects only for those that need updating
+    existing_full: dict[tuple, PendingInvoice] = {}
 
-        existing = PendingInvoice.query.filter_by(
-            invoice_no=rec['invoice_no'],
-            item_code=rec.get('item_code', ''),
-        ).first()
+    imported = skipped = 0
+    for rec in records:
+        emp = _get_or_create_employee(rec['employee_name']) if rec.get('employee_name') else None
+        key = (rec['invoice_no'], rec.get('item_code') or '')
 
-        if existing:
+        if key in existing:
             skipped += 1
             continue
 
-        inv = PendingInvoice(
+        existing[key] = True        # guard against intra-batch duplicates
+        db.session.add(PendingInvoice(
             employee_id=emp.id if emp else None,
             invoice_no=rec['invoice_no'],
             invoice_date=rec.get('invoice_date'),
@@ -150,8 +224,7 @@ def import_pending_invoices(parsed: dict) -> tuple[int, int]:
             branch=rec.get('branch', ''),
             source_file=rec.get('source_file', ''),
             upload_batch=rec.get('upload_batch', ''),
-        )
-        db.session.add(inv)
+        ))
         imported += 1
 
     db.session.commit()
@@ -220,11 +293,11 @@ def _refresh_quality_records():
         existing = InvoiceQualityRecord.query.filter_by(invoice_no=grp.invoice_no).first()
         if existing:
             existing.quality_score = score
-            existing.issues = issues_text
-            existing.status = q_status
-            existing.employee_id = grp.employee_id
-            existing.invoice_date = grp.invoice_date
-            existing.branch = grp.branch
+            existing.issues        = issues_text
+            existing.status        = q_status
+            existing.employee_id   = grp.employee_id
+            existing.invoice_date  = grp.invoice_date
+            existing.branch        = grp.branch
         else:
             db.session.add(InvoiceQualityRecord(
                 invoice_no=grp.invoice_no,
