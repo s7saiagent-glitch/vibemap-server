@@ -46,28 +46,81 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
     """
     Import sales detail records.
     Dedup key: (invoice_no, item_code, sale_date, employee_id).
-    Pre-loads all existing keys in the file's date range into a set for fast lookup.
+
+    Pre-aggregation: SAP may emit multiple rows per key (sale + return with
+    same invoice_no) OR credit notes with a DIFFERENT invoice_no for the same
+    item/date/employee.  We handle both by computing the net per group:
+      net_value = sum(value) - sum(ret_val)
+    Credit notes (different invoice_no) are stored as negative values so the
+    daily sum naturally subtracts them, matching SAP's own daily totals.
+
     Returns (imported, skipped).
     """
     records = parsed.get('records', [])
     if not records:
         return 0, 0
 
-    # ── determine date range of incoming file ─────────────────────────────────
-    valid_dates = [r['sale_date'] for r in records if r.get('sale_date')]
-    if not valid_dates:
-        return 0, len(records)
+    # ── resolve employees first (needed for grouping key) ────────────────────
+    emp_cache: dict[str, 'Employee'] = {}
+    for rec in records:
+        name = rec.get('employee_name', '')
+        if name and name not in emp_cache:
+            emp_cache[name] = _get_or_create_employee(name, rec.get('sap_id'))
 
+    # ── pre-aggregate: group rows by (invoice_no, item_code, date, emp_id) ───
+    # Accumulate value/ret sums so net = total_value - total_ret_val per group.
+    aggs: dict[tuple, dict] = {}
+    skipped_parse = 0
+
+    for rec in records:
+        if not rec.get('sale_date'):
+            skipped_parse += 1
+            continue
+        emp = emp_cache.get(rec.get('employee_name', ''))
+        if not emp:
+            skipped_parse += 1
+            continue
+        key = (rec['invoice_no'], rec.get('item_code') or '', rec['sale_date'], emp.id)
+
+        if key not in aggs:
+            aggs[key] = {
+                **rec,
+                '_emp_id': emp.id,
+                '_sum_value': 0.0,
+                '_sum_ret_val': 0.0,
+                '_sum_qty': 0.0,
+                '_sum_ret_qty': 0.0,
+            }
+        aggs[key]['_sum_value']   += float(rec.get('value')   or 0)
+        aggs[key]['_sum_ret_val'] += float(rec.get('ret_val') or 0)
+        aggs[key]['_sum_qty']     += float(rec.get('qty')     or 0)
+        aggs[key]['_sum_ret_qty'] += float(rec.get('ret_qty') or 0)
+
+    # Build net_records list
+    net_records = []
+    for key, agg in aggs.items():
+        net_value = agg['_sum_value'] - agg['_sum_ret_val']
+        net_records.append((key, {
+            **agg,
+            'value':   net_value,
+            'ret_val': agg['_sum_ret_val'],
+            'ret_qty': agg['_sum_ret_qty'],
+            'qty':     agg['_sum_qty'],
+        }))
+
+    if not net_records:
+        return 0, skipped_parse
+
+    # ── determine date range ──────────────────────────────────────────────────
+    valid_dates = [key[2] for key, _ in net_records]
     d_min, d_max = min(valid_dates), max(valid_dates)
 
-    # ── pre-load existing keys for this date range (one query) ───────────────
+    # ── pre-load existing DB keys for this date range ─────────────────────────
     existing_keys: set[tuple] = set(
         (r.invoice_no, r.item_code or '', r.sale_date, r.employee_id)
         for r in db.session.query(
-            SaleRecord.invoice_no,
-            SaleRecord.item_code,
-            SaleRecord.sale_date,
-            SaleRecord.employee_id,
+            SaleRecord.invoice_no, SaleRecord.item_code,
+            SaleRecord.sale_date, SaleRecord.employee_id,
         ).filter(
             SaleRecord.sale_date >= d_min,
             SaleRecord.sale_date <= d_max,
@@ -75,24 +128,13 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
     )
 
     imported = skipped = 0
-    for rec in records:
-        if not rec.get('sale_date'):
-            skipped += 1
-            continue
-
-        emp = _get_or_create_employee(rec['employee_name'], rec.get('sap_id'))
-        if not emp:
-            skipped += 1
-            continue
-
-        key = (rec['invoice_no'], rec.get('item_code') or '', rec['sale_date'], emp.id)
+    for key, rec in net_records:
         if key in existing_keys:
             skipped += 1
             continue
-
-        existing_keys.add(key)   # prevent intra-batch duplicates
+        existing_keys.add(key)
         db.session.add(SaleRecord(
-            employee_id=emp.id,
+            employee_id=rec['_emp_id'],
             invoice_no=rec['invoice_no'],
             item_code=rec.get('item_code', ''),
             sale_date=rec['sale_date'],
@@ -112,7 +154,7 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
         imported += 1
 
     db.session.commit()
-    return imported, skipped
+    return imported, skipped + skipped_parse
 
 
 def import_productivity(parsed: dict) -> tuple[int, int]:
