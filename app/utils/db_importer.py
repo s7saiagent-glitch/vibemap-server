@@ -80,7 +80,7 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
             skipped += 1
             continue
 
-        emp = _get_or_create_employee(rec['employee_name'])
+        emp = _get_or_create_employee(rec['employee_name'], rec.get('sap_id'))
         if not emp:
             skipped += 1
             continue

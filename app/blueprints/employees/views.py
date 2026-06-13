@@ -180,3 +180,54 @@ def delete_alias(emp_id, alias_id):
     db.session.commit()
     flash(_l('Alias removed.'), 'success')
     return redirect(url_for('employees.edit', emp_id=emp_id))
+
+
+@bp.route('/merge', methods=['POST'])
+def merge():
+    """
+    Merge duplicate employee records.
+    All sales, targets, schedules, invoices, and aliases from `source_id`
+    are re-assigned to `target_id`, then source is deleted.
+    """
+    target_id = request.form.get('target_id', type=int)
+    source_id = request.form.get('source_id', type=int)
+
+    if not target_id or not source_id or target_id == source_id:
+        flash('يرجى اختيار موظفين مختلفين للدمج.', 'danger')
+        return redirect(url_for('employees.index'))
+
+    target = Employee.query.get_or_404(target_id)
+    source = Employee.query.get_or_404(source_id)
+
+    from app.models import SalesTarget, Schedule, PendingInvoice, SalesProductivityRecord
+
+    # Re-assign all related records
+    SaleRecord.query.filter_by(employee_id=source.id).update({'employee_id': target.id})
+    SalesTarget.query.filter_by(employee_id=source.id).update({'employee_id': target.id})
+    SalesProductivityRecord.query.filter_by(employee_id=source.id).update({'employee_id': target.id})
+    PendingInvoice.query.filter_by(employee_id=source.id).update({'employee_id': target.id})
+    Schedule.query.filter_by(employee_id=source.id).update({'employee_id': target.id})
+
+    # Merge aliases
+    for alias in list(source.aliases):
+        exists = EmployeeAlias.query.filter_by(alias=alias.alias, employee_id=target.id).first()
+        if not exists:
+            alias.employee_id = target.id
+        else:
+            db.session.delete(alias)
+
+    # Add source name as alias if not already present
+    if source.name != target.name:
+        exists = EmployeeAlias.query.filter_by(alias=source.name, employee_id=target.id).first()
+        if not exists:
+            db.session.add(EmployeeAlias(employee_id=target.id, alias=source.name))
+
+    # Update SAP ID on target if missing
+    if not target.sap_id and source.sap_id:
+        target.sap_id = source.sap_id
+
+    db.session.delete(source)
+    db.session.commit()
+
+    flash(f'تم دمج "{source.name}" مع "{target.name}" بنجاح.', 'success')
+    return redirect(url_for('employees.index'))

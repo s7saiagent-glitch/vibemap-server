@@ -20,8 +20,8 @@
     border-radius: 99px; font-size: .72rem; font-weight: 600;
     margin: .1rem;
   }
-  #addEmpPanel { display: none; }
-  #addEmpPanel.show { display: block; }
+  #addEmpPanel, #mergePanel { display: none; }
+  #addEmpPanel.show, #mergePanel.show { display: block; }
 </style>
 {% endblock %}
 
@@ -35,9 +35,14 @@
     </h1>
     <p class="text-muted small mb-0">{{ _('Total') }}: <strong>{{ employees|length }}</strong> {{ _('employees') }}</p>
   </div>
-  <button class="btn btn-primary btn-sm" id="toggleAddBtn" onclick="toggleAddPanel()">
-    <i class="bi bi-plus-circle-fill me-1"></i>{{ _('Add Employee') }}
-  </button>
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary btn-sm" id="toggleAddBtn" onclick="toggleAddPanel()">
+      <i class="bi bi-plus-circle-fill me-1"></i>{{ _('Add Employee') }}
+    </button>
+    <button class="btn btn-outline-warning btn-sm" onclick="toggleMergePanel()">
+      <i class="bi bi-people-fill me-1"></i>دمج موظف مكرر
+    </button>
+  </div>
 </div>
 
 <!-- Add Employee Panel -->
@@ -64,6 +69,48 @@
         <button type="submit" class="btn btn-success w-100">
           <i class="bi bi-check2-all"></i>
         </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Merge Panel -->
+<div id="mergePanel" class="card mb-4 border-warning">
+  <div class="card-header fw-semibold text-warning-emphasis bg-warning-subtle">
+    <i class="bi bi-people-fill me-2"></i>دمج موظف مكرر — اختر الموظف الأصلي والمكرر
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('employees.merge') }}"
+          onsubmit="return confirm('سيتم نقل جميع بيانات الموظف المكرر إلى الأصلي ثم حذف السجل المكرر. متأكد؟')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-5">
+          <label class="form-label fw-semibold">الموظف الأصلي (الاحتفاظ به)</label>
+          <select name="target_id" class="form-select" required>
+            <option value="">-- اختر الموظف الأصلي --</option>
+            {% for emp in employees %}
+              <option value="{{ emp.id }}">{{ emp.name }} {% if emp.sap_id %}({{ emp.sap_id }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-5">
+          <label class="form-label fw-semibold">الموظف المكرر (سيُحذف)</label>
+          <select name="source_id" class="form-select" required>
+            <option value="">-- اختر الموظف المكرر --</option>
+            {% for emp in employees %}
+              <option value="{{ emp.id }}">{{ emp.name }} {% if emp.sap_id %}({{ emp.sap_id }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-2">
+          <button type="submit" class="btn btn-warning w-100">
+            <i class="bi bi-arrow-left-right me-1"></i>دمج
+          </button>
+        </div>
+      </div>
+      <div class="form-text mt-2 text-warning-emphasis">
+        <i class="bi bi-info-circle-fill me-1"></i>
+        سيتم نقل كل المبيعات والفواتير والأهداف من الموظف المكرر إلى الأصلي، ثم حذف السجل المكرر نهائياً.
       </div>
     </form>
   </div>
@@ -190,8 +237,12 @@
 {% block scripts %}
 <script>
 function toggleAddPanel() {
-  const panel = document.getElementById('addEmpPanel');
-  panel.classList.toggle('show');
+  document.getElementById('addEmpPanel').classList.toggle('show');
+  document.getElementById('mergePanel').classList.remove('show');
+}
+function toggleMergePanel() {
+  document.getElementById('mergePanel').classList.toggle('show');
+  document.getElementById('addEmpPanel').classList.remove('show');
 }
 
 function filterTable() {

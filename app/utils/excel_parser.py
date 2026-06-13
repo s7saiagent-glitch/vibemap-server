@@ -236,6 +236,7 @@ def parse_sales_detail_report(path: str, batch_id: str = None) -> dict:
 
     for sheet_name, rows in all_sheets:
         current_employee = None
+        current_sap_id = None
         current_category = None
         in_data = False
 
@@ -266,6 +267,9 @@ def parse_sales_detail_report(path: str, batch_id: str = None) -> dict:
             if _cell(row, 0) == 'Sales' and len(row) > 1 and _cell(row, 1):
                 emp_raw = _cell(row, 1)
                 current_employee = _clean_name(emp_raw)
+                # Extract SAP ID from "NNNN - Name" prefix
+                m = re.match(r'^(-?\d+)\s*-\s*', emp_raw.strip())
+                current_sap_id = m.group(1).lstrip('-') if m else None
                 if current_employee:
                     employees_found.add(current_employee)
                 in_data = False
@@ -302,6 +306,7 @@ def parse_sales_detail_report(path: str, batch_id: str = None) -> dict:
 
             results.append({
                 'employee_name': current_employee,
+                'sap_id': current_sap_id,
                 'invoice_no': invoice_no,
                 'item_code': _cell(row, COL_ITEM),
                 'sale_date': sale_date,
