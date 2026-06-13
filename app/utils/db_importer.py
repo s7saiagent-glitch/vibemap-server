@@ -104,6 +104,7 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
             ret_qty=rec.get('ret_qty', 0),
             ret_val=rec.get('ret_val', 0),
             invoice_type=rec.get('invoice_type', ''),
+            lens_grade=rec.get('lens_grade'),
             branch=rec.get('branch', ''),
             source_file=rec.get('source_file', ''),
             upload_batch=rec.get('upload_batch', ''),

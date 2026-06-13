@@ -174,7 +174,7 @@ def parse_productivity_report(path: str, batch_id: str = None) -> dict:
             for q_col, a_col, cat_name in cat_col_pairs:
                 qty = _safe_float(_cell(row, q_col))
                 amount = _safe_float(_cell(row, a_col))
-                if amount > 0 or qty > 0:
+                if amount != 0 or qty != 0:
                     results.append({
                         'employee_name': emp_name,
                         'sap_id': sap_id,
@@ -227,6 +227,7 @@ def parse_sales_detail_report(path: str, batch_id: str = None) -> dict:
     COL_DATE = 3
     COL_DESC = 5
     COL_QTY = 8
+    COL_LENS_GRADE = 10   # Good / Best / Better / Best+ (RX lenses only)
     COL_PRICE = 12
     COL_RET_QTY = 16
     COL_RET_VAL = 18
@@ -312,6 +313,7 @@ def parse_sales_detail_report(path: str, batch_id: str = None) -> dict:
                 'ret_qty': _safe_float(_cell(row, COL_RET_QTY)),
                 'ret_val': _safe_float(_cell(row, COL_RET_VAL)),
                 'invoice_type': _cell(row, COL_INV_TYPE),
+                'lens_grade': _cell(row, COL_LENS_GRADE) or None,
                 'branch': branch,
                 'source_file': path,
                 'upload_batch': batch_id,

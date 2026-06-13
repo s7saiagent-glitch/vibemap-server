@@ -44,6 +44,7 @@ class SaleRecord(db.Model):
     ret_qty = db.Column(db.Float, default=0)
     ret_val = db.Column(db.Float, default=0)
     invoice_type = db.Column(db.String(50), nullable=True)
+    lens_grade = db.Column(db.String(20), nullable=True)
     region = db.Column(db.String(100), nullable=True)
     branch = db.Column(db.String(100), nullable=True)
     source_file = db.Column(db.String(255), nullable=True)
