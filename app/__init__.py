@@ -75,10 +75,33 @@ def create_app(config_name=None):
 
     with app.app_context():
         db.create_all()
+        _migrate_schema()
         _seed_settings()
 
     _register_cli(app)
     return app
+
+
+def _migrate_schema():
+    """Apply any missing column additions without requiring flask db upgrade."""
+    from sqlalchemy import text, inspect
+    engine = db.engine
+    inspector = inspect(engine)
+
+    # List of (table, column, definition) to add if missing
+    additions = [
+        ('sale_records', 'lens_grade', 'VARCHAR(20)'),
+    ]
+
+    with engine.connect() as conn:
+        for table, column, col_def in additions:
+            try:
+                cols = [c['name'] for c in inspector.get_columns(table)]
+                if column not in cols:
+                    conn.execute(text(f'ALTER TABLE {table} ADD COLUMN {column} {col_def}'))
+                    conn.commit()
+            except Exception:
+                pass
 
 
 def _register_cli(app):
