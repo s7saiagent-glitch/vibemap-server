@@ -269,7 +269,8 @@
             <th class="text-end">
               {% if mode == 'day' %}الهدف اليومي{% elif mode == 'range' %}الهدف (الفترة){% else %}الهدف{% endif %}
             </th>
-            <th class="text-end">المحقق</th>
+            <th class="text-end">المحقق (صافي)</th>
+            <th class="text-end text-warning">الخصم</th>
             <th class="text-end">المتبقي</th>
             {% if mode == 'month' %}<th class="text-end">الهدف اليومي</th>{% endif %}
             <th style="min-width:140px">التقدم</th>
@@ -290,6 +291,9 @@
               <td class="text-end font-monospace">{{ '{:,.0f}'.format(row.target_amount) }}</td>
               <td class="text-end font-monospace fw-semibold {% if row.over_achieved %}text-success{% endif %}">
                 {{ '{:,.0f}'.format(row.achieved) }}
+              </td>
+              <td class="text-end font-monospace text-warning small">
+                {% if row.discount > 0 %}{{ '{:,.0f}'.format(row.discount) }}{% else %}—{% endif %}
               </td>
               <td class="text-end font-monospace text-danger">
                 {% if row.remaining > 0 %}
@@ -323,7 +327,7 @@
             {% endfor %}
           {% else %}
             <tr>
-              <td colspan="{% if mode=='month' %}8{% else %}7{% endif %}" class="text-center py-5 text-muted">
+              <td colspan="{% if mode=='month' %}9{% else %}8{% endif %}" class="text-center py-5 text-muted">
                 <i class="bi bi-people-fill fs-2 d-block mb-2"></i>
                 لا توجد بيانات لهذه الفترة.
               </td>
@@ -336,7 +340,10 @@
             <td colspan="2">الإجمالي</td>
             <td class="text-end font-monospace">{{ '{:,.0f}'.format(employee_data | sum(attribute='target_amount')) }}</td>
             <td class="text-end font-monospace text-success">{{ '{:,.0f}'.format(kpis.period_sales) }}</td>
-            <td colspan="{% if mode=='month' %}4{% else %}3{% endif %}"></td>
+            <td class="text-end font-monospace text-warning">
+              {% if kpis.period_discount > 0 %}{{ '{:,.0f}'.format(kpis.period_discount) }}{% else %}—{% endif %}
+            </td>
+            <td colspan="{% if mode=='month' %}3{% else %}2{% endif %}"></td>
           </tr>
         </tfoot>
         {% endif %}

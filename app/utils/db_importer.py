@@ -68,7 +68,14 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
             emp_cache[name] = _get_or_create_employee(name, rec.get('sap_id'))
 
     # ── pre-aggregate: group rows by (invoice_no, item_code, date, emp_id) ───
-    # Accumulate value/ret sums so net = total_value - total_ret_val per group.
+    # Strategy:
+    #   • Keep the representative row as the one with the highest VALUE (avoids
+    #     summing duplicate or discount sub-rows that share the same key).
+    #   • Accumulate all ret_val across every row in the group (handles multiple
+    #     return rows for the same key).
+    #   • Net = max_value - total_ret_val.
+    #   • Credit-note rows (value=0, ret_val>0, different invoice_no) end up
+    #     as separate keys with net = -total_ret_val (naturally reduces daily totals).
     aggs: dict[tuple, dict] = {}
     skipped_parse = 0
 
@@ -82,30 +89,52 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
             continue
         key = (rec['invoice_no'], rec.get('item_code') or '', rec['sale_date'], emp.id)
 
+        val      = float(rec.get('value')    or 0)
+        ret_val  = float(rec.get('ret_val')  or 0)
+        ret_qty  = float(rec.get('ret_qty')  or 0)
+        qty      = float(rec.get('qty')      or 0)
+        discount = float(rec.get('discount') or 0)
+
         if key not in aggs:
             aggs[key] = {
                 **rec,
-                '_emp_id': emp.id,
-                '_sum_value': 0.0,
-                '_sum_ret_val': 0.0,
-                '_sum_qty': 0.0,
-                '_sum_ret_qty': 0.0,
+                '_emp_id':     emp.id,
+                '_max_value':  0.0,
+                '_total_ret':  0.0,
+                '_total_disc': 0.0,
+                '_qty':        0.0,
+                '_ret_qty':    0.0,
             }
-        aggs[key]['_sum_value']   += float(rec.get('value')   or 0)
-        aggs[key]['_sum_ret_val'] += float(rec.get('ret_val') or 0)
-        aggs[key]['_sum_qty']     += float(rec.get('qty')     or 0)
-        aggs[key]['_sum_ret_qty'] += float(rec.get('ret_qty') or 0)
 
-    # Build net_records list
+        # Use the row with the highest positive value as the representative
+        if val > aggs[key]['_max_value']:
+            aggs[key]['_max_value'] = val
+            for field in ('description', 'product_category', 'price',
+                          'invoice_type', 'lens_grade'):
+                aggs[key][field] = rec.get(field, aggs[key].get(field))
+            if qty > 0:
+                aggs[key]['_qty'] = qty
+
+        # Always accumulate returns and discounts
+        aggs[key]['_total_ret']  += ret_val
+        aggs[key]['_total_disc'] += discount
+        if ret_qty > 0:
+            aggs[key]['_ret_qty'] = ret_qty
+
+    # Build net_records: net = highest_sale_value − returns − discounts
     net_records = []
     for key, agg in aggs.items():
-        net_value = agg['_sum_value'] - agg['_sum_ret_val']
+        gross    = agg['_max_value']
+        total_ret  = agg['_total_ret']
+        total_disc = agg['_total_disc']
+        net_value  = gross - total_ret - total_disc
         net_records.append((key, {
             **agg,
-            'value':   net_value,
-            'ret_val': agg['_sum_ret_val'],
-            'ret_qty': agg['_sum_ret_qty'],
-            'qty':     agg['_sum_qty'],
+            'value':    net_value,
+            'discount': total_disc,
+            'ret_val':  total_ret,
+            'ret_qty':  agg['_ret_qty'],
+            'qty':      agg['_qty'],
         }))
 
     if not net_records:
@@ -143,6 +172,7 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
             qty=rec.get('qty', 0),
             price=rec.get('price', 0),
             value=rec.get('value', 0),
+            discount=rec.get('discount', 0),
             ret_qty=rec.get('ret_qty', 0),
             ret_val=rec.get('ret_val', 0),
             invoice_type=rec.get('invoice_type', ''),

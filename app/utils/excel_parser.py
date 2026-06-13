@@ -229,6 +229,7 @@ def parse_sales_detail_report(path: str, batch_id: str = None) -> dict:
     COL_QTY = 8
     COL_LENS_GRADE = 10   # Good / Best / Better / Best+ (RX lenses only)
     COL_PRICE = 12
+    COL_DISCOUNT = 14     # Discount amount per line (if present)
     COL_RET_QTY = 16
     COL_RET_VAL = 18
     COL_VALUE = 20
@@ -314,6 +315,7 @@ def parse_sales_detail_report(path: str, batch_id: str = None) -> dict:
                 'product_category': current_category or '',
                 'qty': _safe_float(_cell(row, COL_QTY)),
                 'price': _safe_float(_cell(row, COL_PRICE)),
+                'discount': _safe_float(_cell(row, COL_DISCOUNT)),
                 'value': _safe_float(_cell(row, COL_VALUE)),
                 'ret_qty': _safe_float(_cell(row, COL_RET_QTY)),
                 'ret_val': _safe_float(_cell(row, COL_RET_VAL)),

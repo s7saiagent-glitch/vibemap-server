@@ -41,6 +41,7 @@ class SaleRecord(db.Model):
     qty = db.Column(db.Float, default=0)
     price = db.Column(db.Float, default=0)
     value = db.Column(db.Float, default=0)
+    discount = db.Column(db.Float, default=0)
     ret_qty = db.Column(db.Float, default=0)
     ret_val = db.Column(db.Float, default=0)
     invoice_type = db.Column(db.String(50), nullable=True)

@@ -91,6 +91,7 @@ def _migrate_schema():
     # List of (table, column, definition) to add if missing
     additions = [
         ('sale_records', 'lens_grade', 'VARCHAR(20)'),
+        ('sale_records', 'discount',   'REAL DEFAULT 0'),
     ]
 
     with engine.connect() as conn:

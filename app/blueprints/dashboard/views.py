@@ -86,8 +86,23 @@ def _range_sales_total(d_from, d_to) -> float:
     return float(total or 0)
 
 
+def _range_discount_total(d_from, d_to) -> float:
+    total = db.session.query(func.sum(SaleRecord.discount)).filter(
+        _sales_filter(d_from, d_to)
+    ).scalar()
+    return float(total or 0)
+
+
 def _employee_range_sales(employee_id: int, d_from, d_to) -> float:
     total = db.session.query(func.sum(SaleRecord.value)).filter(
+        SaleRecord.employee_id == employee_id,
+        _sales_filter(d_from, d_to),
+    ).scalar()
+    return float(total or 0)
+
+
+def _employee_range_discount(employee_id: int, d_from, d_to) -> float:
+    total = db.session.query(func.sum(SaleRecord.discount)).filter(
         SaleRecord.employee_id == employee_id,
         _sales_filter(d_from, d_to),
     ).scalar()
@@ -108,9 +123,10 @@ def index():
     target_month = d_from.month
 
     # ── KPIs ──────────────────────────────────────────────────────────────────
-    total_employees = Employee.query.filter_by(is_active=True).count()
-    period_sales    = _range_sales_total(d_from, d_to)
-    pending_count   = PendingInvoice.query.filter_by(status='pending').count()
+    total_employees   = Employee.query.filter_by(is_active=True).count()
+    period_sales      = _range_sales_total(d_from, d_to)
+    period_discount   = _range_discount_total(d_from, d_to)
+    pending_count     = PendingInvoice.query.filter_by(status='pending').count()
 
     top_row = (
         db.session.query(Employee.name, func.sum(SaleRecord.value).label('total'))
@@ -146,7 +162,8 @@ def index():
         target_amount    = float(target_row.target_amount) if target_row else 0.0
         emp_working_days = int(target_row.working_days)    if target_row else working_days
 
-        achieved  = _employee_range_sales(emp.id, d_from, d_to)
+        achieved   = _employee_range_sales(emp.id, d_from, d_to)
+        emp_discount = _employee_range_discount(emp.id, d_from, d_to)
         remaining = max(target_amount - achieved, 0.0)
 
         # Scale target for day/range modes
@@ -176,6 +193,7 @@ def index():
             'employee':       emp,
             'target_amount':  display_target,
             'achieved':       achieved,
+            'discount':       emp_discount,
             'remaining':      max(display_target - achieved, 0.0),
             'daily_target':   daily_target,
             'progress_pct':   progress_pct,
@@ -191,6 +209,7 @@ def index():
     kpis = {
         'total_employees':        total_employees,
         'period_sales':           period_sales,
+        'period_discount':        period_discount,
         'company_target':         company_target,
         'company_achievement_pct': achievement_pct,
         'top_performer':          top_performer,
