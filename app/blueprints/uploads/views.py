@@ -3,6 +3,7 @@ Uploads blueprint – file upload, type detection, parsing, and DB import.
 """
 import os
 import uuid
+import xml.etree.ElementTree as ET
 from datetime import datetime
 
 from flask import (
@@ -36,17 +37,42 @@ def _allowed_file(filename: str) -> bool:
 
 def _detect_file_type(filename: str, filepath: str) -> str:
     """
-    Determine report type from filename.
+    Determine report type from filename, then from file content as fallback.
     Priority:
-      1. 'Pending Invoice' (case-insensitive) in filename → pending_invoices
-      2. 'SALES_PRODUCTIVITY' in filename → productivity
-      3. Everything else → sales_detail
+      1. 'Pending Invoice' in filename → pending_invoices
+      2. 'PRODUCTIVITY' in filename     → productivity
+      3. Content sniff (first 3 rows)   → look for known header strings
+      4. Default                        → sales_detail
     """
     name_upper = filename.upper()
     if 'PENDING INVOICE' in name_upper or 'PENDINGINVOICE' in name_upper:
         return 'pending_invoices'
     if 'SALES_PRODUCTIVITY' in name_upper or 'PRODUCTIVITY' in name_upper:
         return 'productivity'
+
+    # Filename gave no clue — peek inside the XML for known report headers
+    try:
+        NS = {'ss': 'urn:schemas-microsoft-com:office:spreadsheet'}
+        tree = ET.parse(filepath)
+        root = tree.getroot()
+        ws = root.findall('.//ss:Worksheet', NS)
+        if ws:
+            table = ws[0].find('.//ss:Table', NS)
+            if table is not None:
+                snippet = []
+                for row in list(table.findall('ss:Row', NS))[:4]:
+                    for cell in row.findall('ss:Cell', NS):
+                        d = cell.find('ss:Data', NS)
+                        if d is not None and d.text:
+                            snippet.append(d.text.strip().upper())
+                joined = ' '.join(snippet)
+                if 'SALES PRODUCTIVITY' in joined or 'SALESMAN NAME' in joined:
+                    return 'productivity'
+                if 'PENDING INVOICE' in joined or 'PENDING INVOICES' in joined:
+                    return 'pending_invoices'
+    except Exception:
+        pass
+
     return 'sales_detail'
 
 
