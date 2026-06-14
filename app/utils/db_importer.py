@@ -67,15 +67,13 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
         if name and name not in emp_cache:
             emp_cache[name] = _get_or_create_employee(name, rec.get('sap_id'))
 
-    # ── pre-aggregate: group rows by (invoice_no, item_code, date, emp_id) ───
-    # Strategy:
-    #   • Keep the representative row as the one with the highest VALUE (avoids
-    #     summing duplicate or discount sub-rows that share the same key).
-    #   • Accumulate all ret_val across every row in the group (handles multiple
-    #     return rows for the same key).
-    #   • Net = max_value - total_ret_val.
-    #   • Credit-note rows (value=0, ret_val>0, different invoice_no) end up
-    #     as separate keys with net = -total_ret_val (naturally reduces daily totals).
+    # ── pre-aggregate: group rows by (invoice_no, item_code, date) ──────────
+    # Key deliberately excludes employee_id: SAP files often contain a branch-
+    # manager section that repeats every invoice already listed under individual
+    # employees.  An invoice number is globally unique, so (invoice, item, date)
+    # is sufficient and prevents that double-count.
+    # Employee is taken from whichever row has the highest positive value
+    # (i.e. the original salesperson's section, not a manager summary copy).
     aggs: dict[tuple, dict] = {}
     skipped_parse = 0
 
@@ -87,7 +85,7 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
         if not emp:
             skipped_parse += 1
             continue
-        key = (rec['invoice_no'], rec.get('item_code') or '', rec['sale_date'], emp.id)
+        key = (rec['invoice_no'], rec.get('item_code') or '', rec['sale_date'])
 
         val      = float(rec.get('value')    or 0)
         ret_val  = float(rec.get('ret_val')  or 0)
@@ -112,9 +110,12 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
                 '_ret_qty':    0.0,
             }
 
-        # Use the row with the highest positive value as the representative
+        # Use the row with the highest positive value as the representative.
+        # Also update _emp_id so the invoice is assigned to the employee whose
+        # section had the original (non-summary) sale value.
         if val > aggs[key]['_max_value']:
             aggs[key]['_max_value'] = val
+            aggs[key]['_emp_id'] = emp.id
             for field in ('description', 'product_category', 'price',
                           'invoice_type', 'lens_grade'):
                 aggs[key][field] = rec.get(field, aggs[key].get(field))
@@ -152,10 +153,10 @@ def import_sales_detail(parsed: dict) -> tuple[int, int]:
 
     # ── pre-load existing DB keys for this date range ─────────────────────────
     existing_keys: set[tuple] = set(
-        (r.invoice_no, r.item_code or '', r.sale_date, r.employee_id)
+        (r.invoice_no, r.item_code or '', r.sale_date)
         for r in db.session.query(
             SaleRecord.invoice_no, SaleRecord.item_code,
-            SaleRecord.sale_date, SaleRecord.employee_id,
+            SaleRecord.sale_date,
         ).filter(
             SaleRecord.sale_date >= d_min,
             SaleRecord.sale_date <= d_max,
