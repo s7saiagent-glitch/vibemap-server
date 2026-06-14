@@ -608,3 +608,261 @@ def export(report_type):
         as_attachment=True,
         download_name=filename,
     )
+
+
+# ─── Sales Sheet (full SAP-style grouped view + export) ───────────────────────
+
+def _build_sheet_groups(year: int, month: int):
+    """Return (emp_order, emp_groups, grand_*) for the sales sheet."""
+    first_day = date(year, month, 1)
+    last_day  = date(year, month, calendar.monthrange(year, month)[1])
+
+    rows = (
+        db.session.query(SaleRecord, Employee.name.label('emp_name'))
+        .join(Employee, Employee.id == SaleRecord.employee_id)
+        .filter(
+            SaleRecord.sale_date >= first_day,
+            SaleRecord.sale_date <= last_day,
+        )
+        .order_by(Employee.name, SaleRecord.sale_date, SaleRecord.invoice_no)
+        .all()
+    )
+
+    emp_groups: dict[str, dict] = {}
+    emp_order:  list[str]       = []
+
+    for rec, emp_name in rows:
+        if emp_name not in emp_groups:
+            emp_groups[emp_name] = {
+                'records':      [],
+                'total_gross':  0.0,
+                'total_ret':    0.0,
+                'total_net':    0.0,
+                'total_qty':    0.0,
+                'count':        0,
+            }
+            emp_order.append(emp_name)
+
+        g     = emp_groups[emp_name]
+        net   = float(rec.value   or 0)
+        ret   = float(rec.ret_val or 0)
+        gross = net + ret
+
+        g['records'].append(rec)
+        g['total_net']   += net
+        g['total_ret']   += ret
+        g['total_gross'] += gross
+        g['total_qty']   += float(rec.qty or 0)
+        g['count']       += 1
+
+    grand_net   = sum(g['total_net']   for g in emp_groups.values())
+    grand_ret   = sum(g['total_ret']   for g in emp_groups.values())
+    grand_gross = sum(g['total_gross'] for g in emp_groups.values())
+    grand_qty   = sum(g['total_qty']   for g in emp_groups.values())
+    grand_count = sum(g['count']       for g in emp_groups.values())
+
+    return emp_order, emp_groups, grand_net, grand_ret, grand_gross, grand_qty, grand_count
+
+
+@bp.route('/sales-sheet')
+def sales_sheet():
+    """Full SAP-style sales sheet: all invoices grouped by employee with subtotals."""
+    today = date.today()
+    year  = request.args.get('year',  today.year,  type=int)
+    month = request.args.get('month', today.month, type=int)
+
+    emp_order, emp_groups, grand_net, grand_ret, grand_gross, grand_qty, grand_count = \
+        _build_sheet_groups(year, month)
+
+    months = [(i, calendar.month_name[i]) for i in range(1, 13)]
+
+    return render_template(
+        'reports/sales_sheet.html',
+        emp_order=emp_order,
+        emp_groups=emp_groups,
+        grand_net=grand_net,
+        grand_ret=grand_ret,
+        grand_gross=grand_gross,
+        grand_qty=grand_qty,
+        grand_count=grand_count,
+        year=year,
+        month=month,
+        today=today,
+        months=months,
+        page_title='تقرير الشيت الكامل',
+    )
+
+
+@bp.route('/sales-sheet/export')
+def sales_sheet_export():
+    """Export the grouped sales sheet to a formatted Excel file."""
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    today = date.today()
+    year  = request.args.get('year',  today.year,  type=int)
+    month = request.args.get('month', today.month, type=int)
+
+    emp_order, emp_groups, grand_net, grand_ret, grand_gross, grand_qty, grand_count = \
+        _build_sheet_groups(year, month)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f'{year}-{month:02d}'
+    ws.sheet_view.rightToLeft = True
+
+    # ── Styles ────────────────────────────────────────────────────────────────
+    def _font(bold=False, color='000000', size=10, italic=False):
+        return Font(bold=bold, color=color, size=size, italic=italic,
+                    name='Arial')
+
+    def _fill(hex_color):
+        return PatternFill(fill_type='solid', fgColor=hex_color)
+
+    def _border():
+        s = Side(style='thin', color='CBD5E1')
+        return Border(left=s, right=s, top=s, bottom=s)
+
+    center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    right  = Alignment(horizontal='right',  vertical='center')
+    left   = Alignment(horizontal='left',   vertical='center')
+
+    COL_HEADERS = [
+        '#', 'التاريخ', 'رقم الفاتورة', 'كود البند',
+        'الوصف', 'الفئة', 'الكمية', 'السعر',
+        'القيمة الإجمالية', 'الخصم / المرتجع', 'الصافي',
+        'نوع الفاتورة',
+    ]
+    NUM_COLS = len(COL_HEADERS)
+    COL_WIDTHS = [5, 12, 14, 14, 32, 20, 8, 12, 16, 16, 14, 14]
+
+    # ── Title ─────────────────────────────────────────────────────────────────
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=NUM_COLS)
+    title_cell = ws.cell(row=1, column=1,
+                         value=f'تقرير المبيعات التفصيلي — {year}/{month:02d}')
+    title_cell.font      = _font(bold=True, color='FFFFFF', size=13)
+    title_cell.fill      = _fill('1E3A5F')
+    title_cell.alignment = center
+    ws.row_dimensions[1].height = 28
+
+    # ── Column headers ────────────────────────────────────────────────────────
+    ws.append(COL_HEADERS)
+    for col in range(1, NUM_COLS + 1):
+        c = ws.cell(row=2, column=col)
+        c.font      = _font(bold=True, color='FFFFFF', size=10)
+        c.fill      = _fill('2563EB')
+        c.alignment = center
+        c.border    = _border()
+    ws.row_dimensions[2].height = 22
+
+    row_num = 3
+    num_fmt = '#,##0.00'
+
+    for emp_name in emp_order:
+        g       = emp_groups[emp_name]
+        records = g['records']
+
+        # Employee header
+        ws.merge_cells(start_row=row_num, start_column=1,
+                       end_row=row_num,   end_column=NUM_COLS)
+        emp_cell = ws.cell(
+            row=row_num, column=1,
+            value=f'  الموظف :  {emp_name}    ({g["count"]} سجل)',
+        )
+        emp_cell.font      = _font(bold=True, color='FFFFFF', size=11)
+        emp_cell.fill      = _fill('1D4ED8')
+        emp_cell.alignment = left
+        ws.row_dimensions[row_num].height = 20
+        row_num += 1
+
+        # Data rows
+        for i, rec in enumerate(records, 1):
+            net   = float(rec.value   or 0)
+            ret   = float(rec.ret_val or 0)
+            gross = net + ret
+            is_return = net < 0 or ret > 0
+
+            row_data = [
+                i,
+                rec.sale_date.strftime('%Y-%m-%d') if rec.sale_date else '',
+                rec.invoice_no      or '',
+                rec.item_code       or '',
+                rec.description     or '',
+                rec.product_category or '',
+                float(rec.qty or 0),
+                float(rec.price or 0),
+                gross,
+                ret,
+                net,
+                rec.invoice_type    or '',
+            ]
+            ws.append(row_data)
+
+            row_fill = _fill('FFF8E1') if is_return else _fill('F8FAFC')
+            for col in range(1, NUM_COLS + 1):
+                c = ws.cell(row=row_num, column=col)
+                c.fill   = row_fill
+                c.border = _border()
+                c.alignment = center if col in (1, 7, 12) else (right if col >= 7 else left)
+                if col in (8, 9, 10, 11):
+                    c.number_format = num_fmt
+            row_num += 1
+
+        # Employee subtotal row
+        sub_data = [
+            '', f'إجمالي — {emp_name}', '', '', '', '',
+            g['total_qty'], '',
+            g['total_gross'], g['total_ret'], g['total_net'], '',
+        ]
+        ws.append(sub_data)
+        for col in range(1, NUM_COLS + 1):
+            c = ws.cell(row=row_num, column=col)
+            c.font      = _font(bold=True, size=10)
+            c.fill      = _fill('DBEAFE')
+            c.border    = _border()
+            c.alignment = right if col >= 7 else left
+            if col in (9, 10, 11):
+                c.number_format = num_fmt
+        ws.row_dimensions[row_num].height = 18
+        row_num += 1
+
+        # Empty separator
+        ws.append([''] * NUM_COLS)
+        row_num += 1
+
+    # Grand total row
+    gt_data = [
+        '', 'الإجمالي العام', '', '', '', '',
+        grand_qty, '',
+        grand_gross, grand_ret, grand_net, '',
+    ]
+    ws.append(gt_data)
+    for col in range(1, NUM_COLS + 1):
+        c = ws.cell(row=row_num, column=col)
+        c.font      = _font(bold=True, color='FFFFFF', size=12)
+        c.fill      = _fill('1E3A5F')
+        c.border    = _border()
+        c.alignment = right if col >= 7 else center
+        if col in (9, 10, 11):
+            c.number_format = num_fmt
+    ws.row_dimensions[row_num].height = 24
+
+    # Column widths
+    for i, w in enumerate(COL_WIDTHS, 1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+    # Freeze panes below title+header
+    ws.freeze_panes = 'A3'
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=f'sales_sheet_{year}_{month:02d}.xlsx',
+    )
+

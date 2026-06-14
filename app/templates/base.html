@@ -377,6 +377,8 @@
       </a>
       <ul class="dropdown-menu">
         <li><a class="dropdown-item" href="{{ url_for('reports.index') }}"><i class="bi bi-grid me-2"></i>كل التقارير</a></li>
+        <li><a class="dropdown-item fw-bold" href="{{ url_for('reports.sales_sheet') }}"><i class="bi bi-table me-2 text-success"></i>تقرير الشيت الكامل</a></li>
+        <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item" href="{{ url_for('reports.products') }}"><i class="bi bi-boxes me-2"></i>المنتجات</a></li>
         <li><a class="dropdown-item" href="{{ url_for('reports.comparison') }}"><i class="bi bi-people me-2"></i>مقارنة الموظفين</a></li>
         <li><a class="dropdown-item" href="{{ url_for('reports.actual_vs_target') }}"><i class="bi bi-bullseye me-2"></i>الفعلي مقابل الهدف</a></li>

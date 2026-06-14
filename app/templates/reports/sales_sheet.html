@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% block title %}تقرير الشيت الكامل | AQ Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+  .sheet-table { font-size: .82rem; }
+  .sheet-table thead th {
+    background: var(--bg-table-th);
+    color: var(--text-heading);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    white-space: nowrap;
+    padding: .45rem .6rem;
+  }
+  .sheet-table td { padding: .35rem .6rem; vertical-align: middle; }
+
+  .emp-header {
+    background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: .95rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .emp-header:hover { filter: brightness(1.1); }
+
+  .subtotal-row td {
+    background: #1e3a5f !important;
+    color: #93c5fd !important;
+    font-weight: 700;
+    font-size: .85rem;
+    border-top: 2px solid #3b82f6 !important;
+  }
+
+  .grand-total-row td {
+    background: #0f172a !important;
+    color: #f59e0b !important;
+    font-weight: 800;
+    font-size: .95rem;
+    border-top: 3px solid #f59e0b !important;
+  }
+
+  .ret-row { background: rgba(245, 158, 11, .08) !important; }
+  .negative-val { color: #ef4444 !important; }
+
+  .kpi-bar {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .kpi-box {
+    flex: 1;
+    min-width: 140px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    text-align: center;
+  }
+  .kpi-box .kpi-val {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--primary);
+  }
+  .kpi-box .kpi-lbl {
+    font-size: .72rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .kpi-box.kpi-green .kpi-val { color: #10b981; }
+  .kpi-box.kpi-yellow .kpi-val { color: #f59e0b; }
+  .kpi-box.kpi-red .kpi-val { color: #ef4444; }
+
+  .collapse-icon { transition: transform .2s; }
+  .collapsed .collapse-icon { transform: rotate(-90deg); }
+
+  @media print {
+    .no-print { display: none !important; }
+    .sheet-table thead th { position: static; }
+    .emp-header { break-inside: avoid; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ── Page header ───────────────────────────────────────────────────────── -->
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2 no-print">
+  <div>
+    <h1 class="h4 fw-bold mb-0">
+      <i class="bi bi-table text-primary me-2"></i>تقرير الشيت الكامل
+    </h1>
+    <p class="text-muted small mb-0">جميع سجلات المبيعات مجمّعة حسب الموظف — مطابق لتقرير SAP</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-printer-fill me-1"></i>طباعة
+    </button>
+    <a href="{{ url_for('reports.sales_sheet_export', year=year, month=month) }}"
+       class="btn btn-success btn-sm">
+      <i class="bi bi-file-earmark-excel-fill me-1"></i>تصدير Excel
+    </a>
+    <button class="btn btn-outline-primary btn-sm" id="toggleAll">
+      <i class="bi bi-chevron-double-down me-1"></i>طي / فرد الكل
+    </button>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-right me-1"></i>رجوع
+    </a>
+  </div>
+</div>
+
+<!-- ── Period filter ─────────────────────────────────────────────────────── -->
+<div class="card mb-3 no-print">
+  <div class="card-body py-2">
+    <form method="GET" class="row g-2 align-items-end">
+      <div class="col-4 col-md-2">
+        <label class="form-label fw-semibold small mb-1">السنة</label>
+        <select name="year" class="form-select form-select-sm bg-dark text-light border-secondary">
+          {% for y in range(today.year - 2, today.year + 2) %}
+            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-4 col-md-2">
+        <label class="form-label fw-semibold small mb-1">الشهر</label>
+        <select name="month" class="form-select form-select-sm bg-dark text-light border-secondary">
+          {% for m_num, m_name in months %}
+            <option value="{{ m_num }}" {% if m_num == month %}selected{% endif %}>{{ m_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-4 col-md-2">
+        <button type="submit" class="btn btn-primary btn-sm w-100">عرض</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── KPI summary bar ───────────────────────────────────────────────────── -->
+<div class="kpi-bar no-print">
+  <div class="kpi-box kpi-green">
+    <div class="kpi-val">{{ '{:,.2f}'.format(grand_net) }}</div>
+    <div class="kpi-lbl">الصافي (مطابق SAP)</div>
+  </div>
+  <div class="kpi-box kpi-yellow">
+    <div class="kpi-val">{{ '{:,.2f}'.format(grand_ret) }}</div>
+    <div class="kpi-lbl">إجمالي الخصم / المرتجع</div>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-val">{{ '{:,.2f}'.format(grand_gross) }}</div>
+    <div class="kpi-lbl">القيمة الإجمالية (قبل الخصم)</div>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-val">{{ grand_count }}</div>
+    <div class="kpi-lbl">عدد السجلات</div>
+  </div>
+  <div class="kpi-box">
+    <div class="kpi-val">{{ emp_order | length }}</div>
+    <div class="kpi-lbl">عدد الموظفين</div>
+  </div>
+</div>
+
+{% if not emp_order %}
+<div class="alert alert-warning text-center">
+  <i class="bi bi-exclamation-triangle me-2"></i>
+  لا توجد بيانات للفترة المحددة. يرجى رفع ملفات SAP أولاً.
+</div>
+{% endif %}
+
+<!-- ── Employee sections ─────────────────────────────────────────────────── -->
+<div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+<table class="table table-dark table-bordered sheet-table mb-0">
+  <thead>
+    <tr>
+      <th style="width:40px">#</th>
+      <th>التاريخ</th>
+      <th>رقم الفاتورة</th>
+      <th>كود البند</th>
+      <th>الوصف</th>
+      <th>الفئة</th>
+      <th style="width:60px">الكمية</th>
+      <th>السعر</th>
+      <th>القيمة الإجمالية</th>
+      <th>الخصم / المرتجع</th>
+      <th>الصافي</th>
+      <th>نوع الفاتورة</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for emp_name in emp_order %}
+    {% set g = emp_groups[emp_name] %}
+    {% set sec_id = 'sec-' ~ loop.index %}
+
+    <!-- Employee header row -->
+    <tr class="emp-header" data-bs-toggle="collapse" data-bs-target="#{{ sec_id }}">
+      <td colspan="12">
+        <i class="bi bi-chevron-down collapse-icon me-2"></i>
+        {{ emp_name }}
+        <span class="badge bg-light text-dark ms-2 fw-normal">{{ g.count }} سجل</span>
+        <span class="float-start text-warning ms-3">
+          الصافي: <strong>{{ '{:,.2f}'.format(g.total_net) }}</strong>
+          {% if g.total_ret > 0 %}
+          &nbsp;| خصم: <strong>{{ '{:,.2f}'.format(g.total_ret) }}</strong>
+          {% endif %}
+        </span>
+      </td>
+    </tr>
+
+    <!-- Collapsible data rows -->
+    <tr class="collapse show" id="{{ sec_id }}">
+      <td colspan="12" class="p-0 border-0">
+        <table class="table table-sm table-dark mb-0 w-100" style="border-collapse: collapse;">
+          <tbody>
+            {% for rec in g.records %}
+            {% set net   = (rec.value   or 0) | float %}
+            {% set ret   = (rec.ret_val or 0) | float %}
+            {% set gross = net + ret %}
+            <tr class="{% if ret > 0 or net < 0 %}ret-row{% endif %}">
+              <td style="width:40px" class="text-center text-muted">{{ loop.index }}</td>
+              <td style="min-width:90px">{{ rec.sale_date }}</td>
+              <td>{{ rec.invoice_no or '—' }}</td>
+              <td>{{ rec.item_code or '—' }}</td>
+              <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap"
+                  title="{{ rec.description or '' }}">{{ rec.description or '—' }}</td>
+              <td>{{ rec.product_category or '—' }}</td>
+              <td class="text-center">{{ (rec.qty or 0) | int }}</td>
+              <td class="text-end">{{ '{:,.2f}'.format(rec.price or 0) }}</td>
+              <td class="text-end">{{ '{:,.2f}'.format(gross) }}</td>
+              <td class="text-end {% if ret > 0 %}text-warning{% endif %}">
+                {% if ret > 0 %}{{ '{:,.2f}'.format(ret) }}{% else %}—{% endif %}
+              </td>
+              <td class="text-end fw-bold {% if net < 0 %}negative-val{% endif %}">
+                {{ '{:,.2f}'.format(net) }}
+              </td>
+              <td class="text-muted small">{{ rec.invoice_type or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </td>
+    </tr>
+
+    <!-- Employee subtotal -->
+    <tr class="subtotal-row">
+      <td colspan="6" class="text-end">إجمالي — {{ emp_name }}</td>
+      <td class="text-center">{{ g.total_qty | int }}</td>
+      <td></td>
+      <td class="text-end">{{ '{:,.2f}'.format(g.total_gross) }}</td>
+      <td class="text-end text-warning">{{ '{:,.2f}'.format(g.total_ret) }}</td>
+      <td class="text-end">{{ '{:,.2f}'.format(g.total_net) }}</td>
+      <td></td>
+    </tr>
+
+    {% endfor %}
+
+    <!-- Grand total -->
+    {% if emp_order %}
+    <tr class="grand-total-row">
+      <td colspan="6" class="text-end">
+        <i class="bi bi-calculator-fill me-1"></i>الإجمالي العام
+      </td>
+      <td class="text-center">{{ grand_qty | int }}</td>
+      <td></td>
+      <td class="text-end">{{ '{:,.2f}'.format(grand_gross) }}</td>
+      <td class="text-end">{{ '{:,.2f}'.format(grand_ret) }}</td>
+      <td class="text-end fs-6">{{ '{:,.2f}'.format(grand_net) }}</td>
+      <td></td>
+    </tr>
+    {% endif %}
+
+  </tbody>
+</table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle all employee sections
+let allExpanded = true;
+document.getElementById('toggleAll')?.addEventListener('click', function () {
+  allExpanded = !allExpanded;
+  document.querySelectorAll('.collapse').forEach(el => {
+    bootstrap.Collapse.getOrCreateInstance(el)[allExpanded ? 'show' : 'hide']();
+  });
+  this.innerHTML = allExpanded
+    ? '<i class="bi bi-chevron-double-down me-1"></i>طي / فرد الكل'
+    : '<i class="bi bi-chevron-double-up me-1"></i>طي / فرد الكل';
+});
+
+// Rotate chevron when section collapses
+document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(trigger => {
+  const targetId = trigger.getAttribute('data-bs-target');
+  const target = document.querySelector(targetId);
+  if (!target) return;
+  target.addEventListener('hidden.bs.collapse', () => {
+    trigger.querySelector('.collapse-icon')?.classList.add('collapsed');
+  });
+  target.addEventListener('shown.bs.collapse', () => {
+    trigger.querySelector('.collapse-icon')?.classList.remove('collapsed');
+  });
+});
+</script>
+{% endblock %}
