@@ -1,0 +1,20 @@
+:root {
+  /* الهوية البصرية - لبيه */
+  --color-night: #0e1b2c;      /* ليل - خلفية أساسية */
+  --color-amber: #ffb020;      /* عنبر البث - زر PTT ولحظة البث فقط */
+  --color-ivory: #f7f3ec;      /* عاجي - نصوص */
+  --color-copper: #e2643b;     /* نحاسي - طوارئ وتنبيهات */
+  --color-metal: #8b95a5;      /* معدني - ثانوي */
+
+  --color-night-raised: #142438;
+  --color-night-border: #1e3049;
+
+  --font-heading: 'Noto Kufi Arabic', 'Tajawal', sans-serif;
+  --font-body: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;
+
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 8px;
+
+  --shadow-amber-glow: 0 0 0 rgba(255, 176, 32, 0);
+}

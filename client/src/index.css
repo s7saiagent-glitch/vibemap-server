@@ -1,0 +1,235 @@
+@import './theme/tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-night);
+  color: var(--color-ivory);
+  font-family: var(--font-body);
+  direction: rtl;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  margin: 0 0 8px;
+}
+
+button, input {
+  font-family: inherit;
+}
+
+a {
+  color: var(--color-amber);
+}
+
+.app-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-night);
+}
+
+.screen {
+  flex: 1;
+  padding: 16px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--color-night-raised);
+  border: 1px solid var(--color-night-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+.btn {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--color-amber);
+  color: var(--color-night);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--color-night-border);
+  color: var(--color-ivory);
+}
+
+.btn-danger {
+  background: var(--color-copper);
+  color: var(--color-ivory);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input[type="text"], input[type="tel"] {
+  width: 100%;
+  background: var(--color-night);
+  border: 1px solid var(--color-night-border);
+  color: var(--color-ivory);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 16px;
+}
+
+input::placeholder {
+  color: var(--color-metal);
+}
+
+.muted {
+  color: var(--color-metal);
+  font-size: 13px;
+}
+
+.error-text {
+  color: var(--color-copper);
+  font-size: 13px;
+}
+
+/* --- زر PTT --- */
+.ptt-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 24px auto;
+}
+
+.ptt-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--color-amber);
+  opacity: 0;
+}
+
+.ptt-button {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: none;
+  background: radial-gradient(circle at 35% 30%, #ffc862, var(--color-amber));
+  color: var(--color-night);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  box-shadow: 0 6px 24px rgba(255, 176, 32, 0.25);
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.ptt-button.recording {
+  box-shadow: 0 0 0 8px rgba(255, 176, 32, 0.18), 0 0 40px rgba(255, 176, 32, 0.55);
+  transform: scale(1.03);
+}
+
+.ptt-button:disabled {
+  filter: grayscale(0.6);
+  cursor: not-allowed;
+}
+
+.ptt-button.locked-out {
+  background: var(--color-metal);
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.72); opacity: 0.55; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+.ptt-ring.active {
+  animation: pulse-ring 1.4s ease-out infinite;
+}
+
+.ptt-ring.active:nth-child(2) { animation-delay: 0.35s; }
+.ptt-ring.active:nth-child(3) { animation-delay: 0.7s; }
+
+.speaking-banner {
+  text-align: center;
+  color: var(--color-amber);
+  font-weight: 700;
+  min-height: 22px;
+}
+
+.message-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-night-border);
+}
+
+.message-item:last-child {
+  border-bottom: none;
+}
+
+.avatar-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-night-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-ivory);
+  flex-shrink: 0;
+}
+
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-night-border);
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge-free { background: rgba(139,149,165,0.2); color: var(--color-metal); }
+.badge-paid { background: rgba(255,176,32,0.15); color: var(--color-amber); }
+.badge-live { background: rgba(226,100,59,0.18); color: var(--color-copper); }
