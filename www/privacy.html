@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; img-src 'self'">
+<title>VibeMap — سياسة الخصوصية</title>
+<style>
+  :root{--bg:#F5F5FB;--ink:#15152B;--ink2:#55557A;--card:#fff;--line:#E3E3F0;--accent:#6A4DF5}
+  @media (prefers-color-scheme:dark){:root{--bg:#0A0A1C;--ink:#F2F2FF;--ink2:#A9A9CC;--card:#14142C;--line:#26264A;--accent:#9C84FF}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.85 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+  main{max-width:760px;margin:0 auto;padding:24px 16px 64px}
+  h1{font-size:26px;margin:8px 0 4px} h2{font-size:18px;margin:28px 0 6px}
+  .muted{color:var(--ink2);font-size:14px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 18px 14px;margin-top:14px}
+  a{color:var(--accent)} ul{padding-inline-start:20px;margin:6px 0}
+  .en{direction:ltr;text-align:left}
+</style>
+</head>
+<body>
+<main>
+<p><a href="index.html">← العودة إلى VibeMap</a></p>
+<h1>سياسة الخصوصية — VibeMap</h1>
+<p class="muted">آخر تحديث: 25 سبتمبر 2026 · تنطبق على الإصدار 7.8.1 وما بعده (الويب وأندرويد وآيفون)</p>
+
+<section>
+<h2>الخلاصة</h2>
+<p>VibeMap تطبيق لاسلكي (اضغط وتحدث) بينك وبين أصدقائك مباشرة. <b>لا نملك خوادم تحفظ كلامك أو رسائلك أو صورك أو موقعك.</b> لا نطلب رقم جوال ولا بريداً ولا حساباً (تسجيل الدخول اختياري)، ولا نستخدم إعلانات أو أدوات تتبع أو تحليلات.</p>
+</section>
+
+<section>
+<h2>ما البيانات التي يتعامل معها التطبيق؟</h2>
+<ul>
+<li><b>الاسم واللون:</b> تختارهما أنت، ويُرسلان لأصدقائك فقط وعند طلب صداقة.</li>
+<li><b>رقم VibeMap:</b> رقم عشوائي يُنشأ على جهازك (مثل VM-XXXX-XXXX) ليجدك أصدقاؤك.</li>
+<li><b>الصوت:</b> يُلتقط فقط وأنت تضغط زر التحدث، ويذهب مباشرة لأصدقائك المتصلين. لا يُسجَّل ولا يُحفظ.</li>
+<li><b>الموقع:</b> يُرسل مشفّراً لأصدقائك الذين قبلتهم فقط ليظهروا على الرادار. تستطيع إخفاءه في أي وقت بوضع التخفي.</li>
+<li><b>الرسائل والصور:</b> مشفّرة بين الطرفين (ECDH P-256 + AES-GCM 256) وتُحفظ على جهازك وجهاز صديقك فقط، ويمكن ضبطها لتختفي بعد القراءة أو بعد 24 ساعة.</li>
+<li><b>الكاميرا:</b> لمسح رمز QR، ولوضع الواقع المعزز، ولالتقاط صورة ترسلها. لا تُرفع أي صورة إلا التي ترسلها بنفسك.</li>
+<li><b>الحالات:</b> نص أو صورة تنشرها بنفسك، تُرسل مشفّرة لأصدقائك فقط وتُحذف تلقائياً بعد 24 ساعة، ومعها موقع النشر فقط إذا اخترت ذلك. تستطيع إخفاءها عن الجميع أو عن صديق معيّن.</li>
+<li><b>الرسائل الصوتية والغرف:</b> تُسجَّل الرسالة الصوتية فقط وأنت ضاغط على زر الميكروفون داخل المحادثة، وتُرسل مشفّرة وتُحفظ على الأجهزة المعنية فقط. رسائل الغرف تُشفّر لكل عضو على حدة، وقد يمرّرها صاحب الغرفة مشفّرة للأعضاء الذين ليسوا أصدقاء للمرسل.</li>
+<li><b>تواصل معنا:</b> إذا أرسلت اقتراحاً أو شكوى من الإعدادات، تُرسل رسالتك (ومعلومات الجهاز إذا اخترتها، وبريدك أو جوالك إذا كتبته) عبر خدمة FormSubmit إلى بريد فريق الدعم فقط.</li>
+<li><b>التقييمات:</b> تُرسل مشفّرة لصاحبها فقط.</li>
+</ul>
+</section>
+
+<section>
+<h2>خدمات الاتصال الخارجية</h2>
+<p>لكي يجد جوالك جوال صديقك نستخدم خدمات تشغيل تقنية لا ترى محتوى كلامك أو رسائلك:</p>
+<ul>
+<li><b>خادم التعارف (PeerJS):</b> يرى رقم VibeMap وعنوان IP للحظة بدء الاتصال فقط، ثم ينتقل الاتصال مباشرة بين الجهازين.</li>
+<li><b>خوادم STUN (Google و Twilio):</b> تساعد الجهازين على معرفة طريق الاتصال، وترى عنوان IP فقط.</li>
+<li><b>خادم TURN (اختياري):</b> إذا أضفته بنفسك من الإعدادات، يمرّ الصوت عبره مشفّراً.</li>
+</ul>
+<p>في الاتصال المباشر قد يرى صديقك عنوان IP الخاص بك، كما في أي مكالمة إنترنت مباشرة. لإخفائه فعّل «إخفاء عنوان IP» مع خادم TURN.</p>
+</section>
+
+<section>
+<h2>الحساب الاختياري والنسخة الاحتياطية</h2>
+<p>تقدر تسجّل دخول (اختياري) بحساب Google أو بريدك أو رقم جوالك عن طريق خدمة Firebase من Google. نستخدم بريدك أو رقمك فقط لتسجيل الدخول. إذا فعّلت النسخ الاحتياطي، يُشفّر رقم VibeMap وأسماء أصدقائك وغرفك وإعداداتك <b>على جوالك</b> برمز تختاره أنت قبل رفعها، فلا نقدر نحن ولا Google نقرأها. الرسائل والصوت والموقع والحالات لا تدخل في النسخة. تقدر تحذف حسابك السحابي ونسختك من التطبيق: حسابي ← الحساب ← حذف الحساب السحابي.</p>
+</section>
+
+<section>
+<h2>التخزين والحذف</h2>
+<p>كل بياناتك محفوظة على جهازك فقط، ومفتاح التشفير الخاص محفوظ بطريقة لا يمكن استخراجه. لا يوجد نسخ احتياطي سحابي إلا إذا فعّلته بنفسك (انظر القسم السابق). لحذف كل شيء: <b>حسابي ← حذف كل شيء</b>، أو احذف التطبيق من جهازك.</p>
+</section>
+
+<section>
+<h2>الحظر والإبلاغ</h2>
+<p>تستطيع حظر أي مستخدم من صفحته أو من طلب الصداقة، فلا يصلك منه أي طلب أو رسالة أو صوت. «حظر وإبلاغ» يفتح رسالة بريد جاهزة إلى فريق الدعم.</p>
+</section>
+
+<section>
+<h2>الأطفال</h2>
+<p>التطبيق غير موجّه لمن هم دون 13 سنة.</p>
+</section>
+
+<section>
+<h2>التواصل</h2>
+<p>لأي سؤال عن الخصوصية تواصل معنا عبر بريد الدعم المذكور في صفحة التطبيق على Google Play أو App Store. سننشر أي تغيير على هذه الصفحة مع تاريخ التحديث.</p>
+</section>
+
+<section class="en">
+<h2>Privacy Policy (English summary)</h2>
+<p>VibeMap is a peer-to-peer push-to-talk app. We operate no servers that store your voice, messages, photos or location. No phone number, email or account is required (sign-in is optional). No ads, trackers or analytics.</p>
+<ul>
+<li>Voice is captured only while you hold the talk button and is streamed directly to your connected friends; it is never recorded.</li>
+<li>Location is shared end-to-end encrypted with accepted friends only and can be hidden anytime (Ghost mode).</li>
+<li>Messages and photos are end-to-end encrypted (ECDH P-256 + AES-GCM-256) and stored only on the devices involved; optional auto-delete.</li>
+<li>A signaling service (PeerJS) and STUN servers (Google, Twilio) see your VibeMap ID and IP address only to set up connections. An optional TURN relay you configure carries encrypted audio.</li>
+<li>All data stays on your device unless you enable the optional encrypted backup. Delete everything via Me → Delete everything, or uninstall the app.</li>
+<li>Stories (text or photo) are sent end-to-end encrypted to friends only, expire after 24 hours, include location only if you choose, and can be hidden from everyone or specific friends.</li>
+<li>Voice messages are recorded only while you hold the mic button in a chat, and are end-to-end encrypted. Room messages are encrypted per member; the room owner may relay them (still encrypted) to members who are not friends with the sender.</li>
+<li>The in-app Contact form sends your message (plus optional device info and contact detail) via the FormSubmit service to our support email only.</li>
+<li>Optional sign-in (Google, email or phone via Firebase Authentication) is used only to store an end-to-end encrypted backup of your VibeMap ID, friends list, rooms and settings, encrypted on your device with a backup code only you know. Messages, voice, location and stories are never backed up. You can delete your cloud account and backup in the app.</li>
+<li>You can block and report any user. Not intended for children under 13.</li>
+</ul>
+</section>
+</main>
+</body>
+</html>
