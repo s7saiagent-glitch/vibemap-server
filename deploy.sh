@@ -25,10 +25,11 @@ echo "✅ الملفات جاهزة (الإصدار $VER)"
 CONF=/etc/nginx/sites-available/vibemap
 if [ ! -f "$CONF" ] || ! grep -q "server_name $DOMAIN;" "$CONF"; then
   echo "⚙️  إعداد Nginx للدومين $DOMAIN ..."
+  V6=""; if [ -s /proc/net/if_inet6 ] && ! grep -q "ipv6.disable=1" /proc/cmdline; then V6="listen [::]:80;"; fi
   cat > "$CONF" <<NGX
 server {
     listen 80;
-    listen [::]:80;
+    $V6
     server_name $DOMAIN;
     root $BASE/current;
     index index.html;
@@ -53,10 +54,14 @@ server {
     location / { try_files \$uri \$uri/ /index.html; }
 }
 NGX
-  ln -sf "$CONF" /etc/nginx/sites-enabled/vibemap
   NEW_CONF=1
 fi
-nginx -t && systemctl reload nginx
+ln -sf "$CONF" /etc/nginx/sites-enabled/vibemap
+if ! nginx -t; then
+  echo "❌ خطأ في إعداد Nginx — ما تغيّر شي في المواقع الثانية. أرسل الرسالة أعلاه لـ Claude."
+  rm -f /etc/nginx/sites-enabled/vibemap; exit 1
+fi
+systemctl reload nginx
 echo "✅ Nginx شغال"
 
 if [ -n "$NEW_CONF" ] || ! grep -q "ssl_certificate" "$CONF"; then
