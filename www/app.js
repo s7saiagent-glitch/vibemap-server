@@ -3,7 +3,7 @@
    VibeMap v7.0 — تطبيق لاسلكي حقيقي بين الجوالات (ويب + أندرويد + آيفون)
    WebRTC P2P (PeerJS) · ECDH P-256 + AES-GCM-256 · GPS · بوصلة · كاميرا
    ════════════════════════════════════════════════════════════ */
-const VERSION = '7.8.3';
+const VERSION = '7.9';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -2136,6 +2136,7 @@ function bgSection(){
   return `<div class="h2">العمل في الخلفية</div><div class="card list">
     <div class="set"><span class="grow"><span class="t1" style="display:block">استقبال والشاشة مقفلة</span><span class="t2" style="display:block">${st.bgMode ? (bg.running ? '<span style="color:var(--ok)">يعمل</span> · يظهر إشعار دائم فيه زر «تحدث»' : 'يبدأ الآن…') : 'متوقف: لن تسمع أحداً إذا قفلت الشاشة'}</span></span>${`<button class="switch" role="switch" aria-checked="${st.bgMode}" data-act="bg-toggle" aria-label="العمل في الخلفية"></button>`}</div>
     ${st.bgMode ? `<div class="set"><span class="grow"><span class="t1" style="display:block">فقاعة التحدث العائمة</span><span class="t2" style="display:block">${st.bubble && bg.canOverlay === false ? '<span style="color:var(--sos)">تحتاج إذن «الظهور فوق التطبيقات»</span>' : 'دائرة VibeMap فوق باقي التطبيقات: ضغطة تفتح التطبيق، ضغط مطوّل تتكلم، واسحبها لأي مكان. تصير خضراء إذا أحد يكلمك'}</span></span>${st.bubble && bg.canOverlay === false ? '<button class="btn sm pri" data-act="bubble-perm">السماح</button>' : `<button class="switch" role="switch" aria-checked="${!!st.bubble}" data-act="bubble-toggle" aria-label="الفقاعة العائمة"></button>`}</div>` : ''}
+    ${st.bgMode && !st.bubble && bg.canOverlay === false ? `<div class="set"><span class="grow"><span class="t1" style="display:block">يرجع يشتغل لو انقفل</span><span class="t2" style="display:block">لو سحبت VibeMap من قائمة التطبيقات الأخيرة ينقفل. اسمح له «بالظهور فوق التطبيقات» عشان يرجع يشتغل في الخلفية تلقائياً</span></span><button class="btn sm pri" data-act="bubble-perm">السماح</button></div>` : ''}
     ${st.bgMode && !bg.batteryUnrestricted ? `<div class="set"><span class="grow"><span class="t1" style="display:block">البطارية تقيّد التطبيق</span><span class="t2" style="display:block">بعض الجوالات توقف التطبيق بعد دقائق. افتح الإعدادات واختر VibeMap ← «غير مقيّد» أو «بدون تحسين»</span></span><button class="btn sm pri" data-act="bg-battery">فتح</button></div>` : ''}
   </div>`;
 }
@@ -2228,6 +2229,31 @@ $('#net').addEventListener('click', () => { if(!S || !S.me) return;
   s.addEventListener('contextmenu', e => e.preventDefault());
   s.addEventListener('click', () => { if(fired){ fired = false; return; } if(!t) toast('اضغط مطولاً على SOS لمدة ثانية لإرسال نداء استغاثة'); });
 })();
+
+/* ════════ v7.9: زر الرجوع ════════
+   يرجع خطوة وحدة (يقفل الكاميرا/الحالة/النافذة/المحادثة/الواقع المعزز، ثم يرجع للرادار).
+   في الرادار: أندرويد يخلي التطبيق يشتغل في الخلفية بدل ما يقفله. */
+function vmBack(){
+  try{
+    if(CAM){ camClose(); return true; }
+    if(SV){ closeStories(); return true; }
+    if(!$('#sheetWrap').hidden){ closeSheet(); return true; }
+    if(!$('#sosAlert').hidden){ stopSosAlert(); return true; }
+    if(RT.chatWith){ closeChat(); return true; }
+    if(!$('#onboard').hidden) return false;
+    if(RT.tab === 'radar' && RT.mode === 'ar'){ stopAR(); return true; }
+    if(RT.tab !== 'radar'){ setTab('radar'); return true; }
+  }catch(e){ console.warn('back', e); }
+  return false;
+}
+window.vmBack = vmBack;
+/* في المتصفح: نفس السلوك مع زر الرجوع في الجوال */
+if(PLATFORM === 'web'){
+  try{
+    history.pushState({ vm:1 }, '');
+    window.addEventListener('popstate', () => { if(vmBack()) history.pushState({ vm:1 }, ''); else history.back(); });
+  }catch(e){}
+}
 
 document.addEventListener('visibilitychange', () => {
   document.documentElement.classList.toggle('bgd', document.visibilityState !== 'visible');
