@@ -1,8 +1,9 @@
 #!/bin/bash
 # VibeMap — رفع نسخة الويب على السيرفر (Ubuntu + Nginx)
-# الاستخدام:  bash deploy.sh vibemap.example.com
+# الاستخدام:  bash deploy.sh vibemap.example.com [رمز-فك-ملف-الإشعارات]
 set -e
 DOMAIN="$1"
+SA_PASS="$2"
 if [ -z "$DOMAIN" ]; then echo "❌ اكتب الدومين بعد الأمر، مثال: bash deploy.sh vibemap.s7sai.cloud"; exit 1; fi
 if [ "$(id -u)" != "0" ]; then echo "❌ شغّل الأمر كمستخدم root"; exit 1; fi
 BRANCH=vibemap-web
@@ -11,6 +12,7 @@ TMP=$(mktemp -d)
 echo "⬇️  تحميل آخر نسخة..."
 curl -fsSL "https://codeload.github.com/s7saiagent-glitch/vibemap-server/tar.gz/refs/heads/$BRANCH" | tar xz -C "$TMP"
 SRC=$(ls -d "$TMP"/*/www)
+RSRC=$(ls -d "$TMP"/*/relay 2>/dev/null || true)
 [ -f "$SRC/index.html" ] || { echo "❌ التحميل ناقص"; exit 1; }
 mkdir -p "$BASE"
 if [ -d "$BASE/current" ]; then cp -a "$BASE/current" "$BASE/backup-$(date +%Y%m%d-%H%M%S)"; fi
@@ -18,6 +20,7 @@ rm -rf "$BASE/current.new" && cp -a "$SRC" "$BASE/current.new"
 rm -rf "$BASE/current" && mv "$BASE/current.new" "$BASE/current"
 ls -dt "$BASE"/backup-* 2>/dev/null | tail -n +4 | xargs -r rm -rf
 chown -R www-data:www-data "$BASE" 2>/dev/null || true
+if [ -n "$RSRC" ]; then mkdir -p /opt/vibemap-relay && cp "$RSRC/server.js" /opt/vibemap-relay/server.js && { [ -f "$RSRC/sa.enc" ] && cp "$RSRC/sa.enc" /opt/vibemap-relay/sa.enc || true; }; fi
 rm -rf "$TMP"
 VER=$(grep -o "const VERSION = '[^']*'" "$BASE/current/app.js" | cut -d"'" -f2)
 echo "✅ الملفات جاهزة (الإصدار $VER)"
@@ -51,12 +54,74 @@ server {
         add_header X-Content-Type-Options "nosniff" always;
     }
     location ~ /\. { deny all; }
+    location /relay/ {
+        proxy_pass http://127.0.0.1:8095;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        client_max_body_size 5m;
+        proxy_read_timeout 30s;
+    }
     location / { try_files \$uri \$uri/ /index.html; }
 }
 NGX
   NEW_CONF=1
 fi
 ln -sf "$CONF" /etc/nginx/sites-enabled/vibemap
+# ─── خادم التوصيل (v8.0): رسائل واستغاثة توصل والتطبيق مقفل ───
+NODE=$(command -v node || true)
+if [ -z "$NODE" ] || [ "$("$NODE" -e 'console.log(+process.versions.node.split(".")[0] >= 18 ? 1 : 0)')" != "1" ]; then
+  echo "⚙️  تثبيت Node.js 20..."
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null 2>&1 && apt-get install -y -qq nodejs >/dev/null 2>&1
+  NODE=$(command -v node)
+fi
+mkdir -p /opt/vibemap-relay /var/lib/vibemap-relay /etc/vibemap
+if [ -n "$SA_PASS" ] && [ -f /opt/vibemap-relay/sa.enc ]; then
+  if openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -a -A -pass "pass:$SA_PASS" -in /opt/vibemap-relay/sa.enc -out /etc/vibemap/service-account.json.new 2>/dev/null && grep -q private_key /etc/vibemap/service-account.json.new; then
+    mv /etc/vibemap/service-account.json.new /etc/vibemap/service-account.json; chmod 600 /etc/vibemap/service-account.json; echo "✅ ملف الإشعارات جاهز"
+  else rm -f /etc/vibemap/service-account.json.new; echo "⚠️  رمز فك ملف الإشعارات غلط — التوصيل يشتغل بدون إشعارات"; fi
+fi
+cat > /etc/systemd/system/vibemap-relay.service <<UNIT
+[Unit]
+Description=VibeMap relay
+After=network.target
+
+[Service]
+ExecStart=$NODE /opt/vibemap-relay/server.js
+Environment=PORT=8095 HOST=127.0.0.1 DATA_DIR=/var/lib/vibemap-relay SA_FILE=/etc/vibemap/service-account.json
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/vibemap-relay
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable vibemap-relay >/dev/null 2>&1 || true
+systemctl restart vibemap-relay
+sleep 2
+if curl -fsS http://127.0.0.1:8095/api/health >/dev/null; then echo "✅ خادم التوصيل شغال ($(curl -fsS http://127.0.0.1:8095/api/health))"; else echo "❌ خادم التوصيل ما اشتغل:"; journalctl -u vibemap-relay -n 15 --no-pager; fi
+# إضافة مسار /relay/ لإعداد قديم (قبل v8.0)
+if ! grep -q "location /relay/" "$CONF"; then
+  python3 - "$CONF" <<'PY'
+import sys
+p=sys.argv[1]; s=open(p).read()
+blk="""location /relay/ {
+        proxy_pass http://127.0.0.1:8095;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        client_max_body_size 5m;
+        proxy_read_timeout 30s;
+    }
+    location / {"""
+s=s.replace("location / {", blk)
+open(p,"w").write(s)
+PY
+fi
+
 if ! nginx -t; then
   echo "❌ خطأ في إعداد Nginx — ما تغيّر شي في المواقع الثانية. أرسل الرسالة أعلاه لـ Claude."
   rm -f /etc/nginx/sites-enabled/vibemap; exit 1

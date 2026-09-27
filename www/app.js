@@ -3,7 +3,7 @@
    VibeMap v7.0 — تطبيق لاسلكي حقيقي بين الجوالات (ويب + أندرويد + آيفون)
    WebRTC P2P (PeerJS) · ECDH P-256 + AES-GCM-256 · GPS · بوصلة · كاميرا
    ════════════════════════════════════════════════════════════ */
-const VERSION = '7.9';
+const VERSION = '8.0';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -343,6 +343,7 @@ function onFriendOnline(pin){
   // أعد إرسال الرسائل المعلّقة
   (MSG[pin] || []).filter(m => m.from === 'me' && m.st === 'pending').forEach(m => deliver(pin, m));
   setTimeout(() => syncStories(pin), 800);
+  clearTimeout(RT.rfT); RT.rfT = setTimeout(() => relayFetch(), 2500); /* v8.0: ممكن ترك لنا شي في الخادم وهو غايب */
   setTimeout(() => roomsOnline(pin), 1200);
   if(S.me.photo) setTimeout(() => sendAvatar(pin), 1600);
 }
@@ -353,6 +354,90 @@ async function sendEnc(pin, obj){
   try{ const e = await encryptFor(pin, obj); c.send({ type:'enc', iv:e.iv, ct:e.ct }); return true; }catch(e){ console.warn('send', e); return false; }
 }
 function friendsOnline(){ return Object.values(S.friends).filter(f => f.status === 'friend' && isOnline(f.pin)).map(f => f.pin); }
+
+/* ════════ v8.0: التوصيل عبر الخادم ════════
+   لو صديقك مقفل التطبيق أو جواله نايم: الرسالة تنحفظ مشفّرة في خادم VibeMap (ما يقدر يقرأها)،
+   ويوصل لجواله إشعار فوري، وأول ما يفتح التطبيق تنزل عنده. نداء الاستغاثة يوصل بصوت إنذار. */
+const RELAY = ((document.querySelector('meta[name=vibemap-relay]') || {}).content || '').replace(/\/+$/, '');
+const RL = { ok:false, push:false, fcm:false, busy:false, again:false, taken:false, last:0 };
+function relayKey(){ if(!S.me.rk){ S.me.rk = b64(crypto.getRandomValues(new Uint8Array(32))); save(); } return S.me.rk; }
+async function relayPost(path, body){
+  if(!RELAY || !S || !S.me) return null;
+  const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 20000);
+  try{
+    const r = await fetch(RELAY + path, { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), ...body }), signal:ac.signal });
+    const j = await r.json().catch(() => null);
+    if(r.status === 401 && path !== '/api/reg'){ RL.ok = false; relayReg(); }
+    return r.ok ? j : null;
+  }catch(e){ return null; } finally { clearTimeout(t); }
+}
+async function pushToken(){
+  const P = NP('VibePush'); if(!P) return null;
+  try{ const r = await P.getToken(); return r && r.token || null; }catch(e){ console.warn('push token', e); return null; }
+}
+async function relayReg(){
+  if(!RELAY || RL.regBusy) return; RL.regBusy = true;
+  try{
+    const fcm = await pushToken();
+    const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 20000);
+    const r = await fetch(RELAY + '/api/reg', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), fcm:fcm || '', plat:PLATFORM }), signal:ac.signal }).catch(() => null);
+    clearTimeout(t);
+    const j = r && await r.json().catch(() => null);
+    RL.taken = !!(r && r.status === 403);
+    RL.ok = !!(j && j.ok); RL.push = !!(j && j.push); RL.fcm = !!(j && j.fcm);
+    if(RL.ok && j.pending) relayFetch();
+  }finally{ RL.regBusy = false; }
+}
+async function relayInit(){
+  if(!RELAY) return;
+  const P = NP('VibePush');
+  if(P){ try{ await P.addListener('push', () => relayFetch(true)); await P.addListener('token', () => relayReg()); }catch(e){} askNotifOnce(); }
+  await relayReg();
+  setInterval(() => { if(document.visibilityState === 'visible') relayFetch(); }, 30000);
+}
+/* أندرويد 13+: نطلب إذن الإشعارات مرة وحدة — بدونه ما يوصل تنبيه الرسائل والاستغاثة */
+async function askNotifOnce(){
+  const LN = NP('LocalNotifications'); if(!LN || S.settings.askedNotif) return;
+  try{ const c = await LN.checkPermissions(); if(c.display === 'prompt' || c.display === 'prompt-with-rationale'){ S.settings.askedNotif = true; save(); const r = await LN.requestPermissions(); RT.lnPerm = r.display === 'granted' ? 'granted' : 'denied'; } }catch(e){}
+}
+async function relaySend(pin, obj, kind, roomName){
+  if(!RELAY || isDemo(pin)) return false;
+  const f = S.friends[pin]; if(!f || f.status !== 'friend' || f.keyAlert) return false;
+  if(!RT.keys[pin] && !(await deriveFor(pin))) return false;
+  try{
+    const e = await encryptFor(pin, obj);
+    const j = await relayPost('/api/send', { to:pin, items:[{ id:(obj.id && /^[A-Za-z0-9_-]{4,40}$/.test(obj.id) ? (obj.k === 'chat' || obj.k === 'photo' || obj.k === 'voice' || obj.k === 'rmsg' ? '' : obj.k + '-') + obj.id : uid()), iv:e.iv, ct:e.ct }],
+      push: kind ? { k:kind, n:S.me.name, r:roomName || '' } : null });
+    return !!(j && j.ok);
+  }catch(e){ console.warn('relay send', e); return false; }
+}
+/* يرسل مباشرة لو الصديق متصل، وإلا عبر الخادم */
+async function sendAny(pin, obj, kind, roomName){
+  if(await sendEnc(pin, obj)) return 'p2p';
+  return (await relaySend(pin, obj, kind, roomName)) ? 'relay' : false;
+}
+async function relayFetch(fromPush){
+  if(!RELAY || !S) return;
+  if(RL.busy){ RL.again = true; return; } RL.busy = true;
+  RT.quietNotify = !!(fromPush && PLATFORM === 'android');
+  try{
+    for(let round = 0; round < 10; round++){
+      const j = await relayPost('/api/inbox', {}); if(!j || !Array.isArray(j.items)) break;
+      const done = [];
+      for(const x of j.items){
+        const pin = typeof x.f === 'string' ? x.f : ''; done.push(pin + '/' + x.id);
+        const f = S.friends[pin]; if(!f || f.status !== 'friend' || f.keyAlert || S.blocked[pin]) continue;
+        if(!RT.keys[pin] && !(await deriveFor(pin))) continue;
+        let m; try{ m = await decryptFrom(pin, x.iv, x.ct); }catch(e){ console.warn('relay decrypt'); continue; }
+        m._relay = true; handleInner(pin, m);
+      }
+      if(done.length) await relayPost('/api/ack', { ids:done });
+      RL.last = now();
+      if(!j.more) break;
+    }
+  }finally{ RL.busy = false; RT.quietNotify = false; if(RL.again){ RL.again = false; setTimeout(() => relayFetch(), 300); } }
+}
+const pushKind = m => m.type === 'voice' ? 'voice' : m.type === 'photo' ? 'photo' : 'msg';
 
 /* ─── الرسائل الواردة ─── */
 function handleInner(pin, m){
@@ -369,7 +454,7 @@ function handleInner(pin, m){
       if(arr.some(x => x.id === m.id)) break;
       if(arr.length > 2000) arr.splice(0, arr.length - 2000);
       arr.push({ id:m.id, from:'them', type, text:m.text, data:m.data, dur:m.dur, live:m.live, ts:m.ts, ttl:m.ttl, st:'recv' });
-      sendEnc(pin, { k:'ack', id:m.id }); saveMsgs();
+      sendAny(pin, { k:'ack', id:m.id }); saveMsgs();
       if(RT.chatWith === pin && document.visibilityState === 'visible'){ markRead(pin); if(type === 'voice' && !m.live && isEcho(pin)) setTimeout(() => playVoice(pin, m.id), 300); }
       else if(!f.mute){ const lbl = msgLabel(m); tone(BEEP.msg); vibrate(40); notify(f.name, !S.settings.notifPreview ? 'رسالة جديدة' : lbl); if(RT.chatWith !== pin) toast(`${f.name}: ${lbl}`); }
       renderAll(); break;
@@ -389,9 +474,16 @@ function handleInner(pin, m){
       renderTalk(); renderStage(); break;
     }
     case 'sos': {
-      if(m.on === false){ if(RT.sosFrom && RT.sosFrom.pin === pin) stopSosAlert(); f.sos = false; }
-      else { f.sos = true; const l = V.loc(m); if(l) f.loc = { ...l, ts:now() }; showSosAlert(pin); }
-      save(); renderStage(); break;
+      const ts = V.num(m.ts, 1e12, 1e13) || now();
+      if(m.on === false){ if(RT.sosFrom && RT.sosFrom.pin === pin) stopSosAlert(); if(f.sos) sysMsg(pin, `✅ ${f.name} ألغى نداء الاستغاثة`); f.sos = false; f.sosOff = ts; }
+      else {
+        if(f.sosTs === ts || (f.sosOff && f.sosOff > ts)) break; /* وصل مرتين (مباشر + خادم) أو أُلغي بعده */
+        f.sosTs = ts; const l = V.loc(m); if(l) f.loc = { ...l, ts:now() };
+        sysMsg(pin, `🆘 نداء استغاثة من ${f.name}${l ? ` — https://www.google.com/maps/search/?api=1&query=${(+l.lat).toFixed(6)},${(+l.lng).toFixed(6)}` : ''}`);
+        if(now() - ts < 2 * 3600e3){ f.sos = true; showSosAlert(pin); }
+        else toast(`${f.name} أرسل نداء استغاثة ${fmtAgo(ts)}`);
+      }
+      save(); saveMsgs(); renderStage(); renderAll(); break;
     }
     case 'story': recvStory(pin, m); break;
     case 'avatar': { const d = m.data === '' ? null : V.photo(m.data); if(m.data !== '' && (!d || d.length > 90000)) break; if(f.photo === d) break; f.photo = d; save(); renderAll(); break; }
@@ -646,7 +738,14 @@ async function deliver(conv, m){
     : m.type === 'voice' ? { k:'voice', id:m.id, data:m.data, dur:m.dur, live:!!m.live, ts:m.ts, ttl:m.ttl }
     : { k:'chat', id:m.id, text:m.text, ts:m.ts, ttl:m.ttl };
   const ok = await sendEnc(conv, payload);
-  if(ok && m.st === 'pending'){ m.st = 'sent'; saveMsgs(); renderChatIfOpen(conv); }
+  if(ok){
+    if(m.st === 'pending'){ m.st = 'sent'; saveMsgs(); renderChatIfOpen(conv); }
+    /* v8.0: لو ما وصل تأكيد خلال 9 ثواني (جواله نايم) نرسلها عبر الخادم مع إشعار */
+    setTimeout(() => { if(m.st === 'sent' && !m.relayed){ m.relayed = true; relaySend(conv, payload, pushKind(m)); } }, 9000);
+    return;
+  }
+  if(m.relayed) return;
+  if(await relaySend(conv, payload, pushKind(m))){ m.relayed = true; if(m.st === 'pending'){ m.st = 'sent'; saveMsgs(); renderChatIfOpen(conv); } }
 }
 function sendMsg(conv, o){
   const ci = convInfo(conv); if(!ci) return;
@@ -670,7 +769,7 @@ function compressImage(file, max, q){
 }
 function markRead(pin){
   let changed = false;
-  (MSG[pin] || []).forEach(m => { if(m.from === 'them' && !m.readAt){ m.readAt = now(); changed = true; if(!isRoom(pin)) sendEnc(pin, { k:'read', id:m.id }); } });
+  (MSG[pin] || []).forEach(m => { if(m.from === 'them' && !m.readAt){ m.readAt = now(); changed = true; if(!isRoom(pin)) sendAny(pin, { k:'read', id:m.id }); } });
   if(changed) saveMsgs();
 }
 function unread(pin){ return (MSG[pin] || []).filter(m => m.from === 'them' && !m.readAt).length; }
@@ -994,7 +1093,10 @@ async function deliverRoom(rid, m, onlyPin){
   for(const p of r.members){
     if(p === S.me.pin || m.dl.includes(p) || (onlyPin && p !== onlyPin)) continue;
     if(isDemo(p)){ m.dl.push(p); if(p === 'VM-DEMO-SARA' && !onlyPin) setTimeout(() => demoRoomSay(rid, m.type === 'voice' ? 'سمعتك 🎧 تمام' : ['أبشر', 'تمام 👍', 'وصلت', 'أنا في الطريق'][Math.floor(Math.random() * 4)]), 1600); continue; }
-    if(S.friends[p] && S.friends[p].status === 'friend' && isOnline(p)){ const ok = await sendEnc(p, payload); if(ok && m.st === 'pending') m.st = 'sent'; }
+    if(S.friends[p] && S.friends[p].status === 'friend'){
+      if(isOnline(p) && await sendEnc(p, payload)){ if(m.st === 'pending') m.st = 'sent'; }
+      else if(!onlyPin && !(m.rl || []).includes(p) && await relaySend(p, payload, 'room', r.name)){ (m.rl = m.rl || []).push(p); if(m.st === 'pending') m.st = 'sent'; }
+    }
   }
   if(m.st === 'pending' && m.dl.length) m.st = 'sent';
   saveMsgs(); renderChatIfOpen('R:' + rid);
@@ -1011,7 +1113,7 @@ function recvRoomMsg(pin, m){
   const data = type === 'photo' ? V.photo(m.data) : type === 'voice' ? V.audio(m.data) : null; if(type !== 'text' && !data) return;
   const text = type === 'text' ? V.str(m.text, 4000) : ''; if(type === 'text' && !text.trim()) return;
   const conv = 'R:' + rid, arr = MSG[conv] || (MSG[conv] = []);
-  if(!isDemo(pin)) sendEnc(pin, { k:'rack', room:rid, id });
+  if(!isDemo(pin)) sendAny(pin, { k:'rack', room:rid, id });
   if(arr.some(x => x.id === id)) return;
   const sname = (S.friends[from] && S.friends[from].name) || V.name(m.fname);
   if(!S.friends[from]){ r.names = r.names || {}; r.names[from] = sname; }
@@ -1020,7 +1122,7 @@ function recvRoomMsg(pin, m){
   /* صاحب الغرفة يمرّر الرسالة للأعضاء اللي مو أصدقاء للمرسل */
   if(r.owner === S.me.pin && !isDemo(from)){
     const fw = { k:'rmsg', room:rid, id, from, fname:sname, type, text, data, dur:msg.dur, live:msg.live, ts:msg.ts, ttl:msg.ttl };
-    r.members.forEach(p => { if(p !== S.me.pin && p !== from && p !== pin && !isDemo(p) && S.friends[p] && S.friends[p].status === 'friend' && isOnline(p)) sendEnc(p, fw); }); }
+    r.members.forEach(p => { if(p !== S.me.pin && p !== from && p !== pin && !isDemo(p) && S.friends[p] && S.friends[p].status === 'friend') sendAny(p, fw, 'room', r.name); }); }
   if(RT.chatWith === conv && document.visibilityState === 'visible') markRead(conv);
   else if(!r.mute){ const lbl = msgLabel(msg); tone(BEEP.msg); vibrate(40); notify(`${r.emoji} ${r.name}`, !S.settings.notifPreview ? 'رسالة جديدة' : `${sname}: ${lbl}`); if(RT.chatWith !== conv) toast(`${r.emoji} ${r.name} · ${sname}: ${lbl}`); }
   renderAll();
@@ -1447,20 +1549,71 @@ async function acAction(a, b){
 }
 
 /* ════════ SOS ════════ */
-function sendSOS(){
-  RT.sosActive = true;
+/* v8.0: الاستغاثة لمن تختار (الجميع، شخص، أو غرفة) وتوصل حتى لو التطبيق مقفل عندهم */
+function sosTargets(to){
+  const fr = p => S.friends[p] && S.friends[p].status === 'friend' && !isDemo(p);
+  if(to && isRoom(to)){ const r = roomOf(to); if(r) return r.members.filter(p => p !== S.me.pin && fr(p)); }
+  else if(to && to !== 'all' && fr(to)) return [to];
+  return Object.values(S.friends).filter(f => fr(f.pin)).map(f => f.pin);
+}
+function sosToName(to){
+  if(!to || to === 'all') return 'الجميع';
+  if(isRoom(to)){ const r = roomOf(to); return r ? `${r.emoji} ${r.name}` : 'الجميع'; }
+  return (S.friends[to] && S.friends[to].status === 'friend') ? S.friends[to].name : 'الجميع';
+}
+function sosDefault(){ const t = S.settings.sosTo || 'all'; return (t === 'all' || (isRoom(t) ? roomOf(t) : S.friends[t] && S.friends[t].status === 'friend')) ? t : 'all'; }
+function renderSosBtn(){ const b = $('#sosBtn'); const l = b && b.querySelector('span:last-child'); if(!l) return; const t = sosDefault(); l.textContent = t === 'all' ? 'استغاثة' : 'SOS: ' + sosToName(t).split(' ')[0]; }
+async function sendSOS(to){
+  to = to || sosDefault();
+  const list = sosTargets(to);
+  if(!list.length){ toast('ما عندك أصدقاء تضيفهم لنداء الاستغاثة. أضف صديق أولاً'); return; }
+  RT.sosActive = true; RT.sosTo = to; RT.sosList = list;
   const payload = { k:'sos', on:true, ts:now() };
   if(RT.myLoc){ payload.lat = RT.myLoc.lat; payload.lng = RT.myLoc.lng; payload.acc = RT.myLoc.acc; }
-  const list = Object.values(S.friends).filter(f => f.status === 'friend' && !isDemo(f.pin));
-  let sent = 0; list.forEach(f => { sendEnc(f.pin, payload).then(ok => { if(ok) sent++; }); });
   vibrate([200, 100, 200]); tone([[880,.2],[660,.2],[880,.2]], .3);
-  setTimeout(() => { toast(sent ? `أُرسل نداء الاستغاثة إلى ${sent} من الأصدقاء المتصلين` : 'لا يوجد أصدقاء متصلون لاستلام النداء الآن'); openSheet(sosSentSheet()); }, 600);
+  openSheet(sosSentSheet(null));
+  const res = await Promise.all(list.map(async p => {
+    const direct = await sendEnc(p, payload);
+    const viaServer = await relaySend(p, payload, 'sos'); /* دائماً عبر الخادم أيضاً: يوصل حتى لو جواله نايم */
+    return direct || viaServer;
+  }));
+  const n = res.filter(Boolean).length;
+  RT.sosSent = n;
+  if(!$('#sheetWrap').hidden && $('#sosSentBox')) openSheet(sosSentSheet(n));
+  toast(n ? `وصل نداء الاستغاثة إلى ${n} من ${list.length}` : 'تعذّر الإرسال الآن — تأكد من الإنترنت');
 }
-function cancelSOS(){ RT.sosActive = false; friendsOnline().forEach(pin => { if(!isDemo(pin)) sendEnc(pin, { k:'sos', on:false }); }); closeSheet(); toast('تم إلغاء نداء الاستغاثة'); }
-function sosSentSheet(){
-  return `<div class="grab"></div><div class="h1" style="color:var(--sos)">نداء الاستغاثة أُرسل</div>
-  <p class="note">وصل تنبيه بموقعك إلى أصدقائك المتصلين الآن، مع صوت إنذار واهتزاز على أجهزتهم.${RT.myLoc ? '' : ' <b>موقعك غير متاح</b>، فلم يُرسل معه.'}<br>في حالة الخطر الحقيقي اتصل بالطوارئ <b class="mono">911</b> أو الإسعاف <b class="mono">997</b>.</p>
+function cancelSOS(){
+  RT.sosActive = false; const payload = { k:'sos', on:false, ts:now() };
+  (RT.sosList || sosTargets('all')).forEach(p => { sendEnc(p, payload); relaySend(p, payload, 'sosoff'); });
+  closeSheet(); toast('تم إلغاء نداء الاستغاثة');
+}
+function sosSentSheet(n){
+  const who = sosToName(RT.sosTo);
+  return `<div class="grab"></div><div class="h1" style="color:var(--sos)" id="sosSentBox">نداء الاستغاثة ${n == null ? 'يُرسل…' : 'أُرسل'}</div>
+  <p class="note">إلى: <b>${esc(who)}</b>${n == null ? '' : ` — وصل إلى <b>${n}</b> من ${(RT.sosList || []).length}`}. يوصلهم تنبيه بصوت إنذار وموقعك، حتى لو التطبيق مقفل عندهم.${RT.myLoc ? '' : ' <b>موقعك غير متاح</b>، فلم يُرسل معه.'}<br>في حالة الخطر الحقيقي اتصل بالطوارئ <b class="mono">911</b> أو الإسعاف <b class="mono">997</b>.</p>
   <button class="btn danger block" data-act="sos-cancel">أنا بخير — إلغاء النداء</button>`;
+}
+/* ضغطة عادية على SOS: تختار لمن يوصل النداء */
+function sosPickSheet(){
+  const cur = sosDefault();
+  const fr = Object.values(S.friends).filter(f => f.status === 'friend' && !isDemo(f.pin));
+  const rooms = Object.values(S.rooms || {}).filter(r => r.members.some(p => p !== S.me.pin && S.friends[p] && S.friends[p].status === 'friend'));
+  const row = (t, label, sub, av) => `<button class="row ${cur === t ? 'on' : ''}" data-act="sos-to" data-t="${esc(t)}" style="width:100%;text-align:start">${av}<span class="grow"><span class="t1" style="display:block">${esc(label)}</span><span class="t2" style="display:block">${esc(sub)}</span></span><span aria-hidden="true" style="font-size:20px">${cur === t ? '🔴' : '⚪'}</span></button>`;
+  return `<div class="grab"></div><div class="h1" style="color:var(--sos)">🆘 نداء استغاثة</div>
+  <p class="note">اختر لمن يوصل النداء. <b>الضغط المطوّل</b> على زر SOS يرسله فوراً للي تختاره هنا.</p>
+  <div class="card list" style="max-height:46vh;overflow:auto">
+  ${row('all', 'الجميع', `كل أصدقائك (${fr.length})`, '<span class="av" style="background:var(--sos)">👥</span>')}
+  ${rooms.map(r => row('R:' + r.id, `${r.emoji} ${r.name}`, `غرفة · ${r.members.length - 1} أعضاء`, `<span class="av" style="background:${esc(r.color)};font-size:20px">${esc(r.emoji)}</span>`)).join('')}
+  ${fr.map(f => row(f.pin, f.name, isOnline(f.pin) ? 'متصل الآن' : 'يوصله إشعار', `<span class="av" style="${avCss(f)}">${esc(initial(f.name))}</span>`)).join('')}
+  </div>
+  <button class="btn danger block" data-act="sos-send-now" style="margin-top:12px">أرسل الاستغاثة الآن إلى ${esc(sosToName(cur))}</button>`;
+}
+function sosConvSheet(conv){
+  RT.sosConv = conv;
+  return `<div class="grab"></div><div class="h1" style="color:var(--sos)">🆘 استغاثة إلى ${esc(sosToName(conv))}</div>
+  <p class="note">يوصلهم تنبيه بصوت إنذار مع موقعك، حتى لو التطبيق مقفل عندهم.</p>
+  <button class="btn danger block" data-act="sos-send-conv" data-pin="${esc(conv)}">أرسل الاستغاثة الآن</button>
+  <button class="btn block" data-act="sheet-close" style="margin-top:8px">تراجع</button>`;
 }
 function showSosAlert(pin){
   const f = S.friends[pin]; RT.sosFrom = { pin };
@@ -1531,7 +1684,7 @@ function qrSvg(text){ try{ const q = qrcode(0, 'M'); q.addData(text); q.make(); 
 
 /* ════════ الإشعارات و إبقاء الشاشة ════════ */
 async function notify(title, body){
-  if(document.visibilityState === 'visible') return;
+  if(document.visibilityState === 'visible' || RT.quietNotify) return; /* v8.0: الإشعار ظهر من النظام مسبقاً */
   const LN = NP('LocalNotifications');
   if(LN){ try{ await LN.schedule({ notifications:[{ id: Math.floor(Math.random() * 2e9), title, body: String(body || '').slice(0, 140) }] }); }catch(e){} return; }
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
@@ -1777,6 +1930,7 @@ function renderChat(){
     el.innerHTML = `<div class="chead"><button class="iconbtn" data-act="chat-close" aria-label="رجوع">${I.back}</button>
       <span class="av" id="chatAv" style="${room ? 'background:' + ci.color + ';font-size:20px' : avCss(ci.f)}">${room ? esc(ci.emoji) : esc(initial(ci.name))}<i class="st"></i></span>
       <button class="grow" style="text-align:start" data-act="${room ? 'conv-set' : 'friend'}" data-pin="${esc(pin)}"><span class="t1" id="chatName" style="display:block"></span><span class="t2" id="chatSt" style="display:block"></span></button>
+      <button class="iconbtn sosmini" data-act="chat-sos" aria-label="إرسال استغاثة لهذه المحادثة">SOS</button>
       <button class="iconbtn" data-act="conv-set" data-pin="${esc(pin)}" aria-label="تخصيص المحادثة">${I.gear}</button></div>
       <div class="ttlbar" id="ttlbar"></div>
       <div class="msgs" id="msgs"></div>
@@ -2090,9 +2244,13 @@ document.addEventListener('click', async e => {
     case 'dev-off': S.settings.dev = false; save(); renderMe(); break;
     case 'reset-ask': $('#resetBox').innerHTML = `<div class="btns"><button class="btn danger" data-act="reset">نعم، احذف كل شيء</button><button class="btn" data-act="reset-no">تراجع</button></div>`; break;
     case 'reset-no': renderMe(); break;
-    case 'reset': try{ localStorage.removeItem(LS_KEY); }catch(x){} await idb.clear(); if(RT.peer) RT.peer.destroy(); location.replace(location.pathname); break;
+    case 'reset': await relayPost('/api/unreg', {}); try{ localStorage.removeItem(LS_KEY); }catch(x){} await idb.clear(); if(RT.peer) RT.peer.destroy(); location.replace(location.pathname); break;
     case 'sheet-close': closeSheet(); break;
     case 'sos-cancel': cancelSOS(); break;
+    case 'sos-to': S.settings.sosTo = b.dataset.t || 'all'; save(); renderSosBtn(); openSheet(sosPickSheet()); break;
+    case 'sos-send-now': sendSOS(sosDefault()); break;
+    case 'chat-sos': openSheet(sosConvSheet(RT.chatWith)); break;
+    case 'sos-send-conv': sendSOS(b.dataset.pin); break;
     case 'sos-dismiss': stopSosAlert(); break;
     case 'geo-retry': startGeo(); break;
     case 'unlock': unlockAudio(); $('#tapAudio').hidden = true; break;
@@ -2227,7 +2385,7 @@ $('#net').addEventListener('click', () => { if(!S || !S.me) return;
   s.addEventListener('pointerdown', e => { e.preventDefault(); fired = false; s.classList.add('arming'); t = setTimeout(() => { cancel(); fired = true; sendSOS(); }, 1200); });
   ['pointerup','pointerleave','pointercancel'].forEach(ev => s.addEventListener(ev, cancel));
   s.addEventListener('contextmenu', e => e.preventDefault());
-  s.addEventListener('click', () => { if(fired){ fired = false; return; } if(!t) toast('اضغط مطولاً على SOS لمدة ثانية لإرسال نداء استغاثة'); });
+  s.addEventListener('click', () => { if(fired){ fired = false; return; } if(!t) openSheet(sosPickSheet()); });
 })();
 
 /* ════════ v7.9: زر الرجوع ════════
@@ -2318,7 +2476,7 @@ async function boot(){
   startPeer(); startGeo(); applyWake();
   const q = new URLSearchParams(location.search).get('add');
   if(q && PIN_RE.test(q)){ history.replaceState(null, '', location.pathname); setTimeout(() => confirmAdd(q), 800); }
-  hwInit(); bgInit();
+  hwInit(); bgInit(); relayInit(); renderSosBtn();
   if(S.account && FB_CFG) setTimeout(() => acInit().then(() => bkSoon()).catch(() => {}), 2500);
   { const LN = NP('LocalNotifications'); if(LN) LN.checkPermissions().then(r => { RT.lnPerm = r.display === 'granted' ? 'granted' : r.display === 'denied' ? 'denied' : 'default'; }).catch(() => {}); }
   setInterval(sweep, 2000);
