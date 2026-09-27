@@ -21,7 +21,7 @@
 <main>
 <p><a href="index.html">← العودة إلى VibeMap</a></p>
 <h1>سياسة الخصوصية — VibeMap</h1>
-<p class="muted">آخر تحديث: 25 سبتمبر 2026 · تنطبق على الإصدار 7.8.1 وما بعده (الويب وأندرويد وآيفون)</p>
+<p class="muted">آخر تحديث: 25 سبتمبر 2026 · تنطبق على الإصدار 8.0 وما بعده (الويب وأندرويد وآيفون)</p>
 
 <section>
 <h2>الخلاصة</h2>
@@ -50,6 +50,7 @@
 <ul>
 <li><b>خادم التعارف (PeerJS):</b> يرى رقم VibeMap وعنوان IP للحظة بدء الاتصال فقط، ثم ينتقل الاتصال مباشرة بين الجهازين.</li>
 <li><b>خوادم STUN (Google و Twilio):</b> تساعد الجهازين على معرفة طريق الاتصال، وترى عنوان IP فقط.</li>
+<li><b>خادم التوصيل (من الإصدار 8.0):</b> إذا كان صديقك مقفل التطبيق، تُحفظ رسالتك أو نداء الاستغاثة <b>مشفّرة</b> في خادم VibeMap حتى يستلمها، ثم تُحذف فوراً (وتُحذف تلقائياً بعد 7 أيام إن لم تُستلم). الخادم لا يملك مفتاح فكها. يعرف الخادم رقم VibeMap للمرسل والمستلم ووقت الإرسال، ورمز الإشعارات لجهازك، واسمك الذي يظهر في الإشعار. الإشعار نفسه يمر عبر خدمة Firebase Cloud Messaging من Google ولا يحتوي نص رسالتك.</li>
 <li><b>خادم TURN (اختياري):</b> إذا أضفته بنفسك من الإعدادات، يمرّ الصوت عبره مشفّراً.</li>
 </ul>
 <p>في الاتصال المباشر قد يرى صديقك عنوان IP الخاص بك، كما في أي مكالمة إنترنت مباشرة. لإخفائه فعّل «إخفاء عنوان IP» مع خادم TURN.</p>
@@ -92,6 +93,7 @@
 <li>Stories (text or photo) are sent end-to-end encrypted to friends only, expire after 24 hours, include location only if you choose, and can be hidden from everyone or specific friends.</li>
 <li>Voice messages are recorded only while you hold the mic button in a chat, and are end-to-end encrypted. Room messages are encrypted per member; the room owner may relay them (still encrypted) to members who are not friends with the sender.</li>
 <li>The in-app Contact form sends your message (plus optional device info and contact detail) via the FormSubmit service to our support email only.</li>
+<li>Relay (v8.0+): when a friend's app is closed, your message or SOS is stored end-to-end encrypted on the VibeMap relay until delivered, then deleted (undelivered items expire after 7 days). The relay cannot decrypt it; it knows sender/recipient VibeMap IDs, timestamps, your push token, and the display name shown in the notification. Wake-up notifications go through Firebase Cloud Messaging and contain no message content.</li>
 <li>Optional sign-in (Google, email or phone via Firebase Authentication) is used only to store an end-to-end encrypted backup of your VibeMap ID, friends list, rooms and settings, encrypted on your device with a backup code only you know. Messages, voice, location and stories are never backed up. You can delete your cloud account and backup in the app.</li>
 <li>You can block and report any user. Not intended for children under 13.</li>
 </ul>
