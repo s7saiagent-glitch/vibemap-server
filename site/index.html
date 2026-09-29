@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>VibeMap — لاسلكي حقيقي بينك وبين أهلك</title>
-<meta name="description" content="VibeMap يحوّل جوالك إلى جهاز لاسلكي: اضغط وتحدث مع أهلك وأصدقائك، شوفهم على الرادار، وأرسل نداء استغاثة بموقعك. مشفّر، بدون رقم جوال، ومجاني.">
+<title>VibeMap — لاسلكي حقيقي بينك وبين مجتمعك</title>
+<meta name="description" content="VibeMap يحوّل جوالك إلى جهاز لاسلكي: اضغط وتحدث مع مجتمعك وأصدقائك وأهلك، شوفهم على الرادار، وأرسل نداء استغاثة بموقعك. مشفّر، بدون رقم جوال، ومجاني.">
 <meta name="theme-color" content="#0A0A1C">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ar_SA">
 <meta property="og:url" content="https://vibemap.s7sai.cloud/">
-<meta property="og:title" content="VibeMap — لاسلكي حقيقي بينك وبين أهلك">
-<meta property="og:description" content="اضغط وتحدث، شوف أهلك على الرادار، ونداء استغاثة بموقعك. مشفّر ومجاني.">
+<meta property="og:title" content="VibeMap — لاسلكي حقيقي بينك وبين مجتمعك">
+<meta property="og:description" content="اضغط وتحدث، شوف مجتمعك على الرادار، ونداء استغاثة بموقعك. مشفّر ومجاني.">
 <meta property="og:image" content="https://vibemap.s7sai.cloud/img/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="img/logo.svg" type="image/svg+xml">
@@ -170,6 +170,15 @@ footer{padding:48px 0 56px;border-top:1px solid var(--line);margin-top:96px;colo
 .foot nav a:hover{color:var(--ink)}
 .copy{margin-top:18px;font-size:13px}
 
+/* ─── التواصل الاجتماعي ─── */
+.social{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.final .social{justify-content:center}
+.social a{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink2);transition:color .2s,background .2s,transform .15s}
+.social a:hover{color:#fff;background:rgba(139,114,255,.22);transform:translateY(-2px)}
+.social svg{width:20px;height:20px}
+.studio{color:var(--ink);font-weight:600;border-bottom:1px dashed rgba(255,255,255,.35)}
+.studio:hover{color:var(--cyan)}
+
 /* ─── الجوال ─── */
 @media (max-width:980px){
   .hgrid{grid-template-columns:1fr;text-align:center}
@@ -228,7 +237,7 @@ footer{padding:48px 0 56px;border-top:1px solid var(--line);margin-top:96px;colo
   <div class="wrap hgrid">
     <div>
       <div class="pill"><i></i>مجاني · بدون رقم جوال · بدون إعلانات</div>
-      <h1>لاسلكي حقيقي<br><span class="grad">بينك وبين أهلك</span></h1>
+      <h1>لاسلكي حقيقي<br><span class="grad">بينك وبين مجتمعك</span></h1>
       <p class="lead">اضغط وتكلّم وصوتك يوصلهم في نفس اللحظة. شوفهم على الرادار وكم يبعدون عنك، وأرسل نداء استغاثة بموقعك بضغطة وحدة.</p>
       <div class="stores" data-stores>
         <a class="store" data-store="play" href="#" aria-label="حمّل من Google Play">
@@ -276,7 +285,7 @@ footer{padding:48px 0 56px;border-top:1px solid var(--line);margin-top:96px;colo
       <article class="feat">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4"/></svg></div>
         <h3>الرادار والواقع المعزز</h3>
-        <p>شوف أهلك حولك وكم يبعدون، ووجّه الكاميرا عشان تعرف اتجاههم بالضبط.</p>
+        <p>شوف مجتمعك حولك وكم يبعدون، ووجّه الكاميرا عشان تعرف اتجاههم بالضبط.</p>
       </article>
       <article class="feat sos">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
@@ -343,7 +352,7 @@ footer{padding:48px 0 56px;border-top:1px solid var(--line);margin-top:96px;colo
     </div>
     <div class="steps">
       <div class="step"><h3>حمّل التطبيق</h3><p>من المتجر أو افتحه من المتصفح، واكتب اسمك بس. بدون رقم جوال وبدون إيميل.</p></div>
-      <div class="step"><h3>أضف أهلك</h3><p>كل واحد له رقم VibeMap مثل <span class="mono">VM-7K2Q-9XPA</span>. شاركه برسالة أو امسح رمز QR.</p></div>
+      <div class="step"><h3>أضف مجتمعك</h3><p>كل واحد له رقم VibeMap مثل <span class="mono">VM-7K2Q-9XPA</span>. شاركه برسالة أو امسح رمز QR.</p></div>
       <div class="step"><h3>اضغط وتكلّم</h3><p>اضغط الزر الكبير وتكلّم، وصوتك يوصلهم فوراً. ارفع إصبعك وخلّصت.</p></div>
     </div>
   </div>
@@ -389,9 +398,10 @@ footer{padding:48px 0 56px;border-top:1px solid var(--line);margin-top:96px;colo
   <div class="wrap">
     <div class="final">
       <h2>جاهز؟ <span class="grad">اضغط وتكلّم</span></h2>
-      <p>حمّله الحين وأضف أهلك في أقل من دقيقة.</p>
+      <p>حمّله الحين وأضف مجتمعك في أقل من دقيقة.</p>
       <div class="stores" data-stores></div>
       <div class="webcta"><a href="app/">أو افتح VibeMap من المتصفح ←</a></div>
+      <div class="social" data-social aria-label="تابعنا"></div>
     </div>
   </div>
 </section>
@@ -408,7 +418,8 @@ footer{padding:48px 0 56px;border-top:1px solid var(--line);margin-top:96px;colo
         <a href="mailto:s7saiagent@gmail.com">تواصل معنا</a>
       </nav>
     </div>
-    <div class="copy">© <span data-year>2026</span> VibeMap · صُنع في جدة 🇸🇦</div>
+    <div class="social" data-social aria-label="تابعنا"></div>
+    <div class="copy">© <span data-year>2026</span> VibeMap — جميع الحقوق محفوظة لـ <a class="studio" href="https://s7sai.cloud" target="_blank" rel="noopener">استوديو S7S.ai</a> · صُنع في جدة 🇸🇦</div>
   </div>
 </footer>
 

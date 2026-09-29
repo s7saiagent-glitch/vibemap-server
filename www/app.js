@@ -3,7 +3,7 @@
    VibeMap v7.0 — تطبيق لاسلكي حقيقي بين الجوالات (ويب + أندرويد + آيفون)
    WebRTC P2P (PeerJS) · ECDH P-256 + AES-GCM-256 · GPS · بوصلة · كاميرا
    ════════════════════════════════════════════════════════════ */
-const VERSION = '8.2';
+const VERSION = '8.3';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -2108,6 +2108,7 @@ function renderMe(){
     <form id="turnForm" style="display:flex;flex-direction:column;gap:8px"><input class="input" id="turnUrl" dir="ltr" placeholder="turn:relay.example.com:443" value="${esc(st.turnUrl)}"><input class="input" id="turnUser" dir="ltr" placeholder="username" value="${esc(st.turnUser)}"><input class="input" id="turnPass" dir="ltr" placeholder="credential" type="password" value="${esc(st.turnPass)}"><button class="btn pri" type="submit">حفظ وإعادة الاتصال</button></form>
     <div class="set" style="padding:12px 0 0;border:0"><span class="grow"><span class="t1" style="display:block">إخفاء عنوان IP عن الأصدقاء</span><span class="t2" style="display:block">يمرّر الصوت عبر خادم TURN فقط. يحتاج خادم TURN أعلاه.</span></span>${st.turnUrl ? sw(st.relayOnly, 'relay') : '<span class="t2">أضف TURN أولاً</span>'}</div></details>
   <button class="btn sm" data-act="dev-off" style="align-self:center">إخفاء الخيارات المتقدمة</button>` : ''}
+  ${aboutCard()}
   <p class="t2" style="text-align:center;white-space:normal"><span data-act="ver-tap" style="cursor:default;user-select:none">VibeMap ${VERSION}</span> · <a href="privacy.html" style="color:var(--accent)">سياسة الخصوصية</a></p></div>`;
   $('#v-me').innerHTML = h; fillRoutes();
   $('#nameIn').onchange = e => { const v = e.target.value.trim(); if(v){ S.me.name = v; save(); rehello(); toast('تم حفظ الاسم'); } };
@@ -2847,6 +2848,23 @@ function radarGestures(box){
   box.addEventListener('wheel', e => { e.preventDefault(); radarZoom(e.deltaY < 0 ? 'in' : 'out'); }, { passive:false });
 }
 
+/* ════════ v8.3: عن VibeMap — رابط الموقع وحسابات التواصل وحقوق الاستوديو ════════ */
+const SOCIAL = (() => { try{ return JSON.parse((document.querySelector('meta[name=vibemap-social]') || {}).content || '{}'); }catch(e){ return {}; } })();
+const SOCIAL_ICONS = {"x": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M18.9 2H22l-7.2 8.2L23 22h-6.6l-5.2-6.8L5.3 22H2.2l7.7-8.8L1.8 2h6.8l4.7 6.2L18.9 2Zm-1.1 18h1.7L7.3 3.9H5.5L17.8 20Z\"/></svg>", "instagram": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"4.2\"/><circle cx=\"17.4\" cy=\"6.6\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"/></svg>", "tiktok": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M16.6 5.8A4.3 4.3 0 0 1 15.5 3h-3.2v12.6a2.6 2.6 0 1 1-2.6-2.6c.3 0 .5 0 .8.1V9.8a5.9 5.9 0 1 0 5 5.8V9.3a7.4 7.4 0 0 0 4.3 1.4V7.5a4.3 4.3 0 0 1-3.2-1.7Z\"/></svg>", "snapchat": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M12 2.5c2.8 0 5 2.1 5 5v2.3c.5.2 1.1.1 1.6-.1.6-.2 1 .6.4 1-.6.4-1.4.6-2 .8.4 1.5 1.6 2.8 3.3 3.4.5.2.4.8-.1 1-1 .4-1.7.3-2.1 1-.3.5-.2 1.2-.7 1.3-.7.2-1.7-.4-3 .3-.9.5-1.6 1.4-2.4 1.4s-1.5-.9-2.4-1.4c-1.3-.7-2.3-.1-3-.3-.5-.1-.4-.8-.7-1.3-.4-.7-1.1-.6-2.1-1-.5-.2-.6-.8-.1-1 1.7-.6 2.9-1.9 3.3-3.4-.6-.2-1.4-.4-2-.8-.6-.4-.2-1.2.4-1 .5.2 1.1.3 1.6.1V7.5c0-2.9 2.2-5 5-5Z\"/></svg>", "whatsapp": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path fill=\"currentColor\" d=\"M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.2-.1-1-.4-2-1.2-.7-.7-1.2-1.5-1.3-1.7-.1-.2 0-.4.1-.5l.4-.4.2-.4c.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.1.2 1.6 2.5 4 3.5 2 .8 2.4.6 2.8.6.4 0 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.5-.3Z\"/></svg>", "email": "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"m3 7 9 6 9-6\"/></svg>"};
+const SOCIAL_LINK = { x:'https://x.com/', instagram:'https://instagram.com/', tiktok:'https://www.tiktok.com/@', snapchat:'https://www.snapchat.com/add/', whatsapp:'https://wa.me/', email:'mailto:' };
+const SOCIAL_NAME = { x:'X', instagram:'انستقرام', tiktok:'تيك توك', snapchat:'سناب شات', whatsapp:'واتساب', email:'البريد' };
+function socialLinks(){
+  return Object.keys(SOCIAL_LINK).map(k => { const v = String(SOCIAL[k] || '').replace(/^@/, '').trim(); if(!/^[A-Za-z0-9._@+-]{2,60}$/.test(v)) return '';
+    return `<a href="${SOCIAL_LINK[k]}${esc(v)}" ${k === 'email' ? '' : 'target="_blank" rel="noopener"'} aria-label="${SOCIAL_NAME[k]}" title="${SOCIAL_NAME[k]}">${SOCIAL_ICONS[k]}</a>`; }).join('');
+}
+function aboutCard(){
+  const site = PUBLIC_URL || 'https://vibemap.s7sai.cloud';
+  return `<div class="h2">عن VibeMap</div><div class="card aboutcard">
+    <a class="btn grad block" href="${esc(site)}" target="_blank" rel="noopener">🌐 موقع VibeMap</a>
+    <div class="social" aria-label="تابعنا">${socialLinks()}</div>
+    <div class="credit">© ${new Date().getFullYear()} VibeMap — جميع الحقوق محفوظة لـ <a href="https://s7sai.cloud" target="_blank" rel="noopener">استوديو S7S.ai</a></div></div>`;
+}
+
 /* الضغط على مؤشر الاتصال يفتح التشخيص */
 $('#net').style.cursor = 'pointer';
 $('#net').addEventListener('click', () => { if(!S || !S.me) return; openSheet(netSheet()); });
@@ -2933,7 +2951,7 @@ function renderAll(){
 /* ════════ البداية ════════ */
 function showOnboard(){
   const ob = $('#onboard'); ob.hidden = false; let color = COLORS[0];
-  ob.innerHTML = `<div class="ob"><img class="logo" src="icons/icon-192.png" alt="شعار VibeMap"><h1>لاسلكي حقيقي بين جوالك وجوالات من تحب</h1>
+  ob.innerHTML = `<div class="ob"><img class="logo" src="icons/icon-192.png" alt="شعار VibeMap"><h1>لاسلكي حقيقي بينك وبين مجتمعك</h1>
   <p>اضغط وتحدث، شاهد أصدقاءك على الرادار، وأرسل رسائل مشفّرة. بلا حساب وبلا خوادم تحفظ كلامك.</p>
   <form id="obForm" style="display:flex;flex-direction:column;gap:12px"><label for="obName" class="t1">ما اسمك؟</label><input class="input" id="obName" placeholder="مثال: حسين" maxlength="24" required>
   <div class="t1">اختر لونك</div><div class="swatches" id="obColors">${COLORS.slice(0, 6).map((c, i) => `<button type="button" style="background:${c}" class="${i ? '' : 'on'}" data-c="${c}" aria-label="لون"></button>`).join('')}</div>
