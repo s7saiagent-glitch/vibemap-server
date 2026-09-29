@@ -1,4 +1,4 @@
-/* VibeMap — لوحة التحكم v8.4 */
+/* VibeMap — لوحة التحكم v8.6 */
 (() => {
   'use strict';
   const API = (document.querySelector('meta[name=vibemap-api]') || {}).content || '/relay/api/';
@@ -6,7 +6,9 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const nf = new Intl.NumberFormat('en-US');
   const N = n => nf.format(n || 0);
-  let TOKEN = '';
+  let TOKEN = '', ME = null;
+  const ROLE = { owner: 'المالك', admin: 'مدير', mod: 'مشرف' };
+  const can = (...r) => ME && r.includes(ME.role);
   try { TOKEN = sessionStorage.getItem('vmadm') || ''; } catch (e) {}
 
   const FLAGS = {
@@ -22,7 +24,7 @@
     bubble: ['الفقاعة العائمة', 'زر الكلام السريع فوق التطبيقات (أندرويد).']
   };
   const PLAT = { android: 'أندرويد', ios: 'آيفون', web: 'المتصفح' };
-  const ERR = { auth: 'انتهت الجلسة، ادخل من جديد', bad: 'كلمة السر غلط', slow: 'محاولات كثيرة، انتظر شوي وجرب', noadmin: 'حساب المدير مو مجهز على السيرفر — شغّل أمر التثبيت', nopush: 'الإشعارات مو مفعّلة على السيرفر', empty: 'اكتب نص أول', nf: 'ما لقيناه', net: 'ما قدرنا نوصل للسيرفر' };
+  const ERR = { auth: 'انتهت الجلسة، ادخل من جديد', bad: 'اسم المستخدم أو كلمة السر غلط', role: 'ما عندك صلاحية لهالشي', oldpw: 'كلمة السر الحالية غلط', weak: 'كلمة السر لازم 8 أحرف أو أكثر', user: 'اسم المستخدم: 3 إلى 24 حرف إنجليزي صغير أو رقم', max: 'وصلت الحد الأعلى للحسابات', owner: 'ما تقدر تحذف حساب المالك', slow: 'محاولات كثيرة، انتظر شوي وجرب', noadmin: 'حساب المدير مو مجهز على السيرفر — شغّل أمر التثبيت', nopush: 'الإشعارات مو مفعّلة على السيرفر', empty: 'اكتب نص أول', nf: 'ما لقيناه', net: 'ما قدرنا نوصل للسيرفر' };
 
   /* ─── الاتصال ─── */
   async function call(ep, body = {}) {
@@ -52,11 +54,19 @@
   const dstr = ts => ts ? new Date(ts).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
   /* ─── الدخول والخروج ─── */
-  function showLogin() { $('#app').hidden = true; $('#loginView').hidden = false; setTimeout(() => $('#pw').focus(), 30); }
-  function showApp() { $('#loginView').hidden = true; $('#app').hidden = false; go(cur); }
+  function showLogin() { $('#app').hidden = true; $('#loginView').hidden = false; setTimeout(() => ($('#user').value ? $('#pw') : $('#user')).focus(), 30); }
+  async function showApp() {
+    if (!ME) { try { ME = (await call('admin/me')).me; } catch (e) { if (e.message !== 'auth') showLogin(); return; } }
+    $('#loginView').hidden = true; $('#app').hidden = false;
+    { const nm = ME.name || ME.u, rl = ROLE[ME.role] || ''; $('#meChip').textContent = nm === rl ? nm : `${nm} · ${rl}`; }
+    /* المشرف: المشتركين والساحة بس */
+    ['tools', 'news'].forEach(t => { const b = document.querySelector(`.tabs [data-tab=${t}]`); if (b) b.hidden = !can('owner', 'admin'); });
+    if (!can('owner', 'admin') && (cur === 'tools' || cur === 'news')) cur = 'overview';
+    go(cur);
+  }
   function logout(expired) {
     if (TOKEN && !expired) fetch(API + 'admin/logout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: TOKEN }) }).catch(() => {});
-    TOKEN = ''; try { sessionStorage.removeItem('vmadm'); } catch (e) {}
+    TOKEN = ''; ME = null; try { sessionStorage.removeItem('vmadm'); } catch (e) {}
     if (expired) $('#loginErr').textContent = ERR.auth;
     showLogin();
   }
@@ -64,8 +74,8 @@
     e.preventDefault();
     const btn = $('#loginBtn'); btn.disabled = true; $('#loginErr').textContent = '';
     try {
-      const j = await call('admin/login', { password: $('#pw').value });
-      TOKEN = j.token; try { sessionStorage.setItem('vmadm', TOKEN); } catch (er) {}
+      const j = await call('admin/login', { user: $('#user').value.trim().toLowerCase(), password: $('#pw').value });
+      TOKEN = j.token; ME = j.me; try { sessionStorage.setItem('vmadm', TOKEN); } catch (er) {}
       $('#pw').value = ''; showApp();
     } catch (er) { $('#loginErr').textContent = msg(er); }
     btn.disabled = false;
@@ -73,7 +83,7 @@
 
   /* ─── التبويب ─── */
   let cur = 'overview';
-  const LOAD = { overview: loadOverview, users: loadUsers, tools: loadTools, square: loadSquare, news: loadNews };
+  const LOAD = { overview: loadOverview, users: loadUsers, tools: loadTools, square: loadSquare, news: loadNews, settings: loadSettings };
   function go(tab) {
     cur = tab;
     document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
@@ -332,6 +342,82 @@
       catch (er) { $('#bcMsg').textContent = msg(er); }
       ev.target.disabled = false;
     };
+  }
+
+  /* ═══ الإعدادات: حسابي + فريق الإدارة + السجل ═══ */
+  const ACT = { password: 'غيّر كلمة السر', 'admin-save': 'حفظ حساب إدارة', 'admin-del': 'حذف حساب إدارة', 'user-ban': 'حظر مستخدم', 'user-unban': 'فك حظر', 'user-wipe': 'مسح محتوى مستخدم',
+    'post-hide': 'إخفاء منشور', 'post-show': 'إظهار منشور', 'post-del': 'حذف منشور', config: 'تغيير إعدادات التطبيق', broadcast: 'إشعار للكل' };
+  async function loadSettings() {
+    const el = $('#t-settings');
+    el.innerHTML = `<h2>الإعدادات</h2><p class="sub">حسابك وفريق الإدارة.</p><div class="stack">
+      <div class="card"><h3>حسابي</h3><div class="note">أنت داخل باسم <b class="mono">${esc(ME.u)}</b> · ${ROLE[ME.role]}</div>
+        <form id="pwForm" autocomplete="off"><input type="text" autocomplete="username" value="${esc(ME.u)}" hidden>
+          <div class="fields">
+            <label class="f">كلمة السر الحالية<input class="input" id="pwOld" type="password" autocomplete="current-password" required></label>
+            <label class="f">كلمة السر الجديدة (8 أحرف أو أكثر)<input class="input" id="pwNew" type="password" autocomplete="new-password" minlength="8" required></label>
+            <label class="f">أعد كتابة الجديدة<input class="input" id="pwNew2" type="password" autocomplete="new-password" minlength="8" required></label>
+          </div>
+          <div class="save"><button class="btn pri" type="submit">تغيير كلمة السر</button><span class="note">بعد التغيير، أي جهاز ثاني داخل بحسابك يطلع تلقائياً.</span></div>
+        </form></div>
+      ${can('owner') ? `<div class="card"><h3>فريق الإدارة</h3><div class="note">أضف حسابات لغيرك. <b>مدير</b>: كل شي إلا إدارة الحسابات. <b>مشرف</b>: المشتركين والساحة بس (حظر ومراجعة).</div>
+        <div class="scroll" id="admList" style="margin-top:10px"></div>
+        <form id="admForm" autocomplete="off" style="margin-top:14px"><h3 id="admFormT">إضافة حساب</h3>
+          <div class="formrow">
+            <label class="f">اسم المستخدم (إنجليزي)<input class="input mono" id="aU" pattern="[a-z0-9_.\-]{3,24}" placeholder="rashid" autocapitalize="none" spellcheck="false" required></label>
+            <label class="f">الاسم الظاهر<input class="input" id="aN" maxlength="40" placeholder="رشيد"></label>
+            <label class="f">الصلاحية<select class="input" id="aR" style="max-width:none"><option value="admin">مدير</option><option value="mod">مشرف</option></select></label>
+            <label class="f">كلمة السر<input class="input" id="aP" type="password" autocomplete="new-password" placeholder="8 أحرف أو أكثر"></label>
+          </div>
+          <div class="save"><button class="btn pri" type="submit" id="aSave">إضافة</button><button class="btn" type="button" id="aCancel" hidden>إلغاء التعديل</button><button class="btn" type="button" id="aGen">كلمة سر عشوائية</button><span class="note" id="aMsg"></span></div>
+        </form></div>` : ''}
+      ${can('owner', 'admin') ? `<div class="card"><h3>سجل النشاط</h3><div class="note">آخر اللي سواه فريق الإدارة.</div><div class="scroll" id="audList" style="margin-top:10px"></div></div>` : ''}
+    </div>`;
+    $('#pwForm').onsubmit = async e => {
+      e.preventDefault(); const n = $('#pwNew').value;
+      if (n !== $('#pwNew2').value) return toast('كلمة السر الجديدة مو متطابقة');
+      if (n.length < 8) return toast(ERR.weak);
+      const b = e.target.querySelector('button'); b.disabled = true;
+      try { await call('admin/password', { old: $('#pwOld').value, new: n }); toast('✓ تغيّرت كلمة السر'); e.target.reset(); } catch (er) { toast(msg(er)); }
+      b.disabled = false;
+    };
+    if (can('owner')) { admBind(); loadAdmins(); }
+    if (can('owner', 'admin')) loadAudit();
+  }
+  let EDIT = null;
+  function admReset() { EDIT = null; $('#admForm').reset(); $('#aU').disabled = false; $('#aR').disabled = false; $('#admFormT').textContent = 'إضافة حساب'; $('#aSave').textContent = 'إضافة'; $('#aCancel').hidden = true; $('#aP').placeholder = '8 أحرف أو أكثر'; $('#aMsg').textContent = ''; }
+  function admBind() {
+    $('#aGen').onclick = () => { const a = new Uint8Array(12); crypto.getRandomValues(a); const c = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'; const p = [...a].map(x => c[x % c.length]).join('');
+      $('#aP').type = 'text'; $('#aP').value = p; $('#aMsg').textContent = 'انسخها وأرسلها لصاحب الحساب قبل الحفظ'; };
+    $('#aCancel').onclick = admReset;
+    $('#admForm').onsubmit = async e => {
+      e.preventDefault(); const u = $('#aU').value.trim().toLowerCase(), pw = $('#aP').value;
+      if (!/^[a-z0-9_.-]{3,24}$/.test(u)) return toast(ERR.user);
+      if (!EDIT && pw.length < 8) return toast(ERR.weak);
+      if (pw && pw.length < 8) return toast(ERR.weak);
+      const b = $('#aSave'); b.disabled = true;
+      try { await call('admin/admins/save', { u, name: $('#aN').value.trim(), role: $('#aR').value, password: pw || undefined }); toast(EDIT ? 'انحفظ الحساب' : `انضاف ${u} ✓`); admReset(); loadAdmins(); loadAudit(); }
+      catch (er) { toast(msg(er)); }
+      b.disabled = false;
+    };
+    $('#admList').onclick = async e => {
+      const b = e.target.closest('[data-a]'); if (!b) return; const u = b.dataset.u;
+      if (b.dataset.a === 'edit') { const x = ADM.find(y => y.u === u); if (!x) return; EDIT = u; $('#aU').value = u; $('#aU').disabled = true; $('#aN').value = x.name || ''; $('#aR').value = x.role === 'mod' ? 'mod' : 'admin'; $('#aR').disabled = x.role === 'owner';
+        $('#aP').value = ''; $('#aP').type = 'password'; $('#aP').placeholder = 'اتركها فاضية لو ما تبي تغيّرها'; $('#admFormT').textContent = 'تعديل ' + u; $('#aSave').textContent = 'حفظ'; $('#aCancel').hidden = false; $('#admForm').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      if (b.dataset.a === 'del') { if (!confirm(`حذف حساب ${u}؟ يطلع من اللوحة فوراً.`)) return; try { await call('admin/admins/del', { u }); toast('انحذف'); if (EDIT === u) admReset(); loadAdmins(); loadAudit(); } catch (er) { toast(msg(er)); } }
+    };
+  }
+  let ADM = [];
+  async function loadAdmins() {
+    const box = $('#admList'); if (!box) return;
+    try { ADM = (await call('admin/admins')).items; } catch (e) { if (e.message !== 'auth') box.innerHTML = `<div class="empty">${esc(msg(e))}</div>`; return; }
+    box.innerHTML = `<table class="tbl"><thead><tr><th>المستخدم</th><th>الاسم</th><th>الصلاحية</th><th>آخر دخول</th><th></th></tr></thead><tbody>${ADM.map(x => `<tr>
+      <td class="mono">${esc(x.u)}</td><td>${esc(x.name || '')}</td><td><span class="role ${x.role}">${ROLE[x.role] || esc(x.role)}</span></td><td>${ago(x.last)}</td>
+      <td style="white-space:nowrap"><button class="btn sm" data-a="edit" data-u="${esc(x.u)}">تعديل</button>${x.role === 'owner' ? '' : ` <button class="btn sm bad" data-a="del" data-u="${esc(x.u)}">حذف</button>`}</td></tr>`).join('')}</tbody></table>`;
+  }
+  async function loadAudit() {
+    const box = $('#audList'); if (!box) return;
+    let j; try { j = await call('admin/audit'); } catch (e) { return; }
+    box.innerHTML = j.items.length ? `<table class="tbl"><thead><tr><th>متى</th><th>مين</th><th>وش سوى</th><th>على</th></tr></thead><tbody>${j.items.slice(0, 50).map(x => `<tr><td>${ago(x.ts)}</td><td class="mono">${esc(x.u)}</td><td>${ACT[x.act] || esc(x.act)}</td><td class="mono">${esc(x.t)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">ما فيه نشاط للحين</div>';
   }
 
   if (TOKEN) showApp(); else showLogin();

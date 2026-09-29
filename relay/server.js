@@ -126,7 +126,7 @@ async function push(to, data, urgent) {
 
 /* ─── المسارات ─── */
 const H = {};
-H['/api/health'] = async () => ({ ok: true, v: '8.4', push: !!SA, turn: !!TURN_SECRET });
+H['/api/health'] = async () => ({ ok: true, v: '8.6', push: !!SA, turn: !!TURN_SECRET });
 
 // v8.1: استرجاع الرقم المرتبط بهذا الجهاز
 H['/api/whoami'] = async (b, ip) => {
@@ -371,24 +371,78 @@ H['/api/turn'] = async b => {
   return { ok: true, ttl: 12 * 3600, servers: [{ urls: [`turn:${TURN_HOST}:3478?transport=udp`, `turn:${TURN_HOST}:3478?transport=tcp`], username, credential }] };
 };
 
-/* ─── تسجيل دخول المدير ─── */
+/* ─── v8.6: حسابات الإدارة (مالك / مدير / مشرف) ───
+   المالك يدخل باسم admin، وكلمة سره الأولى من أمر التثبيت. يقدر يغيّرها ويضيف حسابات لغيره.
+   لو شغّلت أمر التثبيت مع reset-admin تنعاد كلمة سر المالك. */
+const ADM_FILE = path.join(DATA, 'admins.json');
+const ROLES = ['owner', 'admin', 'mod'];
+let ADMS = { users: [], audit: [] };
+try { ADMS = JSON.parse(fs.readFileSync(ADM_FILE, 'utf8')); } catch (e) { }
+if (!Array.isArray(ADMS.users)) ADMS.users = []; if (!Array.isArray(ADMS.audit)) ADMS.audit = [];
+const saveAdms = () => { try { fs.writeFileSync(ADM_FILE + '.tmp', JSON.stringify(ADMS)); fs.renameSync(ADM_FILE + '.tmp', ADM_FILE); } catch (e) { log('admins write', e.message); } };
+const hashPw = (pw, salt) => crypto.scryptSync(String(pw).slice(0, 200), Buffer.from(salt, 'hex'), 32).toString('hex');
+const admOf = u => ADMS.users.find(x => x.u === u);
+(function syncOwner() {
+  if (!ADMIN || !ADMIN.salt || !ADMIN.hash) return;
+  let o = ADMS.users.find(x => x.role === 'owner');
+  if (!o) { o = { u: 'admin', name: 'المالك', role: 'owner', created: Date.now() }; ADMS.users.unshift(o); }
+  if (o.credHash !== ADMIN.hash) { o.salt = ADMIN.salt; o.hash = ADMIN.hash; o.credHash = ADMIN.hash; o.pwTs = Date.now(); log('owner password from install credential'); }
+  saveAdms();
+})();
+function audit(u, act, target) { ADMS.audit.unshift({ ts: Date.now(), u, act, t: String(target || '').slice(0, 80) }); if (ADMS.audit.length > 300) ADMS.audit.length = 300; saveAdms(); }
 const SESS = new Map();
-function adminOk(b) {
+function sessOf(b) {
   const t = typeof b.token === 'string' ? b.token : ''; const e = t && SESS.get(t);
-  if (!e || e < Date.now()) { if (t) SESS.delete(t); return false; }
-  SESS.set(t, Date.now() + 12 * 3600e3); return true;
+  if (!e || e.exp < Date.now() || !admOf(e.u)) { if (t) SESS.delete(t); return null; }
+  e.exp = Date.now() + 12 * 3600e3; return e;
 }
+const USER_RE = /^[a-z0-9_.-]{3,24}$/;
 H['/api/admin/login'] = async (b, ip) => {
-  if (!ADMIN || !ADMIN.salt || !ADMIN.hash) return [503, { err: 'noadmin' }];
+  if (!ADMS.users.length) return [503, { err: 'noadmin' }];
   if (limited('adm:' + ipKey(ip), 8, 900e3)) return [429, { err: 'slow' }];
-  const h = crypto.scryptSync(String(b.password || '').slice(0, 200), Buffer.from(ADMIN.salt, 'hex'), 32).toString('hex');
-  if (!eq(h, ADMIN.hash)) { log('⚠️ admin login failed', ipKey(ip)); return [401, { err: 'bad' }]; }
-  const token = crypto.randomBytes(32).toString('hex'); SESS.set(token, Date.now() + 12 * 3600e3);
-  for (const [k, v] of SESS) if (v < Date.now()) SESS.delete(k);
-  log('admin login', ipKey(ip)); return { ok: true, token };
+  const u = String(b.user || 'admin').trim().toLowerCase() || 'admin', a = admOf(u);
+  const h = hashPw(b.password || '', a ? a.salt : '00'.repeat(16));
+  if (!a || !a.hash || !eq(h, a.hash)) { log('⚠️ admin login failed', u, ipKey(ip)); return [401, { err: 'bad' }]; }
+  const token = crypto.randomBytes(32).toString('hex'); SESS.set(token, { u, exp: Date.now() + 12 * 3600e3 });
+  for (const [k, v] of SESS) if (v.exp < Date.now()) SESS.delete(k);
+  a.last = Date.now(); saveAdms(); log('admin login', u, ipKey(ip));
+  return { ok: true, token, me: { u, name: a.name, role: a.role } };
 };
 H['/api/admin/logout'] = async b => { SESS.delete(String(b.token || '')); return { ok: true }; };
-const A = fn => async (b, ip) => adminOk(b) ? fn(b, ip) : [401, { err: 'auth' }];
+/* A(fn, roles): يتأكد من الجلسة والصلاحية */
+const A = (fn, roles) => async (b, ip) => { const e = sessOf(b); if (!e) return [401, { err: 'auth' }]; const a = admOf(e.u);
+  if (roles && !roles.includes(a.role)) return [403, { err: 'role' }]; b._adm = a; return fn(b, ip); };
+const OWN = ['owner'], MGR = ['owner', 'admin'];
+H['/api/admin/me'] = A(async b => ({ ok: true, me: { u: b._adm.u, name: b._adm.name, role: b._adm.role } }));
+H['/api/admin/password'] = A(async (b, ip) => {
+  const a = b._adm;
+  if (limited('admpw:' + a.u, 10, 3600e3)) return [429, { err: 'slow' }];
+  if (!eq(hashPw(b.old || '', a.salt), a.hash)) return [400, { err: 'oldpw' }];
+  const pw = String(b.new || ''); if (pw.length < 8 || pw.length > 200) return [400, { err: 'weak' }];
+  a.salt = crypto.randomBytes(16).toString('hex'); a.hash = hashPw(pw, a.salt); a.pwTs = Date.now();
+  for (const [k, v] of SESS) if (v.u === a.u && k !== b.token) SESS.delete(k); /* الأجهزة الثانية تطلع */
+  audit(a.u, 'password', a.u); return { ok: true };
+});
+H['/api/admin/admins'] = A(async () => ({ ok: true, items: ADMS.users.map(x => ({ u: x.u, name: x.name, role: x.role, created: x.created, last: x.last || 0 })) }), OWN);
+H['/api/admin/admins/save'] = A(async b => {
+  const u = String(b.u || '').trim().toLowerCase(); if (!USER_RE.test(u)) return [400, { err: 'user' }];
+  const role = ['admin', 'mod'].includes(b.role) ? b.role : null; const name = clean(b.name, 40);
+  let a = admOf(u);
+  if (a && a.role === 'owner') { if (name) a.name = name; saveAdms(); return { ok: true }; } /* المالك ما تتغير صلاحيته */
+  if (!role) return [400, { err: 'role' }];
+  const pw = typeof b.password === 'string' ? b.password : '';
+  if (!a) { if (ADMS.users.length >= 50) return [400, { err: 'max' }]; if (pw.length < 8) return [400, { err: 'weak' }]; a = { u, created: Date.now() }; ADMS.users.push(a); }
+  a.name = name || u; a.role = role;
+  if (pw) { if (pw.length < 8 || pw.length > 200) return [400, { err: 'weak' }]; a.salt = crypto.randomBytes(16).toString('hex'); a.hash = hashPw(pw, a.salt); for (const [k, v] of SESS) if (v.u === u) SESS.delete(k); }
+  audit(b._adm.u, 'admin-save', u + ':' + role); return { ok: true };
+}, OWN);
+H['/api/admin/admins/del'] = A(async b => {
+  const u = String(b.u || '').toLowerCase(), i = ADMS.users.findIndex(x => x.u === u);
+  if (i < 0) return [404, { err: 'nf' }]; if (ADMS.users[i].role === 'owner') return [400, { err: 'owner' }];
+  ADMS.users.splice(i, 1); for (const [k, v] of SESS) if (v.u === u) SESS.delete(k);
+  audit(b._adm.u, 'admin-del', u); return { ok: true };
+}, OWN);
+H['/api/admin/audit'] = A(async () => ({ ok: true, items: ADMS.audit.slice(0, 200) }), MGR);
 const nameOf = pin => { const p = PUB.get(pin); if (p) return p.n; const q = SQ.find(x => x.pin === pin); return q ? q.n : ''; };
 const START = Date.now();
 
@@ -420,7 +474,7 @@ H['/api/admin/user'] = A(async b => {
   else if (b.act === 'wipe') { PUB.delete(pin); for (let i = SQ.length - 1; i >= 0; i--) if (SQ[i].pin === pin) { const [o] = SQ.splice(i, 1); if (o.img) fs.rm(path.join(SQ_IMG, o.id + '.jpg'), () => {}); } sqDirty = true;
     const a = BOX.get(pin); if (a) CACHE_USED -= boxBytes(a); BOX.set(pin, []); boxDirty.add(pin); }
   else return [400, { err: 'act' }];
-  saveReg(); log('admin', b.act, pin); return { ok: true };
+  saveReg(); log('admin', b.act, pin); audit(b._adm.u, 'user-' + b.act, pin); return { ok: true };
 });
 H['/api/admin/sq'] = A(async b => {
   const f = b.filter === 'reported' ? p => (p.reports || []).length > 0 : b.filter === 'hidden' ? p => p.hidden : () => true;
@@ -431,16 +485,17 @@ H['/api/admin/sq/act'] = A(async b => {
   if (b.act === 'hide') p.hidden = true; else if (b.act === 'show') { p.hidden = false; p.reports = []; p.rw = 0; }
   else if (b.act === 'del') { SQ.splice(i, 1); if (p.img) fs.rm(path.join(SQ_IMG, p.id + '.jpg'), () => {}); }
   else return [400, { err: 'act' }];
-  sqDirty = true; log('admin sq', b.act, p.id); return { ok: true };
+  sqDirty = true; log('admin sq', b.act, p.id); audit(b._adm.u, 'post-' + b.act, p.id); return { ok: true };
 });
 H['/api/admin/config'] = A(async b => {
   if (b.set && typeof b.set === 'object') {
+    if (!MGR.includes(b._adm.role)) return [403, { err: 'role' }];
     const s = b.set;
     if (s.flags && typeof s.flags === 'object') FLAG_KEYS.forEach(k => { if (typeof s.flags[k] === 'boolean') CONFIG.flags[k] = s.flags[k]; });
     if ('ann' in s) { const txt = clean(s.ann && s.ann.text, 300); CONFIG.ann = txt ? { id: crypto.randomBytes(4).toString('hex'), text: txt, level: ['info', 'warn', 'ok'].includes(s.ann.level) ? s.ann.level : 'info', ts: Date.now() } : null; }
     if ('minVersion' in s) CONFIG.minVersion = VER_RE.test(String(s.minVersion || '')) ? String(s.minVersion) : '';
     if ('maint' in s) CONFIG.maint = clean(s.maint, 200);
-    saveCfg(); log('admin config', JSON.stringify(CONFIG.flags));
+    saveCfg(); log('admin config', JSON.stringify(CONFIG.flags)); audit(b._adm.u, 'config', Object.keys(s).join(','));
   }
   return { ok: true, config: CONFIG, flagKeys: FLAG_KEYS };
 });
@@ -451,8 +506,8 @@ H['/api/admin/broadcast'] = A(async b => {
   const targets = Object.entries(REG).filter(([p, r]) => !r.dead && !r.banned && r.fcm).map(([p]) => p);
   let sent = 0; const conc = 8;
   for (let i = 0; i < targets.length; i += conc) { const rs = await Promise.all(targets.slice(i, i + conc).map(p => push(p, { t: 'vm', k: 'news', f: NEWS_PIN, n: 'VibeMap', r: text }, false))); sent += rs.filter(Boolean).length; }
-  log('admin broadcast', sent + '/' + targets.length); return { ok: true, sent, total: targets.length };
-});
+  log('admin broadcast', sent + '/' + targets.length); audit(b._adm.u, 'broadcast', text.slice(0, 60)); return { ok: true, sent, total: targets.length };
+}, MGR);
 
 const server = http.createServer((req, res) => {
   const send = (code, obj) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'POST, GET, OPTIONS', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }); res.end(JSON.stringify(obj)); };
