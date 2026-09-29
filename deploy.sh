@@ -245,6 +245,8 @@ AmbientCapabilities=
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 SystemCallArchitectures=native
 SystemCallFilter=@system-service
+# v8.4: أي نداء نظام ممنوع يرجع خطأ بدل ما يطيح الخادم (بعض إصدارات Node تجرب io_uring)
+SystemCallErrorNumber=EPERM
 UMask=0077
 MemoryMax=600M
 LimitNOFILE=4096
