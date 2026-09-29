@@ -16,13 +16,20 @@ RSRC=$(ls -d "$TMP"/*/relay 2>/dev/null || true)
 [ -f "$SRC/index.html" ] || { echo "❌ التحميل ناقص"; exit 1; }
 mkdir -p "$BASE"
 if [ -d "$BASE/current" ]; then cp -a "$BASE/current" "$BASE/backup-$(date +%Y%m%d-%H%M%S)"; fi
-rm -rf "$BASE/current.new" && cp -a "$SRC" "$BASE/current.new"
+rm -rf "$BASE/current.new"
+SITE=$(ls -d "$TMP"/*/site 2>/dev/null || true)
+if [ -n "$SITE" ]; then
+  # v8.1: الصفحة الرئيسية = موقع التعريف، والتطبيق في /app/
+  cp -a "$SITE" "$BASE/current.new" && cp -a "$SRC" "$BASE/current.new/app"
+else
+  cp -a "$SRC" "$BASE/current.new"
+fi
 rm -rf "$BASE/current" && mv "$BASE/current.new" "$BASE/current"
 ls -dt "$BASE"/backup-* 2>/dev/null | tail -n +4 | xargs -r rm -rf
 chown -R www-data:www-data "$BASE" 2>/dev/null || true
 if [ -n "$RSRC" ]; then mkdir -p /opt/vibemap-relay && cp "$RSRC/server.js" /opt/vibemap-relay/server.js && { [ -f "$RSRC/sa.enc" ] && cp "$RSRC/sa.enc" /opt/vibemap-relay/sa.enc || true; }; fi
 rm -rf "$TMP"
-VER=$(grep -o "const VERSION = '[^']*'" "$BASE/current/app.js" | cut -d"'" -f2)
+VER=$(grep -oh "const VERSION = '[^']*'" "$BASE/current/app.js" "$BASE/current/app/app.js" 2>/dev/null | head -1 | cut -d"'" -f2)
 echo "✅ الملفات جاهزة (الإصدار $VER)"
 
 CONF=/etc/nginx/sites-available/vibemap
@@ -45,7 +52,7 @@ server {
     add_header Permissions-Policy "microphone=(self), camera=(self), geolocation=(self)" always;
     add_header X-Frame-Options "DENY" always;
 
-    location = /sw.js {
+    location ~ (^|/)sw\.js\$ {
         add_header Cache-Control "no-cache" always;
         add_header X-Content-Type-Options "nosniff" always;
     }
@@ -61,6 +68,7 @@ server {
         client_max_body_size 5m;
         proxy_read_timeout 30s;
     }
+    location /app/ { try_files \$uri \$uri/ /app/index.html; }
     location / { try_files \$uri \$uri/ /index.html; }
 }
 NGX
@@ -104,6 +112,15 @@ systemctl enable vibemap-relay >/dev/null 2>&1 || true
 systemctl restart vibemap-relay
 sleep 2
 if curl -fsS http://127.0.0.1:8095/api/health >/dev/null; then echo "✅ خادم التوصيل شغال ($(curl -fsS http://127.0.0.1:8095/api/health))"; else echo "❌ خادم التوصيل ما اشتغل:"; journalctl -u vibemap-relay -n 15 --no-pager; fi
+# ترقية إعداد قديم (قبل v8.1): التطبيق في /app/ و sw.js بدون تخزين
+python3 - "$CONF" <<'PY'
+import sys
+p=sys.argv[1]; s=open(p).read(); o=s
+s=s.replace("location = /sw.js {", "location ~ (^|/)sw\\.js$ {")
+if "location /app/" not in s:
+    s=s.replace("    location / {", "    location /app/ { try_files $uri $uri/ /app/index.html; }\n    location / {")
+if s!=o: open(p,"w").write(s)
+PY
 # إضافة مسار /relay/ لإعداد قديم (قبل v8.0)
 if ! grep -q "location /relay/" "$CONF"; then
   python3 - "$CONF" <<'PY'
