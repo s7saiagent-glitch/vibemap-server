@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com https://vibemap.s7sai.cloud; media-src 'self' blob: mediastream: data:; connect-src 'self' https://vibemap.s7sai.cloud https://0.peerjs.com wss://0.peerjs.com https://formsubmit.co https://*.googleapis.com https://www.google.com; frame-src https://www.google.com https://recaptcha.google.com https://*.firebaseapp.com; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com https://vibemap.s7sai.cloud; media-src 'self' blob: mediastream: data:; connect-src 'self' https://vibemap.s7sai.cloud wss://vibemap.s7sai.cloud https://0.peerjs.com wss://0.peerjs.com https://formsubmit.co https://*.googleapis.com https://www.google.com; frame-src https://www.google.com https://recaptcha.google.com https://*.firebaseapp.com; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="vibemap-public-url" content="https://vibemap.s7sai.cloud">
 <meta name="vibemap-relay" content="https://vibemap.s7sai.cloud/relay">
@@ -511,6 +511,16 @@ button.av{border:0;cursor:pointer;padding:0}
 .holdrec.rec{background:var(--sos);color:#fff;border-color:var(--sos)}
 .row.on{background:color-mix(in srgb,var(--accent) 8%,transparent)}
 
+.cfgbar{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;font-size:13px;line-height:1.6;background:color-mix(in srgb,var(--accent, #7C5CFF) 14%,var(--bg));border-bottom:1px solid var(--line);color:var(--ink)}
+.cfgbar.warn{background:color-mix(in srgb,var(--warn) 18%,var(--bg))}
+.cfgbar.ok{background:color-mix(in srgb,var(--ok) 16%,var(--bg))}
+.cfgbar .tx{flex:1;white-space:pre-wrap;word-break:break-word}
+.cfgbar button{flex:none;font:inherit;font-weight:600;color:inherit;background:none;border:0;padding:0 4px;cursor:pointer}
+.updwall{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px;text-align:center;background:var(--bg);color:var(--ink)}
+.updwall h2{font-size:20px}.updwall p{color:var(--ink-2);max-width:340px}
+/* v8.4: الواجهة الإنجليزية (من اليسار لليمين) */
+[dir=ltr] .blip .lab,[dir=ltr] .sbub,[dir=ltr] .sticker.label{direction:ltr}
+[dir=ltr] [data-act=chat-close] svg,[dir=ltr] .chev{display:inline-block;transform:scaleX(-1)}
 </style>
 </head>
 <body>
@@ -522,8 +532,9 @@ button.av{border:0;cursor:pointer;padding:0}
       <span class="word"><b>vibe</b>map</span>
     </div>
     <button id="sosBtn" class="sostop" aria-label="استغاثة: اضغط مطولاً ثانية للإرسال، أو ضغطة عادية لاختيار المستلم"><span class="fill"></span><b>SOS</b><span class="sub" hidden></span></button>
-    <button id="net" class="net wait" aria-label="حالتك: أونلاين أو أوفلاين"><i></i><span>يتصل…</span></button>
+    <button id="net" class="net wait" aria-label="حالتك: متصل أو غير متصل"><i></i><span>يتصل…</span></button>
   </header>
+  <div id="cfgBar" class="cfgbar" hidden role="status"></div>
 
   <main>
     <!-- RADAR -->
@@ -588,6 +599,7 @@ button.av{border:0;cursor:pointer;padding:0}
 <script src="vendor/peerjs.min.js"></script>
 <script src="vendor/qrcode.js"></script>
 <script src="vendor/jsQR.js"></script>
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

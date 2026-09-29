@@ -3,7 +3,7 @@
    VibeMap v7.0 — تطبيق لاسلكي حقيقي بين الجوالات (ويب + أندرويد + آيفون)
    WebRTC P2P (PeerJS) · ECDH P-256 + AES-GCM-256 · GPS · بوصلة · كاميرا
    ════════════════════════════════════════════════════════════ */
-const VERSION = '8.3';
+const VERSION = '8.4';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -218,29 +218,43 @@ function unlockAudio(){
 /* ════════ الشبكة: PeerJS WebRTC ════════ */
 function setNet(s){ RT.net = s; const el = $('#net'); const off = S && S.settings && S.settings.offline;
   el.className = 'net ' + (off ? 'manual' : s === 'on' ? 'on' : s === 'wait' ? 'wait' : '');
-  el.querySelector('span').textContent = off ? 'أوفلاين' : s === 'on' ? 'أونلاين' : s === 'wait' ? 'يتصل…' : 'غير متصل';
+  el.querySelector('span').textContent = off ? 'غير متصل' : s === 'on' ? 'متصل' : s === 'wait' ? 'يتصل…' : 'انقطع الاتصال';
   if(S && S.me && RT.tab === 'me') renderAll(); }
 /* v7.1: كانت قائمتنا تستبدل خوادم TURN المجانية المدمجة في PeerJS، فيفشل الاتصال بين جوالين على شبكة الجوال.
    الآن: STUN + TURN المجاني من PeerJS دائماً، + خادمك الخاص إن أضفته */
 function iceServers(){
-  const list = [{ urls:['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+  const list = [...turnOwn(), { urls:['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
     { urls:['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username:'peerjs', credential:'peerjsp' }];
   const st = S.settings;
   if(st.turnUrl) list.push({ urls: st.turnUrl.split(',').map(s => s.trim()).filter(u => /^turns?:/.test(u)), username: st.turnUser, credential: st.turnPass });
   return list;
 }
-/* خادم التعارف: الافتراضي خادم PeerJS العام، ويمكن تغييره بخادم خاص عبر <meta name="vibemap-signal" content="https://host:port/path"> */
-const SIGNAL = (() => { const v = (document.querySelector('meta[name=vibemap-signal]') || {}).content || '';
-  try{ if(!v) return {}; const u = new URL(v); return { host:u.hostname, port:+(u.port || (u.protocol === 'https:' ? 443 : 80)), secure:u.protocol === 'https:', path:u.pathname || '/' }; }catch(e){ return {}; } })();
+/* v8.4: خادم TURN خاص (من سيرفر VibeMap) — بيانات دخول مؤقتة تتجدد تلقائياً */
+function turnOwn(){ const t = RT.turn; return t && t.exp > now() && Array.isArray(t.servers) ? t.servers.filter(x => x && Array.isArray(x.urls) && x.urls.every(u => /^turns?:/.test(u))) : []; }
+async function turnFetch(){
+  if(!RELAY || S.settings.offline) return;
+  if(RT.turn && RT.turn.exp - now() > 3600e3) return;
+  const j = await relayPost('/api/turn', {});
+  if(j && j.ok && Array.isArray(j.servers)){ RT.turn = { servers:j.servers, exp:now() + (j.ttl || 43200) * 1000 - 600e3 };
+    if(RT.peer && RT.peer.options && RT.peer.options.config) RT.peer.options.config.iceServers = iceServers(); }
+}
+/* خادم التعارف: v8.4 خادم VibeMap الخاص (يوصل من إعدادات السيرفر) — لو تعطّل نرجع مؤقتاً للخادم العام */
+function sigParse(v){ try{ if(!v) return {}; const u = new URL(v); if(u.protocol !== 'https:' && !/^(localhost|127\.0\.0\.1)$/.test(u.hostname)) return {};
+  return { host:u.hostname, port:+(u.port || (u.protocol === 'https:' ? 443 : 80)), secure:u.protocol === 'https:', path:u.pathname || '/' }; }catch(e){ return {}; } }
+function sigOpts(){
+  if(RT.sigFallback && now() < RT.sigFallback) return {};
+  return sigParse(S.settings.signal || (document.querySelector('meta[name=vibemap-signal]') || {}).content || '');
+}
 const relayOnly = () => !!(S.settings.relayOnly && S.settings.turnUrl);
 function startPeer(){
   if(S.settings.offline){ setNet('off'); return; }
   if(typeof Peer === 'undefined'){ setNet('off'); toast('تعذّر تحميل مكتبة الاتصال'); return; }
   if(RT.peer && !RT.peer.destroyed) RT.peer.destroy();
   setNet('wait');
-  const peer = new Peer(peerId(S.me.pin), { debug:0, ...SIGNAL, config:{ iceServers: iceServers(), iceTransportPolicy: relayOnly() ? 'relay' : 'all' } });
+  const sig = sigOpts(); RT.sigOwn = !!sig.host;
+  const peer = new Peer(peerId(S.me.pin), { debug:0, ...sig, pingInterval:20000, config:{ iceServers: iceServers(), iceTransportPolicy: relayOnly() ? 'relay' : 'all' } });
   RT.peer = peer;
-  peer.on('open', () => { RT.idRetry = 0; setNet('on'); connectAll(); });
+  peer.on('open', () => { RT.idRetry = 0; RT.sigFails = 0; RT.netTry = 0; setNet('on'); connectAll(); });
   peer.on('connection', c => setupConn(c, false));
   peer.on('call', onCall);
   peer.on('disconnected', () => { if(peer.destroyed) return; setNet('wait'); setTimeout(() => { try{ if(!peer.destroyed && peer.disconnected) peer.reconnect(); }catch(e){} }, 2500); });
@@ -255,7 +269,10 @@ function startPeer(){
       if(RT.idRetry === 7) toast('رقمك مفتوح في جهاز أو نافذة أخرى؟ أغلقها وسيتصل تلقائياً');
       setTimeout(() => { if(RT.peer === peer) startPeer(); }, 8000);
     }else if(e.type === 'network' || e.type === 'server-error' || e.type === 'socket-error' || e.type === 'socket-closed'){
-      setNet('wait'); setTimeout(() => { if(RT.peer === peer && (peer.destroyed || peer.disconnected)) startPeer(); }, 5000);
+      setNet(navigator.onLine === false ? 'down' : 'wait');
+      /* خادمنا ما يرد 3 مرات ورا بعض والإنترنت شغال؟ نستخدم الخادم العام 5 دقائق ونرجع نجرب */
+      if(RT.sigOwn && navigator.onLine !== false && ++RT.sigFails >= 3){ RT.sigFails = 0; RT.sigFallback = now() + 300e3; }
+      setTimeout(() => { if(RT.peer === peer && (peer.destroyed || peer.disconnected)) startPeer(); }, Math.min(30000, 3000 * (1 + (RT.netTry = (RT.netTry || 0) + 1))));
     }else console.warn('peer', e.type, e);
   });
 }
@@ -294,12 +311,15 @@ function setupConn(c, outgoing){
     delete RT.pending[pin]; if(RT.iceFail) delete RT.iceFail[pin];
     c.send({ type:'hello', v:VERSION, pin:S.me.pin, name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), bio:S.me.bio || null, via:(S.friends[pin] && S.friends[pin].status === 'out' && S.friends[pin].via) || undefined });
   });
-  c.on('data', d => onData(c, pin, d).catch(e => console.warn('data', e)));
+  c.on('data', d => { c._rx = now(); onData(c, pin, d).catch(e => console.warn('data', e)); });
   c.on('close', () => { if(RT.conns[pin] === c){ delete RT.conns[pin]; const f = S.friends[pin]; if(f){ f.seen = now(); save(); } RT.rxTalking.delete(pin); renderAll(); } });
   c.on('error', () => { delete RT.pending[pin]; });
 }
 async function onData(c, pin, d){
   if(!d || typeof d !== 'object' || typeof d.type !== 'string') return;
+  /* v8.4: نبض الاتصال — نعرف فوراً لو الطرف الثاني انقطع بدل ما يظل «متصل» وهو مو موجود */
+  if(d.type === 'ping'){ c._hb = true; try{ c.send({ type:'pong' }); }catch(e){} return; }
+  if(d.type === 'pong'){ c._hb = true; return; }
   if(!rateOk(pin)){ if(!RATE[pin].warned){ RATE[pin].warned = true; console.warn('rate limit', pin); } return; }
   if(d.type === 'hello'){
     if(pinOf(c.peer) !== d.pin) return;
@@ -393,7 +413,7 @@ async function relayPost(path, body){
     const j = await r.json().catch(() => null); RL.lastErr = !r.ok && j && j.err || '';
     if(r.status === 401 && path !== '/api/reg'){ RL.ok = false; relayReg(); }
     return r.ok ? j : null;
-  }catch(e){ return null; } finally { clearTimeout(t); }
+  }catch(e){ RL.lastErr = 'net'; return null; } finally { clearTimeout(t); }
 }
 async function pushToken(){
   const P = NP('VibePush'); if(!P) return null;
@@ -415,8 +435,8 @@ async function relayReg(){
 async function relayInit(){
   if(!RELAY) return;
   const P = NP('VibePush');
-  if(P){ try{ await P.addListener('push', () => relayFetch(true)); await P.addListener('token', () => relayReg()); }catch(e){} askNotifOnce(); }
-  await relayReg();
+  if(P){ try{ await P.addListener('push', d => { if(d && d.k === 'news' && d.f === 'VM-NEWS-0000'){ if(d.r) toast('📢 ' + String(d.r).slice(0, 180)); cfgFetch(); } else relayFetch(true); }); await P.addListener('token', () => relayReg()); }catch(e){} askNotifOnce(); }
+  await relayReg(); turnFetch();
   setInterval(() => { if(document.visibilityState === 'visible') relayFetch(); }, 30000);
   /* طلب صداقة معلّق: نتحقق كل 5 ثواني عشان القبول يوصل بسرعة */
   setInterval(() => { if(document.visibilityState === 'visible' && Object.values(S.friends).some(f => f.status === 'out')) relayFetch(); }, 5000);
@@ -620,7 +640,7 @@ function pttTargets(){
 
 async function pttDown(){
   if(RT.talking) return;
-  if(S.settings.offline){ toast('أنت أوفلاين — ارجع أونلاين من أعلى الشاشة عشان تتكلم'); return; }
+  if(S.settings.offline){ toast('أنت «غير متصل» — اضغط الحالة أعلى الشاشة وارجع «متصل» عشان تتكلم'); return; }
   if(floorBusy()) return;
   unlockAudio();
   const targets = pttTargets();
@@ -1008,6 +1028,7 @@ function bindMic(btn){
 }
 async function chatRecStart(){
   if(RT.rec || !RT.chatWith) return;
+  if(!feat('voice')){ featOff(); return; }
   if(floorBusy(RT.chatWith)) return;
   const conv = RT.chatWith, mime = pickMime();
   if(mime === null){ toast('الجهاز لا يدعم تسجيل الصوت'); return; }
@@ -1414,7 +1435,7 @@ function camPost(){
   postStory({ t:'photo', text:V.str(CAM.caption, 150).trim(), data, withLoc:CAM.withLoc });
   camClose(); if(RT.tab !== 'stories') setTab('stories'); else renderStoriesTab();
 }
-function nowLabel(){ const d = new Date(); let h = d.getHours(); const m = String(d.getMinutes()).padStart(2, '0'); const pm = h >= 12; h = h % 12 || 12; return `🕒 ${h}:${m} ${pm ? 'م' : 'ص'}`; }
+function nowLabel(){ const d = new Date(); let h = d.getHours(); const m = String(d.getMinutes()).padStart(2, '0'); const pm = h >= 12; h = h % 12 || 12; return `🕒 ${h}:${m} ${window.VMI18N && VMI18N.lang === 'en' ? (pm ? 'PM' : 'AM') : (pm ? 'م' : 'ص')}`; }
 function placeLabel(){ const c = RT.myLoc; if(!c) return '📍 هنا'; const known = [['جدة',21.54,39.17],['مكة',21.42,39.83],['المدينة',24.47,39.61],['الرياض',24.71,46.68],['الدمام',26.43,50.10],['الطائف',21.27,40.42],['أبها',18.22,42.51],['تبوك',28.38,36.57]];
   let best = null; known.forEach(k => { const d = distance(c, { lat:k[1], lng:k[2] }); if(!best || d < best.d) best = { n:k[0], d }; }); return best && best.d < 40000 ? `📍 ${best.n}` : '📍 هنا'; }
 
@@ -1431,6 +1452,7 @@ function storyCard(pin, list, opts = {}){
 }
 function renderStoriesTab(){
   const v = $('#v-stories'); if(!v || RT.tab !== 'stories') return;
+  if(RT.stSeg === 'square' && !feat('square')) RT.stSeg = 'stories'; else if(RT.stSeg !== 'square' && !feat('stories') && feat('square')) RT.stSeg = 'square';
   const fr = Object.values(S.friends).filter(f => f.status === 'friend' && friendStories(f.pin).length);
   const newOnes = fr.filter(f => !f.muteStories && hasUnseen(f.pin)).sort((a, b) => friendStories(b.pin).slice(-1)[0].ts - friendStories(a.pin).slice(-1)[0].ts);
   const seenOnes = fr.filter(f => !f.muteStories && !hasUnseen(f.pin)).sort((a, b) => friendStories(b.pin).slice(-1)[0].ts - friendStories(a.pin).slice(-1)[0].ts);
@@ -1696,7 +1718,24 @@ function addFriendByPin(raw){
   if(f && f.status === 'friend'){ toast(`${f.name} صديقك بالفعل`); return true; }
   if(f && f.status === 'in'){ acceptFriend(pin); return true; }
   S.friends[pin] = { pin, name:pin, color:COLORS[Math.floor(Math.random() * COLORS.length)], status:'out', added:now() };
-  save(); connectTo(pin); relaySendPlain(pin, reqPayload(), 'friend').then(ok => toast(ok ? 'أُرسل طلب الصداقة ويوصله إشعار ✓' : 'أُرسل طلب الصداقة. يوصله أول ما يفتح التطبيق.')); renderAll(); return true;
+  S.friends[pin].rq = 'wait'; save(); connectTo(pin); renderAll(); toast('جاري إرسال الطلب…'); sendReq(pin); return true;
+}
+/* v8.4: إرسال طلب الصداقة بحالة واضحة: وصل ✓ / ننتظر الإنترنت ونعيد تلقائياً / الرقم غير موجود */
+async function sendReq(pin, extra, quiet){
+  let f = S.friends[pin]; if(!f || f.status !== 'out') return false;
+  if(extra) f.reqX = extra; f.rqLast = now();
+  const ok = await relaySendPlain(pin, reqPayload(f.reqX), 'friend'), err = RL.lastErr;
+  f = S.friends[pin]; if(!f || f.status !== 'out') return ok;
+  if(ok){ f.rq = 'sent'; f.rqTry = 0; }
+  else if(err === 'noreg'){ delete S.friends[pin]; save(); renderAll(); toast('ما لقينا مستخدم بهذا الرقم — تأكد منه وجرّب مرة ثانية'); return false; }
+  else { f.rq = 'retry'; f.rqTry = (f.rqTry || 0) + 1; }
+  save(); renderAll();
+  if(!quiet) toast(ok ? `وصل طلب الصداقة ✓ — بيوصله إشعار` : 'ما قدرنا نرسل الحين — بنعيد المحاولة تلقائياً أول ما يرجع الإنترنت');
+  return ok;
+}
+function reqRetry(){
+  if(!RELAY || S.settings.offline || navigator.onLine === false) return;
+  Object.values(S.friends).forEach(f => { if(f.status === 'out' && (f.rq === 'retry' || f.rq === 'wait') && !f.fromPub && now() - (f.rqLast || 0) > Math.min(300e3, 15e3 * Math.pow(2, f.rqTry || 0))) sendReq(f.pin, null, true); });
 }
 function acceptFriend(pin){
   const f = S.friends[pin]; if(!f) return; f.status = 'friend'; save();
@@ -1743,7 +1782,8 @@ function qrSvg(text){ try{ const q = qrcode(0, 'M'); q.addData(text); q.make(); 
 async function notify(title, body){
   if(document.visibilityState === 'visible' || RT.quietNotify) return; /* v8.0: الإشعار ظهر من النظام مسبقاً */
   const LN = NP('LocalNotifications');
-  if(LN){ try{ await LN.schedule({ notifications:[{ id: Math.floor(Math.random() * 2e9), title, body: String(body || '').slice(0, 140) }] }); }catch(e){} return; }
+  title = T(title); body = T(String(body || ''));
+  if(LN){ try{ await LN.schedule({ notifications:[{ id: Math.floor(Math.random() * 2e9), title, body: body.slice(0, 140) }] }); }catch(e){} return; }
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
   try{ const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration(); if(reg && reg.showNotification) reg.showNotification(title, { body, icon:'icons/icon-192.png', badge:'icons/icon-192.png', tag:'vibemap', renotify:true, vibrate:[100,50,100] }); else new Notification(title, { body, icon:'icons/icon-192.png' }); }catch(e){}
 }
@@ -1754,6 +1794,12 @@ async function applyWake(){
 
 /* ════════ الواجهة ════════ */
 function applyEco(){ document.documentElement.classList.toggle('eco', !!(S && S.settings.eco)); }
+/* ════════ v8.4: اللغة — «لغة الجهاز» تلقائياً، أو عربي/English من حسابي ════════ */
+function langOf(){ const l = S && S.settings && S.settings.lang || 'auto'; if(l === 'ar' || l === 'en') return l;
+  const n = (navigator.languages && navigator.languages[0]) || navigator.language || 'ar'; return /^ar\b/i.test(n) ? 'ar' : 'en'; }
+function applyLang(){ const l = langOf(); if(window.VMI18N) VMI18N.set(l);
+  const P = NP('VibePush'); if(P && P.setLang) P.setLang({ lang:l }).catch(() => {}); }
+const T = s => window.VMI18N ? VMI18N.tr(s) : s;
 function applyTheme(){ applyEco(); const t = S ? S.settings.theme : 'system'; const r = document.documentElement;
   if(t === 'system') r.removeAttribute('data-theme'); else r.setAttribute('data-theme', t);
   const dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
@@ -2045,7 +2091,7 @@ function renderFriends(){
       ${RT.rxTalking.has(f.pin) ? '<span class="pill ok">يتحدث</span>' : ''}</button>`; });
     h += `</div>`; }
   if(out.length){ h += `<div class="h2">بانتظار القبول</div><div class="card list">`;
-    out.forEach(f => { h += `<div class="row"><span class="av" style="${avCss(f)}">${f.hidePin ? esc(initial(f.name)) : '…'}</span><span class="grow"><span class="t1 ${f.hidePin ? '' : 'mono'}" style="display:block">${f.hidePin ? esc(f.name) : f.pin}</span><span class="t2" style="display:block">وصله الطلب، بانتظار موافقته</span></span><button class="btn sm" data-act="cancel-req" data-pin="${f.pin}">إلغاء</button></div>`; });
+    out.forEach(f => { h += `<div class="row"><span class="av" style="${avCss(f)}">${f.hidePin ? esc(initial(f.name)) : '…'}</span><span class="grow"><span class="t1 ${f.hidePin ? '' : 'mono'}" style="display:block">${f.hidePin ? esc(f.name) : f.pin}</span><span class="t2" style="display:block">${f.rq === 'retry' || f.rq === 'wait' ? '⏳ جاري الإرسال — نعيد المحاولة تلقائياً' : '✓ وصله الطلب، بانتظار موافقته'}</span></span><button class="btn sm" data-act="cancel-req" data-pin="${f.pin}">إلغاء</button></div>`; });
     h += `</div>`; }
   h += `</div>`;
   $('#v-friends').innerHTML = h;
@@ -2073,7 +2119,7 @@ function renderMe(){
     <div class="set"><span class="grow t1">لونك</span><div class="swatches">${COLORS.slice(0, 6).map(c => `<button style="background:${c}" class="${S.me.color === c ? 'on' : ''}" data-act="color" data-color="${c}" aria-label="لون"></button>`).join('')}</div></div>
   </div>
   ${FB_CFG ? `<div class="h2">الحساب (اختياري)</div><div class="card list">
-    <button class="set" data-act="acc-open" style="width:100%;text-align:start"><span class="grow"><span class="t1" style="display:block">${S.account ? `<bdi>${esc(S.account.label)}</bdi>` : 'تسجيل الدخول'}</span><span class="t2" style="display:block">${S.account ? (S.account.salt ? 'نسخة احتياطية مشفّرة' + (S.account.lastBk ? ' · آخرها ' + fmtAgo(S.account.lastBk) : '') : 'فعّل النسخ الاحتياطي') : (acProviders().google ? 'Google أو البريد' + (acProviders().phone ? ' أو الجوال' : '') : 'البريد' + (acProviders().phone ? ' أو الجوال' : '')) + ' — لحفظ نسخة احتياطية من حسابك'}</span></span><span class="t2">‹</span></button>
+    <button class="set" data-act="acc-open" style="width:100%;text-align:start"><span class="grow"><span class="t1" style="display:block">${S.account ? `<bdi>${esc(S.account.label)}</bdi>` : 'تسجيل الدخول'}</span><span class="t2" style="display:block">${S.account ? (S.account.salt ? 'نسخة احتياطية مشفّرة' + (S.account.lastBk ? ' · آخرها ' + fmtAgo(S.account.lastBk) : '') : 'فعّل النسخ الاحتياطي') : (acProviders().google ? 'Google أو البريد' + (acProviders().phone ? ' أو الجوال' : '') : 'البريد' + (acProviders().phone ? ' أو الجوال' : '')) + ' — لحفظ نسخة احتياطية من حسابك'}</span></span><span class="t2 chev">‹</span></button>
   </div>` : ''}
   <div class="h2">الأداء وحرارة الجهاز</div><div class="card list">
     <div class="set"><span class="grow"><span class="t1" style="display:block">توفير الطاقة</span><span class="t2" style="display:block">${st.eco ? 'مفعّل: GPS دقيق فقط والرادار أمامك، رسم أقل، بدون حركة مستمرة — الجوال يبرد والبطارية تطول' : 'متوقف: أعلى دقة وتحديث أسرع، لكن الجوال يسخن أسرع'}</span></span>${sw(st.eco, 'eco')}</div>
@@ -2086,6 +2132,7 @@ function renderMe(){
   </div>
   <div class="h2">الإعدادات</div><div class="card list">
     <div class="set"><span class="grow"><span class="t1" style="display:block">المظهر</span></span><div class="segs">${[['system','النظام'],['dark','داكن'],['light','فاتح']].map(([k, n]) => `<button class="${st.theme === k ? 'on' : ''}" data-act="theme" data-theme="${k}">${n}</button>`).join('')}</div></div>
+    <div class="set"><span class="grow"><span class="t1" style="display:block">اللغة</span><span class="t2" style="display:block;white-space:normal">${(st.lang || 'auto') === 'auto' ? 'تتبع لغة جهازك تلقائياً' : 'اخترتها أنت'}</span></span><div class="segs" translate="no">${[['auto','🌐'],['ar','عربي'],['en','EN']].map(([k, n]) => `<button class="${(st.lang || 'auto') === k ? 'on' : ''}" data-act="lang" data-lang="${k}" aria-label="${k === 'auto' ? 'لغة الجهاز' : k === 'ar' ? 'العربية' : 'English'}">${n}</button>`).join('')}</div></div>
     <div class="set"><span class="grow"><span class="t1" style="display:block">مدة الرسائل الافتراضية</span></span><div class="segs">${['read','24h','keep'].map(k => `<button class="${st.ttl === k ? 'on' : ''}" data-act="def-ttl" data-ttl="${k}">${k === 'read' ? 'بعد القراءة' : k === '24h' ? '24 ساعة' : 'دائم'}</button>`).join('')}</div></div>
     <div class="set"><span class="grow"><span class="t1" style="display:block">وضع التخفي</span><span class="t2" style="display:block">يخفي موقعك عن الجميع، وتبقى قادراً على السماع والتحدث</span></span>${sw(st.ghost, 'ghost')}</div>
     <div class="set"><span class="grow"><span class="t1" style="display:block">الإشعارات</span><span class="t2" style="display:block">${notif === 'granted' ? 'مفعّلة' : notif === 'denied' ? 'مرفوضة، فعّلها من إعدادات الجهاز' : notif === 'unsupported' ? (ios ? 'ثبّت التطبيق على الشاشة الرئيسية أولاً' : 'غير مدعومة في هذا المتصفح') : 'تنبيه عند الرسائل والتحدث والاستغاثة'}</span></span>${notif === 'default' ? '<button class="btn sm pri" data-act="notif">تفعيل</button>' : ''}</div>
@@ -2094,7 +2141,7 @@ function renderMe(){
   </div>
 
   <div class="h2">تواصل معنا</div><div class="card list">
-    <button class="set" data-act="contact" style="width:100%;text-align:start"><span class="grow"><span class="t1" style="display:block">أرسل اقتراحاً أو شكوى أو فكرة</span><span class="t2" style="display:block">توصل رسالتك مباشرة لبريد فريق VibeMap</span></span><span class="t2">‹</span></button>
+    <button class="set" data-act="contact" style="width:100%;text-align:start"><span class="grow"><span class="t1" style="display:block">أرسل اقتراحاً أو شكوى أو فكرة</span><span class="t2" style="display:block">توصل رسالتك مباشرة لبريد فريق VibeMap</span></span><span class="t2 chev">‹</span></button>
   </div>
   ${Object.keys(S.blocked).length ? `<div class="h2">المحظورون</div><div class="card list">${Object.entries(S.blocked).map(([p, x]) => `<div class="set"><span class="grow"><span class="t1" style="display:block">${esc(x.name)}</span>${x.hidePin ? '' : `<span class="t2 mono" style="display:block">${esc(p)}</span>`}</span><button class="btn sm" data-act="unblock" data-pin="${esc(p)}">إلغاء الحظر</button></div>`).join('')}</div>` : ''}
   <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><div class="t1">حذف الحساب من هذا الجهاز</div><div class="t2" style="white-space:normal">يحذف رقمك ومفاتيح التشفير والأصدقاء والرسائل. لا يمكن التراجع.</div>
@@ -2195,7 +2242,7 @@ async function openScan(){
 function stopScan(){ if(scanStream){ scanStream.getTracks().forEach(t => t.stop()); scanStream = null; } cancelAnimationFrame(scanRAF); }
 
 async function sharePin(){
-  const text = `أضفني في VibeMap برقمي ${S.me.pin}`; const url = inviteUrl();
+  const text = T(`أضفني في VibeMap برقمي ${S.me.pin}`); const url = inviteUrl();
   if(navigator.share){ try{ await navigator.share({ title:'VibeMap', text, url }); return; }catch(e){ if(e.name === 'AbortError') return; } }
   copyText(`${text}\n${url}`);
 }
@@ -2206,6 +2253,9 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-act]'); if(!b) return;
   const a = b.dataset.act, pin = b.dataset.pin;
   if(/^(acc|bk)-/.test(a)){ acAction(a, b); return; }
+  if(featOfAct(a)){ featOff(); return; }
+  if(a === 'ann-x'){ if(RT.cfg && RT.cfg.ann){ S.settings.annSeen = RT.cfg.ann.id; save(); } applyCfg(); return; }
+  if(a === 'upd-reload'){ location.reload(); return; }
   switch(a){
     case 'tab': closeSheet(); setTab(b.dataset.tab); break;
     case 'mode': if(b.dataset.mode === 'ar') startAR(); else { stopAR(); } break;
@@ -2273,6 +2323,7 @@ document.addEventListener('click', async e => {
     case 'install': if(RT.installEvt){ RT.installEvt.prompt(); RT.installEvt = null; renderMe(); } break;
     case 'color': S.me.color = b.dataset.color; save(); rehello(); renderMe(); break;
     case 'theme': S.settings.theme = b.dataset.theme; save(); applyTheme(); renderMe(); break;
+    case 'lang': { const l = ['auto', 'ar', 'en'].includes(b.dataset.lang) ? b.dataset.lang : 'auto'; S.settings.lang = l; save(); applyLang(); renderAll(); renderMe(); break; }
     case 'def-ttl': S.settings.ttl = b.dataset.ttl; save(); renderMe(); break;
     case 'notif': { const LN = NP('LocalNotifications'); try{ if(LN){ const r = await LN.requestPermissions(); RT.lnPerm = r.display === 'granted' ? 'granted' : 'denied'; } else await Notification.requestPermission(); }catch(x){} renderMe(); break; }
     case 'wake': S.settings.wake = !S.settings.wake; save(); applyWake(); renderMe(); break;
@@ -2293,7 +2344,7 @@ document.addEventListener('click', async e => {
     case 'room-new': openRoomEditor(); break;
     case 'room-addfriend': { const r = S.rooms[b.dataset.room]; if(!r || !r.members.includes(pin) || !PIN_STRICT.test(pin) || S.friends[pin]) break;
       S.friends[pin] = { pin, name:memberName(r, pin), color:senderColor(pin), status:'out', added:now(), via:r.id, hidePin:true };
-      save(); connectTo(pin); toast(`أُرسل طلب صداقة إلى ${memberName(r, pin)}`); openConvSettings(RT.cvConv); break; }
+      S.friends[pin].rq = 'wait'; save(); connectTo(pin); sendReq(pin, { via:r.id }, true); toast(`أُرسل طلب صداقة إلى ${memberName(r, pin)}`); openConvSettings(RT.cvConv); break; }
     case 'room-edit': openRoomEditor(pin); break;
     case 're-emoji': reKeep(); if(EMOJIS.includes(b.dataset.e)) RE.emoji = b.dataset.e; renderRoomEditor(); break;
     case 're-color': reKeep(); RE.color = V.color(b.dataset.color); renderRoomEditor(); break;
@@ -2656,7 +2707,7 @@ async function strangerRequest(pin, voice){
   const p = nearOf(pin) || (S.friends[pin] && S.friends[pin].pub ? { n:S.friends[pin].name, c:S.friends[pin].color, pub:S.friends[pin].pub } : null); if(!p) return false;
   const pay = reqPayload({ pubreq:true, ...(voice ? { voice:voice.data, dur:voice.dur } : {}) });
   let j = null; try{ j = await relayPost('/api/send', { to:pin, items:[{ id:uid(), iv:'X', ct:await sealFor(p.pub, pay) }], push:{ k:voice ? 'voicereq' : 'friend', n:S.me.name } }); }catch(e){ console.warn('seal', e); }
-  if(j && j.ok && !S.friends[pin]){ S.friends[pin] = { pin, name:p.n, color:p.c, status:'out', added:now(), pub:p.pub, fromPub:true }; save(); connectTo(pin); }
+  if(j && j.ok && !S.friends[pin]){ S.friends[pin] = { pin, name:p.n, color:p.c, status:'out', added:now(), pub:p.pub, fromPub:true, rq:'sent' }; save(); connectTo(pin); }
   renderAll(); return !!(j && j.ok);
 }
 /* تسجيل بالضغط المطوّل (للفويس مع طلب الصداقة) */
@@ -2693,12 +2744,12 @@ function floorBusy(conv){
   return true;
 }
 
-/* ─── أونلاين / أوفلاين ─── */
+/* ─── متصل / غير متصل ─── */
 function netSheet(){ const off = !!S.settings.offline;
   const row = (v, dot, t, d, on) => `<button class="row ${on ? 'on' : ''}" data-act="net-set" data-v="${v}"><span class="netdot ${dot}"></span><span class="grow"><span class="t1" style="display:block">${t}</span><span class="t2" style="display:block;white-space:normal">${d}</span></span><span aria-hidden="true">${on ? '✓' : ''}</span></button>`;
-  return `<div class="grab"></div><div class="h1">حالتك</div><div class="card list">
-    ${row('on', 'on', 'أونلاين', 'تستقبل الكلام المباشر والرسائل فوراً، وأصدقاؤك يشوفونك متصل', !off)}
-    ${row('off', 'off', 'أوفلاين', 'تختفي عن الكل، ويوقف الكلام المباشر والإشعارات. الرسائل تنتظرك لين ترجع أونلاين', off)}</div>
+  return `<div class="grab"></div><div class="h1">حالة الاتصال</div><div class="card list">
+    ${row('on', 'on', 'متصل', 'تستقبل الكلام المباشر والرسائل فوراً، وأصدقاؤك يشوفونك متصل', !off)}
+    ${row('off', 'off', 'غير متصل', 'تختفي عن الكل، ويوقف الكلام المباشر والإشعارات. الرسائل تنتظرك لين ترجع متصل', off)}</div>
     ${!off ? `<p class="t2" style="white-space:normal">الحالة الآن: ${RT.net === 'on' ? 'متصل ✓' : RT.net === 'wait' ? 'يحاول الاتصال… تأكد من الإنترنت' : 'غير متصل — تأكد من الإنترنت'}</p>` : ''}
     ${S.settings.dev ? '<button class="btn" data-act="diag-open">التشخيص</button>' : ''}`; }
 async function setOffline(v){
@@ -2707,8 +2758,8 @@ async function setOffline(v){
   if(v){ if(RT.talking) pttUp();
     /* نقفل كل اتصال بهدوء قبل فصل الخادم (يمنع خطأ داخلي في مكتبة الاتصال) */
     [...Object.values(RT.conns), ...Object.values(RT.outCalls)].forEach(c => { try{ const pc = c.peerConnection; if(pc){ pc.ondatachannel = null; pc.ontrack = null; } c.close(); }catch(e){} });
-    if(RT.peer && !RT.peer.destroyed){ const pr = RT.peer; RT.peer = null; try{ pr.disconnect(); }catch(e){} setTimeout(() => { try{ pr.destroy(); }catch(e){} }, 400); } RT.conns = {}; RT.outCalls = {}; RT.pending = {}; RT.rxTalking.clear(); setNet('off'); pubSync(true); RT.near = []; toast('أنت أوفلاين الحين'); }
-  else { startPeer(); relayFetch(); pubSync(true); nearFetch(true); toast('رجعت أونلاين'); }
+    if(RT.peer && !RT.peer.destroyed){ const pr = RT.peer; RT.peer = null; try{ pr.disconnect(); }catch(e){} setTimeout(() => { try{ pr.destroy(); }catch(e){} }, 400); } RT.conns = {}; RT.outCalls = {}; RT.pending = {}; RT.rxTalking.clear(); setNet('off'); pubSync(true); RT.near = []; toast('صرت «غير متصل» — ما أحد يشوفك'); }
+  else { startPeer(); relayFetch(); pubSync(true); nearFetch(true); toast('رجعت متصل ✓'); }
   relayReg(); renderAll();
 }
 
@@ -2883,11 +2934,91 @@ $('#net').addEventListener('click', () => { if(!S || !S.me) return; openSheet(ne
   /* SOS: ضغط مطوّل 1.2 ثانية */
   const s = $('#sosBtn'); let t = null, fired = false;
   const cancel = () => { clearTimeout(t); t = null; s.classList.remove('arming'); };
-  s.addEventListener('pointerdown', e => { e.preventDefault(); fired = false; s.classList.add('arming'); t = setTimeout(() => { cancel(); fired = true; sendSOS(); }, 1200); });
+  s.addEventListener('pointerdown', e => { e.preventDefault(); if(!feat('sos')) return; fired = false; s.classList.add('arming'); t = setTimeout(() => { cancel(); fired = true; sendSOS(); }, 1200); });
   ['pointerup','pointerleave','pointercancel'].forEach(ev => s.addEventListener(ev, cancel));
   s.addEventListener('contextmenu', e => e.preventDefault());
   s.addEventListener('click', () => { if(fired){ fired = false; return; } if(!t) openSheet(sosPickSheet()); });
 })();
+
+
+/* ════════ v8.4: إعدادات من لوحة التحكم ════════
+   المدير يشغّل ويطفّي الميزات، ويحط إعلان أو رسالة صيانة أو يطلب تحديث — يوصل لكل الأجهزة خلال دقائق */
+const FEAT_KEYS = ['square', 'nearby', 'stories', 'rooms', 'poke', 'voice', 'photos', 'sos', 'bubble'];
+const FEAT_ACTS = { square:/^sq-/, stories:/^(story-|sc-|cam-post$|mute-stories$|hide-stories$)/, rooms:/^room-(new|talk)$/, poke:/^poke/, photos:/^(photo|sq-photo)$/, sos:/^(sos-|chat-sos$)/, nearby:/^(near-toggle|pub-add)$/, bubble:/^bubble-/ };
+const FEAT_CSS = {
+  square:'.stseg,[data-act^=sq-]', stories:'#storyBar,#storyBarC,.stseg,[data-act^=story-]',
+  rooms:'[data-act=room-new]', poke:'[data-act=poke],[data-act=poke-pick]', voice:'#micBtn,#strMic', photos:'[data-act=photo],[data-act=sq-photo]',
+  sos:'#sosBtn,[data-act=chat-sos]', bubble:'[data-act=bubble-toggle],[data-act=bubble-perm]', nearby:'[data-act=near-toggle],[data-act=pub-add]' };
+const feat = k => !(RT.cfg && RT.cfg.flags && RT.cfg.flags[k] === false);
+const featOff = () => toast('هالميزة متوقفة مؤقتاً من إدارة VibeMap');
+function featOfAct(a){ for(const k in FEAT_ACTS) if(FEAT_ACTS[k].test(a) && !feat(k)) return k; return null; }
+function verLess(a, b){ const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
+  for(let i = 0; i < Math.max(x.length, y.length); i++){ const d = (x[i] || 0) - (y[i] || 0); if(d) return d < 0; } return false; }
+async function cfgFetch(){
+  if(!RELAY) return;
+  const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 10000);
+  try{
+    const r = await fetch(RELAY + '/api/config', { cache:'no-store', signal:ac.signal }); const j = await r.json();
+    if(!j || !j.ok || typeof j.flags !== 'object') return;
+    RT.cfg = { flags:j.flags, ann:j.ann && typeof j.ann.text === 'string' ? j.ann : null, minVersion:V.str(j.minVersion, 12) || '', maint:V.str(j.maint, 200) || '' };
+    S.settings.cfg = RT.cfg;
+    const sig = typeof j.signal === 'string' && /^https:\/\/[a-z0-9.-]+(:\d+)?\/[\w\/-]*$/i.test(j.signal) ? j.signal : '';
+    if(sig !== (S.settings.signal || '')){ S.settings.signal = sig; RT.sigFallback = 0;
+      if(RT.peer && !RT.talking && !S.settings.offline){ const pr = RT.peer; RT.peer = null; try{ pr.destroy(); }catch(e){} RT.conns = {}; RT.pending = {}; startPeer(); } }
+    save(); applyCfg();
+  }catch(e){}finally{ clearTimeout(t); }
+}
+function applyCfg(){
+  if(!RT.cfg && S.settings.cfg) RT.cfg = S.settings.cfg;
+  const c = RT.cfg || {};
+  let st = $('#featCss'); if(!st){ st = document.createElement('style'); st.id = 'featCss'; document.head.appendChild(st); }
+  const off = FEAT_KEYS.filter(k => !feat(k));
+  st.textContent = off.length ? off.map(k => FEAT_CSS[k]).join(',') + '{display:none!important}' : '';
+  const tabSt = $('#t-stories'); if(tabSt) tabSt.hidden = !feat('stories') && !feat('square');
+  if(!feat('square') && RT.stSeg === 'square') RT.stSeg = 'stories';
+  if(!feat('stories') && feat('square')) RT.stSeg = 'square';
+  if(!feat('stories') && !feat('square') && RT.tab === 'stories') setTab('radar');
+  /* الشريط: صيانة أولاً، بعدها الإعلان (يقدر المستخدم يقفله) */
+  const bar = $('#cfgBar');
+  if(bar){
+    let h = '', cls = '';
+    if(c.maint){ h = `<span>🛠️</span><span class="tx">${esc(c.maint)}</span>`; cls = 'warn'; }
+    else if(c.ann && S.settings.annSeen !== c.ann.id){ h = `<span>${c.ann.level === 'warn' ? '⚠️' : c.ann.level === 'ok' ? '🎉' : '📢'}</span><span class="tx">${esc(c.ann.text)}</span><button data-act="ann-x" aria-label="إغلاق">✕</button>`; cls = c.ann.level === 'warn' ? 'warn' : c.ann.level === 'ok' ? 'ok' : ''; }
+    bar.className = 'cfgbar ' + cls; if(bar._h !== h){ bar.innerHTML = h; bar._h = h; } bar.hidden = !h;
+  }
+  /* تحديث إجباري */
+  const need = c.minVersion && verLess(VERSION, c.minVersion);
+  let w = $('#updWall');
+  if(need && !w){ w = document.createElement('div'); w.id = 'updWall'; w.className = 'updwall';
+    const store = PLATFORM === 'android' ? 'https://play.google.com/store/apps/details?id=sa.vibemap.app' : (RELAY ? new URL(RELAY).origin + '/' : '');
+    w.innerHTML = `<div style="font-size:48px">⬆️</div><h2>لازم تحدّث VibeMap</h2><p>فيه إصدار جديد (${esc(c.minVersion)}) فيه تحسينات مهمة. حدّث التطبيق عشان تكمل.</p>` +
+      (IS_NATIVE ? `<a class="btn grad" href="${store}" target="_blank" rel="noopener">تحديث الحين</a>` : `<button class="btn grad" data-act="upd-reload">تحديث الحين</button>`);
+    document.body.appendChild(w); }
+  else if(!need && w) w.remove();
+  if(S && S.me) renderAll();
+}
+
+/* ════════ v8.4: نبض الاتصالات + مراقبة الشبكة ════════ */
+function heartbeat(){
+  const t = now(), gap = t - (RT.hbLast || t); RT.hbLast = t; let changed = false;
+  for(const pin in RT.conns){
+    const c = RT.conns[pin]; if(!c || !c.open) continue;
+    /* ما وصلنا منه شي 45 ثانية (وهو يدعم النبض) = الاتصال ميت: نقفله ونعيد الاتصال */
+    if(gap < 30000 && c._hb && t - (c._rx || c._t || t) > 45000){
+      delete RT.conns[pin]; delete RT.pending[pin]; RT.rxTalking.delete(pin); try{ c.close(); }catch(e){}
+      const f = S.friends[pin]; if(f){ f.seen = t; } changed = true; setTimeout(() => connectTo(pin), 800); continue;
+    }
+    try{ c.send({ type:'ping' }); }catch(e){}
+  }
+  if(changed){ save(); renderAll(); }
+}
+function netBack(){
+  if(S.settings.offline) return;
+  if(!RT.peer || RT.peer.destroyed) startPeer();
+  else if(RT.peer.disconnected){ setNet('wait'); try{ RT.peer.reconnect(); }catch(e){ startPeer(); } }
+  else if(RT.peer.open) setNet('on');
+  setTimeout(() => { connectAll(); relayFetch(); reqRetry(); turnFetch(); }, 1200);
+}
 
 /* ════════ v7.9: زر الرجوع ════════
    يرجع خطوة وحدة (يقفل الكاميرا/الحالة/النافذة/المحادثة/الواقع المعزز، ثم يرجع للرادار).
@@ -2931,7 +3062,9 @@ document.addEventListener('visibilitychange', () => {
     connectAll(); if(RT.chatWith) markRead(RT.chatWith); renderAll();
   } else pttUp();
 });
-window.addEventListener('online', () => { if(RT.peer && RT.peer.disconnected) try{ RT.peer.reconnect(); }catch(e){} });
+window.addEventListener('online', netBack);
+window.addEventListener('offline', () => { if(!S || !S.me || S.settings.offline) return; setNet('down'); });
+{ const nc = navigator.connection; if(nc && nc.addEventListener) nc.addEventListener('change', () => { if(S && S.me && navigator.onLine !== false) setTimeout(netBack, 1500); }); }
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); RT.installEvt = e; if(RT.tab === 'me') renderMe(); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(S) applyTheme(); });
 
@@ -2979,6 +3112,7 @@ async function boot(){
   for(const p in MSG){ MSG[p] = (MSG[p] || []).filter(m => m.type !== 'photo' || V.photo(m.data)); }
   applyDemo();
   RT.tab = 'radar'; setTab('radar');
+  applyCfg(); await Promise.race([cfgFetch(), new Promise(r => setTimeout(r, 2500))]);
   startPeer(); startGeo(); applyWake();
   const q = new URLSearchParams(location.search).get('add');
   if(q && PIN_RE.test(q)){ history.replaceState(null, '', location.pathname); setTimeout(() => confirmAdd(q), 800); }
@@ -2991,6 +3125,8 @@ async function boot(){
   if(S.account && FB_CFG) setTimeout(() => acInit().then(() => bkSoon()).catch(() => {}), 2500);
   { const LN = NP('LocalNotifications'); if(LN) LN.checkPermissions().then(r => { RT.lnPerm = r.display === 'granted' ? 'granted' : r.display === 'denied' ? 'denied' : 'default'; }).catch(() => {}); }
   setInterval(sweep, 2000);
+  setInterval(heartbeat, 15000); setInterval(() => { cfgFetch(); turnFetch(); }, 600e3);
+  setInterval(() => { if(document.visibilityState === 'visible') reqRetry(); }, 15000);
   setInterval(() => { connectAll(); if(RT.tab === 'radar') renderStage(); Object.values(S.friends).forEach(f => { if(f.rateQueued && isOnline(f.pin) && f.myRating){ sendEnc(f.pin, { k:'rate', ...f.myRating }).then(ok => { if(ok){ f.rateQueued = false; save(); } }); } }); }, 15000);
   setInterval(() => { if(S.settings.demo && RT.tab === 'radar' && !RT.talking && document.visibilityState === 'visible') renderStage(); }, S.settings.eco ? 5000 : 3000);
 }
@@ -3000,6 +3136,6 @@ if(!IS_NATIVE && 'serviceWorker' in navigator && location.protocol === 'https:')
     document.body.innerHTML = '<div style="padding:32px;font-family:sans-serif;text-align:center;line-height:1.8">VibeMap يحتاج رابطاً آمناً يبدأ بـ <b>https://</b><br>ارفع المجلد على Netlify أو GitHub Pages ثم افتحه من الرابط.</div>'; return;
   }
   S = load();
-  applyTheme();
+  applyTheme(); applyLang();
   if(!S){ S = null; showOnboard(); } else await boot();
 })();

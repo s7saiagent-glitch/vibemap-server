@@ -1,4 +1,4 @@
-/* VibeMap Relay v8.2 — خادم التوصيل (مع إصلاحات الأمان)
+/* VibeMap Relay v8.4 — خادم التوصيل + لوحة التحكم
  * يحفظ الرسائل المشفّرة (لا يقدر يقرأها) حتى يستلمها الصديق، ويوقظ جواله بإشعار عبر Firebase Cloud Messaging.
  * بدون مكتبات خارجية: Node 18 أو أحدث فقط.
  * الإعدادات من متغيرات البيئة:
@@ -28,6 +28,7 @@ const CACHE_MAX = 160 * 1024 * 1024;       // ذاكرة الصناديق
 const POST_MIN_AGE = process.env.POST_MIN_AGE != null ? +process.env.POST_MIN_AGE : 10 * 60e3;   // عمر الحساب قبل أول منشور
 const REPORT_MIN_AGE = process.env.REPORT_MIN_AGE != null ? +process.env.REPORT_MIN_AGE : 24 * 3600e3; // عمر الحساب ليُحسب بلاغه
 const TTL_MS = 7 * 24 * 3600e3;            // تُحذف الرسائل غير المستلمة بعد 7 أيام
+const NEWS_PIN = 'VM-NEWS-0000';
 const PUSH_KINDS = new Set(['sos', 'sosoff', 'msg', 'voice', 'photo', 'room', 'friend', 'accept', 'poke', 'react', 'shot', 'voicereq']);
 const REQ_KINDS = new Set(['friend', 'voicereq', 'accept']); // تنبيهات مسموحة من غير الأصدقاء (بحدود أشد)
 const DEMO_RE = /^VM-DEMO-/;
@@ -54,7 +55,7 @@ const eq = (a, b) => { const x = Buffer.from(a), y = Buffer.from(b); return x.le
 function auth(b) {
   const pin = typeof b.pin === 'string' ? b.pin.toUpperCase() : '';
   if (!PIN_RE.test(pin) || typeof b.key !== 'string' || b.key.length < 32 || b.key.length > 100) return null;
-  const r = REG[pin]; if (!r || r.dead || !eq(r.kh, sha(b.key))) return null;
+  const r = REG[pin]; if (!r || r.dead || r.banned || !eq(r.kh, sha(b.key))) return null;
   const t = Date.now(); if (!r.seen || t - r.seen > 3600e3) { r.seen = t; saveReg(); } return pin;
 }
 
@@ -125,7 +126,7 @@ async function push(to, data, urgent) {
 
 /* ─── المسارات ─── */
 const H = {};
-H['/api/health'] = async () => ({ ok: true, v: '8.2', push: !!SA });
+H['/api/health'] = async () => ({ ok: true, v: '8.4', push: !!SA, turn: !!TURN_SECRET });
 
 // v8.1: استرجاع الرقم المرتبط بهذا الجهاز
 H['/api/whoami'] = async (b, ip) => {
@@ -140,11 +141,13 @@ H['/api/reg'] = async (b, ip) => {
   if (!PIN_RE.test(pin) || DEMO_RE.test(pin) || typeof b.key !== 'string' || b.key.length < 32 || b.key.length > 100) return [400, { err: 'bad' }];
   const kh = sha(b.key); let r = REG[pin];
   const dh = typeof b.dev === 'string' && b.dev.length >= 32 && b.dev.length <= 100 ? sha('dev:' + b.dev) : null;
+  if (r && r.banned) return [403, { err: 'banned' }];
   if (r && (r.dead || !eq(r.kh, kh))) {
     /* نفس الجهاز بعد إعادة التثبيت (أو بعد حذف الحساب): نسمح بتجديد المفتاح. رقم محذوف ما يرجع إلا لجهازه */
     if (dh && r.dh && eq(r.dh, dh)) { r.kh = kh; delete r.dead; } else return [403, { err: 'taken' }];
   }
-  if (!r) { if (limited('reg:' + ipKey(ip), 300, 3600e3) || limited('reg:all', 3000, 3600e3)) return [429, { err: 'slow' }]; r = REG[pin] = { kh, ts: Date.now() }; }
+  if (!r) { if (!CONFIG.flags.register) return [403, { err: 'closed' }];
+    if (limited('reg:' + ipKey(ip), 300, 3600e3) || limited('reg:all', 3000, 3600e3)) return [429, { err: 'slow' }]; r = REG[pin] = { kh, ts: Date.now() }; }
   /* v8.2: قائمة أصدقائك (أرقام فقط) — التنبيهات تُقبل منهم بس، وغيرهم بحدود صغيرة */
   if (Array.isArray(b.allow)) r.allow = [...new Set(b.allow.filter(x => typeof x === 'string' && PIN_RE.test(x)))].slice(0, 1000);
   const fcm = typeof b.fcm === 'string' && b.fcm.length < 400 ? b.fcm : null;
@@ -224,7 +227,7 @@ const distM = (a, b) => { const R = 6371e3, t = x => x * Math.PI / 180, dl = t(b
 setInterval(() => { const t = Date.now(); for (const [k, v] of PUB) if (t - v.ts > PUB_TTL) PUB.delete(k); }, 60e3).unref();
 H['/api/pub/set'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
-  if (b.on !== true) { PUB.delete(pin); return { ok: true, on: false }; }
+  if (b.on !== true || !CONFIG.flags.nearby) { PUB.delete(pin); return CONFIG.flags.nearby ? { ok: true, on: false } : [403, { err: 'off' }]; }
   const lat = +b.lat, lng = +b.lng; if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return [400, { err: 'loc' }];
   const pub = b.pub && JWK_RE.test(b.pub.x || '') && JWK_RE.test(b.pub.y || '') ? { kty: 'EC', crv: 'P-256', x: b.pub.x, y: b.pub.y } : null; if (!pub) return [400, { err: 'pub' }];
   if (limited('pubset:' + pin, 40, 600e3)) return [429, { err: 'slow' }];
@@ -236,6 +239,7 @@ H['/api/pub/set'] = async b => {
 };
 H['/api/pub/near'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
+  if (!CONFIG.flags.nearby) return { ok: true, items: [], off: true };
   const me = { lat: +b.lat, lng: +b.lng }; if (!isFinite(me.lat) || !isFinite(me.lng)) return [400, { err: 'loc' }];
   if (limited('near:' + pin, 60, 600e3)) return [429, { err: 'slow' }];
   const t = Date.now(), out = [];
@@ -268,6 +272,7 @@ const tagsOf = s => [...new Set([...String(s).matchAll(TAG_RE)].map(m => m[1].to
 const sqView = (p, me) => ({ id: p.id, pin: p.pin, n: p.n, c: p.c, lvl: p.lvl, rt: p.rt, text: p.text, tags: p.tags, img: !!p.img, ts: p.ts, likes: p.likes.length, liked: p.likes.includes(me), mine: p.pin === me, city: p.city || '' });
 H['/api/sq/post'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
+  if (!CONFIG.flags.square) return [403, { err: 'off' }];
   if (limited('sqpost:' + pin, 12, 3600e3) || limited('sqpost:all', 400, 3600e3)) return [429, { err: 'slow' }];
   if (Date.now() - (REG[pin].ts || 0) < POST_MIN_AGE) return [403, { err: 'new' }]; /* الحسابات الجديدة جداً تنتظر 10 دقائق */
   const text = clean(b.text, 500); if (!text && !b.photo) return [400, { err: 'empty' }];
@@ -288,6 +293,7 @@ H['/api/sq/post'] = async b => {
 };
 H['/api/sq/feed'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
+  if (!CONFIG.flags.square) return [403, { err: 'off' }];
   const tag = typeof b.tag === 'string' ? b.tag.replace(/^#/, '').toLowerCase().slice(0, 30) : '';
   const before = +b.before || Infinity; const blocked = new Set(Array.isArray(b.blocked) ? b.blocked.slice(0, 500) : []);
   const out = [];
@@ -296,12 +302,14 @@ H['/api/sq/feed'] = async b => {
 };
 H['/api/sq/trends'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
+  if (!CONFIG.flags.square) return [403, { err: 'off' }];
   const t = Date.now(), cnt = new Map();
   for (const p of SQ) { if (p.hidden || t - p.ts > 24 * 3600e3) continue; for (const g of p.tags) cnt.set(g, (cnt.get(g) || 0) + 1); }
   return { ok: true, tags: [...cnt].sort((a, b) => b[1] - a[1]).slice(0, 20).map(([tag, n]) => ({ tag, n })) };
 };
 H['/api/sq/like'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
+  if (!CONFIG.flags.square) return [403, { err: 'off' }];
   if (limited('like:' + pin, 120, 600e3)) return [429, { err: 'slow' }];
   const p = SQ.find(x => x.id === b.id); if (!p) return [404, { err: 'nf' }];
   const i = p.likes.indexOf(pin); if (i < 0 && p.likes.length >= 5000) return { ok: true, likes: p.likes.length, liked: false }; if (i >= 0) p.likes.splice(i, 1); else p.likes.push(pin); sqDirty = true;
@@ -309,6 +317,7 @@ H['/api/sq/like'] = async b => {
 };
 H['/api/sq/report'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
+  if (!CONFIG.flags.square) return [403, { err: 'off' }];
   if (limited('rep:' + pin, 20, 24 * 3600e3)) return [429, { err: 'slow' }];
   const p = SQ.find(x => x.id === b.id); if (!p) return [404, { err: 'nf' }];
   /* v8.2: البلاغ يُحسب فقط من حساب عمره يوم فأكثر (ضد الحسابات الوهمية) */
@@ -325,13 +334,125 @@ H['/api/sq/del'] = async b => {
 };
 function sqImage(res, id) {
   const p = /^[A-Za-z0-9_-]{12}$/.test(id) && SQ.find(x => x.id === id);
-  if (!p || !p.img || p.hidden) { res.writeHead(404); return res.end(); }
+  if (!p || !p.img || p.hidden || !CONFIG.flags.square) { res.writeHead(404); return res.end(); }
   fs.readFile(path.join(SQ_IMG, id + '.jpg'), (e, buf) => {
     if (e) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'content-type': 'image/' + (p.img === true ? 'jpeg' : p.img), 'cache-control': 'public, max-age=86400', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'" });
     res.end(buf);
   });
 }
+
+/* ═══════════ v8.4: الإعدادات العامة + لوحة التحكم ═══════════ */
+const CRED = process.env.CREDENTIALS_DIRECTORY || '';
+const readCred = (name, fallback) => { for (const f of [CRED && path.join(CRED, name), fallback]) { if (!f) continue; try { return fs.readFileSync(f, 'utf8').trim(); } catch (e) { } } return ''; };
+const TURN_SECRET = process.env.TURN_SECRET || readCred('turn', '/etc/vibemap/turn.secret');
+const TURN_HOST = process.env.TURN_HOST || '';
+let ADMIN = null; try { ADMIN = JSON.parse(readCred('admin', '/etc/vibemap/admin.json') || 'null'); } catch (e) { ADMIN = null; }
+if (!ADMIN) log('⚠️ لا توجد كلمة سر للوحة التحكم');
+
+/* ─── إعدادات التطبيق (يتحكم فيها صاحب التطبيق من اللوحة) ─── */
+const FLAG_KEYS = ['register', 'square', 'nearby', 'stories', 'rooms', 'poke', 'voice', 'photos', 'sos', 'bubble'];
+const CFG_FILE = path.join(DATA, 'config.json');
+let CONFIG = { flags: {}, ann: null, minVersion: '', maint: '' };
+try { CONFIG = { ...CONFIG, ...JSON.parse(fs.readFileSync(CFG_FILE, 'utf8')) }; } catch (e) { }
+FLAG_KEYS.forEach(k => { if (typeof CONFIG.flags[k] !== 'boolean') CONFIG.flags[k] = true; });
+const saveCfg = () => { try { fs.writeFileSync(CFG_FILE + '.tmp', JSON.stringify(CONFIG)); fs.renameSync(CFG_FILE + '.tmp', CFG_FILE); } catch (e) { log('cfg write', e.message); } };
+const VER_RE = /^\d{1,2}(\.\d{1,2}){0,2}$/;
+/* خادم التعارف الخاص (PeerJS) — يحدده أمر التثبيت، والتطبيق يتحول له تلقائياً */
+const SIGNAL_URL = /^https:\/\/[a-z0-9.-]+(:\d+)?\/[\w\/-]*$/i.test(process.env.SIGNAL_URL || '') ? process.env.SIGNAL_URL : '';
+H['/api/config'] = async () => ({ ok: true, flags: CONFIG.flags, ann: CONFIG.ann, minVersion: CONFIG.minVersion, maint: CONFIG.maint, signal: SIGNAL_URL });
+
+/* ─── خادم TURN خاص: بيانات دخول مؤقتة (12 ساعة) لكل مستخدم ─── */
+H['/api/turn'] = async b => {
+  const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
+  if (!TURN_SECRET || !TURN_HOST) return { ok: true, servers: [] };
+  const exp = Math.floor(Date.now() / 1000) + 12 * 3600, username = exp + ':' + pin;
+  const credential = crypto.createHmac('sha1', TURN_SECRET).update(username).digest('base64');
+  return { ok: true, ttl: 12 * 3600, servers: [{ urls: [`turn:${TURN_HOST}:3478?transport=udp`, `turn:${TURN_HOST}:3478?transport=tcp`], username, credential }] };
+};
+
+/* ─── تسجيل دخول المدير ─── */
+const SESS = new Map();
+function adminOk(b) {
+  const t = typeof b.token === 'string' ? b.token : ''; const e = t && SESS.get(t);
+  if (!e || e < Date.now()) { if (t) SESS.delete(t); return false; }
+  SESS.set(t, Date.now() + 12 * 3600e3); return true;
+}
+H['/api/admin/login'] = async (b, ip) => {
+  if (!ADMIN || !ADMIN.salt || !ADMIN.hash) return [503, { err: 'noadmin' }];
+  if (limited('adm:' + ipKey(ip), 8, 900e3)) return [429, { err: 'slow' }];
+  const h = crypto.scryptSync(String(b.password || '').slice(0, 200), Buffer.from(ADMIN.salt, 'hex'), 32).toString('hex');
+  if (!eq(h, ADMIN.hash)) { log('⚠️ admin login failed', ipKey(ip)); return [401, { err: 'bad' }]; }
+  const token = crypto.randomBytes(32).toString('hex'); SESS.set(token, Date.now() + 12 * 3600e3);
+  for (const [k, v] of SESS) if (v < Date.now()) SESS.delete(k);
+  log('admin login', ipKey(ip)); return { ok: true, token };
+};
+H['/api/admin/logout'] = async b => { SESS.delete(String(b.token || '')); return { ok: true }; };
+const A = fn => async (b, ip) => adminOk(b) ? fn(b, ip) : [401, { err: 'auth' }];
+const nameOf = pin => { const p = PUB.get(pin); if (p) return p.n; const q = SQ.find(x => x.pin === pin); return q ? q.n : ''; };
+const START = Date.now();
+
+H['/api/admin/stats'] = A(async () => {
+  const t = Date.now(), day = 864e5; let users = 0, a1 = 0, a7 = 0, a30 = 0, newToday = 0, push = 0, banned = 0; const plat = { android: 0, ios: 0, web: 0 };
+  const perDay = {}; for (let i = 29; i >= 0; i--) perDay[new Date(t - i * day).toISOString().slice(0, 10)] = 0;
+  const today = new Date(t).toISOString().slice(0, 10);
+  for (const p in REG) { const r = REG[p]; if (r.dead) continue; if (r.banned) { banned++; continue; } users++;
+    const seen = r.seen || r.ts || 0; if (t - seen < day) a1++; if (t - seen < 7 * day) a7++; if (t - seen < 30 * day) a30++;
+    const d = new Date(r.ts || 0).toISOString().slice(0, 10); if (d in perDay) perDay[d]++; if (d === today) newToday++;
+    plat[r.plat] = (plat[r.plat] || 0) + 1; if (r.fcm) push++; }
+  let active = 0, hidden = 0, reported = 0; for (const p of SQ) { if (p.hidden) hidden++; else active++; if ((p.reports || []).length) reported++; }
+  const mem = process.memoryUsage();
+  return { ok: true, users, banned, active24: a1, active7: a7, active30: a30, newToday, plat, push, publicNow: [...PUB.values()].filter(v => t - v.ts < PUB_TTL).length,
+    perDay: Object.entries(perDay).map(([d, n]) => ({ d, n })), boxes: BOXSZ.size, diskMB: +(DISK_USED / 1048576).toFixed(1),
+    posts: { active, hidden, reported }, uptimeH: +((t - START) / 3600e3).toFixed(1), memMB: Math.round(mem.rss / 1048576), turn: !!(TURN_SECRET && TURN_HOST), signal: !!SIGNAL_URL, fcm: !!SA };
+});
+H['/api/admin/users'] = A(async b => {
+  const q = String(b.q || '').trim().toUpperCase(), page = Math.max(0, b.page | 0), t = Date.now();
+  let list = Object.entries(REG).filter(([p, r]) => !r.dead).map(([p, r]) => ({ pin: p, name: nameOf(p), plat: r.plat || 'web', ts: r.ts || 0, seen: r.seen || r.ts || 0, friends: (r.allow || []).length, push: !!r.fcm, banned: !!r.banned, pub: PUB.has(p) }));
+  if (q) list = list.filter(u => u.pin.includes(q) || u.name.toUpperCase().includes(q));
+  const sort = b.sort === 'new' ? (x, y) => y.ts - x.ts : (x, y) => y.seen - x.seen; list.sort(sort);
+  return { ok: true, total: list.length, page, items: list.slice(page * 50, page * 50 + 50) };
+});
+H['/api/admin/user'] = A(async b => {
+  const pin = String(b.pin || '').toUpperCase(), r = REG[pin]; if (!r || r.dead) return [404, { err: 'nf' }];
+  if (b.act === 'ban') { r.banned = true; PUB.delete(pin); for (const p of SQ) if (p.pin === pin) p.hidden = true; sqDirty = true; }
+  else if (b.act === 'unban') { delete r.banned; }
+  else if (b.act === 'wipe') { PUB.delete(pin); for (let i = SQ.length - 1; i >= 0; i--) if (SQ[i].pin === pin) { const [o] = SQ.splice(i, 1); if (o.img) fs.rm(path.join(SQ_IMG, o.id + '.jpg'), () => {}); } sqDirty = true;
+    const a = BOX.get(pin); if (a) CACHE_USED -= boxBytes(a); BOX.set(pin, []); boxDirty.add(pin); }
+  else return [400, { err: 'act' }];
+  saveReg(); log('admin', b.act, pin); return { ok: true };
+});
+H['/api/admin/sq'] = A(async b => {
+  const f = b.filter === 'reported' ? p => (p.reports || []).length > 0 : b.filter === 'hidden' ? p => p.hidden : () => true;
+  return { ok: true, items: SQ.filter(f).slice(0, 200).map(p => ({ id: p.id, pin: p.pin, n: p.n, text: p.text, tags: p.tags, img: !!p.img, ts: p.ts, likes: p.likes.length, reports: (p.reports || []).length, hidden: !!p.hidden })) };
+});
+H['/api/admin/sq/act'] = A(async b => {
+  const i = SQ.findIndex(x => x.id === b.id); if (i < 0) return [404, { err: 'nf' }]; const p = SQ[i];
+  if (b.act === 'hide') p.hidden = true; else if (b.act === 'show') { p.hidden = false; p.reports = []; p.rw = 0; }
+  else if (b.act === 'del') { SQ.splice(i, 1); if (p.img) fs.rm(path.join(SQ_IMG, p.id + '.jpg'), () => {}); }
+  else return [400, { err: 'act' }];
+  sqDirty = true; log('admin sq', b.act, p.id); return { ok: true };
+});
+H['/api/admin/config'] = A(async b => {
+  if (b.set && typeof b.set === 'object') {
+    const s = b.set;
+    if (s.flags && typeof s.flags === 'object') FLAG_KEYS.forEach(k => { if (typeof s.flags[k] === 'boolean') CONFIG.flags[k] = s.flags[k]; });
+    if ('ann' in s) { const txt = clean(s.ann && s.ann.text, 300); CONFIG.ann = txt ? { id: crypto.randomBytes(4).toString('hex'), text: txt, level: ['info', 'warn', 'ok'].includes(s.ann.level) ? s.ann.level : 'info', ts: Date.now() } : null; }
+    if ('minVersion' in s) CONFIG.minVersion = VER_RE.test(String(s.minVersion || '')) ? String(s.minVersion) : '';
+    if ('maint' in s) CONFIG.maint = clean(s.maint, 200);
+    saveCfg(); log('admin config', JSON.stringify(CONFIG.flags));
+  }
+  return { ok: true, config: CONFIG, flagKeys: FLAG_KEYS };
+});
+H['/api/admin/broadcast'] = A(async b => {
+  const text = clean(b.text, 180); if (!text) return [400, { err: 'empty' }];
+  if (!SA) return [503, { err: 'nopush' }];
+  if (limited('broadcast', 5, 24 * 3600e3)) return [429, { err: 'slow' }];
+  const targets = Object.entries(REG).filter(([p, r]) => !r.dead && !r.banned && r.fcm).map(([p]) => p);
+  let sent = 0; const conc = 8;
+  for (let i = 0; i < targets.length; i += conc) { const rs = await Promise.all(targets.slice(i, i + conc).map(p => push(p, { t: 'vm', k: 'news', f: NEWS_PIN, n: 'VibeMap', r: text }, false))); sent += rs.filter(Boolean).length; }
+  log('admin broadcast', sent + '/' + targets.length); return { ok: true, sent, total: targets.length };
+});
 
 const server = http.createServer((req, res) => {
   const send = (code, obj) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'POST, GET, OPTIONS', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }); res.end(JSON.stringify(obj)); };
@@ -340,7 +461,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && url.startsWith('/api/sq/img/')) return sqImage(res, url.slice(12));
   const h = H[url]; if (!h) return send(404, { err: 'nf' });
   const ip = String(req.headers['x-real-ip'] || req.socket.remoteAddress || '');
-  if (req.method === 'GET') { if (url !== '/api/health') return send(405, { err: 'method' }); return h({}, ip).then(r => send(200, r)); }
+  if (req.method === 'GET') { if (url !== '/api/health' && url !== '/api/config') return send(405, { err: 'method' }); return h({}, ip).then(r => send(200, r)); }
   if (req.method !== 'POST') return send(405, { err: 'method' });
   let len = 0; const chunks = [];
   req.on('data', c => { len += c.length; if (len > MAX_BODY) { send(413, { err: 'big' }); req.destroy(); } else chunks.push(c); });
