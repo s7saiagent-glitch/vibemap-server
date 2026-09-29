@@ -3,7 +3,7 @@
    VibeMap v7.0 — تطبيق لاسلكي حقيقي بين الجوالات (ويب + أندرويد + آيفون)
    WebRTC P2P (PeerJS) · ECDH P-256 + AES-GCM-256 · GPS · بوصلة · كاميرا
    ════════════════════════════════════════════════════════════ */
-const VERSION = '8.0';
+const VERSION = '8.1';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -106,7 +106,7 @@ function saveMsgs(){ clearTimeout(msgSaveT); msgSaveT = setTimeout(() => idb.set
 
 /* ════════ أدوات ════════ */
 function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2800); }
-function vibrate(p){ try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
+function vibrate(p){ try{ if(!navigator.vibrate || (navigator.userActivation && !navigator.userActivation.hasBeenActive)) return; navigator.vibrate(p); }catch(e){} }
 function makePin(){
   const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const r = new Uint8Array(8); crypto.getRandomValues(r);
@@ -205,8 +205,9 @@ function unlockAudio(){
 }
 
 /* ════════ الشبكة: PeerJS WebRTC ════════ */
-function setNet(s){ RT.net = s; const el = $('#net'); el.className = 'net ' + (s === 'on' ? 'on' : s === 'wait' ? 'wait' : '');
-  el.querySelector('span').textContent = s === 'on' ? 'متصل' : s === 'wait' ? 'يتصل…' : 'غير متصل';
+function setNet(s){ RT.net = s; const el = $('#net'); const off = S && S.settings && S.settings.offline;
+  el.className = 'net ' + (off ? 'manual' : s === 'on' ? 'on' : s === 'wait' ? 'wait' : '');
+  el.querySelector('span').textContent = off ? 'أوفلاين' : s === 'on' ? 'أونلاين' : s === 'wait' ? 'يتصل…' : 'غير متصل';
   if(S && S.me && RT.tab === 'me') renderAll(); }
 /* v7.1: كانت قائمتنا تستبدل خوادم TURN المجانية المدمجة في PeerJS، فيفشل الاتصال بين جوالين على شبكة الجوال.
    الآن: STUN + TURN المجاني من PeerJS دائماً، + خادمك الخاص إن أضفته */
@@ -222,6 +223,7 @@ const SIGNAL = (() => { const v = (document.querySelector('meta[name=vibemap-sig
   try{ if(!v) return {}; const u = new URL(v); return { host:u.hostname, port:+(u.port || (u.protocol === 'https:' ? 443 : 80)), secure:u.protocol === 'https:', path:u.pathname || '/' }; }catch(e){ return {}; } })();
 const relayOnly = () => !!(S.settings.relayOnly && S.settings.turnUrl);
 function startPeer(){
+  if(S.settings.offline){ setNet('off'); return; }
   if(typeof Peer === 'undefined'){ setNet('off'); toast('تعذّر تحميل مكتبة الاتصال'); return; }
   if(RT.peer && !RT.peer.destroyed) RT.peer.destroy();
   setNet('wait');
@@ -278,7 +280,7 @@ function setupConn(c, outgoing){
   if(!outgoing) c._init = pin;
   c.on('open', () => {
     delete RT.pending[pin]; if(RT.iceFail) delete RT.iceFail[pin];
-    c.send({ type:'hello', v:VERSION, pin:S.me.pin, name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), via:(S.friends[pin] && S.friends[pin].status === 'out' && S.friends[pin].via) || undefined });
+    c.send({ type:'hello', v:VERSION, pin:S.me.pin, name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), bio:S.me.bio || null, via:(S.friends[pin] && S.friends[pin].status === 'out' && S.friends[pin].via) || undefined });
   });
   c.on('data', d => onData(c, pin, d).catch(e => console.warn('data', e)));
   c.on('close', () => { if(RT.conns[pin] === c){ delete RT.conns[pin]; const f = S.friends[pin]; if(f){ f.seen = now(); save(); } RT.rxTalking.delete(pin); renderAll(); } });
@@ -290,7 +292,7 @@ async function onData(c, pin, d){
   if(d.type === 'hello'){
     if(pinOf(c.peer) !== d.pin) return;
     const pub = V.pub(d.pub); if(!pub) return;
-    d = { ...d, name:V.name(d.name), color:V.color(d.color), rep:V.rep(d.rep), v:V.str(d.v, 8), pub };
+    d = { ...d, name:V.name(d.name), color:V.color(d.color), rep:V.rep(d.rep), lvl:V.lvl(d.lvl), bio:V.bio(d.bio), v:V.str(d.v, 8), pub };
     if(!S.friends[pin] && Object.values(S.friends).filter(x => x.status === 'in').length >= 20){ try{ c.close(); }catch(e){} return; }
     const old = RT.conns[pin];
     if(old && old !== c && old.open){
@@ -307,7 +309,7 @@ async function onData(c, pin, d){
       notify('طلب صداقة جديد', `${d.name} يريد إضافتك في VibeMap`);
       tone(BEEP.msg); toast(`طلب صداقة من ${d.name}`);
     }
-    f.name = d.name; f.color = d.color; f.rep = d.rep; f.seen = now(); f.ver = d.v;
+    f.name = d.name; f.color = d.color; f.rep = d.rep; f.lvl = d.lvl; f.bio = d.bio; f.seen = now(); f.ver = d.v; if(f.status === 'friend') delete f.reqVoice;
     if(pubChanged && f.status === 'friend'){
       /* v7: لا نثق بالمفتاح الجديد تلقائياً — نوقف المراسلة حتى يتحقق المستخدم (حماية من انتحال الرقم) */
       if(!f.newPub || f.newPub.x !== pub.x){ f.newPub = pub; f.keyAlert = true; delete RT.keys[pin];
@@ -378,9 +380,9 @@ async function pushToken(){
 async function relayReg(){
   if(!RELAY || RL.regBusy) return; RL.regBusy = true;
   try{
-    const fcm = await pushToken();
+    const fcm = S.settings.offline ? null : await pushToken();
     const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 20000);
-    const r = await fetch(RELAY + '/api/reg', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), fcm:fcm || '', plat:PLATFORM }), signal:ac.signal }).catch(() => null);
+    const r = await fetch(RELAY + '/api/reg', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), fcm:fcm || '', plat:PLATFORM, dev:S.me.dev || undefined }), signal:ac.signal }).catch(() => null);
     clearTimeout(t);
     const j = r && await r.json().catch(() => null);
     RL.taken = !!(r && r.status === 403);
@@ -417,7 +419,7 @@ async function sendAny(pin, obj, kind, roomName){
   return (await relaySend(pin, obj, kind, roomName)) ? 'relay' : false;
 }
 async function relayFetch(fromPush){
-  if(!RELAY || !S) return;
+  if(!RELAY || !S || S.settings.offline) return;
   if(RL.busy){ RL.again = true; return; } RL.busy = true;
   RT.quietNotify = !!(fromPush && PLATFORM === 'android');
   try{
@@ -426,6 +428,8 @@ async function relayFetch(fromPush){
       const done = [];
       for(const x of j.items){
         const pin = typeof x.f === 'string' ? x.f : ''; done.push(pin + '/' + x.id);
+        if(x.iv === 'PLAIN'){ try{ handlePlain(pin, JSON.parse(TD.decode(unb64(x.ct))), null); }catch(e){} continue; }
+        if(x.iv === 'X'){ try{ const o = await openSealed(x.ct); handlePlain(pin, o.m, o.pub); }catch(e){ console.warn('sealed', e); } continue; }
         const f = S.friends[pin]; if(!f || f.status !== 'friend' || f.keyAlert || S.blocked[pin]) continue;
         if(!RT.keys[pin] && !(await deriveFor(pin))) continue;
         let m; try{ m = await decryptFrom(pin, x.iv, x.ct); }catch(e){ console.warn('relay decrypt'); continue; }
@@ -469,6 +473,9 @@ function handleInner(pin, m){
     case 'talk': {
       clearTimeout((RT.rxT || (RT.rxT = {}))[pin]);
       if(m.on) RT.rxT[pin] = setTimeout(() => { if(RT.rxTalking.delete(pin)){ rxPlay(pin, false); renderTalk(); renderStage(); } }, 65000); /* احتياط لو ضاعت رسالة «انتهى» */
+      /* v8.1: اثنين ضغطوا مع بعض — اللي ضغط أول يكمل والثاني يسكت */
+      if(m.on && RT.talking && (RT._txTargets || []).includes(pin)){ const their = V.num(m.ts, 1e12, 1e13) || now();
+        if(their < (RT.talkTs || 0) || (their === RT.talkTs && pin < S.me.pin)){ pttUp(); if(RT.rec) chatRecStop(true); toast(`${f.name} سبقك بالكلام — انتظر لين يخلص`); } }
       if(m.on){ if(!RT.rxTalking.has(pin)){ RT.rxTalking.add(pin); tone(BEEP.rx); vibrate(25); if(!f.mute) notify(`${f.name} يتحدث`, 'افتح VibeMap للاستماع'); } rxPlay(pin, true); }
       else { RT.rxTalking.delete(pin); rxPlay(pin, false); }
       renderTalk(); renderStage(); break;
@@ -486,6 +493,9 @@ function handleInner(pin, m){
       save(); saveMsgs(); renderStage(); renderAll(); break;
     }
     case 'story': recvStory(pin, m); break;
+    case 'poke': recvPoke(pin, m); break;
+    case 'story-react': recvStoryReact(pin, m); break;
+    case 'story-shot': recvStoryShot(pin, m); break;
     case 'avatar': { const d = m.data === '' ? null : V.photo(m.data); if(m.data !== '' && (!d || d.length > 90000)) break; if(f.photo === d) break; f.photo = d; save(); renderAll(); break; }
     case 'room': recvRoom(pin, m); break;
     case 'rmsg': recvRoomMsg(pin, m); break;
@@ -506,16 +516,16 @@ function handleInner(pin, m){
 /* v7.5: جودة وسرعة الصوت — Opus بصوت عريض 32kbps، تصحيح أخطاء الشبكة (FEC)، وإيقاف الإرسال في الصمت (DTX) */
 function opusTune(sdp){
   const m = sdp.match(/a=rtpmap:(\d+) opus\/48000/i); if(!m) return sdp;
-  const pt = m[1], want = { minptime:'10', useinbandfec:'1', usedtx:'1', stereo:'0', 'sprop-stereo':'0', maxaveragebitrate:'32000', maxplaybackrate:'48000', cbr:'0' };
+  const pt = m[1], want = { minptime:'10', useinbandfec:'1', usedtx:'1', stereo:'0', 'sprop-stereo':'0', maxaveragebitrate:'40000', maxplaybackrate:'48000', cbr:'0' };
   const re = new RegExp(`a=fmtp:${pt} ([^\\r\\n]*)`);
   const merge = cur => { const o = {}; cur.split(';').forEach(kv => { const [k, v] = kv.split('='); if(k) o[k.trim()] = (v || '').trim(); }); Object.assign(o, want); return Object.entries(o).map(([k, v]) => `${k}=${v}`).join(';'); };
   return re.test(sdp) ? sdp.replace(re, (x, cur) => `a=fmtp:${pt} ${merge(cur)}`) : sdp.replace(m[0], `${m[0]}\r\na=fmtp:${pt} ${merge('')}`);
 }
 function tuneSender(pc){
   pc.getSenders().forEach(snd => { if(snd.track && snd.track.kind !== 'audio') return; try{ const p = snd.getParameters(); if(!p.encodings || !p.encodings.length) p.encodings = [{}];
-    p.encodings.forEach(e => { e.maxBitrate = 32000; e.priority = 'high'; e.networkPriority = 'high'; }); snd.setParameters(p).catch(() => {}); }catch(e){} });
+    p.encodings.forEach(e => { e.maxBitrate = 40000; e.priority = 'high'; e.networkPriority = 'high'; }); snd.setParameters(p).catch(() => {}); }catch(e){} });
 }
-function tuneReceiver(pc){ pc.getReceivers().forEach(r => { try{ if('jitterBufferTarget' in r) r.jitterBufferTarget = 40; else if('playoutDelayHint' in r) r.playoutDelayHint = 0.04; }catch(e){} }); }
+function tuneReceiver(pc){ pc.getReceivers().forEach(r => { try{ if('jitterBufferTarget' in r) r.jitterBufferTarget = 30; else if('playoutDelayHint' in r) r.playoutDelayHint = 0.03; }catch(e){} }); }
 function ensureCall(pin){
   if(isDemo(pin) || !RT.peer || RT.peer.disconnected) return;
   const ex = RT.outCalls[pin]; if(ex && !ex._closed) return;
@@ -557,7 +567,8 @@ async function getMicTrack(){
 }
 /* v7.6: نحرر الميكروفون بسرعة (فوراً تقريباً والتطبيق في الخلفية) — عشان واتساب وغيره يقدرون يسجلون */
 function releaseMicNow(){ clearTimeout(RT.micTimer); if(!RT.talking && !RT.rec && RT.micTrack){ RT.micTrack.stop(); RT.micTrack = null; } }
-function releaseMicSoon(){ clearTimeout(RT.micTimer); RT.micTimer = setTimeout(releaseMicNow, document.visibilityState === 'visible' ? 3000 : 600); }
+/* v8.1: الميكروفون يبقى جاهز 15 ثانية بعد آخر كلام والتطبيق قدامك — الرد يطلع فوراً بدون تأخير */
+function releaseMicSoon(){ clearTimeout(RT.micTimer); RT.micTimer = setTimeout(releaseMicNow, document.visibilityState === 'visible' ? 15000 : 600); }
 /* v7.6: في تطبيق الجوال لا يبقى مشغّل الصوت مفتوحاً إلا وأحد يتكلم — لا نحجز الصوت ولا نأثر على التطبيقات الأخرى */
 function rxPlay(pin, on){
   const a = RT.audios[pin]; if(!a) return;
@@ -575,23 +586,25 @@ function pttTargets(){
 
 async function pttDown(){
   if(RT.talking) return;
+  if(S.settings.offline){ toast('أنت أوفلاين — ارجع أونلاين من أعلى الشاشة عشان تتكلم'); return; }
+  if(floorBusy()) return;
   unlockAudio();
   const targets = pttTargets();
   /* غير متصل؟ إذا اخترت شخصاً أو غرفة نسجّل رسالة صوتية توصله أول ما يتصل */
   const offlineTo = !targets.length && RT.target && convInfo(RT.target) ? RT.target : null;
   if(!targets.length && !offlineTo){ toast('لا يوجد أصدقاء متصلون الآن — اختر صديقاً من «لمن تتحدث» لتسجيل رسالة صوتية'); return; }
-  RT.talking = true; renderTalk();
+  RT.talking = true; RT.talkTs = now(); renderTalk();
   let track;
   try{ track = await getMicTrack(); }
   catch(e){ RT.talking = false; renderTalk(); toast('اسمح باستخدام الميكروفون من إعدادات المتصفح ثم حاول مجدداً'); return; }
   if(!RT.talking){ releaseMicSoon(); return; }
-  tone(BEEP.start); vibrate(20); bgTalk(true);
+  tone(BEEP.start); vibrate(20); bgTalk(true); stat('talks');
   pttRecStart(track, targets);
   if(!RT.bgMic && BG() && S.settings.bgMode){ RT.bgMic = true; bgApply(); } /* بعد السماح بالميكروفون نعيد تشغيل الخدمة لتشمل التحدث من الخلفية */
   RT._txTargets = targets;
   for(const pin of targets){
     if(isDemo(pin)){ if(isEcho(pin)) startEcho(track); continue; } /* صدى يدخل هنا فقط إذا اخترته بنفسك أو ما عندك أصدقاء حقيقيون */
-    sendEnc(pin, { k:'talk', on:true }); ensureCall(pin); setTrack(pin, track);
+    sendEnc(pin, { k:'talk', on:true, ts:RT.talkTs }); ensureCall(pin); setTrack(pin, track);
   }
 }
 /* v7.8: كل تحدث من الرادار/الفقاعة/الأزرار يُحفظ تلقائياً كرسالة صوتية في المحادثة */
@@ -599,7 +612,7 @@ function pttRecStart(track, targets){
   const mime = pickMime(); if(mime === null || RT.rec) return;
   const convs = RT.target && (isRoom(RT.target) || !targets.length) ? [RT.target] : targets.filter(p => S.friends[p]);
   if(!convs.length) return;
-  try{ const mr = new MediaRecorder(new MediaStream([track]), mime ? { mimeType:mime, audioBitsPerSecond:24000 } : undefined);
+  try{ const mr = new MediaRecorder(new MediaStream([track]), mime ? { mimeType:mime, audioBitsPerSecond:32000 } : undefined);
     const rec = { mr, chunks:[], t0:now(), convs, live:targets.length > 0 }; mr.ondataavailable = e => { if(e.data && e.data.size) rec.chunks.push(e.data); };
     mr.onstop = () => { const dur = (now() - rec.t0) / 1000; if(dur < .8) return; const blob = new Blob(rec.chunks, { type:mr.mimeType || 'audio/webm' }); if(!blob.size || blob.size > 1.4e6) return;
       const fr = new FileReader(); fr.onload = () => { const data = V.audio(String(fr.result)); if(!data) return; rec.convs.forEach(c => { if(convInfo(c)) sendMsg(c, { type:'voice', data, dur:Math.min(VOICE_MAX, dur), live:rec.live }); });
@@ -644,7 +657,7 @@ function startGeo(){
   if(geoWatch != null) return;
   RT.geoMode = geoWant(); const high = RT.geoMode === 'high';
   geoWatch = navigator.geolocation.watchPosition(p => {
-    RT.myLoc = { lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy, ts:now() };
+    RT.myLoc = { lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy, ts:now() }; if(S.settings.pubVis) pubSync();
     if(RT.heading == null && p.coords.heading != null && !isNaN(p.coords.heading) && p.coords.speed > 1) RT.gpsHeading = p.coords.heading;
     RT.geoErr = null; broadcastLoc(); if(document.visibilityState === 'visible') renderStageT();
   }, err => { RT.geoErr = err.code === 1 ? 'لم تسمح بالوصول للموقع' : 'تعذّر تحديد موقعك الآن'; geoWatch = null; renderStage(); },
@@ -731,6 +744,8 @@ function demoReceive(pin, m){
 }
 
 /* ════════ المحادثة ════════ */
+/* v8.1: صح وحدة حمراء = أُرسلت · صحين برتقالي = وصلت · صحين أخضر = قُرئت */
+function tickHtml(st){ return st === 'read' ? '<i class="tk r" title="قُرئت">✓✓</i>' : st === 'delivered' ? '<i class="tk d" title="وصلت">✓✓</i>' : st === 'sent' ? '<i class="tk s" title="أُرسلت">✓</i>' : '<i class="tk p" title="ينتظر">⏳</i>'; }
 function sysMsg(pin, text){ (MSG[pin] || (MSG[pin] = [])).push({ id:uid(), from:'sys', type:'sys', text, ts:now(), ttl:'keep' }); saveMsgs(); }
 async function deliver(conv, m){
   if(isRoom(conv)) return deliverRoom(conv.slice(2), m);
@@ -751,7 +766,7 @@ function sendMsg(conv, o){
   const ci = convInfo(conv); if(!ci) return;
   const m = { id:uid(), from:'me', type:o.type, text:o.text || '', data:o.data || null, dur:o.dur || 0, live:!!o.live, ts:now(), ttl:ci.ttl, st:'pending' };
   if(isRoom(conv)) m.dl = [];
-  (MSG[conv] || (MSG[conv] = [])).push(m); saveMsgs(); renderChatIfOpen(conv); deliver(conv, m);
+  (MSG[conv] || (MSG[conv] = [])).push(m); saveMsgs(); renderChatIfOpen(conv); deliver(conv, m); if(!o.live) stat('msgs');
 }
 function sendChat(conv, text){ text = String(text || '').trim(); if(text) sendMsg(conv, { type:'text', text }); }
 async function sendPhoto(conv, file){
@@ -827,7 +842,7 @@ function recvStory(pin, m){
 function postStory(o){
   const loc = o.withLoc && RT.myLoc && !S.settings.ghost ? { lat:+RT.myLoc.lat.toFixed(5), lng:+RT.myLoc.lng.toFixed(5), acc:0 } : null;
   const s = { id:uid(), t:o.t, text:o.text || '', bg:o.bg || 0, data:o.data || null, ts:now(), exp:now() + STORY_TTL, loc, views:{} };
-  STO.mine.push(s); while(STO.mine.length > STORY_MAX) STO.mine.shift(); saveSto();
+  STO.mine.push(s); while(STO.mine.length > STORY_MAX) STO.mine.shift(); saveSto(); stat('stories');
   syncAllStories();
   if(S.settings.demo && S.friends['VM-DEMO-SARA']) setTimeout(() => { const x = STO.mine.find(y => y.id === s.id); if(x){ x.views['VM-DEMO-SARA'] = now(); saveSto(); if(SV && SV.mine) renderStoryView(); } }, 2500);
   renderStories(); renderStage();
@@ -896,9 +911,10 @@ function renderStoryView(){
   el.innerHTML = `<div class="bars">${SV.list.map((x, k) => `<i class="${k === SV.i ? 'cur' : ''}"><b style="width:${k < SV.i ? 100 : 0}%"></b></i>`).join('')}</div>
   <div class="head"><span class="av" style="${avCss(who)}">${esc(initial(who.name))}</span><span class="grow"><b>${SV.mine ? 'حالتي' : esc(who.name)}</b><small>${fmtAgo(s.ts)}${where}</small></span><button class="iconbtn" data-act="sv-close" aria-label="إغلاق">✕</button></div>
   <div class="body" id="svBody" style="background:${s.t === 'photo' ? '#111' : SBG[s.bg] || SBG[0]}">${s.t === 'photo' ? `<img src="${esc(s.data)}" alt="صورة الحالة">` : ''}${s.text ? `<div class="${s.t === 'photo' ? 'cap' : 'txt'}">${esc(s.text)}</div>` : ''}</div>
-  ${SV.showViews ? `<div class="viewers"><div class="t1" style="margin-bottom:6px">شاهدها ${views.length}</div>${views.length ? views.map(([p, t]) => `<div class="t2">${esc((S.friends[p] || {}).name || p)} · ${fmtAgo(t)}</div>`).join('') : '<div class="t2">لم يشاهدها أحد بعد</div>'}</div>` : ''}
+  ${SV.showViews ? `<div class="viewers"><div class="t1" style="margin-bottom:6px">شاهدها ${views.length}${s.shots && Object.keys(s.shots).length ? ` · 📸 ${Object.keys(s.shots).length}` : ''}</div>${views.length ? views.map(([p, t]) => `<div class="t2">${esc((S.friends[p] || {}).name || p)}${s.reacts && s.reacts[p] ? ' ' + s.reacts[p] : ''}${s.shots && s.shots[p] ? ' · <b style="color:#FFB547">📸 صوّر الشاشة</b>' : ''} · ${fmtAgo(t)}</div>`).join('') : '<div class="t2">لم يشاهدها أحد بعد</div>'}</div>` : ''}
+  ${!SV.mine ? `<div class="sv-reacts">${REACTS.map(e => `<button class="${(SV.reacted || {})[s.id] === e ? 'on' : ''}" data-act="sv-react" data-e="${e}" aria-label="تفاعل ${e}">${e}</button>`).join('')}</div>` : ''}
   <div class="foot">${SV.mine
-    ? `<button class="btn sm" data-act="sv-views">👁 ${views.length}</button><button class="btn sm danger" data-act="sv-del" data-id="${s.id}">حذف</button><span class="grow"></span><button class="btn sm pri" data-act="story-new">+ حالة</button>`
+    ? `<button class="btn sm" data-act="sv-views">👁 ${views.length}${s.reacts && Object.keys(s.reacts).length ? ' · ' + [...new Set(Object.values(s.reacts))].slice(0, 3).join('') + ' ' + Object.keys(s.reacts).length : ''}</button><button class="btn sm danger" data-act="sv-del" data-id="${s.id}">حذف</button><span class="grow"></span><button class="btn sm pri" data-act="story-new">+ حالة</button>`
     : `<form id="svReply" class="field grow" autocomplete="off"><input class="input grow" id="svInput" placeholder="ردّ على ${esc(who.name.split(' ')[0])}…" maxlength="300" enterkeyhint="send"><button class="btn pri" type="submit" aria-label="إرسال">${I.send}</button></form>`}</div>`;
   const body = $('#svBody'); let downAt = 0;
   body.onpointerdown = e => { downAt = performance.now(); SV.paused = true; };
@@ -958,21 +974,22 @@ function bindMic(btn){
 }
 async function chatRecStart(){
   if(RT.rec || !RT.chatWith) return;
+  if(floorBusy(RT.chatWith)) return;
   const conv = RT.chatWith, mime = pickMime();
   if(mime === null){ toast('الجهاز لا يدعم تسجيل الصوت'); return; }
   RT.rec = { conv, chunks:[], t0:now(), stopReq:false };
   unlockAudio();
   let track; try{ track = await getMicTrack(); }catch(e){ RT.rec = null; toast('اسمح باستخدام الميكروفون من الإعدادات ثم حاول مجدداً'); return; }
   const rec = RT.rec; if(!rec) { releaseMicSoon(); return; }
-  try{ rec.mr = new MediaRecorder(new MediaStream([track]), mime ? { mimeType:mime, audioBitsPerSecond:24000 } : undefined); }
+  try{ rec.mr = new MediaRecorder(new MediaStream([track]), mime ? { mimeType:mime, audioBitsPerSecond:32000 } : undefined); }
   catch(e){ RT.rec = null; toast('تعذّر بدء التسجيل'); return; }
   rec.mr.ondataavailable = e => { if(e.data && e.data.size) rec.chunks.push(e.data); };
   rec.mr.onstop = () => finishRec(rec);
   rec.mr.start(250); rec.t0 = now();
   /* البث المباشر لمن هو متصل الآن */
   const targets = convTargets(conv).filter(p => !isDemo(p));
-  RT.talking = true; RT._txTargets = targets; renderTalk(); tone(BEEP.start); vibrate(20); bgTalk(true);
-  for(const p of targets){ sendEnc(p, { k:'talk', on:true }); ensureCall(p); setTrack(p, track); }
+  RT.talking = true; RT.talkTs = now(); RT._txTargets = targets; renderTalk(); tone(BEEP.start); vibrate(20); bgTalk(true);
+  for(const p of targets){ sendEnc(p, { k:'talk', on:true, ts:RT.talkTs }); ensureCall(p); setTrack(p, track); }
   if(isEcho(conv)) startEcho(track);
   rec.live = targets.length > 0 || isEcho(conv);
   $('#composer') && $('#composer').classList.add('rec');
@@ -1003,7 +1020,7 @@ function finishRec(rec){
 }
 function voiceBubble(conv, m){
   const me = m.from === 'me', room = isRoom(conv), playing = RT.vMid === m.id;
-  const st = me ? (m.st === 'read' ? '✓✓ قُرئت' : m.st === 'delivered' ? '✓✓' : m.st === 'sent' ? '✓' : '⏳') : '';
+  const st = me ? tickHtml(m.st) : '';
   const snd = room && !me ? `<div class="snd" style="color:${senderColor(m.sender)}">${esc(m.sname || '')}</div>` : '';
   const ok = !!V.audio(m.data);
   return `<div class="bub vnote ${me ? 'me' : ''}" data-mid="${esc(m.id)}">${snd}<div class="vrow">
@@ -1384,7 +1401,9 @@ function renderStoriesTab(){
   const newOnes = fr.filter(f => !f.muteStories && hasUnseen(f.pin)).sort((a, b) => friendStories(b.pin).slice(-1)[0].ts - friendStories(a.pin).slice(-1)[0].ts);
   const seenOnes = fr.filter(f => !f.muteStories && !hasUnseen(f.pin)).sort((a, b) => friendStories(b.pin).slice(-1)[0].ts - friendStories(a.pin).slice(-1)[0].ts);
   const muted = fr.filter(f => f.muteStories), mine = activeMine();
-  let h = `<div class="pad"><div class="h1">الحالات</div>
+  const seg = `<div class="seg wide stseg" role="tablist"><button class="${RT.stSeg !== 'square' ? 'on' : ''}" data-act="st-seg" data-v="stories" role="tab">الحالات</button><button class="${RT.stSeg === 'square' ? 'on' : ''}" data-act="st-seg" data-v="square" role="tab"># الساحة</button></div>`;
+  if(RT.stSeg === 'square'){ const hh = `<div class="pad"><div class="h1">اكتشف</div>${seg}${squareHtml()}</div>`; if(v._h !== hh){ v.innerHTML = hh; v._h = hh; } return; }
+  let h = `<div class="pad"><div class="h1">اكتشف</div>${seg}
     <div class="st-hero"><button class="st-cam" data-act="cam-open"><span>📷</span><b>صوّر حالة</b><small>فلاتر وملصقات</small></button>
       <button class="st-cam alt" data-act="story-new"><span>✍️</span><b>حالة نصية</b><small>بخلفية ملونة</small></button></div>
     <div class="h2">حالتي ${mine.length ? `<span class="pill">${mine.length}</span>` : ''}</div>
@@ -1562,7 +1581,7 @@ function sosToName(to){
   return (S.friends[to] && S.friends[to].status === 'friend') ? S.friends[to].name : 'الجميع';
 }
 function sosDefault(){ const t = S.settings.sosTo || 'all'; return (t === 'all' || (isRoom(t) ? roomOf(t) : S.friends[t] && S.friends[t].status === 'friend')) ? t : 'all'; }
-function renderSosBtn(){ const b = $('#sosBtn'); const l = b && b.querySelector('span:last-child'); if(!l) return; const t = sosDefault(); l.textContent = t === 'all' ? 'استغاثة' : 'SOS: ' + sosToName(t).split(' ')[0]; }
+function renderSosBtn(){ const b = $('#sosBtn'); const l = b && b.querySelector('.sub'); if(!l) return; const t = sosDefault(); l.textContent = t === 'all' ? '' : sosToName(t).split(' ')[0]; l.hidden = t === 'all'; b.title = 'استغاثة إلى ' + sosToName(t); }
 async function sendSOS(to){
   to = to || sosDefault();
   const list = sosTargets(to);
@@ -1643,19 +1662,23 @@ function addFriendByPin(raw){
   if(f && f.status === 'friend'){ toast(`${f.name} صديقك بالفعل`); return true; }
   if(f && f.status === 'in'){ acceptFriend(pin); return true; }
   S.friends[pin] = { pin, name:pin, color:COLORS[Math.floor(Math.random() * COLORS.length)], status:'out', added:now() };
-  save(); connectTo(pin); toast('أُرسل طلب الصداقة. سيصل عندما يفتح صديقك التطبيق.'); renderAll(); return true;
+  save(); connectTo(pin); relaySendPlain(pin, reqPayload(), 'friend').then(ok => toast(ok ? 'أُرسل طلب الصداقة ويوصله إشعار ✓' : 'أُرسل طلب الصداقة. يوصله أول ما يفتح التطبيق.')); renderAll(); return true;
 }
 function acceptFriend(pin){
   const f = S.friends[pin]; if(!f) return; f.status = 'friend'; save();
   const c = RT.conns[pin]; if(c && c.open) c.send({ type:'accept' });
+  relaySendPlain(pin, acceptPayload(), 'accept'); if(f.pub && !RT.keys[pin]) deriveFor(pin); delete f.reqVoice; save();
   toast(`أصبحت أنت و${f.name} أصدقاء`); onFriendOnline(pin); renderAll();
 }
-function declineFriend(pin){ const c = RT.conns[pin]; if(c && c.open){ c.send({ type:'decline' }); setTimeout(() => c.close(), 300); } delete S.friends[pin]; save(); renderAll(); }
+function declineFriend(pin){ const c = RT.conns[pin]; if(c && c.open){ c.send({ type:'decline' }); setTimeout(() => c.close(), 300); } relaySendPlain(pin, { k:'fdec', pub:S.keys.pub }); delete S.friends[pin]; save(); renderAll(); }
 /* v7: حظر مستخدم — يقطع الاتصال ويرفض أي طلب أو رسالة منه مستقبلاً، ويمكن الإبلاغ عنه */
 const SUPPORT_EMAIL = (document.querySelector('meta[name=vibemap-support-email]') || {}).content || '';
 function blockUser(pin, report){
-  const f = S.friends[pin]; if(!f || isDemo(pin)) return;
+  if(!PIN_STRICT.test(pin) || isDemo(pin)) return;
+  const sq = SQ.items.find(x => x.pin === pin), nr = nearOf(pin);
+  const f = S.friends[pin] || { name:(nr && nr.n) || (sq && V.name(sq.n)) || pin, hidePin:false };
   S.blocked[pin] = { name:f.name, ts:now(), hidePin:!!f.hidePin };
+  if(RT.near) RT.near = RT.near.filter(x => x.pin !== pin); SQ.items = SQ.items.filter(x => x.pin !== pin);
   const c = RT.conns[pin]; if(c && c.open){ c.send({ type:'remove' }); setTimeout(() => c.close(), 300); }
   delete S.friends[pin]; delete MSG[pin]; delete STO.fr[pin]; delete STO.sent[pin]; saveSto(); if(RT.target === pin) RT.target = null; save(); saveMsgs(); closeSheet(); closeChat(); renderAll();
   toast(`تم حظر ${f.name}`);
@@ -1714,7 +1737,7 @@ function renderTabs(){
   const req = Object.values(S.friends).filter(f => f.status === 'in').length;
   $('#t-radar').innerHTML = `${I.radar}<span>الرادار</span>`;
   { const ns = Object.values(S.friends).filter(f => f.status === 'friend' && !f.muteStories && hasUnseen(f.pin)).length;
-    $('#t-stories').innerHTML = `${I.story}<span>الحالات</span>${ns ? `<span class="badge num">${ns}</span>` : ''}`; }
+    $('#t-stories').innerHTML = `${I.story}<span>اكتشف</span>${ns ? `<span class="badge num">${ns}</span>` : ''}`; }
   $('#t-chats').innerHTML = `${I.chat}<span>المحادثات</span>${u ? `<span class="badge num">${u}</span>` : ''}`;
   $('#t-friends').innerHTML = `${I.users}<span>الأصدقاء</span>${req ? `<span class="badge num">${req}</span>` : ''}`;
   $('#t-me').innerHTML = `${I.user}<span>حسابي</span>`;
@@ -1725,13 +1748,14 @@ function renderToolbar(){
   const rm = RT.target && roomOf(RT.target), t = !rm && RT.target && S.friends[RT.target];
   const chip = $('#targetChip'); chip.classList.toggle('hot', !!(t || rm));
   chip.innerHTML = (rm ? `تتحدث في غرفة <b>${esc(rm.emoji)} ${esc(rm.name)}</b> (${convTargets(RT.target).length} متصل)` : t ? `تتحدث إلى <b>${esc(t.name)}</b> فقط` : `تتحدث إلى <b>كل الأصدقاء المتصلين (${pttTargets().length})</b>`) + ' <span class="chev">▾</span>';
-  const g = S.settings.ghost; $('#ghostBtn').setAttribute('aria-pressed', g); $('#ghostIcon').innerHTML = g ? I.eyeOff : I.eye; $('#ghostLbl').textContent = g ? 'مخفي' : 'ظاهر';
+  const vm = visMode(); $('#ghostBtn').setAttribute('aria-pressed', vm === 'hidden'); $('#ghostBtn').classList.toggle('pubv', vm === 'public');
+  $('#ghostIcon').innerHTML = vm === 'hidden' ? I.eyeOff : vm === 'public' ? '<span style="font-size:22px">🌍</span>' : I.eye; $('#ghostLbl').textContent = vm === 'hidden' ? 'مخفي' : vm === 'public' ? 'للجميع' : 'للأصدقاء';
   $('#pttIcon').innerHTML = I.mic;
 }
 function renderTalk(){
   bgState();
   const p = $('#ptt'); p.classList.toggle('talk', RT.talking); p.classList.toggle('rx', !RT.talking && RT.rxTalking.size > 0);
-  $('#pttLbl').textContent = RT.talking ? ((RT._txTargets || []).length ? 'تبث الآن…' : 'يسجّل رسالة…') : 'اضغط وتحدث';
+  $('#pttLbl').textContent = RT.talking ? ((RT._txTargets || []).length ? 'تبث الآن…' : 'يسجّل رسالة…') : RT.rxTalking.size ? 'انتظر…' : 'اضغط وتحدث';
   const names = [...RT.rxTalking].map(p => S.friends[p] && S.friends[p].name).filter(Boolean);
   $('#rxbar').textContent = RT.talking ? `على الهواء إلى ${RT._txTargets ? RT._txTargets.length : 0} ${(RT._txTargets||[]).length === 1 ? 'صديق' : 'أصدقاء'}` : names.length ? `${names.join('، ')} ${names.length > 1 ? 'يتحدثون' : 'يتحدث'} الآن` : '';
 }
@@ -1754,7 +1778,7 @@ function renderStage(){
   let msg = '';
   if(!RT.myLoc){ msg = RT.geoErr ? `${esc(RT.geoErr)}${S.settings.demo ? '. نعرض موقعاً تقريبياً للتجربة.' : '.'}` : 'نحدد موقعك…';
     if(RT.geoErr) msg += ` <button class="btn sm pri" data-act="geo-retry">إعادة المحاولة</button>`; }
-  else if(!people.length){ msg = `لا يظهر أحد بعد. أضف صديقاً برقم VibeMap الخاص به. <button class="btn sm pri" data-act="tab" data-tab="friends">إضافة</button>`; }
+  else if(!people.length && !(RT.near || []).length){ msg = `لا يظهر أحد بعد. أضف صديقاً برقم VibeMap الخاص به. <button class="btn sm pri" data-act="tab" data-tab="friends">إضافة</button>`; }
   else if(RT.mode === 'ar' && RT.heading == null){ msg = `فعّل البوصلة ليعرف التطبيق اتجاه كاميرتك. <button class="btn sm pri" data-act="compass">تفعيل</button>`; }
   note.hidden = !msg; note.innerHTML = msg;
   renderTalk();
@@ -1765,8 +1789,9 @@ function radarBuild(box){
     <div class="axis" style="left:50%;top:2%;bottom:2%;width:1px"></div><div class="axis" style="top:50%;left:2%;right:2%;height:1px"></div></div>
     ${[1/3, 2/3, 1].map((r, i) => `<div class="rlabel" id="rl${i}" style="top:${50 + r*48}%"></div>`).join('')}
     <div class="rotor" id="rotor"><div class="north"><span>N</span></div><div id="rItems"></div></div>
-    <div class="me-cone" id="meCone" hidden></div><div class="me-dot" title="أنت"></div><div id="meBub"></div>`;
-  box._built = true; box._items = {};
+    <div class="me-cone" id="meCone" hidden></div><div class="me-dot" title="أنت"></div><div id="meBub"></div>
+    <div class="rzoom"><button data-act="zoom" data-z="in" aria-label="تقريب">＋</button><button data-act="zoom" data-z="auto" id="zAuto" class="${RT.zoom ? '' : 'on'}" aria-label="تكبير تلقائي">A</button><button data-act="zoom" data-z="out" aria-label="تبعيد">－</button></div>`;
+  box._built = true; box._items = {}; radarGestures(box);
 }
 /* دوران البوصلة: نحدّث الاتجاه بضع مرات في الثانية فقط، والانتقال الناعم بينها يسويه معالج الرسوم (بدون تشغيل المعالج كل إطار) */
 function radarHeading(){
@@ -1808,12 +1833,15 @@ function declutter(items, minD){
 function radarUpdate(box, center, people){
   if(!box._built) radarBuild(box);
   const dists = center ? people.map(f => distance(center, f.loc)) : [];
-  const range = niceRange(Math.max(150, ...dists.map(d => d * 1.15)));
+  const near = center && !S.settings.hideNear ? (RT.near || []) : [];
+  const nd = near.map(x => distance(center, x.loc)).filter(d => d <= 2000);
+  const range = RT.zoom || niceRange(Math.max(150, ...dists.map(d => d * 1.15), ...nd.map(d => d * 1.1)));
   if(box._range !== range){ box._range = range; [1/3, 2/3, 1].forEach((r, i) => { const l = $('#rl' + i); if(l) l.textContent = fmtDist(range * r); }); }
   const pos = (loc) => { const d = distance(center, loc), b = bearing(center, loc), r = Math.min(1, d / range) * 46; return { d, x:50 + r * Math.sin(rad(b)), y:50 - r * Math.cos(rad(b)) }; };
   const want = [];
   if(center){
     const blips = people.map(f => { const p = pos(f.loc); return { key:'b:' + f.pin, kind:'blip', f, ...p, r:19 }; });
+    near.forEach(x => { const p = pos(x.loc); if(p.d <= range * 1.02) blips.push({ key:'n:' + x.pin, kind:'stranger', nr:x, ...p, d:x.d || p.d, r:16 }); });
     const pins = [];
     Object.values(S.friends).filter(f => f.status === 'friend' && !f.muteStories).forEach(f => friendStories(f.pin).forEach(x => { if(x.loc && !(f.loc && !f.hidden && distance(f.loc, x.loc) < 40)) pins.push({ pin:f.pin, s:x }); }));
     activeMine().forEach(x => { if(x.loc && distance(center, x.loc) >= 40) pins.push({ pin:'me', s:x }); });
@@ -1826,11 +1854,15 @@ function radarUpdate(box, center, people){
     let sig, cls, html;
     if(it.kind === 'blip'){ const f = it.f, st = f.muteStories ? [] : friendStories(f.pin), latest = st[st.length - 1];
       const on = isOnline(f.pin), talk = RT.rxTalking.has(f.pin);
-      cls = ['blip', on ? 'on' : 'off', talk ? 'talk' : '', f.sos ? 'sos' : '', !f.muteStories && hasUnseen(f.pin) ? 'story' : ''].join(' ');
+      cls = ['blip', on ? 'on' : 'off', talk ? 'talk' : '', f.sos ? 'sos' : '', !f.muteStories && hasUnseen(f.pin) ? 'story' : '', RT.poked && now() - (RT.poked[f.pin] || 0) < 4000 ? 'poked' : ''].join(' ');
       html = `<span class="bin">${latest ? `<span class="sbub ${latest.seen ? 'seen' : ''}"><b>${esc(storyShort(latest))}</b></span>` : ''}<span class="av" style="${avCss(f)}">${esc(initial(f.name))}${talk ? '<i class="wave"></i>' : ''}<i class="dot"></i></span><span class="lab">${esc(f.name.split(' ')[0])}<small>${fmtDist(it.d)}</small></span></span>`;
       sig = cls + html;
       if(!el){ el = document.createElement('button'); el.dataset.act = 'friend'; el.dataset.pin = f.pin; L.appendChild(el); box._items[it.key] = el; }
       el.setAttribute('aria-label', `${f.name} على بعد ${fmtDist(it.d)}`);
+    } else if(it.kind === 'stranger'){ const x = it.nr;
+      cls = 'blip stranger'; html = `<span class="bin"><span class="av" style="background:${x.c}">${esc(initial(x.n))}</span><span class="lab">${esc(x.n.split(' ')[0])}<small>~${fmtDist(it.d)}</small></span></span>`; sig = cls + html;
+      if(!el){ el = document.createElement('button'); el.dataset.act = 'stranger'; el.dataset.pin = x.pin; L.appendChild(el); box._items[it.key] = el; }
+      el.setAttribute('aria-label', `${x.n} (ظاهر للجميع) تقريباً ${fmtDist(it.d)}`);
     } else { const s = it.s, th = thumbOf(s);
       cls = `spin ${it.pin !== 'me' && !s.seen ? 'new' : ''} ${s.t === 'photo' ? 'ph' : ''}`;
       html = `<span class="bin">${s.t === 'photo' ? '' : '💬'}</span>`; sig = cls;
@@ -1916,7 +1948,7 @@ function chatMsgsHtml(pin){
     if(m.from === 'sys') return `<div class="sys">${esc(m.text)}</div>`;
     const me = m.from === 'me';
     if(m.type === 'voice') return voiceBubble(pin, m);
-    const st = me ? (m.st === 'read' ? '✓✓ قُرئت' : m.st === 'delivered' ? '✓✓' : m.st === 'sent' ? '✓' : '⏳') : '';
+    const st = me ? tickHtml(m.st) : '';
     const ttlTxt = m.ttl === '24h' ? '24س' : m.ttl === 'read' ? (m.readAt ? `يختفي خلال ${Math.max(0, Math.ceil((10000 - (now() - m.readAt)) / 1000))}ث` : 'يختفي بعد القراءة') : '';
     const snd = room && !me ? `<div class="snd" style="color:${senderColor(m.sender)}">${esc(m.sname || '')}</div>` : '';
     return `<div class="bub ${me ? 'me' : ''}">${snd}${m.type === 'photo' ? (V.photo(m.data) ? `<img src="${esc(m.data)}" alt="صورة">` : '<i>صورة غير صالحة</i>') : esc(m.text)}<div class="meta"><span class="ttl">${ttlTxt}</span><span>${fmtTime(m.ts)}</span><span>${st}</span></div></div>`;
@@ -1928,8 +1960,9 @@ function renderChat(){
   if(el.dataset.pin !== pin || !$('#msgs')){
     el.dataset.pin = pin;
     el.innerHTML = `<div class="chead"><button class="iconbtn" data-act="chat-close" aria-label="رجوع">${I.back}</button>
-      <span class="av" id="chatAv" style="${room ? 'background:' + ci.color + ';font-size:20px' : avCss(ci.f)}">${room ? esc(ci.emoji) : esc(initial(ci.name))}<i class="st"></i></span>
+      <${room ? 'span' : 'button'} class="av" id="chatAv" ${room ? '' : `data-act="av-open" data-pin="${esc(pin)}" aria-label="عرض الصورة"`} style="${room ? 'background:' + ci.color + ';font-size:20px' : avCss(ci.f)}">${room ? esc(ci.emoji) : esc(initial(ci.name))}<i class="st"></i></${room ? 'span' : 'button'}>
       <button class="grow" style="text-align:start" data-act="${room ? 'conv-set' : 'friend'}" data-pin="${esc(pin)}"><span class="t1" id="chatName" style="display:block"></span><span class="t2" id="chatSt" style="display:block"></span></button>
+      ${room ? '' : `<button class="iconbtn" data-act="poke" data-pin="${esc(pin)}" aria-label="وكز" style="font-size:18px">👉</button>`}
       <button class="iconbtn sosmini" data-act="chat-sos" aria-label="إرسال استغاثة لهذه المحادثة">SOS</button>
       <button class="iconbtn" data-act="conv-set" data-pin="${esc(pin)}" aria-label="تخصيص المحادثة">${I.gear}</button></div>
       <div class="ttlbar" id="ttlbar"></div>
@@ -1965,7 +1998,7 @@ function renderFriends(){
     <div class="btns"><button class="btn" data-act="scan">${I.qr}مسح رمز QR</button><button class="btn" data-act="mycard">${I.share}شارك رقمي</button></div>
   </div>`;
   if(req.length){ h += `<div class="h2">طلبات صداقة</div><div class="card list">`;
-    req.forEach(f => { h += `<div class="row"><span class="av" style="${avCss(f)}">${esc(initial(f.name))}</span><span class="grow"><span class="t1" style="display:block">${esc(f.name)}</span><span class="t2" style="display:block">${f.hidePin ? `من «${esc((S.rooms[f.via] || {}).name || "غرفة")}»` : `<span class="mono">${f.pin}</span>`}</span></span>
+    req.forEach(f => { h += `<div class="row"><span class="av" style="${avCss(f)}">${esc(initial(f.name))}</span><span class="grow"><span class="t1" style="display:block">${esc(f.name)}${badge(f)}</span><span class="t2" style="display:block">${f.hidePin ? `من «${esc((S.rooms[f.via] || {}).name || "غرفة")}»` : f.fromPub ? '🌍 من الناس القريبين' : `<span class="mono">${f.pin}</span>`}</span>${f.bio && f.bio.about ? `<span class="t2" style="display:block;white-space:normal">${esc(f.bio.about)}</span>` : ''}${f.reqVoice ? `<button class="btn sm" data-act="req-play" data-pin="${f.pin}" style="margin-top:6px">▶ سماع الفويس ${f.reqDur ? fmtDur(f.reqDur) : ''}</button>` : ''}</span>
       <button class="btn sm pri" data-act="accept" data-pin="${f.pin}">قبول</button><button class="btn sm" data-act="decline" data-pin="${f.pin}">رفض</button><button class="btn sm danger" data-act="block" data-pin="${f.pin}">حظر</button></div>`; });
     h += `</div>`; }
   h += `<div class="h2">أصدقائي (${fr.length})</div>`;
@@ -1973,12 +2006,12 @@ function renderFriends(){
   else { h += `<div class="card list">`;
     fr.sort((a, b) => isOnline(b.pin) - isOnline(a.pin)).forEach(f => { const d = c && f.loc && !f.hidden ? distance(c, f.loc) : null; const on = isOnline(f.pin);
       h += `<button class="row" data-act="friend" data-pin="${f.pin}"><span class="av" style="${avCss(f)}">${esc(initial(f.name))}<i class="st ${on ? 'on' : ''}"></i></span>
-      <span class="grow"><span class="t1" style="display:block">${esc(f.name)} ${f.demo ? '<span class="pill demo">تجريبي</span>' : ''}</span>
-      <span class="t2" style="display:block">${on ? 'متصل' : fmtAgo(f.seen)}${f.hidden ? ' · مخفي' : d != null ? ' · ' + fmtDist(d) : ''}${f.rep ? ` · ★ ${((f.rep.t + f.rep.e + f.rep.h) / 3).toFixed(1)}` : ''}</span></span>
+      <span class="grow"><span class="t1" style="display:block">${esc(f.name)}${badge(f)} ${f.demo ? '<span class="pill demo">تجريبي</span>' : ''}</span>
+      <span class="t2" style="display:block">${on ? 'متصل' : fmtAgo(f.seen)}${f.hidden ? ' · مخفي' : d != null ? ' · ' + fmtDist(d) : ''}</span></span>
       ${RT.rxTalking.has(f.pin) ? '<span class="pill ok">يتحدث</span>' : ''}</button>`; });
     h += `</div>`; }
   if(out.length){ h += `<div class="h2">بانتظار القبول</div><div class="card list">`;
-    out.forEach(f => { h += `<div class="row"><span class="av" style="${avCss(f)}">${f.hidePin ? esc(initial(f.name)) : '…'}</span><span class="grow"><span class="t1 ${f.hidePin ? '' : 'mono'}" style="display:block">${f.hidePin ? esc(f.name) : f.pin}</span><span class="t2" style="display:block">${isOnline(f.pin) ? 'وصل الطلب، بانتظار موافقته' : 'سيصل الطلب عندما يفتح التطبيق'}</span></span><button class="btn sm" data-act="cancel-req" data-pin="${f.pin}">إلغاء</button></div>`; });
+    out.forEach(f => { h += `<div class="row"><span class="av" style="${avCss(f)}">${f.hidePin ? esc(initial(f.name)) : '…'}</span><span class="grow"><span class="t1 ${f.hidePin ? '' : 'mono'}" style="display:block">${f.hidePin ? esc(f.name) : f.pin}</span><span class="t2" style="display:block">وصله الطلب، بانتظار موافقته</span></span><button class="btn sm" data-act="cancel-req" data-pin="${f.pin}">إلغاء</button></div>`; });
     h += `</div>`; }
   h += `</div>`;
   $('#v-friends').innerHTML = h;
@@ -1993,10 +2026,11 @@ function renderMe(){
   const notif = IS_NATIVE ? (RT.lnPerm || 'default') : 'Notification' in window ? Notification.permission : 'unsupported';
   const sw = (on, act) => `<button class="switch" role="switch" aria-checked="${on}" data-act="${act}" aria-label="تبديل"></button>`;
   let h = `<div class="pad"><div class="h1">حسابي</div>
-  <div class="pincard"><div><div class="lbl">رقم VIBEMAP الخاص بك</div><div class="pin">${S.me.pin}</div><div class="nm">${esc(S.me.name)}</div>
+  <div class="pincard"><div><div class="lbl">رقم VIBEMAP الخاص بك</div><div class="pin">${S.me.pin}</div><div class="nm">${esc(S.me.name)}${badge(S.me)}</div>
     <div class="btns" style="margin-top:12px"><button class="btn sm" style="background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.2)" data-act="copy-pin">${I.copy}نسخ</button><button class="btn sm" style="background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.2)" data-act="share-pin">${I.share}مشاركة</button></div></div>
     <button class="qr" data-act="mycard" aria-label="تكبير رمز QR">${qrSvg(inviteUrl())}</button></div>`;
   if(!std) h += `<div class="note"><b>ثبّت VibeMap على شاشتك الرئيسية</b><br>${ios ? 'في Safari اضغط زر المشاركة ثم «إضافة إلى الشاشة الرئيسية». هذا يلزم لاستلام الإشعارات على الآيفون.' : 'افتح قائمة المتصفح ثم «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».'}${RT.installEvt ? ' <button class="btn sm pri" data-act="install">تثبيت الآن</button>' : ''}</div>`;
+  h += `<div class="h2">مستواي</div>${levelCard()}<div class="h2">نبذة عني</div>${bioForm()}`;
   h += `<div class="h2">سمعتي عند أصدقائي</div><div class="card" style="padding:14px">${r ? `<div class="rate">${[['t','المصداقية'],['e','التفاعل'],['h','المساعدة']].map(([k, n]) => `<div class="rrow"><span>${n}</span><span class="bar"><i style="width:${r[k] / 5 * 100}%"></i></span><span class="num">${r[k].toFixed(1)}</span></div>`).join('')}<div class="t2">من ${r.n} ${r.n === 1 ? 'تقييم' : 'تقييمات'}</div></div>` : '<div class="t2" style="white-space:normal">لا توجد تقييمات بعد. يستطيع أصدقاؤك تقييمك من صفحتك لديهم.</div>'}</div>
   <div class="h2">الملف الشخصي</div><div class="card list">
     <div class="set"><span class="av" style="${avCss(S.me)};width:56px;height:56px;font-size:22px">${esc(initial(S.me.name))}</span><span class="grow"><span class="t1" style="display:block">صورتك</span><span class="t2" style="display:block">تظهر لأصدقائك على الرادار وفي المحادثات</span></span>
@@ -2068,7 +2102,7 @@ function avatarFrom(file){ return new Promise((res, rej) => { const url = URL.cr
     c.getContext('2d').drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, z, z); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .8)); };
   im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); }; im.src = url; }); }
 function sendAvatar(pin){ if(isDemo(pin)) return; sendEnc(pin, { k:'avatar', data:S.me.photo || '', v:S.me.photoV || 0 }); }
-function rehello(){ Object.entries(RT.conns).forEach(([pin, c]) => { if(c.open) c.send({ type:'hello', v:VERSION, pin:S.me.pin, name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep() }); }); }
+function rehello(){ Object.entries(RT.conns).forEach(([pin, c]) => { if(c.open) c.send({ type:'hello', v:VERSION, pin:S.me.pin, name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), bio:S.me.bio || null }); }); }
 
 /* ─── ورقة الصديق ─── */
 function friendSheet(pin){
@@ -2078,10 +2112,11 @@ function friendSheet(pin){
   const my = f.myRating || { t:0, e:0, h:0 };
   const stars = (k) => `<div class="stars">${[1,2,3,4,5].map(n => `<button class="${my[k] >= n ? 'on' : ''}" data-act="rate" data-k="${k}" data-n="${n}" aria-label="${n} من 5">${I.star}</button>`).join('')}</div>`;
   return `<div class="grab"></div>
-  <div class="shead"><span class="av" style="${avCss(f)};width:56px;height:56px;font-size:22px">${esc(initial(f.name))}<i class="st ${on ? 'on' : ''}"></i></span>
-    <div class="grow"><div class="t1" style="font-size:18px">${esc(f.name)}</div>${f.hidePin ? '' : `<div class="t2 mono">${f.pin}</div>`}<div class="t2">${on ? 'متصل الآن' : 'آخر ظهور ' + fmtAgo(f.seen)}${f.hidden ? ' · مخفي' : d != null ? ' · على بعد ' + fmtDist(d) : ''}</div></div></div>
+  <div class="shead"><button class="av" data-act="av-open" data-pin="${pin}" aria-label="عرض الصورة" style="${avCss(f)};width:56px;height:56px;font-size:22px">${esc(initial(f.name))}<i class="st ${on ? 'on' : ''}"></i></button>
+    <div class="grow"><div class="t1" style="font-size:18px">${esc(f.name)}${badge(f)}</div>${f.hidePin ? '' : `<div class="t2 mono">${f.pin}</div>`}<div class="t2">${on ? 'متصل الآن' : 'آخر ظهور ' + fmtAgo(f.seen)}${f.hidden ? ' · مخفي' : d != null ? ' · على بعد ' + fmtDist(d) : ''}</div></div></div>
   ${f.keyAlert ? `<div class="note" style="border:1px solid var(--sos)"><b style="color:var(--sos)">⚠️ تغيّر رمز الأمان</b><br>قد يكون صديقك أعاد تثبيت التطبيق، وقد يكون شخص آخر ينتحل رقمه. قارنا الرمز الجديد وجهاً لوجه أو باتصال هاتفي قبل المتابعة.<div class="code" style="font-size:16px;margin:10px 0">${esc(f._newCode || '…')}</div><div class="btns"><button class="btn pri" data-act="trust-key" data-pin="${pin}">تحققت، تابع</button><button class="btn danger" data-act="remove-ask" data-pin="${pin}">إزالته</button></div></div>` : ''}
-  <div class="btns"><button class="btn grad" data-act="solo" data-pin="${pin}">${I.mic}التحدث معه فقط</button><button class="btn" data-act="chat" data-pin="${pin}">${I.chat}محادثة</button></div>
+  ${bioHtml(f.bio)}
+  <div class="btns"><button class="btn grad" data-act="solo" data-pin="${pin}">${I.mic}التحدث معه فقط</button><button class="btn" data-act="chat" data-pin="${pin}">${I.chat}محادثة</button><button class="btn" data-act="poke" data-pin="${pin}">👉 وكز</button></div>
   ${f.rep ? `<div class="card" style="padding:14px"><div class="t1" style="margin-bottom:8px">سمعته حسب أصدقائه</div><div class="rate">${[['t','المصداقية'],['e','التفاعل'],['h','المساعدة']].map(([k, n]) => `<div class="rrow"><span>${n}</span><span class="bar"><i style="width:${(f.rep[k] || 0) / 5 * 100}%"></i></span><span class="num">${(+f.rep[k] || 0).toFixed(1)}</span></div>`).join('')}</div><div class="t2" style="margin-top:6px">من ${+f.rep.n || 0} تقييم</div></div>` : ''}
   <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><div class="t1">قيّم ${esc(f.name.split(' ')[0])}</div>
     <div class="rrow" style="grid-template-columns:84px 1fr"><span>المصداقية</span>${stars('t')}</div>
@@ -2143,7 +2178,39 @@ document.addEventListener('click', async e => {
     case 'target-all': openTargetPicker(); break;
     case 'target-set': { const t = b.dataset.t || null; RT.target = t; closeSheet(); renderToolbar(); renderTalk();
       toast(!t ? 'تتحدث إلى كل الأصدقاء المتصلين' : isRoom(t) ? `تتحدث في غرفة «${(roomOf(t) || {}).name}»` : `تتحدث إلى ${(S.friends[t] || {}).name} فقط`); break; }
-    case 'ghost': S.settings.ghost = !S.settings.ghost; save(); broadcastLoc(true); renderToolbar(); if(RT.tab === 'me') renderMe(); toast(S.settings.ghost ? 'أنت مخفي الآن عن الرادار' : 'أصدقاؤك يرونك الآن على الرادار'); break;
+    case 'ghost': openSheet(visSheet()); break;
+    case 'ghost-quick': S.settings.ghost = !S.settings.ghost; save(); broadcastLoc(true); pubSync(true); renderToolbar(); if(RT.tab === 'me') renderMe(); toast(S.settings.ghost ? 'أنت مخفي الآن عن الرادار' : 'أصدقاؤك يرونك الآن على الرادار'); break;
+    case 'vis-set': { const v = b.dataset.v; S.settings.ghost = v === 'hidden'; S.settings.pubVis = v === 'public'; save(); closeSheet(); broadcastLoc(true); pubSync(true); renderToolbar(); if(RT.tab === 'me') renderMe();
+      toast(v === 'hidden' ? 'أنت مخفي الآن عن الرادار' : v === 'public' ? '🌍 الناس القريبين يشوفونك الحين' : 'أصدقاؤك بس يشوفونك'); break; }
+    case 'near-toggle': S.settings.hideNear = !S.settings.hideNear; save(); nearFetch(true); openSheet(visSheet()); break;
+    case 'stranger': { if(!nearOf(pin)) break; openSheet(strangerSheet(pin)); const mb = $('#strMic'); if(mb) bindHoldRec(mb, 30, async v => { toast('يرسل…'); const ok = await strangerRequest(pin, v); toast(ok ? '🎤 وصل الفويس مع طلب الصداقة' : 'تعذّر الإرسال — حاول بعد شوي'); if(ok) openSheet(strangerSheet(pin)); }); break; }
+    case 'pub-add': strangerRequest(pin).then(ok => { toast(ok ? 'أُرسل طلب الصداقة ✓' : 'تعذّر الإرسال — حاول بعد شوي'); if(ok && nearOf(pin)) openSheet(strangerSheet(pin)); }); break;
+    case 'req-play': playReqVoice(pin); break;
+    case 'poke-pick': openSheet(pokeSheet()); break;
+    case 'poke': pokeFriend(pin); if(b.closest('#sheet') && !b.closest('.shead')) closeSheet(); break;
+    case 'net-set': setOffline(b.dataset.v === 'off'); break;
+    case 'diag-open': closeSheet(); setTab('me'); setTimeout(() => { const d = $('#diag'); if(d) d.scrollIntoView({ block:'start', behavior:'smooth' }); }, 60); break;
+    case 'bio-save': { S.me.bio = V.bio({ about:$('#bioAbout').value, work:$('#bioWork').value, tags:$('#bioTags').value }); save(); rehello(); pubSync(true); toast('حُفظت نبذتك ✓'); renderMe(); break; }
+    case 'av-open': openAvatar(pin); break;
+    case 'av-close': closeAvatar(); break;
+    case 'sv-react': storyReact(b.dataset.e); break;
+    case 'st-seg': RT.stSeg = b.dataset.v; { const v = $('#v-stories'); if(v) v._h = null; } if(RT.stSeg === 'square' && !SQ.loaded) sqLoad(true); renderStoriesTab(); break;
+    case 'sq-tag': SQ.tag = b.dataset.tag || ''; RT.stSeg = 'square'; closeSheet(); sqLoad(true); if(RT.tab !== 'stories') setTab('stories'); else renderStoriesTab(); break;
+    case 'sq-reload': sqLoad(true); break;
+    case 'sq-more': sqLoad(false); break;
+    case 'sq-new': openSheet(S.settings.sqRules ? sqComposeSheet() : sqRulesSheet()); break;
+    case 'sq-rules-ok': S.settings.sqRules = true; save(); openSheet(sqComposeSheet()); break;
+    case 'sq-addtag': { const ta = $('#sqText'); if(ta){ const t = '#' + b.dataset.tag; if(!ta.value.includes(t)) ta.value = (ta.value.trim() + ' ' + t + ' ').trimStart(); ta.focus(); } break; }
+    case 'sq-photo': sqPickPhoto(); break;
+    case 'sq-photo-x': SQ.photo = null; { const pv = $('#sqPrev'); if(pv) pv.innerHTML = ''; } break;
+    case 'sq-send': sqSend(); break;
+    case 'sq-like': { const p = SQ.items.find(x => x.id === b.dataset.id); if(!p) break; p.liked = !p.liked; p.likes = Math.max(0, (p.likes || 0) + (p.liked ? 1 : -1)); renderStoriesTab();
+      relayPost('/api/sq/like', { id:p.id }).then(j => { if(j && j.ok){ p.likes = j.likes; p.liked = j.liked; renderStoriesTab(); } }); break; }
+    case 'sq-menu': openSheet(sqMenuSheet(b.dataset.id)); break;
+    case 'sq-report': relayPost('/api/sq/report', { id:b.dataset.id }).then(() => {}); SQ.items = SQ.items.filter(x => x.id !== b.dataset.id); closeSheet(); renderStoriesTab(); toast('شكراً — وصل البلاغ وانخفى المنشور عندك'); break;
+    case 'sq-block': { const p = SQ.items.find(x => x.id === b.dataset.id); if(p) blockUser(p.pin, false); closeSheet(); renderStoriesTab(); break; }
+    case 'sq-del': { const j = await relayPost('/api/sq/del', { id:b.dataset.id }); if(j && j.ok){ SQ.items = SQ.items.filter(x => x.id !== b.dataset.id); toast('انحذف منشورك'); } closeSheet(); renderStoriesTab(); break; }
+    case 'zoom': radarZoom(b.dataset.z); break;
     case 'friend': { if(b.classList.contains('blip') && hasUnseen(pin) && !S.friends[pin]?.sos){ openStories(pin); break; } const f = S.friends[pin]; if(f && f.keyAlert && !f._newCode){ f._newCode = await safetyCode(pin, true); } openSheet(friendSheet(pin), pin); break; }
     case 'trust-key': { const f = S.friends[pin]; if(!f || !f.newPub) break; f.pub = f.newPub; delete f.newPub; delete f._newCode; f.keyAlert = false; save();
       await deriveFor(pin); sysMsg(pin, 'تم التحقق من رمز الأمان الجديد. عادت الرسائل والصوت.'); if(isOnline(pin)) onFriendOnline(pin); openSheet(friendSheet(pin), pin); renderAll(); break; }
@@ -2362,11 +2429,383 @@ function pttKeySection(){
   </div>`;
 }
 
+
+/* ════════════════════════ v8.1 ════════════════════════ */
+
+/* ─── المستويات: نقاط من التفاعل + شرط التقييم للمستويات العالية ─── */
+const LEVELS = [
+  { n:'جديد', i:'🌱', p:0 }, { n:'نشيط', i:'⚡', p:60 }, { n:'متفاعل', i:'🔥', p:200 },
+  { n:'موثوق', i:'🛡️', p:500, r:3.5, rn:2 }, { n:'مميز', i:'💎', p:1200, r:4, rn:3 },
+  { n:'نجم', i:'⭐', p:2500, r:4.3, rn:5 }, { n:'أسطورة', i:'👑', p:5000, r:4.6, rn:8 } ];
+function stat(k, n = 1){
+  if(!S) return; const st = S.stats || (S.stats = { talks:0, msgs:0, stories:0, sq:0, pokes:0, days:[] });
+  st[k] = (st[k] || 0) + n; const d = new Date().toISOString().slice(0, 10);
+  if(!Array.isArray(st.days)) st.days = [];
+  if(!st.days.includes(d)){ st.days.push(d); if(st.days.length > 400) st.days.shift(); }
+  save();
+}
+const repAvg = r => r && r.n ? +((r.t + r.e + r.h) / 3).toFixed(1) : null;
+function myPoints(){ const st = S.stats || {}, r = myRep();
+  return Math.round((st.talks || 0) * 2 + (st.msgs || 0) + (st.stories || 0) * 5 + (st.sq || 0) * 3 + (st.pokes || 0) * .5 + (st.days || []).length * 10 + (r ? r.n * 15 : 0)); }
+function myLevel(){ const pts = myPoints(), r = myRep(), avg = repAvg(r), n = r ? r.n : 0; let lv = 0;
+  LEVELS.forEach((L, i) => { if(pts >= L.p && (!L.r || (avg != null && avg >= L.r && n >= L.rn))) lv = i; }); return lv; }
+function lvlRt(lv, rt){
+  let h = ''; if(Number.isInteger(lv) && lv > 0 && LEVELS[lv]) h += `<span class="lvl" title="${LEVELS[lv].n}">${LEVELS[lv].i}</span>`;
+  if(rt != null && rt > 0) h += `<span class="rt">★${(+rt).toFixed(1)}</span>`;
+  return h ? ` <span class="bdg">${h}</span>` : ''; }
+function badge(f){ if(!f) return ''; if(f === S.me) return lvlRt(myLevel(), repAvg(myRep())); return lvlRt(f.lvl, repAvg(f.rep)); }
+function levelCard(){
+  const lv = myLevel(), L = LEVELS[lv], nx = LEVELS[lv + 1], pts = myPoints(), r = myRep(), avg = repAvg(r);
+  const pct = nx ? Math.min(100, Math.round((pts - L.p) / (nx.p - L.p) * 100)) : 100;
+  const need = nx ? [pts < nx.p ? `${nx.p - pts} نقطة` : '', nx.r && !(avg != null && avg >= nx.r && r.n >= nx.rn) ? `تقييم ${nx.r}★ من ${nx.rn} أصدقاء` : ''].filter(Boolean).join(' + ') : '';
+  return `<div class="card lvlcard"><div class="lvtop"><span class="lvic">${L.i}</span><span class="grow"><b>${L.n}</b><small>${pts} نقطة${avg != null ? ` · تقييمك ★${avg.toFixed(1)} من ${r.n}` : ''}</small></span></div>
+    ${nx ? `<div class="lvbar"><i style="width:${pct}%"></i></div><div class="t2" style="white-space:normal">للوصول إلى ${nx.i} ${nx.n}: ${need || 'قريب جداً'}</div>` : '<div class="t2">وصلت أعلى مستوى 👑</div>'}
+    <details class="lvhow"><summary>كيف أرتقي؟</summary><div class="t2" style="white-space:normal">كل يوم تفتح فيه التطبيق 10 نقاط · كل مرة تتكلم 2 · كل رسالة 1 · كل حالة 5 · كل منشور في الساحة 3 · كل تقييم يوصلك من صديق 15. المستويات العالية تحتاج تقييم حلو من أصدقائك. مستواك وتقييمك يطلعون جنب اسمك عند الكل.</div></details></div>`;
+}
+
+/* ─── النبذة ─── */
+V.bio = x => { if(!x || typeof x !== 'object') return null; const o = { about:V.str(x.about || '', 160).trim(), work:V.str(x.work || '', 40).trim(), tags:V.str(x.tags || '', 80).trim() }; return o.about || o.work || o.tags ? o : null; };
+V.lvl = x => { const n = V.num(x, 0, LEVELS.length - 1); return n == null ? null : Math.round(n); };
+function bioHtml(b){
+  if(!b) return '';
+  const tags = (b.tags || '').split(/[،,]+/).map(t => t.trim()).filter(Boolean).slice(0, 8);
+  return `<div class="card biocard">${b.about ? `<div class="bio-a">${esc(b.about)}</div>` : ''}${b.work ? `<div class="t2">💼 ${esc(b.work)}</div>` : ''}${tags.length ? `<div class="bio-t">${tags.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}</div>`;
+}
+function bioForm(){ const b = S.me.bio || {};
+  return `<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+    <label class="t1" for="bioAbout">عني</label><textarea class="input" id="bioAbout" rows="2" maxlength="160" placeholder="مثال: أحب البر والقهوة ☕">${esc(b.about || '')}</textarea>
+    <label class="t1" for="bioWork">العمل</label><input class="input" id="bioWork" maxlength="40" placeholder="مثال: مدير فرع" value="${esc(b.work || '')}">
+    <label class="t1" for="bioTags">الاهتمامات</label><input class="input" id="bioTags" maxlength="80" placeholder="مثال: الرحلات، كرة القدم، التصوير" value="${esc(b.tags || '')}">
+    <button class="btn pri" data-act="bio-save">حفظ النبذة</button><div class="t2" style="white-space:normal">تطلع لأصدقائك في صفحتك، وللناس القريبين إذا كنت «ظاهر للجميع».</div></div>`; }
+
+/* ─── الوكز ─── */
+function pokeFriend(pin){
+  const f = S.friends[pin]; if(!f || f.status !== 'friend') return;
+  RT.pokeT = RT.pokeT || {}; if(now() - (RT.pokeT[pin] || 0) < 8000){ toast('انتظر شوي قبل ما توكزه مرة ثانية'); return; }
+  RT.pokeT[pin] = now(); vibrate(30); tone([[740,.05],[990,.07]], .15); stat('pokes');
+  if(isDemo(pin)){ toast(`وكزت ${f.name} 👉`); return; }
+  sendAny(pin, { k:'poke', ts:now() }, 'poke').then(r => toast(r ? `وكزت ${f.name} 👉` : 'تعذّر الوكز الآن — تأكد من الإنترنت'));
+}
+function recvPoke(pin, m){
+  const f = S.friends[pin]; if(!f) return; const ts = V.num(m.ts, 1e12, 1e13) || now();
+  if(now() - ts > 10 * 60e3 || f.pokeTs === ts) return; f.pokeTs = ts;
+  (RT.poked || (RT.poked = {}))[pin] = now();
+  if(!f.mute){ vibrate([90, 60, 90, 60, 220]); tone([[880,.07],[1175,.07],[880,.07],[1175,.1]], .28); notify(`👉 ${f.name} وكزك`, 'يبغاك تنتبه'); }
+  toast(`👉 ${f.name} وكزك`); sysMsg(pin, `👉 ${f.name} وكزك`); saveMsgs(); renderStage(); renderChatIfOpen(pin);
+  setTimeout(() => renderStage(), 4200);
+}
+function pokeSheet(){
+  const fr = Object.values(S.friends).filter(f => f.status === 'friend').sort((a, b) => isOnline(b.pin) - isOnline(a.pin));
+  return `<div class="grab"></div><div class="h1">👉 وكز</div><p class="note">اختر مين توكزه — يوصله تنبيه واهتزاز حتى لو التطبيق مقفل.</p>
+  ${fr.length ? `<div class="card list" style="max-height:52vh;overflow:auto">${fr.map(f => `<button class="row" data-act="poke" data-pin="${f.pin}"><span class="av" style="${avCss(f)}">${esc(initial(f.name))}<i class="st ${isOnline(f.pin) ? 'on' : ''}"></i></span><span class="grow"><span class="t1" style="display:block">${esc(f.name)}${badge(f)}</span><span class="t2" style="display:block">${isOnline(f.pin) ? 'متصل' : 'يوصله إشعار'}</span></span><span style="font-size:24px" aria-hidden="true">👉</span></button>`).join('')}</div>` : '<div class="card empty"><b>ما عندك أصدقاء بعد</b>أضف صديق أول عشان توكزه.</div>'}`;
+}
+
+/* ─── طلبات الصداقة عبر الخادم: توصل حتى لو صديقك مقفل التطبيق ─── */
+async function relaySendPlain(pin, obj, kind){
+  if(!RELAY || !PIN_STRICT.test(pin)) return false;
+  const j = await relayPost('/api/send', { to:pin, items:[{ id:uid(), iv:'PLAIN', ct:b64(TE.encode(JSON.stringify(obj))) }], push: kind ? { k:kind, n:S.me.name } : null });
+  return !!(j && j.ok);
+}
+function reqPayload(extra){ return { k:'freq', name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), bio:S.me.bio || null, v:VERSION, ...(extra || {}) }; }
+function acceptPayload(){ return { k:'facc', name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), bio:S.me.bio || null }; }
+async function ecdhKey(pubJwk){
+  const pub = await crypto.subtle.importKey('jwk', { kty:'EC', crv:'P-256', x:pubJwk.x, y:pubJwk.y }, { name:'ECDH', namedCurve:'P-256' }, false, []);
+  return crypto.subtle.deriveKey({ name:'ECDH', public:pub }, myPriv, { name:'AES-GCM', length:256 }, false, ['encrypt', 'decrypt']);
+}
+/* رسالة مشفّرة لشخص مو صديق (من «ظاهر للجميع») بمفتاحه العام */
+async function sealFor(pubJwk, obj){
+  const key = await ecdhKey(pubJwk), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, TE.encode(JSON.stringify(obj)));
+  return b64(TE.encode(JSON.stringify({ p:{ x:S.keys.pub.x, y:S.keys.pub.y }, iv:b64(iv), ct:b64(ct) })));
+}
+async function openSealed(ct){
+  const w = JSON.parse(TD.decode(unb64(ct))); const p = V.pub({ kty:'EC', crv:'P-256', x:w.p && w.p.x, y:w.p && w.p.y }); if(!p) throw new Error('pub');
+  const key = await ecdhKey(p); const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv:unb64(w.iv) }, key, unb64(w.ct));
+  return { m:JSON.parse(TD.decode(pt)), pub:p };
+}
+function handlePlain(pin, m, sealedPub){
+  if(!m || typeof m !== 'object' || !PIN_STRICT.test(pin) || pin === S.me.pin || S.blocked[pin]) return;
+  const pub = V.pub(m.pub); if(!pub) return; if(sealedPub && sealedPub.x !== pub.x) return;
+  let f = S.friends[pin];
+  if(m.k === 'freq'){
+    if(f && f.status === 'friend'){ if(!f.pub){ f.pub = pub; save(); deriveFor(pin); } return; }
+    if(f && f.status === 'out'){
+      f.name = V.name(m.name); f.color = V.color(m.color); f.pub = pub; f.rep = V.rep(m.rep); f.lvl = V.lvl(m.lvl); f.bio = V.bio(m.bio); f.status = 'friend'; save();
+      deriveFor(pin).then(() => { relaySendPlain(pin, acceptPayload(), 'accept'); onFriendOnline(pin); renderAll(); });
+      toast(`أصبحت أنت و${f.name} أصدقاء`); renderAll(); return;
+    }
+    if(!f && Object.values(S.friends).filter(x => x.status === 'in').length >= 30) return;
+    const isNew = !f;
+    f = S.friends[pin] = { ...(f || {}), pin, name:V.name(m.name), color:V.color(m.color), status:'in', added:(f && f.added) || now(), pub, rep:V.rep(m.rep), lvl:V.lvl(m.lvl), bio:V.bio(m.bio), fromPub:m.pubreq === true };
+    { const vr = V.id(m.via), rr = vr && S.rooms[vr]; if(rr && rr.members.includes(pin)){ f.via = vr; f.hidePin = true; } }
+    const voice = m.voice ? V.audio(m.voice) : null;
+    if(voice){ f.reqVoice = voice; f.reqDur = V.num(m.dur, 0, 60) || 0; }
+    save();
+    if(isNew || voice){ tone(BEEP.msg); vibrate(40);
+      notify(voice ? `🎤 ${f.name}` : 'طلب صداقة جديد', voice ? 'أرسل لك رسالة صوتية مع طلب صداقة' : `${f.name} يبغى يضيفك في VibeMap`);
+      toast(voice ? `🎤 ${f.name} أرسل لك فويس مع طلب صداقة` : `طلب صداقة من ${f.name}`); }
+    renderAll(); return;
+  }
+  if(m.k === 'facc'){
+    if(!f || (f.status !== 'out' && f.status !== 'friend')) return;
+    if(f.status === 'friend' && f.pub && f.pub.x !== pub.x) return; /* تغيّر المفتاح: الاتصال المباشر ينبّه المستخدم */
+    const was = f.status;
+    Object.assign(f, { pub, name:V.name(m.name), color:V.color(m.color), rep:V.rep(m.rep), lvl:V.lvl(m.lvl), bio:V.bio(m.bio), status:'friend' }); save();
+    deriveFor(pin).then(() => { if(was !== 'friend'){ toast(`${f.name} قبل طلب الصداقة`); notify('✅ ' + f.name, 'قبل طلب الصداقة'); onFriendOnline(pin); } renderAll(); });
+    return;
+  }
+  if(m.k === 'fdec'){ if(f && f.status === 'out'){ const n = f.name; delete S.friends[pin]; save(); toast(`${n} رفض طلب الصداقة`); renderAll(); } }
+}
+function playReqVoice(pin){
+  const f = S.friends[pin]; if(!f || !f.reqVoice) return;
+  if(RT.reqAudio){ try{ RT.reqAudio.pause(); }catch(e){} }
+  const a = new Audio(f.reqVoice); RT.reqAudio = a; a.play().catch(() => toast('تعذّر التشغيل'));
+}
+
+/* ─── الظهور: مخفي / للأصدقاء / للجميع ─── */
+function visMode(){ return S.settings.ghost ? 'hidden' : S.settings.pubVis ? 'public' : 'friends'; }
+function visSheet(){ const v = visMode();
+  const row = (k, ic, t, d) => `<button class="row ${v === k ? 'on' : ''}" data-act="vis-set" data-v="${k}"><span class="av" style="background:var(--surface-2);font-size:20px">${ic}</span><span class="grow"><span class="t1" style="display:block">${t}</span><span class="t2" style="display:block;white-space:normal">${d}</span></span><span aria-hidden="true">${v === k ? '✓' : ''}</span></button>`;
+  return `<div class="grab"></div><div class="h1">مين يشوفك على الرادار؟</div><div class="card list">
+    ${row('friends', '👥', 'أصدقائي فقط', 'موقعك الدقيق مشفّر ويوصل لأصدقائك بس')}
+    ${row('public', '🌍', 'الجميع', 'الناس القريبين منك (5 كم) يشوفونك بموقع تقريبي، ويقدرون يرسلون لك طلب صداقة أو فويس')}
+    ${row('hidden', '🙈', 'مخفي', 'ما أحد يشوف موقعك، وتبقى تسمع وتتكلم')}</div>
+    <div class="set card" style="border:1px solid var(--line)"><span class="grow"><span class="t1" style="display:block">أشوف الناس القريبين</span><span class="t2" style="display:block">يطلع لك على الرادار اللي مختارين «الجميع»</span></span><button class="switch" role="switch" aria-checked="${!S.settings.hideNear}" data-act="near-toggle" aria-label="أشوف الناس القريبين"></button></div>`; }
+async function pubSync(force){
+  if(!RELAY || !S || !S.me) return;
+  const want = visMode() === 'public' && !S.settings.offline && !!RT.myLoc;
+  if(!want){ if(RT.pubOn || force){ RT.pubOn = false; RT.pubLast = null; relayPost('/api/pub/set', { on:false }); } return; }
+  const L = RT.myLoc, last = RT.pubLast;
+  if(!force && last && now() - last.t < 120000 && distance(last, L) < 150) return;
+  RT.pubLast = { lat:L.lat, lng:L.lng, t:now() };
+  const b = S.me.bio || {};
+  const j = await relayPost('/api/pub/set', { on:true, name:S.me.name, color:S.me.color, lat:L.lat, lng:L.lng, pub:S.keys.pub, bio:b.about || '', work:b.work || '', tags:b.tags || '', lvl:myLevel(), rt:repAvg(myRep()) || 0 });
+  RT.pubOn = !!(j && j.ok);
+}
+async function nearFetch(force){
+  if(!RELAY || !S || S.settings.offline || !RT.myLoc || S.settings.hideNear){ if(RT.near && RT.near.length){ RT.near = []; renderStage(); } return; }
+  if(!force && (RT.tab !== 'radar' || document.visibilityState !== 'visible')) return;
+  if(!force && RT.nearT && now() - RT.nearT < 40000) return; RT.nearT = now();
+  const j = await relayPost('/api/pub/near', { lat:RT.myLoc.lat, lng:RT.myLoc.lng });
+  if(!j || !Array.isArray(j.items)) return;
+  RT.near = j.items.filter(x => x && PIN_STRICT.test(x.pin) && x.pin !== S.me.pin && !S.blocked[x.pin] && !(S.friends[x.pin] && S.friends[x.pin].status === 'friend'))
+    .map(x => ({ pin:x.pin, n:V.name(x.n), c:V.color(x.c), loc:{ lat:+x.lat, lng:+x.lng }, d:V.num(x.d, 0, 1e5) || 0, pub:V.pub({ kty:'EC', crv:'P-256', x:x.pub && x.pub.x, y:x.pub && x.pub.y }),
+      bio:V.bio({ about:x.bio, work:x.work, tags:x.tags }), lvl:V.lvl(x.lvl), rt:V.num(x.rt, 0, 5) }))
+    .filter(x => x.pub && Number.isFinite(x.loc.lat) && Number.isFinite(x.loc.lng));
+  renderStage();
+}
+const nearOf = pin => (RT.near || []).find(x => x.pin === pin) || null;
+function strangerSheet(pin){
+  const p = nearOf(pin); if(!p) return `<div class="grab"></div><p class="note">هذا الشخص ما عاد ظاهر.</p>`;
+  const f = S.friends[pin], sent = f && f.status === 'out', inReq = f && f.status === 'in';
+  return `<div class="grab"></div>
+  <div class="shead"><span class="av" style="background:${p.c};width:56px;height:56px;font-size:22px">${esc(initial(p.n))}</span>
+    <div class="grow"><div class="t1" style="font-size:18px">${esc(p.n)}${lvlRt(p.lvl, p.rt)}</div><div class="t2">🌍 ظاهر للجميع · تقريباً ${fmtDist(p.d)}</div></div></div>
+  ${bioHtml(p.bio)}
+  <div class="btns">${inReq ? `<button class="btn grad" data-act="accept" data-pin="${pin}">قبول طلبه</button>` : sent ? '<button class="btn" disabled>✓ أرسلت طلب صداقة</button>' : `<button class="btn grad" data-act="pub-add" data-pin="${pin}">${I.plus}طلب صداقة</button>`}</div>
+  <div class="card" style="padding:14px"><div class="t1" style="margin-bottom:4px">🎤 أرسل له فويس</div><div class="t2" style="white-space:normal;margin-bottom:10px">اضغط مطولاً وتكلّم (حتى 30 ثانية). يوصله مع طلب صداقة، ويقدر يرد عليك بعد ما يقبل.</div>
+    <button class="btn block holdrec" id="strMic" data-pin="${pin}">${I.mic}<span>اضغط مطولاً للتسجيل</span></button></div>
+  <div class="btns"><button class="btn danger" data-act="block" data-pin="${pin}">حظر</button><button class="btn danger" data-act="report" data-pin="${pin}">حظر وإبلاغ</button></div>`;
+}
+async function strangerRequest(pin, voice){
+  const p = nearOf(pin) || (S.friends[pin] && S.friends[pin].pub ? { n:S.friends[pin].name, c:S.friends[pin].color, pub:S.friends[pin].pub } : null); if(!p) return false;
+  const pay = reqPayload({ pubreq:true, ...(voice ? { voice:voice.data, dur:voice.dur } : {}) });
+  let j = null; try{ j = await relayPost('/api/send', { to:pin, items:[{ id:uid(), iv:'X', ct:await sealFor(p.pub, pay) }], push:{ k:voice ? 'voicereq' : 'friend', n:S.me.name } }); }catch(e){ console.warn('seal', e); }
+  if(j && j.ok && !S.friends[pin]){ S.friends[pin] = { pin, name:p.n, color:p.c, status:'out', added:now(), pub:p.pub, fromPub:true }; save(); connectTo(pin); }
+  renderAll(); return !!(j && j.ok);
+}
+/* تسجيل بالضغط المطوّل (للفويس مع طلب الصداقة) */
+function bindHoldRec(btn, maxSec, onDone){
+  let rec = null;
+  const start = async e => { e.preventDefault(); if(rec) return; try{ btn.setPointerCapture(e.pointerId); }catch(x){}
+    if(floorBusy()){ return; }
+    const mime = pickMime(); if(mime === null){ toast('الجهاز لا يدعم تسجيل الصوت'); return; }
+    rec = { chunks:[], t0:now(), stop:false }; btn.classList.add('rec');
+    let track; try{ track = await getMicTrack(); }catch(x){ rec = null; btn.classList.remove('rec'); toast('اسمح باستخدام الميكروفون'); return; }
+    if(!rec) { releaseMicSoon(); return; }
+    try{ rec.mr = new MediaRecorder(new MediaStream([track]), mime ? { mimeType:mime, audioBitsPerSecond:32000 } : undefined); }catch(x){ rec = null; btn.classList.remove('rec'); return; }
+    rec.mr.ondataavailable = ev => { if(ev.data && ev.data.size) rec.chunks.push(ev.data); };
+    const r = rec; r.mr.onstop = () => { const dur = (now() - r.t0) / 1000; btn.classList.remove('rec'); releaseMicSoon(); const lab = btn.querySelector('span'); if(lab) lab.textContent = 'اضغط مطولاً للتسجيل';
+      if(dur < .8){ toast('التسجيل قصير — اضغط مطولاً وتكلّم'); return; }
+      const blob = new Blob(r.chunks, { type:r.mr.mimeType || 'audio/webm' }); const fr = new FileReader();
+      fr.onload = () => { const data = V.audio(String(fr.result)); if(data) onDone({ data, dur:Math.min(maxSec, dur) }); else toast('صيغة الصوت غير مدعومة'); }; fr.readAsDataURL(blob); };
+    r.mr.start(250); tone(BEEP.start); vibrate(20);
+    r.timer = setInterval(() => { const d = (now() - r.t0) / 1000; const lab = btn.querySelector('span'); if(lab) lab.textContent = `🔴 ${fmtDur(d)} · اترك للإرسال`; if(d >= maxSec) stop(); }, 200);
+    if(r.stop) stop(); };
+  const stop = () => { if(!rec) return; const r = rec; if(!r.mr){ r.stop = true; return; } rec = null; clearInterval(r.timer); try{ r.mr.stop(); }catch(x){} tone(BEEP.end, .12); };
+  btn.addEventListener('pointerdown', start);
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => btn.addEventListener(ev, stop));
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+/* ─── ما تقدر تتكلم وأحد يتكلم (زي اللاسلكي) ─── */
+function floorBusy(conv){
+  const talkers = [...RT.rxTalking].filter(p => !conv || (isRoom(conv) ? ((roomOf(conv) || {}).members || []).includes(p) : p === conv));
+  if(!talkers.length) return false;
+  const n = (S.friends[talkers[0]] || {}).name || 'صديقك';
+  toast(`${n} يتكلم الحين — انتظر لين يخلص`); tone([[330,.1],[0.1,.05],[330,.1]], .16); vibrate([40, 40, 40]);
+  const p = $('#ptt'); if(p){ p.classList.remove('deny'); void p.offsetWidth; p.classList.add('deny'); }
+  return true;
+}
+
+/* ─── أونلاين / أوفلاين ─── */
+function netSheet(){ const off = !!S.settings.offline;
+  const row = (v, dot, t, d, on) => `<button class="row ${on ? 'on' : ''}" data-act="net-set" data-v="${v}"><span class="netdot ${dot}"></span><span class="grow"><span class="t1" style="display:block">${t}</span><span class="t2" style="display:block;white-space:normal">${d}</span></span><span aria-hidden="true">${on ? '✓' : ''}</span></button>`;
+  return `<div class="grab"></div><div class="h1">حالتك</div><div class="card list">
+    ${row('on', 'on', 'أونلاين', 'تستقبل الكلام المباشر والرسائل فوراً، وأصدقاؤك يشوفونك متصل', !off)}
+    ${row('off', 'off', 'أوفلاين', 'تختفي عن الكل، ويوقف الكلام المباشر والإشعارات. الرسائل تنتظرك لين ترجع أونلاين', off)}</div>
+    ${!off ? `<p class="t2" style="white-space:normal">الحالة الآن: ${RT.net === 'on' ? 'متصل ✓' : RT.net === 'wait' ? 'يحاول الاتصال… تأكد من الإنترنت' : 'غير متصل — تأكد من الإنترنت'}</p>` : ''}
+    ${S.settings.dev ? '<button class="btn" data-act="diag-open">التشخيص</button>' : ''}`; }
+async function setOffline(v){
+  if(!!S.settings.offline === v){ closeSheet(); return; }
+  S.settings.offline = v; save(); closeSheet();
+  if(v){ if(RT.talking) pttUp();
+    /* نقفل كل اتصال بهدوء قبل فصل الخادم (يمنع خطأ داخلي في مكتبة الاتصال) */
+    [...Object.values(RT.conns), ...Object.values(RT.outCalls)].forEach(c => { try{ const pc = c.peerConnection; if(pc){ pc.ondatachannel = null; pc.ontrack = null; } c.close(); }catch(e){} });
+    if(RT.peer && !RT.peer.destroyed){ const pr = RT.peer; RT.peer = null; try{ pr.disconnect(); }catch(e){} setTimeout(() => { try{ pr.destroy(); }catch(e){} }, 400); } RT.conns = {}; RT.outCalls = {}; RT.pending = {}; RT.rxTalking.clear(); setNet('off'); pubSync(true); RT.near = []; toast('أنت أوفلاين الحين'); }
+  else { startPeer(); relayFetch(); pubSync(true); nearFetch(true); toast('رجعت أونلاين'); }
+  relayReg(); renderAll();
+}
+
+/* ─── رقم ثابت مربوط بالجهاز ─── */
+async function deviceKey(){
+  const D = NP('VibeDevice'); if(!D) return null;
+  try{ const r = await D.getId(); const id = r && r.id; if(!id || id.length < 6) return null;
+    const h = new Uint8Array(await crypto.subtle.digest('SHA-256', TE.encode('vibemap-dev|' + id))); return [...h].map(b => b.toString(16).padStart(2, '0')).join(''); }
+  catch(e){ return null; }
+}
+function pinFromHex(hex){ const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; for(let i = 0; i < 8; i++) c += A[parseInt(hex.substr(i * 3, 3), 16) % A.length]; return `VM-${c.slice(0, 4)}-${c.slice(4)}`; }
+async function relayWho(dev){
+  if(!RELAY) return null;
+  const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 7000);
+  try{ const r = await fetch(RELAY + '/api/whoami', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ dev }), signal:ac.signal }); const j = await r.json(); return j && PIN_STRICT.test(j.pin || '') ? j.pin : null; }
+  catch(e){ return null; } finally { clearTimeout(t); }
+}
+async function devicePin(){ const dev = await deviceKey(); if(!dev) return { pin:null, dev:null, restored:false };
+  const old = await relayWho(dev); return { pin:old || pinFromHex(dev), dev, restored:!!old }; }
+
+/* ─── تفاعل الحالات + تصوير الشاشة ─── */
+const REACTS = ['❤️', '😂', '😮', '😢', '🔥', '👏'];
+function storyReact(e){
+  if(!SV || SV.mine || !REACTS.includes(e)) return; const s = SV.list[SV.i]; if(!s) return;
+  (SV.reacted || (SV.reacted = {}))[s.id] = e;
+  const fl = document.createElement('div'); fl.className = 'sv-fly'; fl.textContent = e; $('#storyView').appendChild(fl); setTimeout(() => fl.remove(), 1300);
+  vibrate(15); if(!isDemo(SV.pin)) sendAny(SV.pin, { k:'story-react', id:s.id, e }, 'react', e);
+  renderStoryView();
+}
+function recvStoryReact(pin, m){
+  const f = S.friends[pin], x = STO.mine.find(y => y.id === m.id); if(!f || !x || !REACTS.includes(m.e)) return;
+  x.reacts = x.reacts || {}; if(x.reacts[pin] === m.e) return; x.reacts[pin] = m.e; saveSto();
+  toast(`${f.name} ${m.e} على حالتك`); notify(f.name, `تفاعل مع حالتك ${m.e}`); if(SV && SV.mine) renderStoryView();
+}
+function recvStoryShot(pin, m){
+  const f = S.friends[pin], x = STO.mine.find(y => y.id === m.id); if(!f || !x) return;
+  x.shots = x.shots || {}; const first = !x.shots[pin]; x.shots[pin] = now(); saveSto();
+  if(first){ vibrate([60, 40, 60]); toast(`📸 ${f.name} صوّر الشاشة وهو يشوف حالتك`); notify('📸 تصوير شاشة', `${f.name} صوّر حالتك`); }
+  if(SV && SV.mine) renderStoryView();
+}
+function onScreenshot(){
+  if(SV && !SV.mine){ const s = SV.list[SV.i]; if(s && !isDemo(SV.pin)){ sendAny(SV.pin, { k:'story-shot', id:s.id }, 'shot'); toast('📸 صاحب الحالة بيوصله إنك صوّرت الشاشة'); } }
+}
+
+/* ─── عرض صورة المستخدم (بدون تصوير شاشة) ─── */
+function openAvatar(pin){
+  const f = pin === 'me' ? S.me : S.friends[pin] || null; if(!f) return;
+  let el = $('#avView'); if(!el){ el = document.createElement('div'); el.id = 'avView'; el.className = 'avview'; document.body.appendChild(el); }
+  const ph = f.photo && V.photo(f.photo);
+  el.innerHTML = `<button class="iconbtn avx" data-act="av-close" aria-label="إغلاق">✕</button>
+    <div class="avbig" style="${ph ? 'background:#000' : 'background:' + V.color(f.color)}">${ph ? `<img src="${esc(ph)}" alt="صورة ${esc(f.name)}" draggable="false">` : `<span>${esc(initial(f.name))}</span>`}</div>
+    <div class="avname">${esc(f.name)}${badge(f)}</div>${ph && pin !== 'me' && PLATFORM === 'android' ? '<div class="avnote">🔒 تصوير الشاشة ممنوع لهذه الصورة</div>' : ''}`;
+  el.hidden = false; RT.avOpen = true;
+  el.oncontextmenu = e => e.preventDefault();
+  if(pin !== 'me'){ const D = NP('VibeDevice'); if(D) D.setSecure({ on:true }).catch(() => {}); }
+}
+function closeAvatar(){ const el = $('#avView'); if(el) el.hidden = true; RT.avOpen = false; const D = NP('VibeDevice'); if(D) D.setSecure({ on:false }).catch(() => {}); }
+
+/* ─── الساحة: منشورات عامة بالهاشتاقات ─── */
+const SQ = { tag:'', items:[], trends:[], loading:false, more:true, err:'', photo:null, loaded:false };
+const SQ_SUGG = ['جدة', 'الرياض', 'مكة', 'المدينة', 'الدمام', 'اليوم_الوطني', 'كشتة', 'عمرة', 'قهوة'];
+function sqTagify(t){ return esc(t).replace(/#([\p{L}\p{N}_]{2,30})/gu, (m, g) => `<button class="tagl" data-act="sq-tag" data-tag="${g}">#${g}</button>`); }
+function sqPostHtml(p){
+  const img = p.img ? `<img class="sqimg" src="${RELAY}/api/sq/img/${encodeURIComponent(p.id)}" alt="صورة المنشور" loading="lazy">` : '';
+  return `<article class="sqpost card"><div class="sqh"><span class="av" style="background:${V.color(p.c)}">${esc(initial(p.n))}</span>
+    <span class="grow"><b>${esc(V.name(p.n))}</b>${lvlRt(V.lvl(p.lvl), V.num(p.rt, 0, 5))}<small>${fmtAgo(p.ts)}${p.city ? ' · 📍 ' + esc(V.str(p.city, 30)) : ''}</small></span>
+    <button class="iconbtn" data-act="sq-menu" data-id="${esc(p.id)}" aria-label="خيارات المنشور">⋯</button></div>
+    ${p.text ? `<div class="sqt">${sqTagify(V.str(p.text, 500))}</div>` : ''}${img}
+    <div class="sqf"><button class="lk ${p.liked ? 'on' : ''}" data-act="sq-like" data-id="${esc(p.id)}" aria-label="إعجاب">${p.liked ? '❤️' : '🤍'} <span>${p.likes || ''}</span></button></div></article>`;
+}
+function squareHtml(){
+  if(!RELAY) return '<div class="card empty"><b>الساحة غير متاحة</b>تحتاج اتصال بخادم VibeMap.</div>';
+  const tr = SQ.trends.length ? `<div class="sqtr">${SQ.trends.slice(0, 12).map(t => `<button class="chip ${SQ.tag === t.tag ? 'hot' : ''}" data-act="sq-tag" data-tag="${esc(t.tag)}">#${esc(t.tag)} <small>${t.n}</small></button>`).join('')}</div>` : '';
+  let h = `<div class="sqhead"><div class="grow"><div class="t1">${SQ.tag ? `#${esc(SQ.tag)}` : 'كل المنشورات'}</div><div class="t2">منشورات عامة تختفي بعد 3 أيام</div></div>${SQ.tag ? '<button class="btn sm" data-act="sq-tag" data-tag="">الكل</button>' : ''}<button class="btn sm grad" data-act="sq-new">${I.plus}منشور</button></div>`;
+  h += tr ? `<div class="h2">🔥 الترند اليوم</div>${tr}` : '';
+  if(SQ.err) h += `<div class="card empty"><b>${esc(SQ.err)}</b><button class="btn sm pri" data-act="sq-reload">إعادة المحاولة</button></div>`;
+  else if(!SQ.items.length) h += SQ.loading || !SQ.loaded ? '<div class="card empty"><b>يحمّل…</b></div>' : `<div class="card empty"><b>ما فيه منشورات${SQ.tag ? ' بهذا الهاشتاق' : ''} بعد</b>كن أول من ينشر!</div>`;
+  else h += SQ.items.map(sqPostHtml).join('') + (SQ.more ? `<button class="btn block" data-act="sq-more">${SQ.loading ? 'يحمّل…' : 'عرض المزيد'}</button>` : '');
+  return h;
+}
+async function sqLoad(reset){
+  if(SQ.loading) return; SQ.loading = true; if(reset){ SQ.items = []; SQ.more = true; }
+  const before = !reset && SQ.items.length ? SQ.items[SQ.items.length - 1].ts : undefined;
+  const [f, t] = await Promise.all([relayPost('/api/sq/feed', { tag:SQ.tag, before, blocked:Object.keys(S.blocked || {}) }), reset ? relayPost('/api/sq/trends', {}) : Promise.resolve(null)]);
+  SQ.loading = false; SQ.loaded = true;
+  if(!f || !Array.isArray(f.items)) SQ.err = 'تعذّر تحميل الساحة — تأكد من الإنترنت';
+  else { SQ.err = ''; const seen = new Set(SQ.items.map(x => x.id)); SQ.items.push(...f.items.filter(x => x && typeof x.id === 'string' && !seen.has(x.id))); SQ.more = f.items.length >= 30; }
+  if(t && Array.isArray(t.tags)) SQ.trends = t.tags.filter(x => x && typeof x.tag === 'string');
+  if(RT.tab === 'stories') renderStoriesTab();
+}
+function sqRulesSheet(){ return `<div class="grab"></div><div class="h1">قواعد الساحة</div>
+  <div class="card" style="padding:14px"><div class="t2" style="white-space:normal;line-height:2">• الساحة عامة: أي أحد في VibeMap يشوف منشورك.<br>• لا تنشر أرقام جوالات أو عناوين أو معلومات خاصة.<br>• ممنوع السب والإساءة والمحتوى غير اللائق.<br>• المنشور يختفي تلقائياً بعد 3 أيام.<br>• أي منشور يوصله 3 بلاغات يختفي فوراً.</div></div>
+  <button class="btn grad block" data-act="sq-rules-ok">موافق، خلني أنشر</button>`; }
+function sqComposeSheet(){ return `<div class="grab"></div><div class="h1">منشور في الساحة</div>
+  <textarea class="input" id="sqText" maxlength="500" rows="4" placeholder="وش صاير؟ أضف هاشتاق مثل #جدة">${SQ.tag ? '#' + esc(SQ.tag) + ' ' : ''}</textarea>
+  <div class="sqtr">${SQ_SUGG.map(t => `<button class="chip" data-act="sq-addtag" data-tag="${t}">#${t}</button>`).join('')}</div>
+  <div id="sqPrev">${SQ.photo ? `<div class="sqprev"><img src="${SQ.photo}" alt=""><button class="iconbtn" data-act="sq-photo-x" aria-label="إزالة الصورة">✕</button></div>` : ''}</div>
+  <div class="btns"><button class="btn" data-act="sq-photo">${I.cam}صورة</button><button class="btn grad" data-act="sq-send">نشر</button></div>
+  <p class="t2" style="white-space:normal">يظهر للجميع ويختفي بعد 3 أيام.</p>`; }
+function sqMenuSheet(id){ const p = SQ.items.find(x => x.id === id); if(!p) return '';
+  return `<div class="grab"></div><div class="h1">المنشور</div>${p.mine
+    ? `<button class="btn danger block" data-act="sq-del" data-id="${esc(id)}">حذف منشوري</button>`
+    : `<button class="btn block" data-act="sq-report" data-id="${esc(id)}">🚩 إبلاغ عن المنشور</button><button class="btn danger block" data-act="sq-block" data-id="${esc(id)}" style="margin-top:8px">حظر ${esc(V.name(p.n))}</button>`}`; }
+async function sqPickPhoto(){
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = async () => { const file = inp.files && inp.files[0]; if(!file) return;
+    try{ let d = await compressImage(file, 1080, .72); if(d.length > 580000) d = await compressImage(file, 820, .6); if(d.length > 580000){ toast('الصورة كبيرة'); return; }
+      SQ.photo = d; const pv = $('#sqPrev'); if(pv) pv.innerHTML = `<div class="sqprev"><img src="${d}" alt=""><button class="iconbtn" data-act="sq-photo-x" aria-label="إزالة الصورة">✕</button></div>`; }catch(e){ toast('تعذّر تجهيز الصورة'); } };
+  inp.click();
+}
+async function sqSend(){
+  const ta = $('#sqText'); const text = ta ? ta.value.trim() : '';
+  if(!/#[\p{L}\p{N}_]{2,30}/u.test(text)){ toast('أضف هاشتاق واحد على الأقل، مثل #جدة'); return; }
+  const btn = document.querySelector('[data-act=sq-send]'); if(btn){ btn.disabled = true; btn.textContent = 'ينشر…'; }
+  const j = await relayPost('/api/sq/post', { text, photo:SQ.photo || undefined, name:S.me.name, color:S.me.color, lvl:myLevel(), rt:repAvg(myRep()) || 0 });
+  if(!j || !j.ok){ if(btn){ btn.disabled = false; btn.textContent = 'نشر'; } toast('تعذّر النشر — حاول بعد شوي'); return; }
+  SQ.photo = null; stat('sq'); closeSheet(); toast('انتشر منشورك ✓'); sqLoad(true);
+}
+
+/* ─── تكبير الرادار: تلقائي أو يدوي (أزرار + قرصة بإصبعين) ─── */
+const RANGES = [150, 300, 600, 1500, 3000, 6000, 15000, 30000, 60000, 150000, 600000];
+function radarZoom(dir){
+  const box = $('#radarBox'); const cur = RT.zoom || (box && box._range) || 600;
+  let i = RANGES.indexOf(cur); if(i < 0) i = RANGES.findIndex(x => x >= cur);
+  if(dir === 'auto'){ RT.zoom = null; }
+  else { i = Math.max(0, Math.min(RANGES.length - 1, i + (dir === 'in' ? -1 : 1))); RT.zoom = RANGES[i]; }
+  renderStage(); const z = $('#zAuto'); if(z) z.classList.toggle('on', !RT.zoom);
+}
+function radarGestures(box){
+  const pts = new Map(); let base = 0;
+  box.addEventListener('pointerdown', e => { pts.set(e.pointerId, e); if(pts.size === 2){ const [a, b] = [...pts.values()]; base = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); } });
+  box.addEventListener('pointermove', e => { if(!pts.has(e.pointerId)) return; pts.set(e.pointerId, e); if(pts.size !== 2 || !base) return;
+    const [a, b] = [...pts.values()], d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    if(d / base > 1.3){ radarZoom('in'); base = d; } else if(d / base < .77){ radarZoom('out'); base = d; } });
+  const up = e => { pts.delete(e.pointerId); if(pts.size < 2) base = 0; };
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => box.addEventListener(ev, up));
+  box.addEventListener('wheel', e => { e.preventDefault(); radarZoom(e.deltaY < 0 ? 'in' : 'out'); }, { passive:false });
+}
+
 /* الضغط على مؤشر الاتصال يفتح التشخيص */
 $('#net').style.cursor = 'pointer';
-$('#net').addEventListener('click', () => { if(!S || !S.me) return;
-  if(!S.settings.dev){ toast(RT.net === 'on' ? 'متصل ✓' : RT.net === 'wait' ? 'يحاول الاتصال… تأكد من الإنترنت' : 'غير متصل — تأكد من الإنترنت'); return; }
-  closeSheet(); setTab('me'); setTimeout(() => { const d = $('#diag'); if(d) d.scrollIntoView({ block:'start', behavior:'smooth' }); }, 60); });
+$('#net').addEventListener('click', () => { if(!S || !S.me) return; openSheet(netSheet()); });
 
 /* PTT: ضغط مطوّل */
 (() => {
@@ -2393,6 +2832,7 @@ $('#net').addEventListener('click', () => { if(!S || !S.me) return;
    في الرادار: أندرويد يخلي التطبيق يشتغل في الخلفية بدل ما يقفله. */
 function vmBack(){
   try{
+    if(RT.avOpen){ closeAvatar(); return true; }
     if(CAM){ camClose(); return true; }
     if(SV){ closeStories(); return true; }
     if(!$('#sheetWrap').hidden){ closeSheet(); return true; }
@@ -2413,6 +2853,8 @@ if(PLATFORM === 'web'){
   }catch(e){}
 }
 
+/* مكتبة الاتصال أحياناً تطلق خطأ داخلي بعد قفل اتصال (سباق توقيت) — ما يأثر على شي، نمنعه يطلع كخطأ */
+window.addEventListener('error', e => { if(e && /vendor\/peerjs/.test(e.filename || '') && /_initializeDataChannel|reading 'type'/.test(String(e.message))) e.preventDefault(); });
 document.addEventListener('visibilitychange', () => {
   document.documentElement.classList.toggle('bgd', document.visibilityState !== 'visible');
   geoRefresh();
@@ -2460,8 +2902,10 @@ function showOnboard(){
   $('#obColors').onclick = e => { const b = e.target.closest('[data-c]'); if(!b) return; color = b.dataset.c; [...$('#obColors').children].forEach(x => x.classList.toggle('on', x === b)); };
   $('#obForm').onsubmit = async e => { e.preventDefault(); const name = $('#obName').value.trim(); if(!name) return;
     ctx(); unlockAudio();
-    S = defaults(); S.m78 = 1; S.me = { pin:makePin(), name, color, created:now() }; save();
-    ob.hidden = true; await boot(); toast(`رقمك في VibeMap هو ${S.me.pin}`); };
+    const btn = $('#obForm button[type=submit]'); if(btn){ btn.disabled = true; btn.textContent = 'لحظة…'; }
+    const dp = await devicePin();
+    S = defaults(); S.m78 = 1; S.me = { pin:dp.pin || makePin(), name, color, created:now() }; if(dp.dev) S.me.dev = dp.dev; save();
+    ob.hidden = true; await boot(); toast(dp.restored ? `رجع لك رقمك القديم ${S.me.pin} ✓` : `رقمك في VibeMap هو ${S.me.pin}`); };
 }
 async function boot(){
   applyTheme();
@@ -2477,6 +2921,9 @@ async function boot(){
   const q = new URLSearchParams(location.search).get('add');
   if(q && PIN_RE.test(q)){ history.replaceState(null, '', location.pathname); setTimeout(() => confirmAdd(q), 800); }
   hwInit(); bgInit(); relayInit(); renderSosBtn();
+  if(!S.me.dev) deviceKey().then(d => { if(d){ S.me.dev = d; save(); relayReg(); } });
+  { const D = NP('VibeDevice'); if(D) D.addListener('screenshot', onScreenshot).catch(() => {}); }
+  setInterval(() => { pubSync(); nearFetch(); }, 30000); setTimeout(() => { pubSync(true); nearFetch(true); }, 4000);
   if(S.account && FB_CFG) setTimeout(() => acInit().then(() => bkSoon()).catch(() => {}), 2500);
   { const LN = NP('LocalNotifications'); if(LN) LN.checkPermissions().then(r => { RT.lnPerm = r.display === 'granted' ? 'granted' : r.display === 'denied' ? 'denied' : 'default'; }).catch(() => {}); }
   setInterval(sweep, 2000);

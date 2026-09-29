@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com; media-src 'self' blob: mediastream: data:; connect-src 'self' https://vibemap.s7sai.cloud https://0.peerjs.com wss://0.peerjs.com https://formsubmit.co https://*.googleapis.com https://www.google.com; frame-src https://www.google.com https://recaptcha.google.com https://*.firebaseapp.com; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.google.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://www.gstatic.com https://vibemap.s7sai.cloud; media-src 'self' blob: mediastream: data:; connect-src 'self' https://vibemap.s7sai.cloud https://0.peerjs.com wss://0.peerjs.com https://formsubmit.co https://*.googleapis.com https://www.google.com; frame-src https://www.google.com https://recaptcha.google.com https://*.firebaseapp.com; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="vibemap-public-url" content="https://vibemap.s7sai.cloud">
 <meta name="vibemap-relay" content="https://vibemap.s7sai.cloud/relay">
@@ -418,6 +418,89 @@ textarea.input{font-family:inherit;line-height:1.7}
 @keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
 @media (min-width:760px){.pad{max-width:720px;margin:0 auto}}
+/* ═══ v8.1 ═══ */
+.sostop{margin-inline-start:auto;position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:99px;background:color-mix(in srgb,var(--sos) 14%,var(--surface));border:1.5px solid var(--sos);color:var(--sos);font-size:13px;-webkit-tap-highlight-color:transparent;touch-action:none;user-select:none;-webkit-user-select:none}
+.sostop b{position:relative;font-weight:800;letter-spacing:.06em}
+.sostop .sub{position:relative;font-size:11px;font-weight:600;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sostop .fill{position:absolute;inset:0;width:0;background:var(--sos);opacity:.35}
+.sostop.arming .fill{width:100%;transition:width 1.2s linear}
+.sostop.arming{color:#fff;background:var(--sos)}
+.sostop + .net{margin-inline-start:0}
+.net{cursor:pointer;font:inherit;font-size:12px}
+.net.manual i{background:#8a8aa6}
+.net.manual{color:var(--ink-3)}
+.netdot{width:14px;height:14px;border-radius:50%;flex:none;margin-inline:6px}
+.netdot.on{background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 22%,transparent)}
+.netdot.off{background:#8a8aa6}
+.round.poke .rb{font-size:24px}
+.round.poke:active .rb{transform:scale(.92)}
+#ghostBtn.pubv .rb{border-color:var(--cyan);box-shadow:0 0 0 3px color-mix(in srgb,var(--cyan) 22%,transparent)}
+.ptt.deny{animation:deny .35s}
+@keyframes deny{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.blip.poked .av{animation:poke .4s 6}
+@keyframes poke{50%{transform:scale(1.18) rotate(-8deg)}}
+.blip.stranger .av{width:38px;height:38px;font-size:15px;border:2px dashed var(--cyan);opacity:.9}
+.blip.stranger .lab{border-style:dashed;border-color:color-mix(in srgb,var(--cyan) 55%,var(--line))}
+.rzoom{position:absolute;top:6px;left:6px;display:flex;flex-direction:column;gap:6px;z-index:4}
+.rzoom button{width:34px;height:34px;border-radius:10px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);font-size:18px;font-weight:600;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.rzoom button.on{color:var(--accent);border-color:var(--accent);font-size:13px}
+.rzoom #zAuto{font-size:13px}
+.radar{touch-action:none}
+.bdg{display:inline-flex;align-items:center;gap:4px;margin-inline-start:4px;vertical-align:1px}
+.bdg .lvl{font-size:.95em}
+.bdg .rt{font-size:.78em;font-weight:700;color:#E8A317;background:color-mix(in srgb,#E8A317 14%,transparent);border-radius:99px;padding:0 6px;font-family:var(--mono)}
+.tk{font-style:normal;font-weight:800;letter-spacing:-.28em;padding-inline-end:.28em;display:inline-block}
+.tk.s{color:#FF3B4E}.tk.d{color:#FF9F1C}.tk.r{color:#12B886}
+.bub.me .tk{background:rgba(255,255,255,.94);border-radius:6px;padding:0 .45em 0 .7em;text-shadow:none;line-height:1.35}
+.bub.me .tk.p{background:none}
+.lvlcard{padding:14px;display:flex;flex-direction:column;gap:10px}
+.lvtop{display:flex;align-items:center;gap:12px}
+.lvic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;background:linear-gradient(135deg,color-mix(in srgb,var(--cyan) 22%,transparent),color-mix(in srgb,var(--mag) 22%,transparent))}
+.lvtop b{display:block;font-size:17px}.lvtop small{color:var(--ink-2);font-size:12px}
+.lvbar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.lvbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--cyan),var(--accent),var(--mag))}
+.lvhow summary{cursor:pointer;font-size:13px;color:var(--accent);font-weight:600}
+.biocard{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.bio-a{font-size:14px;line-height:1.7;white-space:pre-wrap}
+.bio-t{display:flex;flex-wrap:wrap;gap:6px}
+.bio-t span{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--surface-2);color:var(--ink-2)}
+button.av{border:0;cursor:pointer;padding:0}
+.avview{position:fixed;inset:0;z-index:95;background:rgba(5,5,16,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;color:#fff;-webkit-user-select:none;user-select:none}
+.avview[hidden]{display:none}
+.avview .avx{position:absolute;top:calc(var(--safe-t) + 14px);inset-inline-end:16px;background:rgba(255,255,255,.14);color:#fff;border-color:transparent}
+.avbig{width:min(78vw,380px);aspect-ratio:1;border-radius:50%;overflow:hidden;display:grid;place-items:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.avbig img{width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-touch-callout:none}
+.avbig span{font-size:120px;font-weight:700;color:#fff}
+.avname{font-size:22px;font-weight:700}
+.avnote{font-size:13px;opacity:.7}
+.sv-reacts{display:flex;justify-content:center;gap:8px;padding:6px 12px 0}
+.sv-reacts button{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);font-size:22px;transition:transform .15s}
+.sv-reacts button:active{transform:scale(1.25)}
+.sv-reacts button.on{background:rgba(255,255,255,.3);box-shadow:0 0 0 2px #fff}
+.sv-fly{position:absolute;left:50%;bottom:120px;font-size:64px;transform:translateX(-50%);animation:fly 1.2s ease-out forwards;pointer-events:none;z-index:5}
+@keyframes fly{to{transform:translate(-50%,-260px) scale(1.4);opacity:0}}
+.seg.wide{display:flex;width:100%;margin:4px 0 14px}
+.seg.wide button{flex:1;padding:9px 12px;font-size:14px}
+.sqhead{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sqtr{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+.sqtr .chip small{color:var(--ink-3);font-family:var(--mono)}
+.sqpost{padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px}
+.sqh{display:flex;align-items:center;gap:10px}
+.sqh .av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;flex:none}
+.sqh b{font-size:14px}.sqh small{display:block;color:var(--ink-3);font-size:12px}
+.sqt{font-size:15px;line-height:1.75;white-space:pre-wrap;word-break:break-word}
+.tagl{color:var(--accent);font-weight:600;padding:0;background:none;border:0;font:inherit;font-weight:600;cursor:pointer}
+.sqimg{width:100%;border-radius:14px;max-height:420px;object-fit:cover;background:var(--surface-2)}
+.sqf{display:flex;gap:10px}
+.sqf .lk{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;background:var(--surface-2);font-size:14px;color:var(--ink-2)}
+.sqf .lk.on{color:var(--sos)}
+.sqprev{position:relative;margin:4px 0}
+.sqprev img{width:100%;max-height:220px;object-fit:cover;border-radius:12px}
+.sqprev .iconbtn{position:absolute;top:8px;inset-inline-end:8px;background:rgba(0,0,0,.55);color:#fff;border-color:transparent}
+.holdrec{touch-action:none;user-select:none;-webkit-user-select:none}
+.holdrec.rec{background:var(--sos);color:#fff;border-color:var(--sos)}
+.row.on{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+
 </style>
 </head>
 <body>
@@ -428,7 +511,8 @@ textarea.input{font-family:inherit;line-height:1.7}
       <svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2=".35"><stop offset="0" stop-color="#2DD4E8"/><stop offset=".55" stop-color="#7C5CFF"/><stop offset="1" stop-color="#D24BF2"/></linearGradient><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2DD4E8"/><stop offset=".6" stop-color="#6C5BFF"/><stop offset="1" stop-color="#D24BF2"/></linearGradient></defs><rect width="100" height="100" rx="23" fill="#0B0B1E"/><g fill="none" stroke-linecap="round"><path d="M22.9 27.2A34 34 0 0 1 77.1 27.2" stroke="url(#lg1)" stroke-width="6"/><path d="M32 35.4A22 22 0 0 1 68 35.4" stroke="url(#lg1)" stroke-width="6"/><path d="M42.6 42.8A9 9 0 0 1 57.4 42.8" stroke="url(#lg1)" stroke-width="5.5"/><path d="M37.5 52C23.5 54 22.5 69 35.5 78.5L50 89L64.5 78.5C77.5 69 76.5 54 62.5 52" stroke="url(#lg2)" stroke-width="8" stroke-linejoin="round"/><path d="M43 61L50 74.5L57 61" stroke="#fff" stroke-width="7" stroke-linejoin="round"/></g></svg>
       <span class="word"><b>vibe</b>map</span>
     </div>
-    <span id="net" class="net wait"><i></i><span>يتصل…</span></span>
+    <button id="sosBtn" class="sostop" aria-label="استغاثة: اضغط مطولاً ثانية للإرسال، أو ضغطة عادية لاختيار المستلم"><span class="fill"></span><b>SOS</b><span class="sub" hidden></span></button>
+    <button id="net" class="net wait" aria-label="حالتك: أونلاين أو أوفلاين"><i></i><span>يتصل…</span></button>
   </header>
 
   <main>
@@ -457,7 +541,7 @@ textarea.input{font-family:inherit;line-height:1.7}
           <span class="halo"></span>
           <span class="core"><span id="pttIcon"></span><span id="pttLbl">اضغط وتحدث</span></span>
         </button>
-        <button id="sosBtn" class="round sos" aria-label="استغاثة: اضغط مطولاً ثانية"><span class="rb"><svg class="prog" viewBox="0 0 62 62"><circle cx="31" cy="31" r="29"/></svg>SOS</span><span>استغاثة</span></button>
+        <button id="pokeBtn" class="round poke" data-act="poke-pick" aria-label="وكز صديق"><span class="rb" aria-hidden="true">👉</span><span>وكز</span></button>
         <div id="rxbar" class="rxbar" aria-live="polite"></div>
       </div>
     </section>

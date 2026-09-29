@@ -21,7 +21,7 @@
 <main>
 <p><a href="./">← العودة إلى VibeMap</a></p>
 <h1>سياسة الخصوصية — VibeMap</h1>
-<p class="muted">آخر تحديث: 25 سبتمبر 2026 · تنطبق على الإصدار 8.0 وما بعده (الويب وأندرويد وآيفون)</p>
+<p class="muted">آخر تحديث: 25 سبتمبر 2026 · تنطبق على الإصدار 8.1 وما بعده (الويب وأندرويد وآيفون)</p>
 
 <section>
 <h2>الخلاصة</h2>
@@ -40,7 +40,12 @@
 <li><b>الحالات:</b> نص أو صورة تنشرها بنفسك، تُرسل مشفّرة لأصدقائك فقط وتُحذف تلقائياً بعد 24 ساعة، ومعها موقع النشر فقط إذا اخترت ذلك. تستطيع إخفاءها عن الجميع أو عن صديق معيّن.</li>
 <li><b>الرسائل الصوتية والغرف:</b> تُسجَّل الرسالة الصوتية فقط وأنت ضاغط على زر الميكروفون داخل المحادثة، وتُرسل مشفّرة وتُحفظ على الأجهزة المعنية فقط. رسائل الغرف تُشفّر لكل عضو على حدة، وقد يمرّرها صاحب الغرفة مشفّرة للأعضاء الذين ليسوا أصدقاء للمرسل.</li>
 <li><b>تواصل معنا:</b> إذا أرسلت اقتراحاً أو شكوى من الإعدادات، تُرسل رسالتك (ومعلومات الجهاز إذا اخترتها، وبريدك أو جوالك إذا كتبته) عبر خدمة FormSubmit إلى بريد فريق الدعم فقط.</li>
-<li><b>التقييمات:</b> تُرسل مشفّرة لصاحبها فقط.</li>
+<li><b>التقييمات والمستوى:</b> التقييم يُرسل مشفّراً لصاحبه فقط. مستواك (يُحسب على جهازك من تفاعلك) وتقييمك يظهران جنب اسمك لأصدقائك، وفي الساحة، وللناس القريبين إذا اخترت «ظاهر للجميع».</li>
+<li><b>النبذة:</b> «عني» والعمل والاهتمامات تكتبها بنفسك (اختيارية)، وتظهر لأصدقائك، وللناس القريبين إذا اخترت «ظاهر للجميع».</li>
+<li><b>الظهور للجميع (اختياري، مطفي افتراضياً):</b> إذا اخترته، يُرسل اسمك ولونك ونبذتك ومستواك وموقعك إلى خادم VibeMap كل دقيقتين تقريباً، ويشوفك الناس القريبين (حتى 5 كم) بموقع تقريبي (حوالي 100 متر) ويقدرون يرسلون لك طلب صداقة أو رسالة صوتية مشفّرة. يُحذف من الخادم خلال 10 دقائق من إيقافه أو إغلاق التطبيق.</li>
+<li><b>الساحة (منشورات عامة):</b> ما تنشره في الساحة <b>عام وغير مشفّر</b>: يراه كل مستخدمي VibeMap مع اسمك ولونك ومستواك، ويُحفظ في خادم VibeMap ويُحذف تلقائياً بعد 3 أيام، أو فوراً إذا حذفته. المنشور الذي يصله 3 بلاغات يُخفى.</li>
+<li><b>تصوير الشاشة:</b> إذا صوّرت الشاشة وأنت تشاهد حالة صديق، يصله تنبيه بذلك (أندرويد 14+ والآيفون). وفي أندرويد يُمنع تصوير الشاشة أثناء عرض صورة مستخدم آخر.</li>
+<li><b>الوكز:</b> تنبيه يرسله صديقك لك، يمر مشفّراً مثل الرسائل.</li>
 </ul>
 </section>
 
@@ -50,6 +55,7 @@
 <ul>
 <li><b>خادم التعارف (PeerJS):</b> يرى رقم VibeMap وعنوان IP للحظة بدء الاتصال فقط، ثم ينتقل الاتصال مباشرة بين الجهازين.</li>
 <li><b>خوادم STUN (Google و Twilio):</b> تساعد الجهازين على معرفة طريق الاتصال، وترى عنوان IP فقط.</li>
+<li><b>رقم ثابت لجهازك (من الإصدار 8.1):</b> في تطبيق الجوال نحفظ في خادم VibeMap بصمة مشفّرة باتجاه واحد (SHA-256) لمعرّف جهازك، فقط عشان يرجع لك نفس رقم VibeMap لو حذفت التطبيق وثبّته من جديد. لا يمكن استخراج معرّف الجهاز من البصمة.</li>
 <li><b>خادم التوصيل (من الإصدار 8.0):</b> إذا كان صديقك مقفل التطبيق، تُحفظ رسالتك أو نداء الاستغاثة <b>مشفّرة</b> في خادم VibeMap حتى يستلمها، ثم تُحذف فوراً (وتُحذف تلقائياً بعد 7 أيام إن لم تُستلم). الخادم لا يملك مفتاح فكها. يعرف الخادم رقم VibeMap للمرسل والمستلم ووقت الإرسال، ورمز الإشعارات لجهازك، واسمك الذي يظهر في الإشعار. الإشعار نفسه يمر عبر خدمة Firebase Cloud Messaging من Google ولا يحتوي نص رسالتك.</li>
 <li><b>خادم TURN (اختياري):</b> إذا أضفته بنفسك من الإعدادات، يمرّ الصوت عبره مشفّراً.</li>
 </ul>
@@ -93,6 +99,10 @@
 <li>Stories (text or photo) are sent end-to-end encrypted to friends only, expire after 24 hours, include location only if you choose, and can be hidden from everyone or specific friends.</li>
 <li>Voice messages are recorded only while you hold the mic button in a chat, and are end-to-end encrypted. Room messages are encrypted per member; the room owner may relay them (still encrypted) to members who are not friends with the sender.</li>
 <li>The in-app Contact form sends your message (plus optional device info and contact detail) via the FormSubmit service to our support email only.</li>
+<li>Optional "Visible to everyone" (off by default): your name, color, bio, level and location are sent to the VibeMap server; nearby users (up to 5 km) see you at an approximate (~100 m) position and can send a friend request or an end-to-end encrypted voice note. Removed within 10 minutes after you turn it off.</li>
+<li>The Square: posts are <b>public, not encrypted</b>, visible to all VibeMap users with your name and level, stored on the VibeMap server and deleted after 3 days (or when you delete them). Posts with 3 reports are hidden.</li>
+<li>Device number (v8.1+): the mobile app stores a one-way SHA-256 hash of your device ID on the VibeMap server only to give you back the same VibeMap ID after reinstalling.</li>
+<li>Screenshots: when you take a screenshot while viewing a friend's story, they are notified (Android 14+, iOS). On Android, screenshots are blocked while viewing another user's profile photo.</li>
 <li>Relay (v8.0+): when a friend's app is closed, your message or SOS is stored end-to-end encrypted on the VibeMap relay until delivered, then deleted (undelivered items expire after 7 days). The relay cannot decrypt it; it knows sender/recipient VibeMap IDs, timestamps, your push token, and the display name shown in the notification. Wake-up notifications go through Firebase Cloud Messaging and contain no message content.</li>
 <li>Optional sign-in (Google, email or phone via Firebase Authentication) is used only to store an end-to-end encrypted backup of your VibeMap ID, friends list, rooms and settings, encrypted on your device with a backup code only you know. Messages, voice, location and stories are never backed up. You can delete your cloud account and backup in the app.</li>
 <li>You can block and report any user. Not intended for children under 13.</li>
