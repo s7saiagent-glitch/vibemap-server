@@ -3,7 +3,7 @@
    VibeMap v7.0 — تطبيق لاسلكي حقيقي بين الجوالات (ويب + أندرويد + آيفون)
    WebRTC P2P (PeerJS) · ECDH P-256 + AES-GCM-256 · GPS · بوصلة · كاميرا
    ════════════════════════════════════════════════════════════ */
-const VERSION = '8.4';
+const VERSION = '8.5';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -1996,13 +1996,16 @@ function stopAR(){
 /* ─── المحادثات ─── */
 function renderChats(){
   const lastOf = c => (MSG[c] || []).filter(m => m.from !== 'sys').slice(-1)[0];
-  const list = [
-    ...Object.values(S.rooms).map(r => { const c = 'R:' + r.id, last = lastOf(c); return { c, r, last, t: last ? last.ts : r.created || 0 }; }),
-    ...Object.values(S.friends).filter(f => f.status === 'friend').map(f => { const last = lastOf(f.pin); return { c:f.pin, f, last, t: last ? last.ts : f.added || 0 }; })
-  ].sort((a, b) => b.t - a.t);
+  /* v8.5: الخاصة لحالها والغرف لحالها */
+  const rooms = Object.values(S.rooms).map(r => { const c = 'R:' + r.id, last = lastOf(c); return { c, r, last, t: last ? last.ts : r.created || 0 }; }).sort((a, b) => b.t - a.t);
+  const priv = Object.values(S.friends).filter(f => f.status === 'friend').map(f => { const last = lastOf(f.pin); return { c:f.pin, f, last, t: last ? last.ts : f.added || 0 }; }).sort((a, b) => b.t - a.t);
+  const roomsOn = feat('rooms'), seg = roomsOn && S.settings.chSeg === 'rooms' ? 'rooms' : 'private';
+  const unr = arr => arr.reduce((n, x) => n + unread(x.c), 0), uP = unr(priv), uR = unr(rooms);
+  const list = seg === 'rooms' ? rooms : priv;
   let h = `<div class="pad"><div class="h1">المحادثات</div><div class="storybar" id="storyBarC" style="padding:0 0 4px">${storyBarHtml()}</div>
-    <button class="btn block" data-act="room-new">${I.plus}غرفة جديدة</button>`;
-  if(!list.length) h += `<div class="card empty"><b>لا توجد محادثات</b>أضف صديقاً من تبويب الأصدقاء لتبدأ.</div>`;
+    ${roomsOn ? `<div class="seg wide chseg" role="tablist"><button class="${seg === 'private' ? 'on' : ''}" data-act="ch-seg" data-v="private" role="tab" aria-selected="${seg === 'private'}">الخاصة${uP ? ` <span class="badge num">${uP}</span>` : ''}</button><button class="${seg === 'rooms' ? 'on' : ''}" data-act="ch-seg" data-v="rooms" role="tab" aria-selected="${seg === 'rooms'}">الغرف${uR ? ` <span class="badge num">${uR}</span>` : ''}</button></div>` : ''}
+    ${seg === 'rooms' ? `<button class="btn block" data-act="room-new">${I.plus}غرفة جديدة</button>` : ''}`;
+  if(!list.length) h += seg === 'rooms' ? `<div class="card empty"><b>ما عندك غرف</b>سوّ غرفة لأهلك أو ربعك وتكلمون كلكم مع بعض.</div>` : `<div class="card empty"><b>لا توجد محادثات</b>أضف صديقاً من تبويب الأصدقاء لتبدأ.</div>`;
   else { h += `<div class="card list">`;
     list.forEach(({ c, f, r, last }) => { const u = unread(c);
       const who = last && r && last.from === 'them' ? esc((last.sname || '').split(' ')[0]) + ': ' : '';
@@ -2279,6 +2282,7 @@ document.addEventListener('click', async e => {
     case 'av-open': openAvatar(pin); break;
     case 'av-close': closeAvatar(); break;
     case 'sv-react': storyReact(b.dataset.e); break;
+    case 'ch-seg': S.settings.chSeg = b.dataset.v === 'rooms' ? 'rooms' : 'private'; save(); renderChats(); break;
     case 'st-seg': RT.stSeg = b.dataset.v; { const v = $('#v-stories'); if(v) v._h = null; } if(RT.stSeg === 'square' && !SQ.loaded) sqLoad(true); renderStoriesTab(); break;
     case 'sq-tag': SQ.tag = b.dataset.tag || ''; RT.stSeg = 'square'; closeSheet(); sqLoad(true); if(RT.tab !== 'stories') setTab('stories'); else renderStoriesTab(); break;
     case 'sq-reload': sqLoad(true); break;
@@ -2947,7 +2951,7 @@ const FEAT_KEYS = ['square', 'nearby', 'stories', 'rooms', 'poke', 'voice', 'pho
 const FEAT_ACTS = { square:/^sq-/, stories:/^(story-|sc-|cam-post$|mute-stories$|hide-stories$)/, rooms:/^room-(new|talk)$/, poke:/^poke/, photos:/^(photo|sq-photo)$/, sos:/^(sos-|chat-sos$)/, nearby:/^(near-toggle|pub-add)$/, bubble:/^bubble-/ };
 const FEAT_CSS = {
   square:'.stseg,[data-act^=sq-]', stories:'#storyBar,#storyBarC,.stseg,[data-act^=story-]',
-  rooms:'[data-act=room-new]', poke:'[data-act=poke],[data-act=poke-pick]', voice:'#micBtn,#strMic', photos:'[data-act=photo],[data-act=sq-photo]',
+  rooms:'[data-act=room-new],.chseg', poke:'[data-act=poke],[data-act=poke-pick]', voice:'#micBtn,#strMic', photos:'[data-act=photo],[data-act=sq-photo]',
   sos:'#sosBtn,[data-act=chat-sos]', bubble:'[data-act=bubble-toggle],[data-act=bubble-perm]', nearby:'[data-act=near-toggle],[data-act=pub-add]' };
 const feat = k => !(RT.cfg && RT.cfg.flags && RT.cfg.flags[k] === false);
 const featOff = () => toast('هالميزة متوقفة مؤقتاً من إدارة VibeMap');
