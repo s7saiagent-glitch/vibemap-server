@@ -21,7 +21,7 @@
 <main>
 <p><a href="./">← العودة إلى VibeMap</a></p>
 <h1>سياسة الخصوصية — VibeMap</h1>
-<p class="muted">آخر تحديث: 25 سبتمبر 2026 · تنطبق على الإصدار 8.2 وما بعده (الويب وأندرويد وآيفون)</p>
+<p class="muted">آخر تحديث: 29 سبتمبر 2026 · تنطبق على الإصدار 8.4 وما بعده (الويب وأندرويد وآيفون)</p>
 
 <section>
 <h2>الخلاصة</h2>
@@ -53,12 +53,12 @@
 <h2>خدمات الاتصال الخارجية</h2>
 <p>لكي يجد جوالك جوال صديقك نستخدم خدمات تشغيل تقنية لا ترى محتوى كلامك أو رسائلك:</p>
 <ul>
-<li><b>خادم التعارف (PeerJS):</b> يرى رقم VibeMap وعنوان IP للحظة بدء الاتصال فقط، ثم ينتقل الاتصال مباشرة بين الجهازين.</li>
+<li><b>خادم التعارف (من الإصدار 8.4 خادم VibeMap نفسه، والخادم العام لـ PeerJS احتياطياً):</b> يرى رقم VibeMap وعنوان IP للحظة بدء الاتصال فقط، ثم ينتقل الاتصال مباشرة بين الجهازين. ما يحفظ سجلات.</li>
 <li><b>خوادم STUN (Google و Twilio):</b> تساعد الجهازين على معرفة طريق الاتصال، وترى عنوان IP فقط.</li>
 <li><b>رقم ثابت لجهازك (من الإصدار 8.1):</b> في تطبيق الجوال نحفظ في خادم VibeMap بصمة مشفّرة باتجاه واحد (SHA-256) لمعرّف جهازك، فقط عشان يرجع لك نفس رقم VibeMap لو حذفت التطبيق وثبّته من جديد. لا يمكن استخراج معرّف الجهاز من البصمة.</li>
 <li><b>قائمة أصدقائك عند الخادم (من الإصدار 8.2):</b> يعرف خادم VibeMap أرقام VibeMap لأصدقائك (بدون أسمائهم) عشان يقبل التنبيهات منهم فقط ويمنع الغرباء من إزعاجك بتنبيهات مزيفة. أسماء أصدقائك تبقى على جوالك.</li>
 <li><b>خادم التوصيل (من الإصدار 8.0):</b> إذا كان صديقك مقفل التطبيق، تُحفظ رسالتك أو نداء الاستغاثة <b>مشفّرة</b> في خادم VibeMap حتى يستلمها، ثم تُحذف فوراً (وتُحذف تلقائياً بعد 7 أيام إن لم تُستلم). الخادم لا يملك مفتاح فكها. يعرف الخادم رقم VibeMap للمرسل والمستلم ووقت الإرسال، ورمز الإشعارات لجهازك، واسمك الذي يظهر في الإشعار. الإشعار نفسه يمر عبر خدمة Firebase Cloud Messaging من Google ولا يحتوي نص رسالتك.</li>
-<li><b>خادم TURN (اختياري):</b> إذا أضفته بنفسك من الإعدادات، يمرّ الصوت عبره مشفّراً.</li>
+<li><b>خادم TURN (من الإصدار 8.4):</b> لو شبكة الجوال تمنع الاتصال المباشر، يمرّ الصوت عبر خادم TURN تابع لـ VibeMap وهو <b>مشفّر من طرف لطرف</b> (DTLS-SRTP) — الخادم ما يقدر يسمعه. تقدر تضيف خادمك الخاص من الإعدادات.</li>
 </ul>
 <p>في الاتصال المباشر قد يرى صديقك عنوان IP الخاص بك، كما في أي مكالمة إنترنت مباشرة. لإخفائه فعّل «إخفاء عنوان IP» مع خادم TURN.</p>
 </section>
@@ -95,7 +95,7 @@
 <li>Voice is captured only while you hold the talk button and is streamed directly to your connected friends; it is never recorded.</li>
 <li>Location is shared end-to-end encrypted with accepted friends only and can be hidden anytime (Ghost mode).</li>
 <li>Messages and photos are end-to-end encrypted (ECDH P-256 + AES-GCM-256) and stored only on the devices involved; optional auto-delete.</li>
-<li>A signaling service (PeerJS) and STUN servers (Google, Twilio) see your VibeMap ID and IP address only to set up connections. An optional TURN relay you configure carries encrypted audio.</li>
+<li>A signaling service (PeerJS) and STUN servers (Google, Twilio) see your VibeMap ID and IP address only to set up connections. From v8.4 the signaling and TURN relay are run by VibeMap itself; audio passing through TURN stays end-to-end encrypted and cannot be heard by the server.</li>
 <li>All data stays on your device unless you enable the optional encrypted backup. Delete everything via Me → Delete everything, or uninstall the app.</li>
 <li>Stories (text or photo) are sent end-to-end encrypted to friends only, expire after 24 hours, include location only if you choose, and can be hidden from everyone or specific friends.</li>
 <li>Voice messages are recorded only while you hold the mic button in a chat, and are end-to-end encrypted. Room messages are encrypted per member; the room owner may relay them (still encrypted) to members who are not friends with the sender.</li>
