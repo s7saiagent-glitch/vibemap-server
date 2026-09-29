@@ -3,7 +3,7 @@
    VibeMap v7.0 — تطبيق لاسلكي حقيقي بين الجوالات (ويب + أندرويد + آيفون)
    WebRTC P2P (PeerJS) · ECDH P-256 + AES-GCM-256 · GPS · بوصلة · كاميرا
    ════════════════════════════════════════════════════════════ */
-const VERSION = '8.1';
+const VERSION = '8.2';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -77,7 +77,17 @@ function defaults(){
   return { me:null, keys:null, friends:{}, ratingsIn:{}, blocked:{}, rooms:{}, leftRooms:{},
     settings:{ theme:'system', ttl:'keep', ghost:false, demo:false, wake:false, turnUrl:'', turnUser:'', turnPass:'', relayOnly:false, notifPreview:true, pttKey:'none', pttMode:'hold', storiesOn:true, bgMode:true, eco:true, bubble:false } };
 }
-function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} try{ if(S && S.account) bkSoon(); }catch(e){} }
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} try{ if(S && S.account) bkSoon(); }catch(e){} try{ contactsSoon(); }catch(e){} }
+/* v8.2: الخادم يقبل التنبيهات من أصدقائك بس، والجوال يعرض الاسم المحفوظ عندك (مو اللي يكتبه المرسل) */
+function allowList(){ return S && S.friends ? Object.values(S.friends).filter(f => (f.status === 'friend' || f.status === 'out') && !isDemo(f.pin)).map(f => f.pin).slice(0, 1000) : []; }
+let contactsT = 0, contactsSig = '';
+function contactsSoon(){ clearTimeout(contactsT); contactsT = setTimeout(() => {
+  if(!S || !S.friends) return;
+  const map = {}; Object.values(S.friends).forEach(f => { if(f.status === 'friend' && !isDemo(f.pin)) map[f.pin] = f.name; });
+  const sig = JSON.stringify(map) + '|' + allowList().join(','); if(sig === contactsSig) return; const first = !contactsSig; contactsSig = sig;
+  const P = NP('VibePush'); if(P && P.setContacts) P.setContacts({ json:JSON.stringify(map) }).catch(() => {});
+  if(!first && typeof relayReg === 'function' && RL.ok) relayReg();
+}, 1500); }
 function load(){ try{
   let v = JSON.parse(localStorage.getItem(LS_KEY));
   if(!v){ v = JSON.parse(localStorage.getItem('vibemap.v6')); if(v && v.me){ localStorage.setItem(LS_KEY, JSON.stringify(v)); localStorage.removeItem('vibemap.v6'); } }
@@ -114,7 +124,8 @@ function makePin(){
   return `VM-${c.slice(0,4)}-${c.slice(4)}`;
 }
 const peerId = pin => 'vibemap-' + pin.toLowerCase();
-const pinOf = id => (id || '').replace(/^vibemap-/, '').toUpperCase();
+/* v8.2: المعرّف لازم يكون بالحروف الصغيرة بالضبط — كان «vibemap-VM-..» بحروف كبيرة يُقبل كأنه نفس الصديق (انتحال) */
+const pinOf = id => { const m = /^vibemap-(vm-[a-z0-9]{4}-[a-z0-9]{4})$/.exec(id || ''); return m ? m[1].toUpperCase() : ''; };
 /* v7.8: صورة المستخدم — إن وُجدت تظهر بدل الحرف */
 const avCss = o => `background:${V.color(o && o.color)}` + (o && o.photo && V.photo(o.photo) ? `;background-image:url('${o.photo}');background-size:cover;background-position:center;color:transparent` : '');
 const initial = n => (String(n || '?').trim()[0] || '?').toUpperCase();
@@ -248,7 +259,8 @@ function startPeer(){
     }else console.warn('peer', e.type, e);
   });
 }
-function isOnline(pin){ return isDemo(pin) ? !!S.settings.demo : !!(RT.conns[pin] && RT.conns[pin].open); }
+/* v8.2: «متصل» فقط عبر اتصال أثبت مفتاح الصديق — ما نرسل صوت لمنتحل */
+function isOnline(pin){ if(isDemo(pin)) return !!S.settings.demo; const c = RT.conns[pin]; return !!(c && c.open && c._ok); }
 function connectAll(){
   if(!RT.peer || RT.peer.disconnected || RT.peer.destroyed) return;
   for(const pin in S.friends){ const f = S.friends[pin]; if(isDemo(pin) || f.status === 'in') continue; connectTo(pin); }
@@ -276,8 +288,8 @@ async function routeOf(pin){
 }
 function setupConn(c, outgoing){
   const pin = pinOf(c.peer);
-  if(!PIN_STRICT.test(pin) || pin === S.me.pin || S.blocked[pin]){ try{ c.close(); }catch(e){} return; }
-  if(!outgoing) c._init = pin;
+  if(!PIN_STRICT.test(pin) || c.peer !== peerId(pin) || isDemo(pin) || pin === S.me.pin || S.blocked[pin] || S.settings.offline){ try{ c.close(); }catch(e){} return; }
+  if(!outgoing) c._init = pin; c._t = now();
   c.on('open', () => {
     delete RT.pending[pin]; if(RT.iceFail) delete RT.iceFail[pin];
     c.send({ type:'hello', v:VERSION, pin:S.me.pin, name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), bio:S.me.bio || null, via:(S.friends[pin] && S.friends[pin].status === 'out' && S.friends[pin].via) || undefined });
@@ -293,10 +305,17 @@ async function onData(c, pin, d){
     if(pinOf(c.peer) !== d.pin) return;
     const pub = V.pub(d.pub); if(!pub) return;
     d = { ...d, name:V.name(d.name), color:V.color(d.color), rep:V.rep(d.rep), lvl:V.lvl(d.lvl), bio:V.bio(d.bio), v:V.str(d.v, 8), pub };
+    { const f0 = S.friends[pin];
+      /* v8.2: طلب معلّق وله مفتاح معروف (من الخادم الموثّق) — مفتاح مختلف في الاتصال المباشر = منتحل، نقفل */
+      if(f0 && f0.status !== 'friend' && f0.pub && (f0.pub.x !== pub.x || f0.pub.y !== pub.y)){ try{ c.close(); }catch(e){} return; }
+      /* v8.2: الطلبات الجديدة لازم توصل عبر الخادم (يتأكد من صاحب الرقم) — ما نقبل طلب من اتصال مباشر مجهول */
+      if(!f0 && RELAY){ try{ c.close(); }catch(e){} if(now() - (RT.rfUnk || 0) > 3000){ RT.rfUnk = now(); setTimeout(() => relayFetch(), 600); } return; } }
     if(!S.friends[pin] && Object.values(S.friends).filter(x => x.status === 'in').length >= 20){ try{ c.close(); }catch(e){} return; }
     const old = RT.conns[pin];
     if(old && old !== c && old.open){
-      const keepNew = c._init === [S.me.pin, pin].sort()[0];
+      /* اتصالين بنفس اللحظة (كل واحد اتصل بالثاني): نختار واحد بقاعدة ثابتة. غير كذا الجديد أحدث — صاحبه أعاد فتح التطبيق */
+      const simult = Math.abs((c._t || 0) - (old._t || 0)) < 8000;
+      const keepNew = !simult || c._init === [S.me.pin, pin].sort()[0];
       if(keepNew) old.close(); else { c.close(); return; }
     }
     RT.conns[pin] = c;
@@ -315,15 +334,18 @@ async function onData(c, pin, d){
       if(!f.newPub || f.newPub.x !== pub.x){ f.newPub = pub; f.keyAlert = true; delete RT.keys[pin];
         sysMsg(pin, '⚠️ تغيّر رمز الأمان لهذا الصديق. أوقفنا الرسائل والصوت معه حتى تتأكد منه وجهاً لوجه أو باتصال هاتفي، ثم اضغط «تحققت» من صفحته.');
         notify('تنبيه أمان', `تغيّر رمز الأمان لـ ${f.name}`); }
-    } else { f.pub = pub; await deriveFor(pin); }
-    if(f.status === 'out'){ /* ننتظر قبوله */ }
-    if(f.status === 'friend'){ onFriendOnline(pin); }
+    } else if(f.pub || !RELAY){ f.pub = pub; await deriveFor(pin); }
+    /* الاتصال موثوق فقط إذا مفتاحه نفس المفتاح اللي نعرفه */
+    c._hp = pub; c._ok = !!(f.pub && f.pub.x === pub.x && f.pub.y === pub.y && !f.keyAlert);
+    if(f.status === 'friend' && c._ok){ onFriendOnline(pin); }
     save(); renderAll();
     return;
   }
   const f = S.friends[pin]; if(!f) return;
+  if(!c._ok) return; /* v8.2: أي أمر من اتصال ما أثبت مفتاحه نتجاهله */
   if(d.type === 'request-accept' || d.type === 'accept'){
-    if(f.status === 'out' || f.status === 'in'){ f.status = 'friend'; save(); toast(`${f.name} قبل طلب الصداقة`); onFriendOnline(pin); renderAll(); }
+    /* v8.2: القبول فقط لطلب «أنا» أرسلته — كان الطرف الثاني يقدر يقبل طلبه بنفسه ويصير صديقك غصب */
+    if(f.status === 'out'){ f.status = 'friend'; save(); toast(`${f.name} قبل طلب الصداقة`); onFriendOnline(pin); renderAll(); }
     return;
   }
   if(d.type === 'decline' || d.type === 'remove'){
@@ -352,7 +374,7 @@ function onFriendOnline(pin){
 async function sendEnc(pin, obj){
   if(isDemo(pin)){ demoReceive(pin, obj); return true; }
   const c = RT.conns[pin];
-  if(!c || !c.open || !RT.keys[pin] || S.friends[pin]?.status !== 'friend' || S.friends[pin]?.keyAlert) return false;
+  if(!c || !c.open || !c._ok || !RT.keys[pin] || S.friends[pin]?.status !== 'friend' || S.friends[pin]?.keyAlert) return false;
   try{ const e = await encryptFor(pin, obj); c.send({ type:'enc', iv:e.iv, ct:e.ct }); return true; }catch(e){ console.warn('send', e); return false; }
 }
 function friendsOnline(){ return Object.values(S.friends).filter(f => f.status === 'friend' && isOnline(f.pin)).map(f => f.pin); }
@@ -368,7 +390,7 @@ async function relayPost(path, body){
   const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 20000);
   try{
     const r = await fetch(RELAY + path, { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), ...body }), signal:ac.signal });
-    const j = await r.json().catch(() => null);
+    const j = await r.json().catch(() => null); RL.lastErr = !r.ok && j && j.err || '';
     if(r.status === 401 && path !== '/api/reg'){ RL.ok = false; relayReg(); }
     return r.ok ? j : null;
   }catch(e){ return null; } finally { clearTimeout(t); }
@@ -382,7 +404,7 @@ async function relayReg(){
   try{
     const fcm = S.settings.offline ? null : await pushToken();
     const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 20000);
-    const r = await fetch(RELAY + '/api/reg', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), fcm:fcm || '', plat:PLATFORM, dev:S.me.dev || undefined }), signal:ac.signal }).catch(() => null);
+    const r = await fetch(RELAY + '/api/reg', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), fcm:fcm || '', plat:PLATFORM, dev:RT.dev || undefined, allow:allowList() }), signal:ac.signal }).catch(() => null);
     clearTimeout(t);
     const j = r && await r.json().catch(() => null);
     RL.taken = !!(r && r.status === 403);
@@ -396,6 +418,8 @@ async function relayInit(){
   if(P){ try{ await P.addListener('push', () => relayFetch(true)); await P.addListener('token', () => relayReg()); }catch(e){} askNotifOnce(); }
   await relayReg();
   setInterval(() => { if(document.visibilityState === 'visible') relayFetch(); }, 30000);
+  /* طلب صداقة معلّق: نتحقق كل 5 ثواني عشان القبول يوصل بسرعة */
+  setInterval(() => { if(document.visibilityState === 'visible' && Object.values(S.friends).some(f => f.status === 'out')) relayFetch(); }, 5000);
 }
 /* أندرويد 13+: نطلب إذن الإشعارات مرة وحدة — بدونه ما يوصل تنبيه الرسائل والاستغاثة */
 async function askNotifOnce(){
@@ -428,6 +452,7 @@ async function relayFetch(fromPush){
       const done = [];
       for(const x of j.items){
         const pin = typeof x.f === 'string' ? x.f : ''; done.push(pin + '/' + x.id);
+        if(!PIN_STRICT.test(pin) || isDemo(pin)) continue;
         if(x.iv === 'PLAIN'){ try{ handlePlain(pin, JSON.parse(TD.decode(unb64(x.ct))), null); }catch(e){} continue; }
         if(x.iv === 'X'){ try{ const o = await openSealed(x.ct); handlePlain(pin, o.m, o.pub); }catch(e){ console.warn('sealed', e); } continue; }
         const f = S.friends[pin]; if(!f || f.status !== 'friend' || f.keyAlert || S.blocked[pin]) continue;
@@ -466,6 +491,7 @@ function handleInner(pin, m){
     case 'ack': { const x = (MSG[pin] || []).find(x => x.from === 'me' && x.id === m.id); if(x && x.st !== 'read'){ x.st = 'delivered'; saveMsgs(); renderChatIfOpen(pin); } break; }
     case 'read': { const x = (MSG[pin] || []).find(x => x.from === 'me' && x.id === m.id); if(x){ x.st = 'read'; x.readAt = now(); saveMsgs(); renderChatIfOpen(pin); } break; }
     case 'loc': {
+      { const ts = V.num(m.ts, 1e12, 1e13); if(ts && now() - ts > 15 * 60e3) break; } /* v8.2: موقع قديم (إعادة إرسال) نتجاهله */
       if(m.hidden){ f.hidden = true; f.loc = null; }
       else { const l = V.loc(m); if(!l) break; f.hidden = false; f.loc = { ...l, ts:now() }; }
       save(); renderStage(); if(RT.tab === 'friends') renderFriends(); break;
@@ -473,6 +499,8 @@ function handleInner(pin, m){
     case 'talk': {
       clearTimeout((RT.rxT || (RT.rxT = {}))[pin]);
       if(m.on) RT.rxT[pin] = setTimeout(() => { if(RT.rxTalking.delete(pin)){ rxPlay(pin, false); renderTalk(); renderStage(); } }, 65000); /* احتياط لو ضاعت رسالة «انتهى» */
+      if(m.on && m._relay) break; /* الكلام المباشر ما يجي عبر الخادم */
+      { const ts = V.num(m.ts, 1e12, 1e13); if(m.on && ts && now() - ts > 90e3) break; }
       /* v8.1: اثنين ضغطوا مع بعض — اللي ضغط أول يكمل والثاني يسكت */
       if(m.on && RT.talking && (RT._txTargets || []).includes(pin)){ const their = V.num(m.ts, 1e12, 1e13) || now();
         if(their < (RT.talkTs || 0) || (their === RT.talkTs && pin < S.me.pin)){ pttUp(); if(RT.rec) chatRecStop(true); toast(`${f.name} سبقك بالكلام — انتظر لين يخلص`); } }
@@ -545,7 +573,13 @@ function ensureCall(pin){
 function onCall(call){
   const pin = pinOf(call.peer);
   const f = S.friends[pin];
-  if(!f || f.status !== 'friend'){ try{ call.close(); }catch(e){} return; }
+  if(!PIN_STRICT.test(pin) || call.peer !== peerId(pin) || !f || f.status !== 'friend' || f.keyAlert || S.settings.offline){ try{ call.close(); }catch(e){} return; }
+  /* v8.2: نرد على المكالمة فقط بعد ما يثبت الاتصال مفتاح الصديق */
+  const ok = () => { const c = RT.conns[pin]; return !!(c && c.open && c._ok); };
+  if(ok()) return answerCall(call, pin);
+  let n = 0; const t = setInterval(() => { if(ok()){ clearInterval(t); answerCall(call, pin); } else if(++n > 40){ clearInterval(t); try{ call.close(); }catch(e){} } }, 100);
+}
+function answerCall(call, pin){
   call.answer(undefined, { sdpTransform:opusTune });
   call.on('stream', stream => {
     if(call.peerConnection) tuneReceiver(call.peerConnection);
@@ -2212,7 +2246,7 @@ document.addEventListener('click', async e => {
     case 'sq-del': { const j = await relayPost('/api/sq/del', { id:b.dataset.id }); if(j && j.ok){ SQ.items = SQ.items.filter(x => x.id !== b.dataset.id); toast('انحذف منشورك'); } closeSheet(); renderStoriesTab(); break; }
     case 'zoom': radarZoom(b.dataset.z); break;
     case 'friend': { if(b.classList.contains('blip') && hasUnseen(pin) && !S.friends[pin]?.sos){ openStories(pin); break; } const f = S.friends[pin]; if(f && f.keyAlert && !f._newCode){ f._newCode = await safetyCode(pin, true); } openSheet(friendSheet(pin), pin); break; }
-    case 'trust-key': { const f = S.friends[pin]; if(!f || !f.newPub) break; f.pub = f.newPub; delete f.newPub; delete f._newCode; f.keyAlert = false; save();
+    case 'trust-key': { const f = S.friends[pin]; if(!f || !f.newPub) break; f.pub = f.newPub; delete f.newPub; delete f._newCode; f.keyAlert = false; save(); markConnOk(pin);
       await deriveFor(pin); sysMsg(pin, 'تم التحقق من رمز الأمان الجديد. عادت الرسائل والصوت.'); if(isOnline(pin)) onFriendOnline(pin); openSheet(friendSheet(pin), pin); renderAll(); break; }
     case 'add-confirm': closeSheet(); addFriendByPin(pin); setTab('friends'); break;
     case 'chat': closeSheet(); openChat(pin); break;
@@ -2524,22 +2558,27 @@ async function openSealed(ct){
   return { m:JSON.parse(TD.decode(pt)), pub:p };
 }
 function handlePlain(pin, m, sealedPub){
-  if(!m || typeof m !== 'object' || !PIN_STRICT.test(pin) || pin === S.me.pin || S.blocked[pin]) return;
-  const pub = V.pub(m.pub); if(!pub) return; if(sealedPub && sealedPub.x !== pub.x) return;
+  if(!m || typeof m !== 'object' || !PIN_STRICT.test(pin) || isDemo(pin) || pin === S.me.pin || S.blocked[pin]) return;
+  const pub = V.pub(m.pub); if(!pub) return; if(sealedPub && (sealedPub.x !== pub.x || sealedPub.y !== pub.y)) return;
   let f = S.friends[pin];
+  /* v8.2: لو نعرف مفتاح هذا الرقم، أي رسالة بمفتاح مختلف مرفوضة (ما نسمح باستبدال المفتاح بصمت) */
+  const samePub = f && f.pub && f.pub.x === pub.x && f.pub.y === pub.y;
+  if(f && f.pub && !samePub) return;
   if(m.k === 'freq'){
-    if(f && f.status === 'friend'){ if(!f.pub){ f.pub = pub; save(); deriveFor(pin); } return; }
+    if(f && f.status === 'friend') return;
     if(f && f.status === 'out'){
-      f.name = V.name(m.name); f.color = V.color(m.color); f.pub = pub; f.rep = V.rep(m.rep); f.lvl = V.lvl(m.lvl); f.bio = V.bio(m.bio); f.status = 'friend'; save();
+      f.name = V.name(m.name); f.color = V.color(m.color); f.pub = pub; f.rep = V.rep(m.rep); f.lvl = V.lvl(m.lvl); f.bio = V.bio(m.bio); f.status = 'friend'; save(); markConnOk(pin);
       deriveFor(pin).then(() => { relaySendPlain(pin, acceptPayload(), 'accept'); onFriendOnline(pin); renderAll(); });
       toast(`أصبحت أنت و${f.name} أصدقاء`); renderAll(); return;
     }
     if(!f && Object.values(S.friends).filter(x => x.status === 'in').length >= 30) return;
     const isNew = !f;
-    f = S.friends[pin] = { ...(f || {}), pin, name:V.name(m.name), color:V.color(m.color), status:'in', added:(f && f.added) || now(), pub, rep:V.rep(m.rep), lvl:V.lvl(m.lvl), bio:V.bio(m.bio), fromPub:m.pubreq === true };
+    f = S.friends[pin] = { ...(f || {}), pin, name:V.name(m.name), color:V.color(m.color), status:'in', added:(f && f.added) || now(), pub, rep:V.rep(m.rep), lvl:V.lvl(m.lvl), bio:V.bio(m.bio), fromPub:m.pubreq === true }; markConnOk(pin);
     { const vr = V.id(m.via), rr = vr && S.rooms[vr]; if(rr && rr.members.includes(pin)){ f.via = vr; f.hidePin = true; } }
-    const voice = m.voice ? V.audio(m.voice) : null;
-    if(voice){ f.reqVoice = voice; f.reqDur = V.num(m.dur, 0, 60) || 0; }
+    const voice = m.voice && String(m.voice).length <= 450000 ? V.audio(m.voice) : null; /* v8.2: حد للحجم (ضد ملء التخزين) */
+    if(voice){ f.reqVoice = voice; f.reqDur = V.num(m.dur, 0, 60) || 0;
+      const vs = Object.values(S.friends).filter(x => x.status === 'in' && x.reqVoice).sort((a, b) => (a.added || 0) - (b.added || 0));
+      while(vs.length > 5){ const o = vs.shift(); delete o.reqVoice; delete o.reqDur; } }
     save();
     if(isNew || voice){ tone(BEEP.msg); vibrate(40);
       notify(voice ? `🎤 ${f.name}` : 'طلب صداقة جديد', voice ? 'أرسل لك رسالة صوتية مع طلب صداقة' : `${f.name} يبغى يضيفك في VibeMap`);
@@ -2548,14 +2587,16 @@ function handlePlain(pin, m, sealedPub){
   }
   if(m.k === 'facc'){
     if(!f || (f.status !== 'out' && f.status !== 'friend')) return;
-    if(f.status === 'friend' && f.pub && f.pub.x !== pub.x) return; /* تغيّر المفتاح: الاتصال المباشر ينبّه المستخدم */
+    if(f.status === 'friend' && !samePub) return;
     const was = f.status;
-    Object.assign(f, { pub, name:V.name(m.name), color:V.color(m.color), rep:V.rep(m.rep), lvl:V.lvl(m.lvl), bio:V.bio(m.bio), status:'friend' }); save();
+    Object.assign(f, { pub, name:V.name(m.name), color:V.color(m.color), rep:V.rep(m.rep), lvl:V.lvl(m.lvl), bio:V.bio(m.bio), status:'friend' }); save(); markConnOk(pin);
     deriveFor(pin).then(() => { if(was !== 'friend'){ toast(`${f.name} قبل طلب الصداقة`); notify('✅ ' + f.name, 'قبل طلب الصداقة'); onFriendOnline(pin); } renderAll(); });
     return;
   }
-  if(m.k === 'fdec'){ if(f && f.status === 'out'){ const n = f.name; delete S.friends[pin]; save(); toast(`${n} رفض طلب الصداقة`); renderAll(); } }
+  if(m.k === 'fdec'){ if(f && f.status === 'out' && (!f.pub || samePub)){ const n = f.name; delete S.friends[pin]; save(); toast(`${n} رفض طلب الصداقة`); renderAll(); } }
 }
+/* مفتاح الصديق تأكد عبر الخادم — لو فيه اتصال مباشر مفتوح بنفس المفتاح نعتبره موثوق */
+function markConnOk(pin){ const c = RT.conns[pin], f = S.friends[pin]; if(c && c._hp && f && f.pub && c._hp.x === f.pub.x && c._hp.y === f.pub.y && !f.keyAlert){ c._ok = true; if(f.status === 'friend') setTimeout(() => onFriendOnline(pin), 50); } }
 function playReqVoice(pin){
   const f = S.friends[pin]; if(!f || !f.reqVoice) return;
   if(RT.reqAudio){ try{ RT.reqAudio.pause(); }catch(e){} }
@@ -2575,18 +2616,21 @@ async function pubSync(force){
   if(!RELAY || !S || !S.me) return;
   const want = visMode() === 'public' && !S.settings.offline && !!RT.myLoc;
   if(!want){ if(RT.pubOn || force){ RT.pubOn = false; RT.pubLast = null; relayPost('/api/pub/set', { on:false }); } return; }
-  const L = RT.myLoc, last = RT.pubLast;
-  if(!force && last && now() - last.t < 120000 && distance(last, L) < 150) return;
+  /* v8.2: ما نرسل موقعك الدقيق أبداً — نثبّته على شبكة ~275م بإزاحة ثابتة خاصة فيك (ما أحد يقدر يحدد مكانك بالضبط) */
+  if(!S.me.fz){ const r = crypto.getRandomValues(new Uint32Array(2)); S.me.fz = [r[0] / 2 ** 32, r[1] / 2 ** 32]; save(); }
+  const G = 0.0025, q = (v, o) => +(Math.floor(v / G + o) - o + .5) * G;
+  const L = { lat:q(RT.myLoc.lat, S.me.fz[0]), lng:q(RT.myLoc.lng, S.me.fz[1]) }, last = RT.pubLast;
+  if(!force && last && now() - last.t < 120000 && last.lat === L.lat && last.lng === L.lng) return;
   RT.pubLast = { lat:L.lat, lng:L.lng, t:now() };
   const b = S.me.bio || {};
-  const j = await relayPost('/api/pub/set', { on:true, name:S.me.name, color:S.me.color, lat:L.lat, lng:L.lng, pub:S.keys.pub, bio:b.about || '', work:b.work || '', tags:b.tags || '', lvl:myLevel(), rt:repAvg(myRep()) || 0 });
+  const j = await relayPost('/api/pub/set', { on:true, name:S.me.name, color:S.me.color, lat:+L.lat.toFixed(5), lng:+L.lng.toFixed(5), pub:S.keys.pub, bio:b.about || '', work:b.work || '', tags:b.tags || '', lvl:myLevel(), rt:repAvg(myRep()) || 0 });
   RT.pubOn = !!(j && j.ok);
 }
 async function nearFetch(force){
   if(!RELAY || !S || S.settings.offline || !RT.myLoc || S.settings.hideNear){ if(RT.near && RT.near.length){ RT.near = []; renderStage(); } return; }
   if(!force && (RT.tab !== 'radar' || document.visibilityState !== 'visible')) return;
   if(!force && RT.nearT && now() - RT.nearT < 40000) return; RT.nearT = now();
-  const j = await relayPost('/api/pub/near', { lat:RT.myLoc.lat, lng:RT.myLoc.lng });
+  const j = await relayPost('/api/pub/near', { lat:+RT.myLoc.lat.toFixed(3), lng:+RT.myLoc.lng.toFixed(3) });
   if(!j || !Array.isArray(j.items)) return;
   RT.near = j.items.filter(x => x && PIN_STRICT.test(x.pin) && x.pin !== S.me.pin && !S.blocked[x.pin] && !(S.friends[x.pin] && S.friends[x.pin].status === 'friend'))
     .map(x => ({ pin:x.pin, n:V.name(x.n), c:V.color(x.c), loc:{ lat:+x.lat, lng:+x.lng }, d:V.num(x.d, 0, 1e5) || 0, pub:V.pub({ kty:'EC', crv:'P-256', x:x.pub && x.pub.x, y:x.pub && x.pub.y }),
@@ -2732,11 +2776,11 @@ function sqPostHtml(p){
     <span class="grow"><b>${esc(V.name(p.n))}</b>${lvlRt(V.lvl(p.lvl), V.num(p.rt, 0, 5))}<small>${fmtAgo(p.ts)}${p.city ? ' · 📍 ' + esc(V.str(p.city, 30)) : ''}</small></span>
     <button class="iconbtn" data-act="sq-menu" data-id="${esc(p.id)}" aria-label="خيارات المنشور">⋯</button></div>
     ${p.text ? `<div class="sqt">${sqTagify(V.str(p.text, 500))}</div>` : ''}${img}
-    <div class="sqf"><button class="lk ${p.liked ? 'on' : ''}" data-act="sq-like" data-id="${esc(p.id)}" aria-label="إعجاب">${p.liked ? '❤️' : '🤍'} <span>${p.likes || ''}</span></button></div></article>`;
+    <div class="sqf"><button class="lk ${p.liked ? 'on' : ''}" data-act="sq-like" data-id="${esc(p.id)}" aria-label="إعجاب">${p.liked ? '❤️' : '🤍'} <span>${(+p.likes | 0) || ''}</span></button></div></article>`;
 }
 function squareHtml(){
   if(!RELAY) return '<div class="card empty"><b>الساحة غير متاحة</b>تحتاج اتصال بخادم VibeMap.</div>';
-  const tr = SQ.trends.length ? `<div class="sqtr">${SQ.trends.slice(0, 12).map(t => `<button class="chip ${SQ.tag === t.tag ? 'hot' : ''}" data-act="sq-tag" data-tag="${esc(t.tag)}">#${esc(t.tag)} <small>${t.n}</small></button>`).join('')}</div>` : '';
+  const tr = SQ.trends.length ? `<div class="sqtr">${SQ.trends.slice(0, 12).map(t => `<button class="chip ${SQ.tag === t.tag ? 'hot' : ''}" data-act="sq-tag" data-tag="${esc(t.tag)}">#${esc(t.tag)} <small>${+t.n | 0}</small></button>`).join('')}</div>` : '';
   let h = `<div class="sqhead"><div class="grow"><div class="t1">${SQ.tag ? `#${esc(SQ.tag)}` : 'كل المنشورات'}</div><div class="t2">منشورات عامة تختفي بعد 3 أيام</div></div>${SQ.tag ? '<button class="btn sm" data-act="sq-tag" data-tag="">الكل</button>' : ''}<button class="btn sm grad" data-act="sq-new">${I.plus}منشور</button></div>`;
   h += tr ? `<div class="h2">🔥 الترند اليوم</div>${tr}` : '';
   if(SQ.err) h += `<div class="card empty"><b>${esc(SQ.err)}</b><button class="btn sm pri" data-act="sq-reload">إعادة المحاولة</button></div>`;
@@ -2779,7 +2823,7 @@ async function sqSend(){
   if(!/#[\p{L}\p{N}_]{2,30}/u.test(text)){ toast('أضف هاشتاق واحد على الأقل، مثل #جدة'); return; }
   const btn = document.querySelector('[data-act=sq-send]'); if(btn){ btn.disabled = true; btn.textContent = 'ينشر…'; }
   const j = await relayPost('/api/sq/post', { text, photo:SQ.photo || undefined, name:S.me.name, color:S.me.color, lvl:myLevel(), rt:repAvg(myRep()) || 0 });
-  if(!j || !j.ok){ if(btn){ btn.disabled = false; btn.textContent = 'نشر'; } toast('تعذّر النشر — حاول بعد شوي'); return; }
+  if(!j || !j.ok){ if(btn){ btn.disabled = false; btn.textContent = 'نشر'; } toast(RL.lastErr === 'new' ? 'الحسابات الجديدة تقدر تنشر بعد 10 دقائق' : 'تعذّر النشر — حاول بعد شوي'); return; }
   SQ.photo = null; stat('sq'); closeSheet(); toast('انتشر منشورك ✓'); sqLoad(true);
 }
 
@@ -2904,7 +2948,7 @@ function showOnboard(){
     ctx(); unlockAudio();
     const btn = $('#obForm button[type=submit]'); if(btn){ btn.disabled = true; btn.textContent = 'لحظة…'; }
     const dp = await devicePin();
-    S = defaults(); S.m78 = 1; S.me = { pin:dp.pin || makePin(), name, color, created:now() }; if(dp.dev) S.me.dev = dp.dev; save();
+    S = defaults(); S.m78 = 1; S.me = { pin:dp.pin || makePin(), name, color, created:now() }; if(dp.dev) RT.dev = dp.dev; save();
     ob.hidden = true; await boot(); toast(dp.restored ? `رجع لك رقمك القديم ${S.me.pin} ✓` : `رقمك في VibeMap هو ${S.me.pin}`); };
 }
 async function boot(){
@@ -2921,7 +2965,9 @@ async function boot(){
   const q = new URLSearchParams(location.search).get('add');
   if(q && PIN_RE.test(q)){ history.replaceState(null, '', location.pathname); setTimeout(() => confirmAdd(q), 800); }
   hwInit(); bgInit(); relayInit(); renderSosBtn();
-  if(!S.me.dev) deviceKey().then(d => { if(d){ S.me.dev = d; save(); relayReg(); } });
+  /* v8.2: بصمة الجهاز ما تنحفظ في التخزين — تنحسب كل مرة من النظام */
+  if(S.me.dev){ delete S.me.dev; save(); }
+  deviceKey().then(d => { if(d){ RT.dev = d; relayReg(); } });
   { const D = NP('VibeDevice'); if(D) D.addListener('screenshot', onScreenshot).catch(() => {}); }
   setInterval(() => { pubSync(); nearFetch(); }, 30000); setTimeout(() => { pubSync(true); nearFetch(true); }, 4000);
   if(S.account && FB_CFG) setTimeout(() => acInit().then(() => bkSoon()).catch(() => {}), 2500);

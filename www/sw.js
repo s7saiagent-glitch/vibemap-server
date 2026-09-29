@@ -1,5 +1,5 @@
 /* VibeMap v7.8 service worker: offline shell + notifications */
-const CACHE = 'vibemap-v8.1';
+const CACHE = 'vibemap-v8.2';
 const SHELL = ['./', './index.html', './app.js', './manifest.webmanifest', './vendor/peerjs.min.js', './vendor/qrcode.js', './vendor/jsQR.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/maskable-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });

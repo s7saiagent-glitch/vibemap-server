@@ -1,4 +1,4 @@
-/* VibeMap Relay v8.1 — خادم التوصيل
+/* VibeMap Relay v8.2 — خادم التوصيل (مع إصلاحات الأمان)
  * يحفظ الرسائل المشفّرة (لا يقدر يقرأها) حتى يستلمها الصديق، ويوقظ جواله بإشعار عبر Firebase Cloud Messaging.
  * بدون مكتبات خارجية: Node 18 أو أحدث فقط.
  * الإعدادات من متغيرات البيئة:
@@ -13,15 +13,26 @@ const crypto = require('crypto');
 const PORT = +process.env.PORT || 8095;
 const HOST = process.env.HOST || '127.0.0.1';
 const DATA = process.env.DATA_DIR || '/var/lib/vibemap-relay';
-const SA_FILE = process.env.SA_FILE || '/etc/vibemap/service-account.json';
+const SA_FILE = process.env.SA_FILE || (process.env.CREDENTIALS_DIRECTORY ? path.join(process.env.CREDENTIALS_DIRECTORY, 'sa') : '/etc/vibemap/service-account.json');
 const PIN_RE = /^VM-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 const ID_RE = /^[A-Za-z0-9_-]{4,40}$/;
 const B64_RE = /^[A-Za-z0-9+/=_-]+$/;
 const MAX_BODY = 4.5 * 1024 * 1024;       // حجم الطلب
 const BOX_MAX_ITEMS = 400;                 // رسائل معلّقة لكل مستخدم
-const BOX_MAX_BYTES = 40 * 1024 * 1024;    // حجم الصندوق لكل مستخدم
+const BOX_MAX_BYTES = 25 * 1024 * 1024;    // حجم الصندوق لكل مستخدم
+const PAIR_MAX_BYTES = 8 * 1024 * 1024, PAIR_MAX_ITEMS = 120;     // من مرسل واحد لمستلم واحد
+const STRANGER_MAX_BYTES = 1.5 * 1024 * 1024, STRANGER_MAX_ITEMS = 6; // من شخص مو في قائمة المستلم
+const ITEM_MAX = 3.6e6;                    // أكبر رسالة
+const DISK_MAX = +process.env.DISK_MAX || 2 * 1024 ** 3; // كل الصناديق مجتمعة
+const CACHE_MAX = 160 * 1024 * 1024;       // ذاكرة الصناديق
+const POST_MIN_AGE = process.env.POST_MIN_AGE != null ? +process.env.POST_MIN_AGE : 10 * 60e3;   // عمر الحساب قبل أول منشور
+const REPORT_MIN_AGE = process.env.REPORT_MIN_AGE != null ? +process.env.REPORT_MIN_AGE : 24 * 3600e3; // عمر الحساب ليُحسب بلاغه
 const TTL_MS = 7 * 24 * 3600e3;            // تُحذف الرسائل غير المستلمة بعد 7 أيام
 const PUSH_KINDS = new Set(['sos', 'sosoff', 'msg', 'voice', 'photo', 'room', 'friend', 'accept', 'poke', 'react', 'shot', 'voicereq']);
+const REQ_KINDS = new Set(['friend', 'voicereq', 'accept']); // تنبيهات مسموحة من غير الأصدقاء (بحدود أشد)
+const DEMO_RE = /^VM-DEMO-/;
+/* v8.2: IPv6 — نعدّ كل /64 كعنوان واحد عشان ما يتجاوزون الحدود بتغيير العنوان */
+const ipKey = ip => { ip = String(ip || '').replace(/^::ffff:/, ''); return ip.includes(':') ? ip.split(':').slice(0, 4).join(':') : ip; };
 
 fs.mkdirSync(path.join(DATA, 'box'), { recursive: true });
 const log = (...a) => console.log(new Date().toISOString(), ...a);
@@ -34,34 +45,46 @@ let regDirty = false;
 /* v8.1: فهرس الجهاز ← الرقم (عشان يرجع نفس الرقم بعد إعادة التثبيت) */
 const DEVS = new Map(); for (const p in REG) if (REG[p].dh) DEVS.set(REG[p].dh, p);
 const saveReg = () => { regDirty = true; };
-setInterval(() => { if (!regDirty) return; regDirty = false; const tmp = REG_FILE + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(REG)); fs.renameSync(tmp, REG_FILE); }, 2000).unref();
+let regWriting = false;
+setInterval(() => { if (!regDirty || regWriting) return; regDirty = false; regWriting = true; const tmp = REG_FILE + '.tmp';
+  fs.promises.writeFile(tmp, JSON.stringify(REG)).then(() => fs.promises.rename(tmp, REG_FILE)).catch(e => log('reg write', e.message)).finally(() => { regWriting = false; }); }, 3000).unref();
 const sha = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 const eq = (a, b) => { const x = Buffer.from(a), y = Buffer.from(b); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 
 function auth(b) {
   const pin = typeof b.pin === 'string' ? b.pin.toUpperCase() : '';
   if (!PIN_RE.test(pin) || typeof b.key !== 'string' || b.key.length < 32 || b.key.length > 100) return null;
-  const r = REG[pin]; if (!r || !eq(r.kh, sha(b.key))) return null;
-  r.seen = Date.now(); return pin;
+  const r = REG[pin]; if (!r || r.dead || !eq(r.kh, sha(b.key))) return null;
+  const t = Date.now(); if (!r.seen || t - r.seen > 3600e3) { r.seen = t; saveReg(); } return pin;
 }
 
 /* ─── الصناديق ─── */
 const BOX = new Map(); const boxDirty = new Set();
+const size = x => x.ct.length + x.iv.length + 80;
+const boxBytes = arr => arr.reduce((s, x) => s + size(x), 0);
+let DISK_USED = 0; // حجم كل الصناديق على القرص (تقريبي)
+const BOXSZ = new Map();
+try { for (const f of fs.readdirSync(path.join(DATA, 'box'))) { if (!f.endsWith('.json')) continue; const st = fs.statSync(path.join(DATA, 'box', f)); BOXSZ.set(f.slice(0, -5), st.size); DISK_USED += st.size; } } catch (e) { }
+let CACHE_USED = 0;
 function box(pin) {
-  if (BOX.has(pin)) return BOX.get(pin);
+  if (BOX.has(pin)) { const a = BOX.get(pin); BOX.delete(pin); BOX.set(pin, a); return a; } // الأحدث استخداماً في الآخر
   let arr = []; try { arr = JSON.parse(fs.readFileSync(path.join(DATA, 'box', pin + '.json'), 'utf8')); } catch (e) { }
   const t = Date.now(); arr = arr.filter(x => t - x.ts < TTL_MS);
-  BOX.set(pin, arr); return arr;
+  BOX.set(pin, arr); CACHE_USED += boxBytes(arr); return arr;
+}
+function trimCache() {
+  if (CACHE_USED <= CACHE_MAX) return;
+  for (const [k, a] of BOX) { if (CACHE_USED <= CACHE_MAX * .8) break; if (boxDirty.has(k)) continue; CACHE_USED -= boxBytes(a); BOX.delete(k); }
 }
 setInterval(() => {
   for (const pin of boxDirty) {
     const arr = BOX.get(pin) || []; const f = path.join(DATA, 'box', pin + '.json');
-    try { if (!arr.length) fs.rmSync(f, { force: true }); else { fs.writeFileSync(f + '.tmp', JSON.stringify(arr)); fs.renameSync(f + '.tmp', f); } } catch (e) { log('box write', pin, e.message); }
+    try { const old = BOXSZ.get(pin) || 0;
+      if (!arr.length) { fs.rmSync(f, { force: true }); BOXSZ.delete(pin); DISK_USED -= old; }
+      else { const j = JSON.stringify(arr); fs.writeFileSync(f + '.tmp', j); fs.renameSync(f + '.tmp', f); BOXSZ.set(pin, j.length); DISK_USED += j.length - old; } } catch (e) { log('box write', pin, e.message); }
   }
-  boxDirty.clear();
-  if (BOX.size > 2000) for (const k of [...BOX.keys()].slice(0, 1000)) if (!boxDirty.has(k)) BOX.delete(k);
+  boxDirty.clear(); trimCache();
 }, 1500).unref();
-const size = x => x.ct.length + x.iv.length + 80;
 
 /* ─── حدود الاستخدام (ضد الإزعاج) ─── */
 const RL = new Map();
@@ -102,26 +125,28 @@ async function push(to, data, urgent) {
 
 /* ─── المسارات ─── */
 const H = {};
-H['/api/health'] = async () => ({ ok: true, v: '8.1', push: !!SA });
+H['/api/health'] = async () => ({ ok: true, v: '8.2', push: !!SA });
 
 // v8.1: استرجاع الرقم المرتبط بهذا الجهاز
 H['/api/whoami'] = async (b, ip) => {
   if (typeof b.dev !== 'string' || b.dev.length < 32 || b.dev.length > 100) return [400, { err: 'bad' }];
-  if (limited('who:' + ip, 200, 3600e3)) return [429, { err: 'slow' }];
+  if (limited('who:' + ipKey(ip), 200, 3600e3)) return [429, { err: 'slow' }];
   const pin = DEVS.get(sha('dev:' + b.dev)); return { ok: true, pin: pin || null };
 };
 
 // تسجيل الجهاز أو تحديث رمز الإشعارات
 H['/api/reg'] = async (b, ip) => {
   const pin = typeof b.pin === 'string' ? b.pin.toUpperCase() : '';
-  if (!PIN_RE.test(pin) || typeof b.key !== 'string' || b.key.length < 32 || b.key.length > 100) return [400, { err: 'bad' }];
+  if (!PIN_RE.test(pin) || DEMO_RE.test(pin) || typeof b.key !== 'string' || b.key.length < 32 || b.key.length > 100) return [400, { err: 'bad' }];
   const kh = sha(b.key); let r = REG[pin];
   const dh = typeof b.dev === 'string' && b.dev.length >= 32 && b.dev.length <= 100 ? sha('dev:' + b.dev) : null;
-  if (r && !eq(r.kh, kh)) {
-    /* نفس الجهاز بعد إعادة التثبيت: نسمح بتجديد المفتاح */
-    if (dh && r.dh && eq(r.dh, dh)) { r.kh = kh; } else return [403, { err: 'taken' }];
+  if (r && (r.dead || !eq(r.kh, kh))) {
+    /* نفس الجهاز بعد إعادة التثبيت (أو بعد حذف الحساب): نسمح بتجديد المفتاح. رقم محذوف ما يرجع إلا لجهازه */
+    if (dh && r.dh && eq(r.dh, dh)) { r.kh = kh; delete r.dead; } else return [403, { err: 'taken' }];
   }
-  if (!r) { if (limited('reg:' + ip, 300, 3600e3)) return [429, { err: 'slow' }]; r = REG[pin] = { kh, ts: Date.now() }; }
+  if (!r) { if (limited('reg:' + ipKey(ip), 300, 3600e3) || limited('reg:all', 3000, 3600e3)) return [429, { err: 'slow' }]; r = REG[pin] = { kh, ts: Date.now() }; }
+  /* v8.2: قائمة أصدقائك (أرقام فقط) — التنبيهات تُقبل منهم بس، وغيرهم بحدود صغيرة */
+  if (Array.isArray(b.allow)) r.allow = [...new Set(b.allow.filter(x => typeof x === 'string' && PIN_RE.test(x)))].slice(0, 1000);
   const fcm = typeof b.fcm === 'string' && b.fcm.length < 400 ? b.fcm : null;
   if (fcm) { for (const p in REG) if (p !== pin && REG[p].fcm === fcm) delete REG[p].fcm; r.fcm = fcm; } else if (b.fcm === '') delete r.fcm;
   if (dh && !r.dh) { const other = DEVS.get(dh); if (other && other !== pin && REG[other]) delete REG[other].dh; r.dh = dh; DEVS.set(dh, pin); }
@@ -134,25 +159,33 @@ H['/api/send'] = async (b, ip) => {
   const from = auth(b); if (!from) return [401, { err: 'auth' }];
   const to = typeof b.to === 'string' ? b.to.toUpperCase() : '';
   if (!PIN_RE.test(to) || to === from) return [400, { err: 'to' }];
+  const R = REG[to]; if (!R || R.dead) return [404, { err: 'noreg' }]; /* v8.2: ما نخزن لأرقام غير موجودة */
   if (!Array.isArray(b.items) || !b.items.length || b.items.length > 20) return [400, { err: 'items' }];
-  if (limited('send:' + from, 120, 60e3) || limited('ip:' + ip, 400, 60e3)) return [429, { err: 'slow' }];
+  if (limited('send:' + from, 120, 60e3) || limited('ip:' + ipKey(ip), 400, 60e3)) return [429, { err: 'slow' }];
+  if (DISK_USED > DISK_MAX) { log('⚠️ disk budget full'); return [507, { err: 'full' }]; }
+  const known = Array.isArray(R.allow) && R.allow.includes(from); // المرسل في قائمة أصدقاء المستلم
   const arr = box(to); const t = Date.now(); let added = 0;
+  let total = boxBytes(arr), mine = 0, mineN = 0; for (const x of arr) if (x.f === from) { mine += size(x); mineN++; }
   for (const it of b.items) {
-    if (!it || !ID_RE.test(it.id || '') || typeof it.iv !== 'string' || typeof it.ct !== 'string' || it.iv.length > 40 || it.ct.length > 4e6 || !B64_RE.test(it.iv) || !B64_RE.test(it.ct)) return [400, { err: 'item' }];
+    if (!it || !ID_RE.test(it.id || '') || typeof it.iv !== 'string' || typeof it.ct !== 'string' || it.iv.length > 40 || it.ct.length > ITEM_MAX || !B64_RE.test(it.iv) || !B64_RE.test(it.ct)) return [400, { err: 'item' }];
     if (arr.some(x => x.f === from && x.id === it.id)) continue;
-    arr.push({ f: from, id: it.id, iv: it.iv, ct: it.ct, ts: t }); added++;
+    const x = { f: from, id: it.id, iv: it.iv, ct: it.ct, ts: t }, sz = size(x);
+    /* الصندوق ممتلئ: نرفض الجديد بدل ما نحذف رسائل قديمة (عشان أحد ما يقدر يمسح رسائلك بالإغراق) */
+    const pairB = known ? PAIR_MAX_BYTES : STRANGER_MAX_BYTES, pairN = known ? PAIR_MAX_ITEMS : STRANGER_MAX_ITEMS;
+    if (mine + sz > pairB || mineN + 1 > pairN || total + sz > BOX_MAX_BYTES || arr.length + 1 > BOX_MAX_ITEMS) { if (added) boxDirty.add(to); return [507, { err: 'box', queued: added }]; }
+    arr.push(x); added++; mine += sz; mineN++; total += sz; CACHE_USED += sz;
   }
-  let bytes = arr.reduce((s, x) => s + size(x), 0);
-  while (arr.length > BOX_MAX_ITEMS || bytes > BOX_MAX_BYTES) { bytes -= size(arr.shift()); }
-  boxDirty.add(to);
+  if (added) boxDirty.add(to);
   let pushed = false;
   const k = b.push && PUSH_KINDS.has(b.push.k) ? b.push.k : null;
-  if (k && added) {
-    const urgent = k === 'sos';
-    const cap = urgent ? limited(`ps:${from}:${to}`, 6, 600e3) : limited(`pm:${from}:${to}`, 30, 600e3);
-    if (!cap) pushed = await push(to, { t: 'vm', k, f: from, n: String(b.push.n || '').slice(0, 40), r: String(b.push.r || '').slice(0, 40) }, urgent);
+  /* v8.2: التنبيه فقط من أصدقاء المستلم. طلبات الصداقة من الغرباء بحد صغير، والاسم ما نرسله (الجوال يعرض الاسم المحفوظ عنده) */
+  if (k && added && (known || REQ_KINDS.has(k))) {
+    const urgent = k === 'sos' && known;
+    const cap = !known ? (limited(`pr:${to}`, 10, 3600e3) || limited(`prs:${from}`, 30, 3600e3)) : urgent ? limited(`ps:${from}:${to}`, 6, 600e3) : limited(`pm:${from}:${to}`, 30, 600e3);
+    const r = k === 'react' && /^(❤️|😂|😮|😢|🔥|👏)$/u.test(String(b.push.r || '')) ? b.push.r : '';
+    if (!cap) pushed = await push(to, { t: 'vm', k: known ? k : (k === 'accept' ? 'accept' : 'friend'), f: from, n: known ? '' : String(b.push.n || '').replace(/[\u0000-\u001f\u202a-\u202e\u2066-\u2069]/g, '').slice(0, 24), r }, urgent);
   }
-  return { ok: true, queued: added, pushed, reg: !!REG[to] };
+  return { ok: true, queued: added, pushed };
 };
 
 // استلام الرسائل المعلّقة
@@ -160,7 +193,6 @@ H['/api/inbox'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
   const arr = box(pin); const out = []; let bytes = 0;
   for (const x of arr) { if (bytes + size(x) > 6e6 && out.length) break; out.push(x); bytes += size(x); if (out.length >= 60) break; }
-  saveReg();
   return { ok: true, items: out, more: arr.length > out.length };
 };
 
@@ -170,15 +202,16 @@ H['/api/ack'] = async b => {
   if (!Array.isArray(b.ids) || b.ids.length > 200) return [400, { err: 'ids' }];
   const set = new Set(b.ids.filter(x => typeof x === 'string').map(String));
   const arr = box(pin); const keep = arr.filter(x => !set.has(x.f + '/' + x.id));
-  if (keep.length !== arr.length) { BOX.set(pin, keep); boxDirty.add(pin); }
+  if (keep.length !== arr.length) { CACHE_USED -= boxBytes(arr) - boxBytes(keep); BOX.set(pin, keep); boxDirty.add(pin); }
   return { ok: true, left: keep.length };
 };
 
 // إلغاء التسجيل (عند حذف كل شيء)
 H['/api/unreg'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
-  if (REG[pin] && REG[pin].dh) DEVS.delete(REG[pin].dh);
-  delete REG[pin]; PUB.delete(pin); saveReg(); BOX.set(pin, []); boxDirty.add(pin); return { ok: true };
+  /* v8.2: نترك «شاهد قبر» فيه بصمة الجهاز فقط — الرقم ما يقدر أحد ثاني يسجله، ويرجع لنفس الجهاز لو أعاد التثبيت */
+  const old = REG[pin]; REG[pin] = { dead: true, ts: Date.now(), kh: '-', ...(old && old.dh ? { dh: old.dh } : {}) };
+  PUB.delete(pin); saveReg(); const a = BOX.get(pin); if (a) CACHE_USED -= boxBytes(a); BOX.set(pin, []); boxDirty.add(pin); return { ok: true };
 };
 
 /* ═══ v8.1: الظهور للجميع — من يختار «ظاهر للجميع» يطلع للي حوله على الرادار ═══ */
@@ -195,7 +228,9 @@ H['/api/pub/set'] = async b => {
   const lat = +b.lat, lng = +b.lng; if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return [400, { err: 'loc' }];
   const pub = b.pub && JWK_RE.test(b.pub.x || '') && JWK_RE.test(b.pub.y || '') ? { kty: 'EC', crv: 'P-256', x: b.pub.x, y: b.pub.y } : null; if (!pub) return [400, { err: 'pub' }];
   if (limited('pubset:' + pin, 40, 600e3)) return [429, { err: 'slow' }];
-  PUB.set(pin, { n: clean(b.name, 24) || 'مستخدم', c: /^#[0-9A-Fa-f]{6}$/.test(b.color || '') ? b.color : '#6A4DF5', lat, lng, pub,
+  /* v8.2: ما نخزن الموقع الدقيق أبداً — نثبّته على شبكة ~250م (والتطبيق يرسله مثبّت أصلاً) */
+  const G = 0.0025, snap = v => Math.round(v / G) * G;
+  PUB.set(pin, { n: clean(b.name, 24) || 'مستخدم', c: /^#[0-9A-Fa-f]{6}$/.test(b.color || '') ? b.color : '#6A4DF5', lat: snap(lat), lng: snap(lng), pub,
     bio: clean(b.bio, 160), work: clean(b.work, 40), tags: clean(b.tags, 80), lvl: Math.max(0, Math.min(9, b.lvl | 0)), rt: Math.max(0, Math.min(5, +b.rt || 0)), ts: Date.now() });
   return { ok: true, on: true };
 };
@@ -207,8 +242,9 @@ H['/api/pub/near'] = async b => {
   for (const [p, v] of PUB) {
     if (p === pin || t - v.ts > PUB_TTL) continue;
     const d = distM(me, v); if (d > NEAR_M) continue;
-    /* الموقع تقريبي (حوالي 100 متر) — ما نعطي الموقع الدقيق لغريب */
-    out.push({ pin: p, n: v.n, c: v.c, lat: Math.round(v.lat * 1000) / 1000, lng: Math.round(v.lng * 1000) / 1000, d: Math.max(50, Math.round(d / 50) * 50), pub: v.pub, bio: v.bio, work: v.work, tags: v.tags, lvl: v.lvl, rt: v.rt, ago: Math.round((t - v.ts) / 1000) });
+    /* الموقع تقريبي (شبكة ~250م) والمسافة بشرائح عريضة — ما يقدر أحد يحدد مكانك بالتثليث */
+    const band = d < 500 ? 250 : d < 1000 ? 750 : d < 2000 ? 1500 : d < 3500 ? 3000 : 5000;
+    out.push({ pin: p, n: v.n, c: v.c, lat: v.lat, lng: v.lng, d: band, pub: v.pub, bio: v.bio, work: v.work, tags: v.tags, lvl: v.lvl, rt: v.rt, ago: Math.round((t - v.ts) / 1000) });
   }
   out.sort((a, b) => a.d - b.d);
   return { ok: true, items: out.slice(0, 60) };
@@ -219,19 +255,21 @@ const SQ_FILE = path.join(DATA, 'square.json'), SQ_IMG = path.join(DATA, 'sq');
 fs.mkdirSync(SQ_IMG, { recursive: true });
 const SQ_TTL = 72 * 3600e3, SQ_MAX = 5000;
 let SQ = []; try { SQ = JSON.parse(fs.readFileSync(SQ_FILE, 'utf8')); } catch (e) { SQ = []; }
-let sqDirty = false;
+let sqDirty = false, sqWriting = false;
 setInterval(() => {
   const t = Date.now(); const keep = [];
   for (const p of SQ) { if (t - p.ts < SQ_TTL) keep.push(p); else { if (p.img) fs.rm(path.join(SQ_IMG, p.id + '.jpg'), () => {}); sqDirty = true; } }
   SQ = keep;
-  if (!sqDirty) return; sqDirty = false; fs.writeFileSync(SQ_FILE + '.tmp', JSON.stringify(SQ)); fs.renameSync(SQ_FILE + '.tmp', SQ_FILE);
+  if (!sqDirty || sqWriting) return; sqDirty = false; sqWriting = true;
+  fs.promises.writeFile(SQ_FILE + '.tmp', JSON.stringify(SQ)).then(() => fs.promises.rename(SQ_FILE + '.tmp', SQ_FILE)).catch(e => log('sq write', e.message)).finally(() => { sqWriting = false; });
 }, 3000).unref();
 const TAG_RE = /#([\p{L}\p{N}_]{2,30})/gu;
 const tagsOf = s => [...new Set([...String(s).matchAll(TAG_RE)].map(m => m[1].toLowerCase()))].slice(0, 6);
 const sqView = (p, me) => ({ id: p.id, pin: p.pin, n: p.n, c: p.c, lvl: p.lvl, rt: p.rt, text: p.text, tags: p.tags, img: !!p.img, ts: p.ts, likes: p.likes.length, liked: p.likes.includes(me), mine: p.pin === me, city: p.city || '' });
 H['/api/sq/post'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
-  if (limited('sqpost:' + pin, 12, 3600e3)) return [429, { err: 'slow' }];
+  if (limited('sqpost:' + pin, 12, 3600e3) || limited('sqpost:all', 400, 3600e3)) return [429, { err: 'slow' }];
+  if (Date.now() - (REG[pin].ts || 0) < POST_MIN_AGE) return [403, { err: 'new' }]; /* الحسابات الجديدة جداً تنتظر 10 دقائق */
   const text = clean(b.text, 500); if (!text && !b.photo) return [400, { err: 'empty' }];
   const tags = tagsOf(text + ' ' + clean(b.tags, 200)); if (!tags.length) return [400, { err: 'tag' }];
   const id = crypto.randomBytes(9).toString('base64url');
@@ -245,7 +283,7 @@ H['/api/sq/post'] = async b => {
   const u = REG[pin] || {};
   const p = { id, pin, n: clean(b.name, 24) || 'مستخدم', c: /^#[0-9A-Fa-f]{6}$/.test(b.color || '') ? b.color : '#6A4DF5', lvl: Math.max(0, Math.min(9, b.lvl | 0)), rt: Math.max(0, Math.min(5, +b.rt || 0)),
     text, tags, img, ts: Date.now(), likes: [], reports: [], city: clean(b.city, 30) };
-  SQ.unshift(p); if (SQ.length > SQ_MAX) SQ.length = SQ_MAX; sqDirty = true;
+  SQ.unshift(p); while (SQ.length > SQ_MAX) { const o = SQ.pop(); if (o.img) fs.rm(path.join(SQ_IMG, o.id + '.jpg'), () => {}); } sqDirty = true;
   return { ok: true, post: sqView(p, pin) };
 };
 H['/api/sq/feed'] = async b => {
@@ -264,15 +302,19 @@ H['/api/sq/trends'] = async b => {
 };
 H['/api/sq/like'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
+  if (limited('like:' + pin, 120, 600e3)) return [429, { err: 'slow' }];
   const p = SQ.find(x => x.id === b.id); if (!p) return [404, { err: 'nf' }];
-  const i = p.likes.indexOf(pin); if (i >= 0) p.likes.splice(i, 1); else p.likes.push(pin); sqDirty = true;
+  const i = p.likes.indexOf(pin); if (i < 0 && p.likes.length >= 5000) return { ok: true, likes: p.likes.length, liked: false }; if (i >= 0) p.likes.splice(i, 1); else p.likes.push(pin); sqDirty = true;
   return { ok: true, likes: p.likes.length, liked: i < 0 };
 };
 H['/api/sq/report'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
+  if (limited('rep:' + pin, 20, 24 * 3600e3)) return [429, { err: 'slow' }];
   const p = SQ.find(x => x.id === b.id); if (!p) return [404, { err: 'nf' }];
-  if (!p.reports.includes(pin)) p.reports.push(pin);
-  if (p.reports.length >= 3) p.hidden = true; /* يختفي تلقائياً بعد 3 بلاغات */
+  /* v8.2: البلاغ يُحسب فقط من حساب عمره يوم فأكثر (ضد الحسابات الوهمية) */
+  const aged = Date.now() - (REG[pin].ts || 0) >= REPORT_MIN_AGE;
+  if (pin !== p.pin && !p.reports.includes(pin)) { p.reports.push(pin); if (aged) p.rw = (p.rw || 0) + 1; }
+  if ((p.rw || 0) >= 3) p.hidden = true; /* يختفي بعد 3 بلاغات من حسابات حقيقية */
   sqDirty = true; log('sq report', p.id, p.reports.length, clean(b.why, 60));
   return { ok: true };
 };
