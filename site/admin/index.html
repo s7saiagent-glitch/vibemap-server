@@ -147,6 +147,13 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--in
 .formrow{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
 .formrow .f{flex:1;min-width:180px}
 @media (max-width:600px){ #meChip{display:none} }
+.modal{position:fixed;inset:0;z-index:40;background:rgba(10,10,28,.55);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.modal .card{width:min(760px,100%);position:relative}
+.modal .x{position:absolute;top:12px;inset-inline-end:12px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:12px 0}
+.kv div{background:var(--surface2);border-radius:12px;padding:8px 12px;font-size:13px;color:var(--ink2)}
+.kv b{display:block;color:var(--ink);font-size:14px;word-break:break-word}
+.warnbox{background:color-mix(in srgb,var(--warn) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 35%,var(--line));border-radius:12px;padding:10px 12px;font-size:13px;margin-top:10px}
 @media (max-width:860px){ .two{grid-template-columns:1fr} }
 @media (max-width:600px){ .kpi .v{font-size:24px} .top{height:56px} .brand small{display:none} main{padding-top:16px} }
 </style>
@@ -195,6 +202,7 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--in
     <section id="t-settings" hidden></section>
   </main>
 </div>
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true"></div>
 <div class="toast" id="toast" role="status"></div>
 <script src="admin.js"></script>
 </body>

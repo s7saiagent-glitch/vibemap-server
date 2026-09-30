@@ -56,7 +56,27 @@ function auth(b) {
   const pin = typeof b.pin === 'string' ? b.pin.toUpperCase() : '';
   if (!PIN_RE.test(pin) || typeof b.key !== 'string' || b.key.length < 32 || b.key.length > 100) return null;
   const r = REG[pin]; if (!r || r.dead || r.banned || !eq(r.kh, sha(b.key))) return null;
-  const t = Date.now(); if (!r.seen || t - r.seen > 3600e3) { r.seen = t; saveReg(); } return pin;
+  const t = Date.now(); if (!r.seen || t - r.seen > 3600e3) { r.seen = t; saveReg(); } noteIp(r, b._ip); return pin;
+}
+/* v8.7: سجل عناوين IP لكل حساب (آخر 30 عنوان، تنحذف بعد 180 يوم) — للرجوع له عند طلب رسمي من جهة مختصة فقط.
+   محتوى الرسائل والصوت ما يوصل السيرفر (مشفّر بين الأجهزة)، فهذا كل اللي نقدر نحفظه. */
+const LOG_KEEP = 180 * 864e5;
+function noteIp(r, ip) {
+  ip = String(ip || '').replace(/^::ffff:/, '').slice(0, 45); if (!ip || !r) return;
+  const t = Date.now(); r.ips = (Array.isArray(r.ips) ? r.ips : []).filter(x => t - x.l < LOG_KEEP);
+  const e = r.ips.find(x => x.ip === ip);
+  if (e) { if (t - e.l > 600e3) { e.l = t; e.n = (e.n || 1) + 1; r.ips.sort((a, b) => b.l - a.l); saveReg(); } return; }
+  r.ips.unshift({ ip, f: t, l: t, n: 1 }); if (r.ips.length > 30) r.ips.length = 30; saveReg();
+}
+function noteDev(r, d) {
+  if (!d || typeof d !== 'object' || !r) return;
+  const c = (v, n) => typeof v === 'string' ? v.replace(/[\u0000-\u001f]/g, '').trim().slice(0, n) : typeof v === 'number' && isFinite(v) ? String(v).slice(0, n) : '';
+  const x = { maker: c(d.maker, 40), model: c(d.model, 60), os: c(d.os, 20), osVer: c(d.osVer, 20), app: c(d.app, 12), lang: c(d.lang, 20), tz: c(d.tz, 40), scr: c(d.scr, 20), ua: c(d.ua, 250) };
+  const k = [x.maker, x.model, x.os, x.osVer, x.app, x.ua].join('|'), t = Date.now();
+  r.devs = (Array.isArray(r.devs) ? r.devs : []).filter(e => t - e.l < LOG_KEEP);
+  const e = r.devs.find(e => e.k === k);
+  if (e) { if (t - e.l > 600e3) { e.l = t; Object.assign(e, x); r.devs.sort((a, b) => b.l - a.l); saveReg(); } return; }
+  r.devs.unshift({ ...x, k, f: t, l: t }); if (r.devs.length > 5) r.devs.length = 5; saveReg();
 }
 
 /* ─── الصناديق ─── */
@@ -126,7 +146,7 @@ async function push(to, data, urgent) {
 
 /* ─── المسارات ─── */
 const H = {};
-H['/api/health'] = async () => ({ ok: true, v: '8.6', push: !!SA, turn: !!TURN_SECRET });
+H['/api/health'] = async () => ({ ok: true, v: '8.7', push: !!SA, turn: !!TURN_SECRET });
 
 // v8.1: استرجاع الرقم المرتبط بهذا الجهاز
 H['/api/whoami'] = async (b, ip) => {
@@ -153,7 +173,7 @@ H['/api/reg'] = async (b, ip) => {
   const fcm = typeof b.fcm === 'string' && b.fcm.length < 400 ? b.fcm : null;
   if (fcm) { for (const p in REG) if (p !== pin && REG[p].fcm === fcm) delete REG[p].fcm; r.fcm = fcm; } else if (b.fcm === '') delete r.fcm;
   if (dh && !r.dh) { const other = DEVS.get(dh); if (other && other !== pin && REG[other]) delete REG[other].dh; r.dh = dh; DEVS.set(dh, pin); }
-  r.plat = ['android', 'ios', 'web'].includes(b.plat) ? b.plat : 'web'; r.seen = Date.now(); saveReg();
+  r.plat = ['android', 'ios', 'web'].includes(b.plat) ? b.plat : 'web'; r.seen = Date.now(); noteIp(r, ip); noteDev(r, b.di); saveReg();
   return { ok: true, push: !!SA, fcm: !!r.fcm, pending: box(pin).length };
 };
 
@@ -476,6 +496,15 @@ H['/api/admin/user'] = A(async b => {
   else return [400, { err: 'act' }];
   saveReg(); log('admin', b.act, pin); audit(b._adm.u, 'user-' + b.act, pin); return { ok: true };
 });
+/* v8.7: بيانات حساب للجهات المختصة — للمالك فقط، وكل عرض ينسجل في سجل النشاط */
+H['/api/admin/user/info'] = A(async b => {
+  const pin = String(b.pin || '').toUpperCase(), r = REG[pin]; if (!r) return [404, { err: 'nf' }];
+  const t = Date.now();
+  audit(b._adm.u, 'user-info', pin);
+  return { ok: true, info: { pin, name: nameOf(pin), plat: r.plat || 'web', ts: r.ts || 0, seen: r.seen || 0, banned: !!r.banned, dead: !!r.dead, friends: (r.allow || []).length, push: !!r.fcm,
+    posts: SQ.filter(x => x.pin === pin).length, pub: PUB.has(pin),
+    ips: (r.ips || []).filter(x => t - x.l < LOG_KEEP), devs: (r.devs || []).filter(x => t - x.l < LOG_KEEP).map(({ k, ...x }) => x) } };
+}, OWN);
 H['/api/admin/sq'] = A(async b => {
   const f = b.filter === 'reported' ? p => (p.reports || []).length > 0 : b.filter === 'hidden' ? p => p.hidden : () => true;
   return { ok: true, items: SQ.filter(f).slice(0, 200).map(p => ({ id: p.id, pin: p.pin, n: p.n, text: p.text, tags: p.tags, img: !!p.img, ts: p.ts, likes: p.likes.length, reports: (p.reports || []).length, hidden: !!p.hidden })) };
@@ -524,6 +553,7 @@ const server = http.createServer((req, res) => {
     if (len > MAX_BODY) return;
     let b; try { b = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch (e) { return send(400, { err: 'json' }); }
     if (!b || typeof b !== 'object') return send(400, { err: 'json' });
+    b._ip = ip;
     try { const r = await h(b, ip); if (Array.isArray(r)) send(r[0], r[1]); else send(200, r); } catch (e) { log('err', url, e.message); send(500, { err: 'server' }); }
   });
 });

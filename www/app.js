@@ -3,7 +3,7 @@
    VibeMap v7.0 — تطبيق لاسلكي حقيقي بين الجوالات (ويب + أندرويد + آيفون)
    WebRTC P2P (PeerJS) · ECDH P-256 + AES-GCM-256 · GPS · بوصلة · كاميرا
    ════════════════════════════════════════════════════════════ */
-const VERSION = '8.5';
+const VERSION = '8.7';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -419,12 +419,22 @@ async function pushToken(){
   const P = NP('VibePush'); if(!P) return null;
   try{ const r = await P.getToken(); return r && r.token || null; }catch(e){ console.warn('push token', e); return null; }
 }
+/* v8.7: نوع الجهاز ونظامه وإصدار التطبيق (بدون أي محتوى) — يُحفظ في السيرفر حسب سياسة الخصوصية */
+async function devInfo(){
+  if(RT.di) return RT.di;
+  const d = { app:VERSION, lang:(navigator.language || '').slice(0, 20), scr:`${screen.width}x${screen.height}` };
+  try{ d.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){}
+  const D = NP('VibeDevice');
+  if(D && D.getInfo){ try{ Object.assign(d, await D.getInfo()); }catch(e){} }
+  if(!IS_NATIVE) d.ua = navigator.userAgent.slice(0, 250);
+  return (RT.di = d);
+}
 async function relayReg(){
   if(!RELAY || RL.regBusy) return; RL.regBusy = true;
   try{
     const fcm = S.settings.offline ? null : await pushToken();
     const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 20000);
-    const r = await fetch(RELAY + '/api/reg', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), fcm:fcm || '', plat:PLATFORM, dev:RT.dev || undefined, allow:allowList() }), signal:ac.signal }).catch(() => null);
+    const r = await fetch(RELAY + '/api/reg', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), fcm:fcm || '', plat:PLATFORM, dev:RT.dev || undefined, allow:allowList(), di:await devInfo() }), signal:ac.signal }).catch(() => null);
     clearTimeout(t);
     const j = r && await r.json().catch(() => null);
     RL.taken = !!(r && r.status === 403);

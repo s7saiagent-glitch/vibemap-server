@@ -1,4 +1,4 @@
-/* VibeMap — لوحة التحكم v8.6 */
+/* VibeMap — لوحة التحكم v8.7 */
 (() => {
   'use strict';
   const API = (document.querySelector('meta[name=vibemap-api]') || {}).content || '/relay/api/';
@@ -214,7 +214,7 @@
         <td>${N(u.friends)}</td>
         <td>${u.banned ? '<span class="pill bad">⛔ محظور</span>' : Date.now() - u.seen < 3e5 ? '<span class="pill ok">● متصل</span>' : '<span class="pill">غير متصل</span>'}${u.pub ? ' <span class="pill warn">ظاهر للعامة</span>' : ''}${u.push ? '' : ' <span class="pill" title="الإشعارات مو مفعّلة">🔕</span>'}</td>
         <td style="white-space:nowrap">${u.banned ? `<button class="btn sm" data-u="unban" data-pin="${esc(u.pin)}">فك الحظر</button>` : `<button class="btn sm bad" data-u="ban" data-pin="${esc(u.pin)}">حظر</button>`}
-          <button class="btn sm" data-u="wipe" data-pin="${esc(u.pin)}" title="يمسح منشوراته في الساحة وظهوره العام ورسائله المنتظرة">مسح المحتوى</button></td>
+          <button class="btn sm" data-u="wipe" data-pin="${esc(u.pin)}" title="يمسح منشوراته في الساحة وظهوره العام ورسائله المنتظرة">مسح المحتوى</button>${can('owner') ? ` <button class="btn sm" data-u="info" data-pin="${esc(u.pin)}" title="الجهاز وعناوين IP — للمالك فقط">🔎 بيانات</button>` : ''}</td>
       </tr>`).join('')}</tbody></table>`;
     const pages = Math.ceil(j.total / 50);
     $('#upg').innerHTML = pages > 1 ? `<button class="btn sm" data-pg="-1" ${US.page ? '' : 'disabled'}>السابق</button><span>صفحة ${US.page + 1} من ${pages}</span><button class="btn sm" data-pg="1" ${US.page + 1 < pages ? '' : 'disabled'}>التالي</button>` : '';
@@ -222,11 +222,41 @@
   async function userAct(e) {
     const b = e.target.closest('[data-u]'); if (!b) return;
     const act = b.dataset.u, pin = b.dataset.pin;
+    if (act === 'info') return userInfo(pin);
     const q = { ban: `حظر ${pin}؟\nما يقدر يستخدم التطبيق، وتنخفي منشوراته.`, unban: `فك الحظر عن ${pin}؟`, wipe: `مسح محتوى ${pin}؟\nتنحذف منشوراته في الساحة ورسائله المنتظرة. ما ينسترجع.` }[act];
     if (!confirm(q)) return;
     b.disabled = true;
     try { await call('admin/user', { pin, act }); toast({ ban: 'تم الحظر', unban: 'تم فك الحظر', wipe: 'تم مسح المحتوى' }[act]); loadUsers(); }
     catch (er) { toast(msg(er)); b.disabled = false; }
+  }
+
+  /* ═══ v8.7: بيانات الحساب (للمالك فقط) ═══ */
+  const dtm = ts => ts ? new Date(ts).toLocaleString('en-GB', { timeZone: 'Asia/Riyadh', hour12: false }) : '—';
+  function closeModal() { const m = $('#modal'); m.hidden = true; m.innerHTML = ''; }
+  $('#modal').addEventListener('click', e => { if (e.target.id === 'modal' || e.target.closest('[data-x]')) closeModal(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').hidden) closeModal(); });
+  async function userInfo(pin) {
+    let x; try { x = (await call('admin/user/info', { pin })).info; } catch (e) { return toast(msg(e)); }
+    const devs = x.devs.map(d => [d.maker, d.model].filter(Boolean).join(' ') + (d.os ? ` · ${d.os} ${d.osVer || ''}` : '') + (d.app ? ` · التطبيق ${d.app}` : ''));
+    const report = [`VibeMap — بيانات حساب`, `الرقم: ${x.pin}`, `الاسم العام: ${x.name || '—'}`, `المنصة: ${x.plat}`, `تاريخ التسجيل: ${dtm(x.ts)} (توقيت الرياض)`, `آخر ظهور: ${dtm(x.seen)}`,
+      `الحالة: ${x.banned ? 'محظور' : x.dead ? 'محذوف' : 'نشط'}`, '', 'الأجهزة:', ...x.devs.map((d, i) => `  ${devs[i]}${d.lang ? ' · ' + d.lang : ''}${d.tz ? ' · ' + d.tz : ''}${d.scr ? ' · ' + d.scr : ''} — أول: ${dtm(d.f)} · آخر: ${dtm(d.l)}${d.ua ? '\n    UA: ' + d.ua : ''}`),
+      '', 'عناوين IP:', ...x.ips.map(i => `  ${i.ip} — أول: ${dtm(i.f)} · آخر: ${dtm(i.l)} · مرات: ${i.n}`), '', `استُخرج: ${dtm(Date.now())} بواسطة ${ME.u}`].join('\n');
+    const m = $('#modal'); m.hidden = false;
+    m.innerHTML = `<div class="card"><button class="btn sm x" data-x>✕</button>
+      <h3>🔎 بيانات الحساب <span class="mono">${esc(x.pin)}</span></h3>
+      <div class="note">للاستخدام عند طلب رسمي من جهة مختصة فقط. كل فتح لهالنافذة ينسجل في سجل النشاط. محتوى الرسائل والصوت مشفّر بين الأجهزة وما يوصل السيرفر.</div>
+      <div class="kv">
+        <div>الاسم العام<b>${esc(x.name || '—')}</b></div><div>المنصة<b>${PLAT[x.plat] || esc(x.plat)}</b></div>
+        <div>التسجيل<b><bdi dir="ltr">${esc(dtm(x.ts))}</bdi></b></div><div>آخر ظهور<b><bdi dir="ltr">${esc(dtm(x.seen))}</bdi></b></div>
+        <div>الحالة<b>${x.banned ? '⛔ محظور' : x.dead ? 'محذوف' : 'نشط'}</b></div><div>أصدقاء · منشورات<b>${N(x.friends)} · ${N(x.posts)}</b></div>
+      </div>
+      <h3 style="margin-top:14px">الأجهزة</h3>
+      ${x.devs.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>الجهاز</th><th>اللغة / المنطقة</th><th>أول مرة</th><th>آخر مرة</th></tr></thead><tbody>${x.devs.map((d, i) => `<tr><td>${esc(devs[i] || '—')}${d.ua ? `<div class="note mono" style="direction:ltr;text-align:left">${esc(d.ua)}</div>` : ''}</td><td class="mono">${esc([d.lang, d.tz].filter(Boolean).join(' · '))}</td><td><bdi dir="ltr">${esc(dtm(d.f))}</bdi></td><td><bdi dir="ltr">${esc(dtm(d.l))}</bdi></td></tr>`).join('')}</tbody></table></div>` : '<div class="note">ما فيه بيانات جهاز (سجّل قبل الإصدار 8.7 وما فتح التطبيق بعدها).</div>'}
+      <h3 style="margin-top:14px">عناوين IP</h3>
+      ${x.ips.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>IP</th><th>أول مرة</th><th>آخر مرة</th><th>مرات</th></tr></thead><tbody>${x.ips.map(i => `<tr><td class="mono">${esc(i.ip)}</td><td><bdi dir="ltr">${esc(dtm(i.f))}</bdi></td><td><bdi dir="ltr">${esc(dtm(i.l))}</bdi></td><td>${N(i.n)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="note">ما فيه عناوين مسجلة للحين.</div>'}
+      <div class="warnbox">الأوقات بتوقيت الرياض. العناوين تنحفظ 180 يوم وبعدها تنحذف تلقائياً.</div>
+      <div class="save"><button class="btn pri" id="copyRep">📋 نسخ التقرير</button><button class="btn" data-x>إغلاق</button></div></div>`;
+    $('#copyRep').onclick = () => { navigator.clipboard.writeText(report).then(() => toast('انسخ التقرير'), () => toast('ما قدرنا ننسخ')); };
   }
 
   /* ═══ أدوات التطبيق ═══ */
@@ -346,7 +376,7 @@
 
   /* ═══ الإعدادات: حسابي + فريق الإدارة + السجل ═══ */
   const ACT = { password: 'غيّر كلمة السر', 'admin-save': 'حفظ حساب إدارة', 'admin-del': 'حذف حساب إدارة', 'user-ban': 'حظر مستخدم', 'user-unban': 'فك حظر', 'user-wipe': 'مسح محتوى مستخدم',
-    'post-hide': 'إخفاء منشور', 'post-show': 'إظهار منشور', 'post-del': 'حذف منشور', config: 'تغيير إعدادات التطبيق', broadcast: 'إشعار للكل' };
+    'user-info': 'عرض بيانات حساب', 'post-hide': 'إخفاء منشور', 'post-show': 'إظهار منشور', 'post-del': 'حذف منشور', config: 'تغيير إعدادات التطبيق', broadcast: 'إشعار للكل' };
   async function loadSettings() {
     const el = $('#t-settings');
     el.innerHTML = `<h2>الإعدادات</h2><p class="sub">حسابك وفريق الإدارة.</p><div class="stack">
