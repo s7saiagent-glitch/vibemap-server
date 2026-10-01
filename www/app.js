@@ -3,7 +3,7 @@
    VibeMap v7.0 — تطبيق لاسلكي حقيقي بين الجوالات (ويب + أندرويد + آيفون)
    WebRTC P2P (PeerJS) · ECDH P-256 + AES-GCM-256 · GPS · بوصلة · كاميرا
    ════════════════════════════════════════════════════════════ */
-const VERSION = '8.7';
+const VERSION = '8.8';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -309,7 +309,7 @@ function setupConn(c, outgoing){
   if(!outgoing) c._init = pin; c._t = now();
   c.on('open', () => {
     delete RT.pending[pin]; if(RT.iceFail) delete RT.iceFail[pin];
-    c.send({ type:'hello', v:VERSION, pin:S.me.pin, name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), bio:S.me.bio || null, via:(S.friends[pin] && S.friends[pin].status === 'out' && S.friends[pin].via) || undefined });
+    c.send({ type:'hello', v:VERSION, pin:S.me.pin, name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), amb:myAmb(), bio:S.me.bio || null, via:(S.friends[pin] && S.friends[pin].status === 'out' && S.friends[pin].via) || undefined });
   });
   c.on('data', d => { c._rx = now(); onData(c, pin, d).catch(e => console.warn('data', e)); });
   c.on('close', () => { if(RT.conns[pin] === c){ delete RT.conns[pin]; const f = S.friends[pin]; if(f){ f.seen = now(); save(); } RT.rxTalking.delete(pin); renderAll(); } });
@@ -324,7 +324,7 @@ async function onData(c, pin, d){
   if(d.type === 'hello'){
     if(pinOf(c.peer) !== d.pin) return;
     const pub = V.pub(d.pub); if(!pub) return;
-    d = { ...d, name:V.name(d.name), color:V.color(d.color), rep:V.rep(d.rep), lvl:V.lvl(d.lvl), bio:V.bio(d.bio), v:V.str(d.v, 8), pub };
+    d = { ...d, name:V.name(d.name), color:V.color(d.color), rep:V.rep(d.rep), lvl:V.lvl(d.lvl), amb:V.amb(d.amb), bio:V.bio(d.bio), v:V.str(d.v, 8), pub };
     { const f0 = S.friends[pin];
       /* v8.2: طلب معلّق وله مفتاح معروف (من الخادم الموثّق) — مفتاح مختلف في الاتصال المباشر = منتحل، نقفل */
       if(f0 && f0.status !== 'friend' && f0.pub && (f0.pub.x !== pub.x || f0.pub.y !== pub.y)){ try{ c.close(); }catch(e){} return; }
@@ -348,7 +348,7 @@ async function onData(c, pin, d){
       notify('طلب صداقة جديد', `${d.name} يريد إضافتك في VibeMap`);
       tone(BEEP.msg); toast(`طلب صداقة من ${d.name}`);
     }
-    f.name = d.name; f.color = d.color; f.rep = d.rep; f.lvl = d.lvl; f.bio = d.bio; f.seen = now(); f.ver = d.v; if(f.status === 'friend') delete f.reqVoice;
+    f.name = d.name; f.color = d.color; f.rep = d.rep; f.lvl = d.lvl; f.amb = d.amb; f.bio = d.bio; f.seen = now(); f.ver = d.v; if(f.status === 'friend') delete f.reqVoice;
     if(pubChanged && f.status === 'friend'){
       /* v7: لا نثق بالمفتاح الجديد تلقائياً — نوقف المراسلة حتى يتحقق المستخدم (حماية من انتحال الرقم) */
       if(!f.newPub || f.newPub.x !== pub.x){ f.newPub = pub; f.keyAlert = true; delete RT.keys[pin];
@@ -429,16 +429,32 @@ async function devInfo(){
   if(!IS_NATIVE) d.ua = navigator.userAgent.slice(0, 250);
   return (RT.di = d);
 }
+/* v8.8: من وين جا المستخدم (رابط دعوة / تيك توك / ...) — يُرسل مرة وحدة مع أول تسجيل */
+const REF_KEY = 'vm.ref';
+(() => { try{ const q = new URLSearchParams(location.search), ref = (q.get('ref') || '').toUpperCase(), src = q.get('src') || '';
+  if(ref || src){ if(!localStorage.getItem(LS_KEY)) localStorage.setItem(REF_KEY, JSON.stringify({ ref:PIN_STRICT.test(ref) ? ref : '', src:/^[a-z]{1,12}$/.test(src) ? src : '', ts:Date.now() }));
+    q.delete('ref'); q.delete('src'); if(ref && PIN_STRICT.test(ref) && localStorage.getItem(LS_KEY)) q.set('add', ref);
+    history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '')); } }catch(e){} })();
+function refStored(){ try{ const x = JSON.parse(localStorage.getItem(REF_KEY) || 'null'); return x && Date.now() - x.ts < 7 * 864e5 ? x : null; }catch(e){ return null; } }
+function refParams(){ const x = refStored(); return x && !S.refSent ? { ref:x.ref || undefined, src:x.src || (x.ref ? 'invite' : undefined) } : {}; }
+async function refFetch(){
+  if(!RELAY || !S || !S.me) return;
+  const j = await relayPost('/api/ref/me', { name:S.me.name });
+  if(j && j.ok){ const old = JSON.stringify(S.ref || {}); S.ref = { clicks:j.clicks, joined:j.joined, active:j.active, pts:j.pts, amb:j.amb, tiers:j.tiers, perRef:j.perRef, welcome:j.welcome, pins:j.pins || [], refBy:j.refBy, canClaim:j.canClaim, ts:now() };
+    if(old !== JSON.stringify(S.ref)){ save(); if(RT.tab === 'me') renderMe(); } }
+}
 async function relayReg(){
   if(!RELAY || RL.regBusy) return; RL.regBusy = true;
   try{
     const fcm = S.settings.offline ? null : await pushToken();
     const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 20000);
-    const r = await fetch(RELAY + '/api/reg', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), fcm:fcm || '', plat:PLATFORM, dev:RT.dev || undefined, allow:allowList(), di:await devInfo() }), signal:ac.signal }).catch(() => null);
+    const r = await fetch(RELAY + '/api/reg', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ pin:S.me.pin, key:relayKey(), fcm:fcm || '', plat:PLATFORM, dev:RT.dev || undefined, allow:allowList(), di:await devInfo(), ...refParams() }), signal:ac.signal }).catch(() => null);
     clearTimeout(t);
     const j = r && await r.json().catch(() => null);
     RL.taken = !!(r && r.status === 403);
     RL.ok = !!(j && j.ok); RL.push = !!(j && j.push); RL.fcm = !!(j && j.fcm);
+    if(RL.ok && !S.refSent){ const x = refStored(); S.refSent = true; save(); try{ localStorage.removeItem(REF_KEY); }catch(e){}
+      if(x && x.ref && x.ref !== S.me.pin && !S.friends[x.ref]){ RT.invRef = x.ref; setTimeout(() => confirmAdd(x.ref), 1200); } setTimeout(refFetch, 3000); }
     if(RL.ok && j.pending) relayFetch();
   }finally{ RL.regBusy = false; }
 }
@@ -446,7 +462,7 @@ async function relayInit(){
   if(!RELAY) return;
   const P = NP('VibePush');
   if(P){ try{ await P.addListener('push', d => { if(d && d.k === 'news' && d.f === 'VM-NEWS-0000'){ if(d.r) toast('📢 ' + String(d.r).slice(0, 180)); cfgFetch(); } else relayFetch(true); }); await P.addListener('token', () => relayReg()); }catch(e){} askNotifOnce(); }
-  await relayReg(); turnFetch();
+  await relayReg(); turnFetch(); setTimeout(refFetch, 5000); setInterval(() => { if(document.visibilityState === 'visible') refFetch(); }, 600e3);
   setInterval(() => { if(document.visibilityState === 'visible') relayFetch(); }, 30000);
   /* طلب صداقة معلّق: نتحقق كل 5 ثواني عشان القبول يوصل بسرعة */
   setInterval(() => { if(document.visibilityState === 'visible' && Object.values(S.friends).some(f => f.status === 'out')) relayFetch(); }, 5000);
@@ -1728,7 +1744,7 @@ function addFriendByPin(raw){
   if(f && f.status === 'friend'){ toast(`${f.name} صديقك بالفعل`); return true; }
   if(f && f.status === 'in'){ acceptFriend(pin); return true; }
   S.friends[pin] = { pin, name:pin, color:COLORS[Math.floor(Math.random() * COLORS.length)], status:'out', added:now() };
-  S.friends[pin].rq = 'wait'; save(); connectTo(pin); renderAll(); toast('جاري إرسال الطلب…'); sendReq(pin); return true;
+  S.friends[pin].rq = 'wait'; if(RT.invRef === pin){ S.friends[pin].reqX = { inv:1 }; RT.invRef = null; } save(); connectTo(pin); renderAll(); toast('جاري إرسال الطلب…'); sendReq(pin); return true;
 }
 /* v8.4: إرسال طلب الصداقة بحالة واضحة: وصل ✓ / ننتظر الإنترنت ونعيد تلقائياً / الرقم غير موجود */
 async function sendReq(pin, extra, quiet){
@@ -1775,9 +1791,11 @@ function removeFriend(pin){
 function myRep(){ const r = Object.values(S.ratingsIn || {}); if(!r.length) return null;
   const avg = k => +(r.reduce((a, x) => a + (x[k] || 0), 0) / r.length).toFixed(1); return { t:avg('t'), e:avg('e'), h:avg('h'), n:r.length }; }
 /* رابط الدعوة: على الويب رابط الصفحة نفسها، وفي تطبيق المتجر رابط الموقع العام إن وُجد، وإلا الرقم فقط (يقرؤه ماسح VibeMap) */
-function inviteUrl(){
+function inviteUrl(src){
+  /* v8.8: رابط دعوة شخصي — يحسب لك نقاط لما أحد ينضم منه */
+  const base = PUBLIC_URL || (RELAY ? new URL(RELAY).origin : '');
+  if(/^https:\/\//.test(base)) return `${base.replace(/\/+$/, '')}/i/${S.me.pin}${src ? '?src=' + src : ''}`;
   if(!IS_NATIVE && /^https:$/.test(location.protocol) && location.hostname !== 'localhost') return `${location.origin}${location.pathname}?add=${S.me.pin}`;
-  if(PUBLIC_URL) return `${PUBLIC_URL.replace(/\/?$/, '/')}?add=${S.me.pin}`;
   return `VIBEMAP:${S.me.pin}`;
 }
 /* v7: رابط الدعوة لا يرسل طلباً تلقائياً — يطلب تأكيدك أولاً (فتح الطلب يكشف اسمك ومفتاحك لصاحب الرقم) */
@@ -2091,7 +2109,7 @@ function renderFriends(){
     <div class="btns"><button class="btn" data-act="scan">${I.qr}مسح رمز QR</button><button class="btn" data-act="mycard">${I.share}شارك رقمي</button></div>
   </div>`;
   if(req.length){ h += `<div class="h2">طلبات صداقة</div><div class="card list">`;
-    req.forEach(f => { h += `<div class="row"><span class="av" style="${avCss(f)}">${esc(initial(f.name))}</span><span class="grow"><span class="t1" style="display:block">${esc(f.name)}${badge(f)}</span><span class="t2" style="display:block">${f.hidePin ? `من «${esc((S.rooms[f.via] || {}).name || "غرفة")}»` : f.fromPub ? '🌍 من الناس القريبين' : `<span class="mono">${f.pin}</span>`}</span>${f.bio && f.bio.about ? `<span class="t2" style="display:block;white-space:normal">${esc(f.bio.about)}</span>` : ''}${f.reqVoice ? `<button class="btn sm" data-act="req-play" data-pin="${f.pin}" style="margin-top:6px">▶ سماع الفويس ${f.reqDur ? fmtDur(f.reqDur) : ''}</button>` : ''}</span>
+    req.forEach(f => { h += `<div class="row"><span class="av" style="${avCss(f)}">${esc(initial(f.name))}</span><span class="grow"><span class="t1" style="display:block">${esc(f.name)}${badge(f)}${f.inv || (S.ref && (S.ref.pins || []).includes(f.pin)) ? ' <span class="pill inv">🎁 انضم من رابطك</span>' : ''}</span><span class="t2" style="display:block">${f.hidePin ? `من «${esc((S.rooms[f.via] || {}).name || "غرفة")}»` : f.fromPub ? '🌍 من الناس القريبين' : `<span class="mono">${f.pin}</span>`}</span>${f.bio && f.bio.about ? `<span class="t2" style="display:block;white-space:normal">${esc(f.bio.about)}</span>` : ''}${f.reqVoice ? `<button class="btn sm" data-act="req-play" data-pin="${f.pin}" style="margin-top:6px">▶ سماع الفويس ${f.reqDur ? fmtDur(f.reqDur) : ''}</button>` : ''}</span>
       <button class="btn sm pri" data-act="accept" data-pin="${f.pin}">قبول</button><button class="btn sm" data-act="decline" data-pin="${f.pin}">رفض</button><button class="btn sm danger" data-act="block" data-pin="${f.pin}">حظر</button></div>`; });
     h += `</div>`; }
   h += `<div class="h2">أصدقائي (${fr.length})</div>`;
@@ -2112,66 +2130,110 @@ function renderFriends(){
 }
 
 /* ─── حسابي ─── */
+/* ─── v8.8: ادعُ أصحابك ─── */
+function inviteText(src){ return `تعال كلمني على VibeMap 🎙️ لاسلكي حقيقي بينك وبين مجتمعك — ادخل من رابطي:\n${inviteUrl(src)}`; }
+function openExt(url){ const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
+function inviteCard(full){
+  const R = S.ref || {}, tiers = R.tiers || [5, 20, 50], act = R.active || 0, per = R.perRef || 50, wel = R.welcome || 20;
+  const nextI = tiers.findIndex(t => act < t), amb = myAmb();
+  const stats = `<div class="invstats"><div><b class="num">${R.clicks || 0}</b><span>فتحوا الرابط</span></div><div><b class="num">${R.joined || 0}</b><span>انضموا</span></div><div><b class="num">${act}</b><span>نشطين</span></div><div><b class="num">${R.pts || 0}</b><span>نقاطك</span></div></div>`;
+  const btns = `<div class="invbtns"><button class="btn wa" data-act="inv-wa">واتساب</button><button class="btn" data-act="inv-copy">نسخ الرابط</button><button class="btn" data-act="inv-share">مشاركة</button></div>`;
+  if(!full) return `<div class="card invcard"><div class="invtop"><span class="invic" aria-hidden="true">🎁</span><span class="grow"><b>ادعُ أصحابك واكسب نقاط</b><small>كل صديق ينضم ويستخدم التطبيق = ${per} نقطة لك و${wel} له</small></span></div>${stats}${btns}<button class="linkbtn" data-act="me-sec" data-sec="invite">التفاصيل والشارات ‹</button></div>`;
+  const tierRow = tiers.map((t, i) => `<div class="tier ${amb > i ? 'on' : ''}"><span>${AMB[i + 1].i}</span><b>${AMB[i + 1].n}</b><small>${t} دعوة ناجحة</small></div>`).join('');
+  const names = (R.pins || []).map(p => S.friends[p] ? esc(S.friends[p].name) : null).filter(Boolean);
+  return `<div class="card invcard"><div class="invtop"><span class="invic" aria-hidden="true">🎁</span><span class="grow"><b>رابطك الخاص</b><small class="mono" dir="ltr" style="text-align:start">${esc(inviteUrl())}</small></span></div>${stats}${btns}</div>
+  <div class="h2">كيف تنحسب النقاط؟</div><div class="card" style="padding:14px"><ul class="invhow">
+    <li>ترسل رابطك لصديقك، يفتحه ويدخل التطبيق.</li>
+    <li>يوصلك منه طلب صداقة تلقائياً بعد ما يسجل.</li>
+    <li>لما يفتح التطبيق في <b>يومين مختلفين</b>، تاخذ <b>${per} نقطة</b> وهو ياخذ <b>${wel}</b>.</li>
+    <li>كل جهاز ينحسب مرة وحدة بس، والنقاط ترفع مستواك.</li></ul></div>
+  <div class="h2">شارات السفير</div><div class="tiers">${tierRow}</div>
+  ${nextI >= 0 ? `<p class="t2" style="white-space:normal;text-align:center">باقي <b>${tiers[nextI] - act}</b> دعوة ناجحة عشان ${AMB[nextI + 1].i} ${AMB[nextI + 1].n}</p>` : '<p class="t2" style="text-align:center">وصلت أعلى شارة 🥇 شكراً لك!</p>'}
+  ${names.length ? `<div class="h2">انضموا من رابطك</div><div class="card" style="padding:12px 14px">${names.join(' · ')}</div>` : ''}
+  ${R.canClaim ? `<div class="h2">أحد دعاك؟</div><div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px"><span class="t2" style="white-space:normal">اكتب رقم اللي دعاك عشان ياخذ نقاطه (خلال أسبوع من تسجيلك).</span><div style="display:flex;gap:8px"><input class="input mono" id="claimIn" dir="ltr" placeholder="VM-XXXX-XXXX" maxlength="12" style="flex:1"><button class="btn pri" data-act="inv-claim">تأكيد</button></div></div>` : ''}`;
+}
 function renderMe(){
+  /* v8.8: «حسابي» صار قائمة مرتبة — كل مجموعة إعدادات في صفحة لحالها */
   const st = S.settings, r = myRep();
   const std = IS_NATIVE || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const notif = IS_NATIVE ? (RT.lnPerm || 'default') : 'Notification' in window ? Notification.permission : 'unsupported';
   const sw = (on, act) => `<button class="switch" role="switch" aria-checked="${on}" data-act="${act}" aria-label="تبديل"></button>`;
-  let h = `<div class="pad"><div class="h1">حسابي</div>
+  const sec = RT.meSec;
+  const row = (k, ic, t, d) => `<button class="set mrow" data-act="me-sec" data-sec="${k}"><span class="mic" aria-hidden="true">${ic}</span><span class="grow"><span class="t1" style="display:block">${t}</span>${d ? `<span class="t2" style="display:block">${d}</span>` : ''}</span><span class="t2 chev">‹</span></button>`;
+  const head = t => `<div class="subhead"><button class="iconbtn" data-act="me-back" aria-label="رجوع">${I.back}</button><div class="h1" style="margin:0">${t}</div></div>`;
+  let h = '<div class="pad">';
+  if(!sec){
+    const L = LEVELS[myLevel()];
+    h += `<div class="h1">حسابي</div>
   <div class="pincard"><div><div class="lbl">رقم VIBEMAP الخاص بك</div><div class="pin">${S.me.pin}</div><div class="nm">${esc(S.me.name)}${badge(S.me)}</div>
     <div class="btns" style="margin-top:12px"><button class="btn sm" style="background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.2)" data-act="copy-pin">${I.copy}نسخ</button><button class="btn sm" style="background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.2)" data-act="share-pin">${I.share}مشاركة</button></div></div>
     <button class="qr" data-act="mycard" aria-label="تكبير رمز QR">${qrSvg(inviteUrl())}</button></div>`;
-  if(!std) h += `<div class="note"><b>ثبّت VibeMap على شاشتك الرئيسية</b><br>${ios ? 'في Safari اضغط زر المشاركة ثم «إضافة إلى الشاشة الرئيسية». هذا يلزم لاستلام الإشعارات على الآيفون.' : 'افتح قائمة المتصفح ثم «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».'}${RT.installEvt ? ' <button class="btn sm pri" data-act="install">تثبيت الآن</button>' : ''}</div>`;
-  h += `<div class="h2">مستواي</div>${levelCard()}<div class="h2">نبذة عني</div>${bioForm()}`;
-  h += `<div class="h2">سمعتي عند أصدقائي</div><div class="card" style="padding:14px">${r ? `<div class="rate">${[['t','المصداقية'],['e','التفاعل'],['h','المساعدة']].map(([k, n]) => `<div class="rrow"><span>${n}</span><span class="bar"><i style="width:${r[k] / 5 * 100}%"></i></span><span class="num">${r[k].toFixed(1)}</span></div>`).join('')}<div class="t2">من ${r.n} ${r.n === 1 ? 'تقييم' : 'تقييمات'}</div></div>` : '<div class="t2" style="white-space:normal">لا توجد تقييمات بعد. يستطيع أصدقاؤك تقييمك من صفحتك لديهم.</div>'}</div>
-  <div class="h2">الملف الشخصي</div><div class="card list">
+    if(!std) h += `<div class="note"><b>ثبّت VibeMap على شاشتك الرئيسية</b><br>${ios ? 'في Safari اضغط زر المشاركة ثم «إضافة إلى الشاشة الرئيسية». هذا يلزم لاستلام الإشعارات على الآيفون.' : 'افتح قائمة المتصفح ثم «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».'}${RT.installEvt ? ' <button class="btn sm pri" data-act="install">تثبيت الآن</button>' : ''}</div>`;
+    h += inviteCard(false);
+    h += `<div class="card list">
+      ${row('profile', '👤', 'الملف الشخصي', esc(S.me.name) + (S.me.bio ? ' · نبذة' : ''))}
+      ${row('level', L.i, 'مستواي وسمعتي', `${L.n} · ${myPoints()} نقطة`)}
+    </div>
+    <div class="h2">الإعدادات</div><div class="card list">
+      ${row('notif', '🔔', 'الإشعارات', notif === 'granted' ? 'مفعّلة' : notif === 'denied' ? 'مرفوضة' : 'غير مفعّلة')}
+      ${row('look', '🎨', 'المظهر واللغة', `${st.theme === 'dark' ? 'داكن' : st.theme === 'light' ? 'فاتح' : 'حسب النظام'} · ${(st.lang || 'auto') === 'auto' ? 'لغة الجهاز' : st.lang === 'en' ? 'English' : 'عربي'}`)}
+      ${row('privacy', '🔒', 'الخصوصية والأمان', st.ghost ? 'وضع التخفي مفعّل' : 'التخفي، مدة الرسائل، المحظورين')}
+      ${row('stories', '📖', 'الحالات', st.storiesOn ? `ظاهرة · ${activeMine().length} نشطة` : 'مخفية')}
+      ${row('power', '🔋', 'البطارية والخلفية', st.eco ? 'توفير الطاقة مفعّل' : 'الأداء، العمل في الخلفية، زر التحدث')}
+      ${FB_CFG ? row('account', '☁️', 'الحساب والنسخ الاحتياطي', S.account ? esc(S.account.label) : 'غير مسجّل') : ''}
+    </div>
+    <div class="h2">المساعدة</div><div class="card list">
+      <button class="set mrow" data-act="contact"><span class="mic" aria-hidden="true">💬</span><span class="grow"><span class="t1" style="display:block">تواصل معنا</span><span class="t2" style="display:block">اقتراح أو شكوى أو فكرة</span></span><span class="t2 chev">‹</span></button>
+      ${row('about', 'ℹ️', 'عن VibeMap', 'الموقع، حساباتنا، الخصوصية')}
+      ${st.dev ? row('adv', '🛠️', 'خيارات متقدمة', 'التشخيص والاتصال') : ''}
+    </div>
+    <div class="h2">تابعنا</div><div class="card followcard"><div class="social" aria-label="تابعنا">${socialLinks()}</div></div>
+    <p class="t2" style="text-align:center;white-space:normal"><span data-act="ver-tap" style="cursor:default;user-select:none">VibeMap ${VERSION}</span> · <a href="privacy.html" style="color:var(--accent)">سياسة الخصوصية</a></p>`;
+  }
+  else if(sec === 'invite') h += head('ادعُ أصحابك') + inviteCard(true);
+  else if(sec === 'profile') h += head('الملف الشخصي') + `<div class="card list">
     <div class="set"><span class="av" style="${avCss(S.me)};width:56px;height:56px;font-size:22px">${esc(initial(S.me.name))}</span><span class="grow"><span class="t1" style="display:block">صورتك</span><span class="t2" style="display:block">تظهر لأصدقائك على الرادار وفي المحادثات</span></span>
       <div class="btns" style="flex:none"><button class="btn sm pri" data-act="me-photo">${S.me.photo ? 'تغيير' : 'إضافة صورة'}</button>${S.me.photo ? '<button class="btn sm" data-act="me-photo-del">إزالة</button>' : ''}</div></div>
     <div class="set"><label class="grow" for="nameIn"><span class="t1" style="display:block">الاسم</span></label><input class="input" id="nameIn" style="max-width:55%" value="${esc(S.me.name)}" maxlength="24"></div>
     <div class="set"><span class="grow t1">لونك</span><div class="swatches">${COLORS.slice(0, 6).map(c => `<button style="background:${c}" class="${S.me.color === c ? 'on' : ''}" data-act="color" data-color="${c}" aria-label="لون"></button>`).join('')}</div></div>
-  </div>
-  ${FB_CFG ? `<div class="h2">الحساب (اختياري)</div><div class="card list">
-    <button class="set" data-act="acc-open" style="width:100%;text-align:start"><span class="grow"><span class="t1" style="display:block">${S.account ? `<bdi>${esc(S.account.label)}</bdi>` : 'تسجيل الدخول'}</span><span class="t2" style="display:block">${S.account ? (S.account.salt ? 'نسخة احتياطية مشفّرة' + (S.account.lastBk ? ' · آخرها ' + fmtAgo(S.account.lastBk) : '') : 'فعّل النسخ الاحتياطي') : (acProviders().google ? 'Google أو البريد' + (acProviders().phone ? ' أو الجوال' : '') : 'البريد' + (acProviders().phone ? ' أو الجوال' : '')) + ' — لحفظ نسخة احتياطية من حسابك'}</span></span><span class="t2 chev">‹</span></button>
-  </div>` : ''}
-  <div class="h2">الأداء وحرارة الجهاز</div><div class="card list">
-    <div class="set"><span class="grow"><span class="t1" style="display:block">توفير الطاقة</span><span class="t2" style="display:block">${st.eco ? 'مفعّل: GPS دقيق فقط والرادار أمامك، رسم أقل، بدون حركة مستمرة — الجوال يبرد والبطارية تطول' : 'متوقف: أعلى دقة وتحديث أسرع، لكن الجوال يسخن أسرع'}</span></span>${sw(st.eco, 'eco')}</div>
-  </div>
-  ${bgSection()}
-  ${pttKeySection()}
-  <div class="h2">الحالات</div><div class="card list">
+  </div><div class="h2">نبذة عني</div>${bioForm()}`;
+  else if(sec === 'level') h += head('مستواي وسمعتي') + `${levelCard()}<div class="h2">سمعتي عند أصدقائي</div><div class="card" style="padding:14px">${r ? `<div class="rate">${[['t','المصداقية'],['e','التفاعل'],['h','المساعدة']].map(([k, n]) => `<div class="rrow"><span>${n}</span><span class="bar"><i style="width:${r[k] / 5 * 100}%"></i></span><span class="num">${r[k].toFixed(1)}</span></div>`).join('')}<div class="t2">من ${r.n} ${r.n === 1 ? 'تقييم' : 'تقييمات'}</div></div>` : '<div class="t2" style="white-space:normal">لا توجد تقييمات بعد. يستطيع أصدقاؤك تقييمك من صفحتك لديهم.</div>'}</div>`;
+  else if(sec === 'notif') h += head('الإشعارات') + `<div class="card list"><div class="set"><span class="grow"><span class="t1" style="display:block">الإشعارات</span><span class="t2" style="display:block">${notif === 'granted' ? 'مفعّلة' : notif === 'denied' ? 'مرفوضة، فعّلها من إعدادات الجهاز' : notif === 'unsupported' ? (ios ? 'ثبّت التطبيق على الشاشة الرئيسية أولاً' : 'غير مدعومة في هذا المتصفح') : 'تنبيه عند الرسائل والتحدث والاستغاثة'}</span></span>${notif === 'default' ? '<button class="btn sm pri" data-act="notif">تفعيل</button>' : ''}</div>
+    <div class="set"><span class="grow"><span class="t1" style="display:block">نص الرسالة في الإشعار</span><span class="t2" style="display:block">أوقفه ليظهر «رسالة جديدة» فقط على شاشة القفل</span></span>${sw(st.notifPreview, 'notif-preview')}</div></div>`;
+  else if(sec === 'look') h += head('المظهر واللغة') + `<div class="card list"><div class="set"><span class="grow"><span class="t1" style="display:block">المظهر</span></span><div class="segs">${[['system','النظام'],['dark','داكن'],['light','فاتح']].map(([k, n]) => `<button class="${st.theme === k ? 'on' : ''}" data-act="theme" data-theme="${k}">${n}</button>`).join('')}</div></div>
+    <div class="set"><span class="grow"><span class="t1" style="display:block">اللغة</span><span class="t2" style="display:block;white-space:normal">${(st.lang || 'auto') === 'auto' ? 'تتبع لغة جهازك تلقائياً' : 'اخترتها أنت'}</span></span><div class="segs" translate="no">${[['auto','🌐'],['ar','عربي'],['en','EN']].map(([k, n]) => `<button class="${(st.lang || 'auto') === k ? 'on' : ''}" data-act="lang" data-lang="${k}" aria-label="${k === 'auto' ? 'لغة الجهاز' : k === 'ar' ? 'العربية' : 'English'}">${n}</button>`).join('')}</div></div></div>`;
+  else if(sec === 'privacy') h += head('الخصوصية والأمان') + `<div class="card list"><div class="set"><span class="grow"><span class="t1" style="display:block">وضع التخفي</span><span class="t2" style="display:block">يخفي موقعك عن الجميع، وتبقى قادراً على السماع والتحدث</span></span>${sw(st.ghost, 'ghost')}</div>
+    <div class="set"><span class="grow"><span class="t1" style="display:block">مدة الرسائل الافتراضية</span></span><div class="segs">${['read','24h','keep'].map(k => `<button class="${st.ttl === k ? 'on' : ''}" data-act="def-ttl" data-ttl="${k}">${k === 'read' ? 'بعد القراءة' : k === '24h' ? '24 ساعة' : 'دائم'}</button>`).join('')}</div></div></div>
+  ${Object.keys(S.blocked).length ? `<div class="h2">المحظورون</div><div class="card list">${Object.entries(S.blocked).map(([p, x]) => `<div class="set"><span class="grow"><span class="t1" style="display:block">${esc(x.name)}</span>${x.hidePin ? '' : `<span class="t2 mono" style="display:block">${esc(p)}</span>`}</span><button class="btn sm" data-act="unblock" data-pin="${esc(p)}">إلغاء الحظر</button></div>`).join('')}</div>` : ''}
+  <div class="h2">حذف الحساب</div><div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><div class="t1">حذف الحساب من هذا الجهاز</div><div class="t2" style="white-space:normal">يحذف رقمك ومفاتيح التشفير والأصدقاء والرسائل. لا يمكن التراجع.</div>
+    <div id="resetBox"><button class="btn danger" data-act="reset-ask">حذف كل شيء</button></div></div>`;
+  else if(sec === 'stories') h += head('الحالات') + `<div class="card list">
     <div class="set"><span class="grow"><span class="t1" style="display:block">إظهار حالاتي لأصدقائي</span><span class="t2" style="display:block">${st.storiesOn ? 'تظهر حالاتك 24 ساعة على رادار أصدقائك' : 'حالاتك مخفية عن الجميع الآن'}${Object.values(S.friends).filter(f => f.hideStories).length ? ` · مخفية عن ${Object.values(S.friends).filter(f => f.hideStories).length} من الأصدقاء` : ''}</span></span>${sw(st.storiesOn, 'stories-toggle')}</div>
     <div class="set"><span class="grow"><span class="t1" style="display:block">حالاتي النشطة: ${activeMine().length}</span></span><button class="btn sm pri" data-act="story-new">+ حالة</button></div>
-  </div>
-  <div class="h2">الإعدادات</div><div class="card list">
-    <div class="set"><span class="grow"><span class="t1" style="display:block">المظهر</span></span><div class="segs">${[['system','النظام'],['dark','داكن'],['light','فاتح']].map(([k, n]) => `<button class="${st.theme === k ? 'on' : ''}" data-act="theme" data-theme="${k}">${n}</button>`).join('')}</div></div>
-    <div class="set"><span class="grow"><span class="t1" style="display:block">اللغة</span><span class="t2" style="display:block;white-space:normal">${(st.lang || 'auto') === 'auto' ? 'تتبع لغة جهازك تلقائياً' : 'اخترتها أنت'}</span></span><div class="segs" translate="no">${[['auto','🌐'],['ar','عربي'],['en','EN']].map(([k, n]) => `<button class="${(st.lang || 'auto') === k ? 'on' : ''}" data-act="lang" data-lang="${k}" aria-label="${k === 'auto' ? 'لغة الجهاز' : k === 'ar' ? 'العربية' : 'English'}">${n}</button>`).join('')}</div></div>
-    <div class="set"><span class="grow"><span class="t1" style="display:block">مدة الرسائل الافتراضية</span></span><div class="segs">${['read','24h','keep'].map(k => `<button class="${st.ttl === k ? 'on' : ''}" data-act="def-ttl" data-ttl="${k}">${k === 'read' ? 'بعد القراءة' : k === '24h' ? '24 ساعة' : 'دائم'}</button>`).join('')}</div></div>
-    <div class="set"><span class="grow"><span class="t1" style="display:block">وضع التخفي</span><span class="t2" style="display:block">يخفي موقعك عن الجميع، وتبقى قادراً على السماع والتحدث</span></span>${sw(st.ghost, 'ghost')}</div>
-    <div class="set"><span class="grow"><span class="t1" style="display:block">الإشعارات</span><span class="t2" style="display:block">${notif === 'granted' ? 'مفعّلة' : notif === 'denied' ? 'مرفوضة، فعّلها من إعدادات الجهاز' : notif === 'unsupported' ? (ios ? 'ثبّت التطبيق على الشاشة الرئيسية أولاً' : 'غير مدعومة في هذا المتصفح') : 'تنبيه عند الرسائل والتحدث والاستغاثة'}</span></span>${notif === 'default' ? '<button class="btn sm pri" data-act="notif">تفعيل</button>' : ''}</div>
-    <div class="set"><span class="grow"><span class="t1" style="display:block">نص الرسالة في الإشعار</span><span class="t2" style="display:block">أوقفه ليظهر «رسالة جديدة» فقط على شاشة القفل</span></span>${sw(st.notifPreview, 'notif-preview')}</div>
-    <div class="set"><span class="grow"><span class="t1" style="display:block">إبقاء الشاشة مضاءة</span><span class="t2" style="display:block">يحافظ على الاتصال أثناء المشي أو القيادة</span></span>${sw(st.wake, 'wake')}</div>
-  </div>
-
-  <div class="h2">تواصل معنا</div><div class="card list">
-    <button class="set" data-act="contact" style="width:100%;text-align:start"><span class="grow"><span class="t1" style="display:block">أرسل اقتراحاً أو شكوى أو فكرة</span><span class="t2" style="display:block">توصل رسالتك مباشرة لبريد فريق VibeMap</span></span><span class="t2 chev">‹</span></button>
-  </div>
-  ${Object.keys(S.blocked).length ? `<div class="h2">المحظورون</div><div class="card list">${Object.entries(S.blocked).map(([p, x]) => `<div class="set"><span class="grow"><span class="t1" style="display:block">${esc(x.name)}</span>${x.hidePin ? '' : `<span class="t2 mono" style="display:block">${esc(p)}</span>`}</span><button class="btn sm" data-act="unblock" data-pin="${esc(p)}">إلغاء الحظر</button></div>`).join('')}</div>` : ''}
-  <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px"><div class="t1">حذف الحساب من هذا الجهاز</div><div class="t2" style="white-space:normal">يحذف رقمك ومفاتيح التشفير والأصدقاء والرسائل. لا يمكن التراجع.</div>
-    <div id="resetBox"><button class="btn danger" data-act="reset-ask">حذف كل شيء</button></div></div>
-  ${st.dev ? `<div class="h2">خيارات متقدمة</div>
-  ${diagSection()}
+  </div>`;
+  else if(sec === 'power') h += head('البطارية والخلفية') + `<div class="card list">
+    <div class="set"><span class="grow"><span class="t1" style="display:block">توفير الطاقة</span><span class="t2" style="display:block">${st.eco ? 'مفعّل: GPS دقيق فقط والرادار أمامك، رسم أقل، بدون حركة مستمرة — الجوال يبرد والبطارية تطول' : 'متوقف: أعلى دقة وتحديث أسرع، لكن الجوال يسخن أسرع'}</span></span>${sw(st.eco, 'eco')}</div>
+  </div><div class="card list" style="margin-top:12px"><div class="set"><span class="grow"><span class="t1" style="display:block">إبقاء الشاشة مضاءة</span><span class="t2" style="display:block">يحافظ على الاتصال أثناء المشي أو القيادة</span></span>${sw(st.wake, 'wake')}</div></div>
+  ${bgSection()}
+  ${pttKeySection()}`;
+  else if(sec === 'account') h += head('الحساب والنسخ الاحتياطي') + `${FB_CFG ? `<div class="card list">
+    <button class="set" data-act="acc-open" style="width:100%;text-align:start"><span class="grow"><span class="t1" style="display:block">${S.account ? `<bdi>${esc(S.account.label)}</bdi>` : 'تسجيل الدخول'}</span><span class="t2" style="display:block">${S.account ? (S.account.salt ? 'نسخة احتياطية مشفّرة' + (S.account.lastBk ? ' · آخرها ' + fmtAgo(S.account.lastBk) : '') : 'فعّل النسخ الاحتياطي') : (acProviders().google ? 'Google أو البريد' + (acProviders().phone ? ' أو الجوال' : '') : 'البريد' + (acProviders().phone ? ' أو الجوال' : '')) + ' — لحفظ نسخة احتياطية من حسابك'}</span></span><span class="t2 chev">‹</span></button>
+  </div><p class="t2" style="white-space:normal;margin-top:10px">اختياري: يحفظ نسخة مشفّرة من رقمك وأصدقائك عشان ترجعها لو غيّرت جوالك.</p>` : ''}`;
+  else if(sec === 'about') h += head('عن VibeMap') + `${aboutCard()}<div class="card list" style="margin-top:12px"><a class="set mrow" href="privacy.html"><span class="mic" aria-hidden="true">📄</span><span class="grow t1">سياسة الخصوصية</span><span class="t2 chev">‹</span></a></div>
+  <p class="t2" style="text-align:center">VibeMap ${VERSION}</p>`;
+  else if(sec === 'adv' && st.dev) h += head('خيارات متقدمة') + `${diagSection()}
   <div class="card list">    <div class="set"><span class="grow"><span class="t1" style="display:block">الوضع التجريبي</span><span class="t2" style="display:block">يضيف «صدى» لاختبار صوتك و«سارة» لتجربة الرادار والمحادثة</span></span>${sw(st.demo, 'demo')}</div>
 </div>
   <details class="card" style="padding:14px"><summary class="t1" style="cursor:pointer">إعدادات الاتصال المتقدمة (TURN)</summary>
     <p class="t2" style="white-space:normal;margin:10px 0">يعمل الاتصال مباشرة بين الجوالات. إذا لم يسمع أحدكما الآخر على شبكة الجوال، أضف خادم TURN مجاني (مثل Metered) وضع بياناته هنا على الجهازين.</p>
     <form id="turnForm" style="display:flex;flex-direction:column;gap:8px"><input class="input" id="turnUrl" dir="ltr" placeholder="turn:relay.example.com:443" value="${esc(st.turnUrl)}"><input class="input" id="turnUser" dir="ltr" placeholder="username" value="${esc(st.turnUser)}"><input class="input" id="turnPass" dir="ltr" placeholder="credential" type="password" value="${esc(st.turnPass)}"><button class="btn pri" type="submit">حفظ وإعادة الاتصال</button></form>
     <div class="set" style="padding:12px 0 0;border:0"><span class="grow"><span class="t1" style="display:block">إخفاء عنوان IP عن الأصدقاء</span><span class="t2" style="display:block">يمرّر الصوت عبر خادم TURN فقط. يحتاج خادم TURN أعلاه.</span></span>${st.turnUrl ? sw(st.relayOnly, 'relay') : '<span class="t2">أضف TURN أولاً</span>'}</div></details>
-  <button class="btn sm" data-act="dev-off" style="align-self:center">إخفاء الخيارات المتقدمة</button>` : ''}
-  ${aboutCard()}
-  <p class="t2" style="text-align:center;white-space:normal"><span data-act="ver-tap" style="cursor:default;user-select:none">VibeMap ${VERSION}</span> · <a href="privacy.html" style="color:var(--accent)">سياسة الخصوصية</a></p></div>`;
+  <button class="btn sm" data-act="dev-off" style="align-self:center">إخفاء الخيارات المتقدمة</button>`;
+  else { RT.meSec = null; return renderMe(); }
+  h += '</div>';
   $('#v-me').innerHTML = h; fillRoutes();
-  $('#nameIn').onchange = e => { const v = e.target.value.trim(); if(v){ S.me.name = v; save(); rehello(); toast('تم حفظ الاسم'); } };
+  if($('#nameIn')) $('#nameIn').onchange = e => { const v = e.target.value.trim(); if(v){ S.me.name = v; save(); rehello(); toast('تم حفظ الاسم'); } };
   if($('#turnForm')) $('#turnForm').onsubmit = e => { e.preventDefault(); st.turnUrl = $('#turnUrl').value.trim(); st.turnUser = $('#turnUser').value.trim(); st.turnPass = $('#turnPass').value; save(); RT.conns = {}; RT.outCalls = {}; startPeer(); toast('يعيد الاتصال بالإعدادات الجديدة'); };
 }
 /* v7.1: تشخيص الاتصال — صورة شاشة منه تكفي لمعرفة سبب أي مشكلة */
@@ -2197,7 +2259,7 @@ function avatarFrom(file){ return new Promise((res, rej) => { const url = URL.cr
     c.getContext('2d').drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, z, z); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .8)); };
   im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); }; im.src = url; }); }
 function sendAvatar(pin){ if(isDemo(pin)) return; sendEnc(pin, { k:'avatar', data:S.me.photo || '', v:S.me.photoV || 0 }); }
-function rehello(){ Object.entries(RT.conns).forEach(([pin, c]) => { if(c.open) c.send({ type:'hello', v:VERSION, pin:S.me.pin, name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), bio:S.me.bio || null }); }); }
+function rehello(){ Object.entries(RT.conns).forEach(([pin, c]) => { if(c.open) c.send({ type:'hello', v:VERSION, pin:S.me.pin, name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), amb:myAmb(), bio:S.me.bio || null }); }); }
 
 /* ─── ورقة الصديق ─── */
 function friendSheet(pin){
@@ -2270,7 +2332,7 @@ document.addEventListener('click', async e => {
   if(a === 'ann-x'){ if(RT.cfg && RT.cfg.ann){ S.settings.annSeen = RT.cfg.ann.id; save(); } applyCfg(); return; }
   if(a === 'upd-reload'){ location.reload(); return; }
   switch(a){
-    case 'tab': closeSheet(); setTab(b.dataset.tab); break;
+    case 'tab': closeSheet(); if(b.dataset.tab === 'me') RT.meSec = null; setTab(b.dataset.tab); break;
     case 'mode': if(b.dataset.mode === 'ar') startAR(); else { stopAR(); } break;
     case 'compass': enableCompass(); break;
     case 'target-all': openTargetPicker(); break;
@@ -2333,6 +2395,15 @@ document.addEventListener('click', async e => {
     case 'scan': openScan(); break;
     case 'mycard': openSheet(`<div class="grab"></div><div class="h1">بطاقتي</div><div class="qr big">${qrSvg(inviteUrl())}</div><div class="code">${S.me.pin}</div><p class="t2" style="white-space:normal;text-align:center">يمسح صديقك الرمز بكاميرا جواله أو من داخل VibeMap، فيصلك طلب صداقة.</p><div class="btns"><button class="btn" data-act="copy-pin">${I.copy}نسخ الرقم</button><button class="btn pri" data-act="share-pin">${I.share}مشاركة</button></div>`); break;
     case 'copy-pin': copyText(S.me.pin); break;
+    case 'me-sec': RT.meSec = b.dataset.sec; renderMe(); $('#v-me').scrollTop = 0; window.scrollTo(0, 0); if(RT.meSec === 'invite') refFetch(); break;
+    case 'me-back': RT.meSec = null; renderMe(); break;
+    case 'inv-wa': openExt('https://wa.me/?text=' + encodeURIComponent(T(inviteText('whatsapp')))); break;
+    case 'inv-copy': copyText(inviteUrl('invite')); break;
+    case 'inv-share': { const text = T(inviteText('invite')); if(navigator.share){ try{ await navigator.share({ title:'VibeMap', text }); }catch(e){} } else copyText(text); break; }
+    case 'inv-claim': { const v = (($('#claimIn') || {}).value || '').trim().toUpperCase(); if(!PIN_STRICT.test(v)){ toast('اكتب الرقم بالشكل VM-XXXX-XXXX'); break; }
+      b.disabled = true; const j = await relayPost('/api/ref/claim', { ref:v }); b.disabled = false;
+      if(j && j.ok){ toast('✓ انحسبت الدعوة — بياخذ نقاطه لما تستخدم التطبيق يومين'); refFetch(); if(!S.friends[v]){ RT.invRef = v; confirmAdd(v); } }
+      else toast({ noreg:'ما لقينا هالرقم', self:'هذا رقمك أنت', late:'فات أسبوع على تسجيلك', already:'سجلت دعوة قبل', loop:'هو مسجّل من رابطك', denied:'ما نقدر نحسبها لهالجهاز' }[RL.lastErr] || 'ما قدرنا، جرب بعدين'); break; }
     case 'share-pin': sharePin(); break;
     case 'install': if(RT.installEvt){ RT.installEvt.prompt(); RT.installEvt = null; renderMe(); } break;
     case 'color': S.me.color = b.dataset.color; save(); rehello(); renderMe(); break;
@@ -2546,14 +2617,18 @@ function stat(k, n = 1){
 }
 const repAvg = r => r && r.n ? +((r.t + r.e + r.h) / 3).toFixed(1) : null;
 function myPoints(){ const st = S.stats || {}, r = myRep();
-  return Math.round((st.talks || 0) * 2 + (st.msgs || 0) + (st.stories || 0) * 5 + (st.sq || 0) * 3 + (st.pokes || 0) * .5 + (st.days || []).length * 10 + (r ? r.n * 15 : 0)); }
+  return Math.round((st.talks || 0) * 2 + (st.msgs || 0) + (st.stories || 0) * 5 + (st.sq || 0) * 3 + (st.pokes || 0) * .5 + (st.days || []).length * 10 + (r ? r.n * 15 : 0) + ((S.ref && +S.ref.pts) || 0)); }
 function myLevel(){ const pts = myPoints(), r = myRep(), avg = repAvg(r), n = r ? r.n : 0; let lv = 0;
   LEVELS.forEach((L, i) => { if(pts >= L.p && (!L.r || (avg != null && avg >= L.r && n >= L.rn))) lv = i; }); return lv; }
-function lvlRt(lv, rt){
-  let h = ''; if(Number.isInteger(lv) && lv > 0 && LEVELS[lv]) h += `<span class="lvl" title="${LEVELS[lv].n}">${LEVELS[lv].i}</span>`;
+const AMB = [null, { i:'🥉', n:'سفير برونزي' }, { i:'🥈', n:'سفير فضي' }, { i:'🥇', n:'سفير ذهبي' }];
+V.amb = x => { const n = V.num(x, 0, 3); return n == null ? 0 : Math.round(n); };
+const myAmb = () => V.amb(S && S.ref && S.ref.amb);
+function lvlRt(lv, rt, amb){
+  let h = ''; if(amb && AMB[amb]) h += `<span class="lvl" title="${AMB[amb].n}">${AMB[amb].i}</span>`;
+  if(Number.isInteger(lv) && lv > 0 && LEVELS[lv]) h += `<span class="lvl" title="${LEVELS[lv].n}">${LEVELS[lv].i}</span>`;
   if(rt != null && rt > 0) h += `<span class="rt">★${(+rt).toFixed(1)}</span>`;
   return h ? ` <span class="bdg">${h}</span>` : ''; }
-function badge(f){ if(!f) return ''; if(f === S.me) return lvlRt(myLevel(), repAvg(myRep())); return lvlRt(f.lvl, repAvg(f.rep)); }
+function badge(f){ if(!f) return ''; if(f === S.me) return lvlRt(myLevel(), repAvg(myRep()), myAmb()); return lvlRt(f.lvl, repAvg(f.rep), f.amb); }
 function levelCard(){
   const lv = myLevel(), L = LEVELS[lv], nx = LEVELS[lv + 1], pts = myPoints(), r = myRep(), avg = repAvg(r);
   const pct = nx ? Math.min(100, Math.round((pts - L.p) / (nx.p - L.p) * 100)) : 100;
@@ -2606,8 +2681,8 @@ async function relaySendPlain(pin, obj, kind){
   const j = await relayPost('/api/send', { to:pin, items:[{ id:uid(), iv:'PLAIN', ct:b64(TE.encode(JSON.stringify(obj))) }], push: kind ? { k:kind, n:S.me.name } : null });
   return !!(j && j.ok);
 }
-function reqPayload(extra){ return { k:'freq', name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), bio:S.me.bio || null, v:VERSION, ...(extra || {}) }; }
-function acceptPayload(){ return { k:'facc', name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), bio:S.me.bio || null }; }
+function reqPayload(extra){ return { k:'freq', name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), amb:myAmb(), bio:S.me.bio || null, v:VERSION, ...(extra || {}) }; }
+function acceptPayload(){ return { k:'facc', name:S.me.name, color:S.me.color, pub:S.keys.pub, rep:myRep(), lvl:myLevel(), amb:myAmb(), bio:S.me.bio || null }; }
 async function ecdhKey(pubJwk){
   const pub = await crypto.subtle.importKey('jwk', { kty:'EC', crv:'P-256', x:pubJwk.x, y:pubJwk.y }, { name:'ECDH', namedCurve:'P-256' }, false, []);
   return crypto.subtle.deriveKey({ name:'ECDH', public:pub }, myPriv, { name:'AES-GCM', length:256 }, false, ['encrypt', 'decrypt']);
@@ -2633,13 +2708,13 @@ function handlePlain(pin, m, sealedPub){
   if(m.k === 'freq'){
     if(f && f.status === 'friend') return;
     if(f && f.status === 'out'){
-      f.name = V.name(m.name); f.color = V.color(m.color); f.pub = pub; f.rep = V.rep(m.rep); f.lvl = V.lvl(m.lvl); f.bio = V.bio(m.bio); f.status = 'friend'; save(); markConnOk(pin);
+      f.name = V.name(m.name); f.color = V.color(m.color); f.pub = pub; f.rep = V.rep(m.rep); f.lvl = V.lvl(m.lvl); f.amb = V.amb(m.amb); f.bio = V.bio(m.bio); f.status = 'friend'; save(); markConnOk(pin);
       deriveFor(pin).then(() => { relaySendPlain(pin, acceptPayload(), 'accept'); onFriendOnline(pin); renderAll(); });
       toast(`أصبحت أنت و${f.name} أصدقاء`); renderAll(); return;
     }
     if(!f && Object.values(S.friends).filter(x => x.status === 'in').length >= 30) return;
     const isNew = !f;
-    f = S.friends[pin] = { ...(f || {}), pin, name:V.name(m.name), color:V.color(m.color), status:'in', added:(f && f.added) || now(), pub, rep:V.rep(m.rep), lvl:V.lvl(m.lvl), bio:V.bio(m.bio), fromPub:m.pubreq === true }; markConnOk(pin);
+    f = S.friends[pin] = { ...(f || {}), pin, name:V.name(m.name), color:V.color(m.color), status:'in', added:(f && f.added) || now(), pub, rep:V.rep(m.rep), lvl:V.lvl(m.lvl), amb:V.amb(m.amb), inv:m.inv === 1, bio:V.bio(m.bio), fromPub:m.pubreq === true }; markConnOk(pin);
     { const vr = V.id(m.via), rr = vr && S.rooms[vr]; if(rr && rr.members.includes(pin)){ f.via = vr; f.hidePin = true; } }
     const voice = m.voice && String(m.voice).length <= 450000 ? V.audio(m.voice) : null; /* v8.2: حد للحجم (ضد ملء التخزين) */
     if(voice){ f.reqVoice = voice; f.reqDur = V.num(m.dur, 0, 60) || 0;
@@ -2655,7 +2730,7 @@ function handlePlain(pin, m, sealedPub){
     if(!f || (f.status !== 'out' && f.status !== 'friend')) return;
     if(f.status === 'friend' && !samePub) return;
     const was = f.status;
-    Object.assign(f, { pub, name:V.name(m.name), color:V.color(m.color), rep:V.rep(m.rep), lvl:V.lvl(m.lvl), bio:V.bio(m.bio), status:'friend' }); save(); markConnOk(pin);
+    Object.assign(f, { pub, name:V.name(m.name), color:V.color(m.color), rep:V.rep(m.rep), lvl:V.lvl(m.lvl), amb:V.amb(m.amb), bio:V.bio(m.bio), status:'friend' }); save(); markConnOk(pin);
     deriveFor(pin).then(() => { if(was !== 'friend'){ toast(`${f.name} قبل طلب الصداقة`); notify('✅ ' + f.name, 'قبل طلب الصداقة'); onFriendOnline(pin); } renderAll(); });
     return;
   }
@@ -3047,6 +3122,7 @@ function vmBack(){
     if(RT.chatWith){ closeChat(); return true; }
     if(!$('#onboard').hidden) return false;
     if(RT.tab === 'radar' && RT.mode === 'ar'){ stopAR(); return true; }
+    if(RT.tab === 'me' && RT.meSec){ RT.meSec = null; renderMe(); return true; }
     if(RT.tab !== 'radar'){ setTab('radar'); return true; }
   }catch(e){ console.warn('back', e); }
   return false;

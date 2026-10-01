@@ -327,6 +327,15 @@ if "location /signal/" not in s:
         proxy_read_timeout 120s;
     }
     location /relay/ {""", 1)
+if "location ^~ /i/" not in s:
+    s=s.replace("    location /relay/ {", """    location ^~ /i/ {
+        limit_req zone=vmrelay burst=30 nodelay;
+        proxy_pass http://127.0.0.1:8095;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_read_timeout 15s;
+    }
+    location /relay/ {""", 1)
 if "location ^~ /admin/" not in s:
     s=s.replace("    location /app/ {", """    location ^~ /admin/ {
         add_header Cache-Control "no-store" always;

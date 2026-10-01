@@ -1,4 +1,4 @@
-/* VibeMap — لوحة التحكم v8.7 */
+/* VibeMap — لوحة التحكم v8.8 */
 (() => {
   'use strict';
   const API = (document.querySelector('meta[name=vibemap-api]') || {}).content || '/relay/api/';
@@ -143,10 +143,33 @@
           </div>
         </div>
       </div>`;
+    el.insertAdjacentHTML('beforeend', '<div id="refBox"></div>');
     drawChart($('#chart'), s.perDay);
+    loadRefs();
     const tv = $('#tview');
     tv.innerHTML = `<table class="tview"><thead><tr><th>اليوم</th><th>تسجيلات</th></tr></thead><tbody>${s.perDay.slice().reverse().map(x => `<tr><td>${esc(x.d)}</td><td>${N(x.n)}</td></tr>`).join('')}</tbody></table>`;
     $('#tvBtn').onclick = e => { const open = tv.hidden; tv.hidden = !open; e.target.textContent = open ? 'إخفاء الجدول' : 'عرض كجدول'; e.target.setAttribute('aria-expanded', open); };
+  }
+
+  /* v8.8: الدعوات ومصادر التسجيل */
+  const SRC = { tiktok: 'تيك توك', instagram: 'انستقرام', x: 'X', snapchat: 'سناب شات', whatsapp: 'واتساب', invite: 'رابط دعوة', qr: 'رمز QR', site: 'الموقع', direct: 'مباشر' };
+  async function loadRefs() {
+    const box = $('#refBox'); if (!box) return;
+    let j; try { j = await call('admin/refs'); } catch (e) { return; }
+    const ent = Object.entries(j.src).sort((a, b) => b[1] - a[1]), tot = Math.max(1, ent.reduce((n, x) => n + x[1], 0));
+    const conv = j.clicks ? Math.round(j.joined / j.clicks * 100) : 0;
+    box.innerHTML = `<div class="grid two">
+      <div class="card"><h3>الدعوات</h3><div class="note">من فتح روابط الدعوة للين صار نشط</div>
+        <div class="health" style="grid-template-columns:repeat(3,1fr)"><div>فتحوا الرابط<b>${N(j.clicks)}</b></div><div>انضموا<b>${N(j.joined)}${j.clicks ? ` <small class="note">${conv}%</small>` : ''}</b></div><div>صاروا نشطين<b>${N(j.active)}</b></div></div>
+        <h3 style="margin-top:16px">أكثر الداعين</h3>
+        ${j.top.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>الاسم</th><th>الرقم</th><th>فتحوا</th><th>انضموا</th><th>نشطين</th><th>نقاط</th><th></th></tr></thead><tbody>${j.top.map(x => `<tr><td>${esc(x.name || '—')}${x.banned ? ' <span class="pill bad">محظور</span>' : ''}</td><td class="mono">${esc(x.pin)}</td><td>${N(x.clicks)}</td><td>${N(x.joined)}</td><td><b>${N(x.active)}</b></td><td>${N(x.pts)}</td><td>${can('owner', 'admin') ? `<button class="btn sm" data-refreset="${esc(x.pin)}" title="لو شكّيت في غش">تصفير</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">ما فيه دعوات للحين</div>'}
+      </div>
+      <div class="card"><h3>من وين جاء المشتركين</h3><div class="note">التسجيلات آخر 30 يوم حسب المصدر</div>
+        <div class="plat">${ent.length ? ent.map(([k, n]) => `<div class="row" style="grid-template-columns:84px 1fr 40px"><span>${esc(SRC[k] || k)}</span><div class="track"><div class="fill" style="width:${(n / tot * 100).toFixed(1)}%"></div></div><span class="n">${N(n)}</span></div>`).join('') : '<div class="note">ما فيه بيانات للحين</div>'}</div>
+        <div class="note" style="margin-top:14px">عشان تعرف وش يجيب ناس، حط في البايو رابط فيه المصدر:<div class="mono" style="display:block;text-align:left;margin-top:4px">vibemap.s7sai.cloud/?src=tiktok<br>vibemap.s7sai.cloud/?src=instagram</div></div>
+      </div></div>`;
+    box.querySelectorAll('[data-refreset]').forEach(b => b.onclick = async () => { const pin = b.dataset.refreset; if (!confirm(`تصفير نقاط الدعوات لـ ${pin}؟`)) return;
+      try { await call('admin/ref/reset', { pin }); toast('تم التصفير'); loadRefs(); } catch (e) { toast(msg(e)); } });
   }
 
   function drawChart(host, data) {
@@ -376,7 +399,7 @@
 
   /* ═══ الإعدادات: حسابي + فريق الإدارة + السجل ═══ */
   const ACT = { password: 'غيّر كلمة السر', 'admin-save': 'حفظ حساب إدارة', 'admin-del': 'حذف حساب إدارة', 'user-ban': 'حظر مستخدم', 'user-unban': 'فك حظر', 'user-wipe': 'مسح محتوى مستخدم',
-    'user-info': 'عرض بيانات حساب', 'post-hide': 'إخفاء منشور', 'post-show': 'إظهار منشور', 'post-del': 'حذف منشور', config: 'تغيير إعدادات التطبيق', broadcast: 'إشعار للكل' };
+    'user-info': 'عرض بيانات حساب', 'ref-reset': 'تصفير نقاط دعوات', 'post-hide': 'إخفاء منشور', 'post-show': 'إظهار منشور', 'post-del': 'حذف منشور', config: 'تغيير إعدادات التطبيق', broadcast: 'إشعار للكل' };
   async function loadSettings() {
     const el = $('#t-settings');
     el.innerHTML = `<h2>الإعدادات</h2><p class="sub">حسابك وفريق الإدارة.</p><div class="stack">

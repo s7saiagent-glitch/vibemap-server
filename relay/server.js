@@ -56,11 +56,44 @@ function auth(b) {
   const pin = typeof b.pin === 'string' ? b.pin.toUpperCase() : '';
   if (!PIN_RE.test(pin) || typeof b.key !== 'string' || b.key.length < 32 || b.key.length > 100) return null;
   const r = REG[pin]; if (!r || r.dead || r.banned || !eq(r.kh, sha(b.key))) return null;
-  const t = Date.now(); if (!r.seen || t - r.seen > 3600e3) { r.seen = t; saveReg(); } noteIp(r, b._ip); return pin;
+  const t = Date.now(); if (!r.seen || t - r.seen > 3600e3) { r.seen = t; saveReg(); } noteIp(r, b._ip); noteDay(pin, r); return pin;
+}
+/* ─── v8.8: الدعوات ───
+   الداعي ياخذ 50 نقطة لما المدعو يصير «نشط» (يفتح التطبيق في يومين مختلفين)، والمدعو ياخذ 20.
+   الحماية: الجهاز يُحسب مرة وحدة، حد للتسجيلات بالدعوة من نفس العنوان، وحد 10 دعوات ناجحة باليوم لكل داعي. */
+const REF_PTS = 50, REF_WELCOME = 20, REF_DAY_CAP = 10, REF_TIERS = [5, 20, 50];
+const REF_SRC = ['tiktok', 'instagram', 'x', 'snapchat', 'whatsapp', 'invite', 'qr', 'site', 'direct'];
+const REFDEV_FILE = path.join(DATA, 'refdev.json');
+let REFDEV = new Set(); try { REFDEV = new Set(JSON.parse(fs.readFileSync(REFDEV_FILE, 'utf8'))); } catch (e) { }
+const saveRefDev = () => { try { fs.writeFileSync(REFDEV_FILE + '.tmp', JSON.stringify([...REFDEV])); fs.renameSync(REFDEV_FILE + '.tmp', REFDEV_FILE); } catch (e) { log('refdev write', e.message); } };
+const ksaDay = t => new Date(t + 3 * 3600e3).toISOString().slice(0, 10);
+const ambOf = n => REF_TIERS.filter(x => n >= x).length;
+function noteDay(pin, r) {
+  const d = ksaDay(Date.now()); if (!Array.isArray(r.days)) r.days = [];
+  if (!r.days.includes(d)) { r.days.push(d); if (r.days.length > 3) r.days.shift(); saveReg(); }
+  refCheck(pin, r);
+}
+function refCheck(pin, r) {
+  if (!r.refBy || r.refOk || r.banned) return;
+  if ((r.days || []).length < 2) return; /* نشط = فتح التطبيق في يومين مختلفين (طلب الصداقة نفسه ما يُحسب) */
+  const R = REG[r.refBy]; if (!R || R.dead || R.banned) { r.refOk = -1; saveReg(); return; }
+  const d = ksaDay(Date.now()); if (!R.refDay || R.refDay.d !== d) R.refDay = { d, n: 0 };
+  if (R.refDay.n >= REF_DAY_CAP) return; /* يتأجل لبكرة */
+  R.refDay.n++; R.refs = (R.refs || 0) + 1; R.pts = (R.pts || 0) + REF_PTS; r.pts = (r.pts || 0) + REF_WELCOME; r.refOk = Date.now(); saveReg();
+  log('ref ok', r.refBy, '←', pin);
 }
 /* v8.7: سجل عناوين IP لكل حساب (آخر 30 عنوان، تنحذف بعد 180 يوم) — للرجوع له عند طلب رسمي من جهة مختصة فقط.
    محتوى الرسائل والصوت ما يوصل السيرفر (مشفّر بين الأجهزة)، فهذا كل اللي نقدر نحفظه. */
 const LOG_KEEP = 180 * 864e5;
+function refAttach(pin, r, ref, dh, ip) {
+  ref = typeof ref === 'string' ? ref.toUpperCase() : ''; if (!PIN_RE.test(ref) || ref === pin || r.refBy) return false;
+  const R = REG[ref]; if (!R || R.dead || R.banned) return false;
+  if (dh && REFDEV.has(dh)) return false; /* هالجهاز انحسب قبل */
+  if (limited('refip:' + ipKey(ip), 5, 24 * 3600e3)) return false;
+  r.refBy = ref; r.refTs = Date.now(); R.refJoin = (R.refJoin || 0) + 1;
+  if (dh) { REFDEV.add(dh); saveRefDev(); }
+  saveReg(); return true;
+}
 function noteIp(r, ip) {
   ip = String(ip || '').replace(/^::ffff:/, '').slice(0, 45); if (!ip || !r) return;
   const t = Date.now(); r.ips = (Array.isArray(r.ips) ? r.ips : []).filter(x => t - x.l < LOG_KEEP);
@@ -146,7 +179,7 @@ async function push(to, data, urgent) {
 
 /* ─── المسارات ─── */
 const H = {};
-H['/api/health'] = async () => ({ ok: true, v: '8.7', push: !!SA, turn: !!TURN_SECRET });
+H['/api/health'] = async () => ({ ok: true, v: '8.8', push: !!SA, turn: !!TURN_SECRET });
 
 // v8.1: استرجاع الرقم المرتبط بهذا الجهاز
 H['/api/whoami'] = async (b, ip) => {
@@ -167,7 +200,9 @@ H['/api/reg'] = async (b, ip) => {
     if (dh && r.dh && eq(r.dh, dh)) { r.kh = kh; delete r.dead; } else return [403, { err: 'taken' }];
   }
   if (!r) { if (!CONFIG.flags.register) return [403, { err: 'closed' }];
-    if (limited('reg:' + ipKey(ip), 300, 3600e3) || limited('reg:all', 3000, 3600e3)) return [429, { err: 'slow' }]; r = REG[pin] = { kh, ts: Date.now() }; }
+    if (limited('reg:' + ipKey(ip), 300, 3600e3) || limited('reg:all', 3000, 3600e3)) return [429, { err: 'slow' }]; r = REG[pin] = { kh, ts: Date.now() };
+    r.src = REF_SRC.includes(b.src) ? b.src : (b.ref ? 'invite' : 'direct');
+    refAttach(pin, r, b.ref, dh, ip); }
   /* v8.2: قائمة أصدقائك (أرقام فقط) — التنبيهات تُقبل منهم بس، وغيرهم بحدود صغيرة */
   if (Array.isArray(b.allow)) r.allow = [...new Set(b.allow.filter(x => typeof x === 'string' && PIN_RE.test(x)))].slice(0, 1000);
   const fcm = typeof b.fcm === 'string' && b.fcm.length < 400 ? b.fcm : null;
@@ -383,6 +418,24 @@ const SIGNAL_URL = /^https:\/\/[a-z0-9.-]+(:\d+)?\/[\w\/-]*$/i.test(process.env.
 H['/api/config'] = async () => ({ ok: true, flags: CONFIG.flags, ann: CONFIG.ann, minVersion: CONFIG.minVersion, maint: CONFIG.maint, signal: SIGNAL_URL });
 
 /* ─── خادم TURN خاص: بيانات دخول مؤقتة (12 ساعة) لكل مستخدم ─── */
+H['/api/ref/me'] = async b => {
+  const pin = auth(b); if (!pin) return [401, { err: 'auth' }]; const r = REG[pin];
+  if (typeof b.name === 'string') { const n = clean(b.name, 24); if (n !== (r.inm || '')) { r.inm = n; saveReg(); } }
+  const joined = []; for (const p in REG) { const x = REG[p]; if (x.refBy === pin && !x.dead) joined.push({ pin: p, ok: !!(x.refOk > 0), ts: x.refTs || x.ts }); }
+  joined.sort((a, b) => b.ts - a.ts);
+  return { ok: true, clicks: r.refClicks || 0, joined: joined.length, active: r.refs || 0, pts: r.pts || 0, amb: ambOf(r.refs || 0), tiers: REF_TIERS, perRef: REF_PTS, welcome: REF_WELCOME,
+    pins: joined.slice(0, 100).map(x => x.pin), refBy: r.refBy || null, canClaim: !r.refBy && Date.now() - (r.ts || 0) < 7 * 864e5 };
+};
+H['/api/ref/claim'] = async (b, ip) => {
+  const pin = auth(b); if (!pin) return [401, { err: 'auth' }]; const r = REG[pin];
+  if (r.refBy) return [400, { err: 'already' }];
+  if (Date.now() - (r.ts || 0) > 7 * 864e5) return [400, { err: 'late' }];
+  const ref = String(b.ref || '').toUpperCase(); if (!PIN_RE.test(ref) || !REG[ref] || REG[ref].dead) return [404, { err: 'noreg' }];
+  if (ref === pin) return [400, { err: 'self' }];
+  if (REG[ref].refBy === pin) return [400, { err: 'loop' }];
+  if (!refAttach(pin, r, ref, r.dh || null, ip)) return [400, { err: 'denied' }];
+  refCheck(pin, r); return { ok: true };
+};
 H['/api/turn'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
   if (!TURN_SECRET || !TURN_HOST) return { ok: true, servers: [] };
@@ -505,6 +558,20 @@ H['/api/admin/user/info'] = A(async b => {
     posts: SQ.filter(x => x.pin === pin).length, pub: PUB.has(pin),
     ips: (r.ips || []).filter(x => t - x.l < LOG_KEEP), devs: (r.devs || []).filter(x => t - x.l < LOG_KEEP).map(({ k, ...x }) => x) } };
 }, OWN);
+H['/api/admin/refs'] = A(async () => {
+  const t = Date.now(), src = {}, top = [];
+  let clicks = 0, joined = 0, active = 0;
+  for (const p in REG) { const r = REG[p]; if (r.dead) continue;
+    clicks += r.refClicks || 0; if (r.refBy) { joined++; if (r.refOk > 0) active++; }
+    if (t - (r.ts || 0) < 30 * 864e5) { const k = r.src || 'direct'; src[k] = (src[k] || 0) + 1; }
+    if (r.refs || r.refJoin || r.refClicks) top.push({ pin: p, name: r.inm || nameOf(p), clicks: r.refClicks || 0, joined: r.refJoin || 0, active: r.refs || 0, pts: r.pts || 0, banned: !!r.banned }); }
+  top.sort((a, b) => b.active - a.active || b.joined - a.joined || b.clicks - a.clicks);
+  return { ok: true, clicks, joined, active, src, top: top.slice(0, 20) };
+});
+H['/api/admin/ref/reset'] = A(async b => {
+  const pin = String(b.pin || '').toUpperCase(), r = REG[pin]; if (!r) return [404, { err: 'nf' }];
+  r.pts = 0; r.refs = 0; saveReg(); audit(b._adm.u, 'ref-reset', pin); return { ok: true };
+}, MGR);
 H['/api/admin/sq'] = A(async b => {
   const f = b.filter === 'reported' ? p => (p.reports || []).length > 0 : b.filter === 'hidden' ? p => p.hidden : () => true;
   return { ok: true, items: SQ.filter(f).slice(0, 200).map(p => ({ id: p.id, pin: p.pin, n: p.n, text: p.text, tags: p.tags, img: !!p.img, ts: p.ts, likes: p.likes.length, reports: (p.reports || []).length, hidden: !!p.hidden })) };
@@ -538,11 +605,42 @@ H['/api/admin/broadcast'] = A(async b => {
   log('admin broadcast', sent + '/' + targets.length); audit(b._adm.u, 'broadcast', text.slice(0, 60)); return { ok: true, sent, total: targets.length };
 }, MGR);
 
+/* صفحة رابط الدعوة: vibemap.s7sai.cloud/i/VM-XXXX-XXXX */
+const htmlEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function invitePage(req, res, raw) {
+  const pin = String(raw || '').toUpperCase(), r = PIN_RE.test(pin) ? REG[pin] : null, ok = r && !r.dead && !r.banned;
+  const ip = String(req.headers['x-real-ip'] || req.socket.remoteAddress || ''), host = String(req.headers.host || '').replace(/[^a-z0-9.:-]/gi, '');
+  const q = new URLSearchParams((req.url || '').split('?')[1] || ''), src = REF_SRC.includes(q.get('src')) ? q.get('src') : 'invite';
+  const bot = /bot|crawl|spider|facebookexternalhit|whatsapp|telegram|twitter|slack|discord|preview/i.test(String(req.headers['user-agent'] || ''));
+  if (ok && !bot && !limited('click:' + pin + ':' + ipKey(ip), 1, 3600e3)) { r.refClicks = (r.refClicks || 0) + 1; saveReg(); }
+  const name = ok ? (r.inm || nameOf(pin) || '') : '', who = name ? htmlEsc(name) : 'صديقك';
+  const base = host ? 'https://' + host : '', app = `/app/?ref=${ok ? pin : ''}&src=${src}`;
+  const title = `${who} يدعوك على VibeMap`, desc = 'لاسلكي حقيقي بينك وبين مجتمعك — كلّم ربعك بضغطة، شوفهم على الرادار، واستغاثة بلمسة.';
+  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title><meta name="description" content="${desc}"><meta property="og:type" content="website"><meta property="og:title" content="${title}">
+<meta property="og:description" content="${desc}"><meta property="og:image" content="${base}/img/og.png"><meta name="twitter:card" content="summary_large_image"><meta name="robots" content="noindex">
+<link rel="icon" href="/img/logo.svg"><style>
+:root{--bg:#F5F5FB;--card:#fff;--ink:#16162C;--ink2:#5A5A7A;--line:#E3E3EF}@media(prefers-color-scheme:dark){:root{--bg:#0A0A1C;--card:#14142E;--ink:#F2F2FF;--ink2:#A9A9CC;--line:#28284E}}
+*{box-sizing:border-box;margin:0}body{background:var(--bg);color:var(--ink);font:16px/1.7 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;min-height:100vh;display:grid;place-items:center;padding:24px}
+.c{width:min(420px,100%);background:var(--card);border:1px solid var(--line);border-radius:24px;padding:28px 22px;text-align:center;box-shadow:0 24px 60px -30px rgba(0,0,0,.35)}
+img{width:76px;height:76px}h1{font-size:22px;margin:14px 0 6px}p{color:var(--ink2);font-size:15px}
+.b{display:block;margin-top:14px;padding:14px;border-radius:14px;font-weight:700;text-decoration:none;font-size:17px}
+.g{background:linear-gradient(100deg,#2DD4E8,#7C5CFF 55%,#D24BF2);color:#0A0A1C}.o{border:1px solid var(--line);color:var(--ink)}
+ul{list-style:none;padding:0;margin:18px 0 0;text-align:start;display:grid;gap:8px;font-size:14px;color:var(--ink2)}small{display:block;margin-top:16px;color:var(--ink2);font-size:12px}
+</style></head><body><main class="c"><img src="/img/logo.svg" alt="VibeMap"><h1>${title}</h1><p>${desc}</p>
+<ul><li>🎙️ كلام مباشر مثل اللاسلكي</li><li>📍 تشوف ربعك على الرادار</li><li>🆘 استغاثة توصل أهلك فوراً</li><li>🔒 مشفّر بين الأجهزة</li></ul>
+<a class="b g" href="${app}">ادخل الحين — بدون تحميل</a><a class="b o" href="/?src=${src}">عن التطبيق والتحميل</a>
+${ok ? `<small>بتنضاف تلقائياً كطلب صداقة عند ${who}</small>` : '<small>الرابط قديم، بس تقدر تدخل التطبيق عادي</small>'}</main></body></html>`;
+  res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer',
+    'content-security-policy': "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" });
+  res.end(html);
+}
 const server = http.createServer((req, res) => {
   const send = (code, obj) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'POST, GET, OPTIONS', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }); res.end(JSON.stringify(obj)); };
   const url = (req.url || '').split('?')[0].replace(/^\/relay/, '');
   if (req.method === 'OPTIONS') return send(204, {});
   if (req.method === 'GET' && url.startsWith('/api/sq/img/')) return sqImage(res, url.slice(12));
+  if (req.method === 'GET' && /^\/i\/[^/]*$/.test(url)) return invitePage(req, res, decodeURIComponent(url.slice(3)));
   const h = H[url]; if (!h) return send(404, { err: 'nf' });
   const ip = String(req.headers['x-real-ip'] || req.socket.remoteAddress || '');
   if (req.method === 'GET') { if (url !== '/api/health' && url !== '/api/config') return send(405, { err: 'method' }); return h({}, ip).then(r => send(200, r)); }

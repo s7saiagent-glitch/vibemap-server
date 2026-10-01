@@ -21,7 +21,7 @@
 <main>
 <p><a href="./">← العودة إلى VibeMap</a></p>
 <h1>سياسة الخصوصية — VibeMap</h1>
-<p class="muted">آخر تحديث: 30 سبتمبر 2026 · تنطبق على الإصدار 8.7 وما بعده (الويب وأندرويد وآيفون)</p>
+<p class="muted">آخر تحديث: 1 أكتوبر 2026 · تنطبق على الإصدار 8.8 وما بعده (الويب وأندرويد وآيفون)</p>
 
 <section>
 <h2>الخلاصة</h2>
@@ -60,6 +60,7 @@
 <li><b>خادم التوصيل (من الإصدار 8.0):</b> إذا كان صديقك مقفل التطبيق، تُحفظ رسالتك أو نداء الاستغاثة <b>مشفّرة</b> في خادم VibeMap حتى يستلمها، ثم تُحذف فوراً (وتُحذف تلقائياً بعد 7 أيام إن لم تُستلم). الخادم لا يملك مفتاح فكها. يعرف الخادم رقم VibeMap للمرسل والمستلم ووقت الإرسال، ورمز الإشعارات لجهازك، واسمك الذي يظهر في الإشعار. الإشعار نفسه يمر عبر خدمة Firebase Cloud Messaging من Google ولا يحتوي نص رسالتك.</li>
 <li><b>خادم TURN (من الإصدار 8.4):</b> لو شبكة الجوال تمنع الاتصال المباشر، يمرّ الصوت عبر خادم TURN تابع لـ VibeMap وهو <b>مشفّر من طرف لطرف</b> (DTLS-SRTP) — الخادم ما يقدر يسمعه. تقدر تضيف خادمك الخاص من الإعدادات.</li>
 <li><b>سجل الاتصال والجهاز (من الإصدار 8.7):</b> يحفظ خادم VibeMap لكل رقم: عناوين IP اللي استُخدمت للاتصال بالخادم وأوقاتها، ونوع الجهاز ونظامه وإصدار التطبيق ولغة الجهاز ومنطقته الزمنية. <b>ما يشمل محتوى رسائلك أو صوتك أو صورك</b> (مشفّرة بين الأجهزة وما يقدر الخادم يقرأها). الغرض: الأمان ومنع إساءة الاستخدام، والاستجابة للطلبات الرسمية من الجهات المختصة وفق الأنظمة في المملكة العربية السعودية، ومنها نظام حماية البيانات الشخصية. يطّلع عليها مالك الخدمة فقط، وكل اطلاع ينسجل، وتنحذف تلقائياً بعد 180 يوم.</li>
+<li><b>الدعوات ومصدر التسجيل (من الإصدار 8.8):</b> إذا دخلت من رابط دعوة، يعرف خادم VibeMap مين دعاك عشان يحسب نقاطه، ويحفظ عدد مرات فتح رابطك. ويحفظ المصدر اللي جيت منه (مثل تيك توك أو واتساب) بدون أي بيانات من تلك المنصات. صفحة رابط الدعوة تعرض اسمك اللي تختاره في التطبيق.</li>
 </ul>
 <p>في الاتصال المباشر قد يرى صديقك عنوان IP الخاص بك، كما في أي مكالمة إنترنت مباشرة. لإخفائه فعّل «إخفاء عنوان IP» مع خادم TURN.</p>
 </section>
@@ -108,6 +109,7 @@
 <li>Contact list on the server (v8.2+): the VibeMap server knows the VibeMap IDs (not names) of your friends, only to accept notifications from them and block fake alerts from strangers.</li>
 <li>Relay (v8.0+): when a friend's app is closed, your message or SOS is stored end-to-end encrypted on the VibeMap relay until delivered, then deleted (undelivered items expire after 7 days). The relay cannot decrypt it; it knows sender/recipient VibeMap IDs, timestamps, your push token, and the display name shown in the notification. Wake-up notifications go through Firebase Cloud Messaging and contain no message content.</li>
 <li>Connection and device log (v8.7+): the VibeMap server keeps, per VibeMap ID, the IP addresses used to reach it with timestamps, plus device model, OS, app version, language and time zone. It never includes the content of your messages, voice or photos (end-to-end encrypted). Used for security, abuse prevention and responding to official requests from competent Saudi authorities under applicable law (including the PDPL); accessible only to the service owner, every access is logged, and entries are deleted automatically after 180 days.</li>
+<li>Invites and sign-up source (v8.8+): if you join from an invite link, the server records who invited you (to award points) and counts link opens; it also stores the source you came from (e.g. TikTok or WhatsApp) without any data from those platforms. Your invite page shows the display name you chose.</li>
 <li>Optional sign-in (Google, email or phone via Firebase Authentication) is used only to store an end-to-end encrypted backup of your VibeMap ID, friends list, rooms and settings, encrypted on your device with a backup code only you know. Messages, voice, location and stories are never backed up. You can delete your cloud account and backup in the app.</li>
 <li>You can block and report any user. Not intended for children under 13.</li>
 </ul>
