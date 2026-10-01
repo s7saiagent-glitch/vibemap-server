@@ -34,6 +34,7 @@
   /* v8.8: مصدر الزيارة (مثل ?src=tiktok في رابط البايو) يوصل للتطبيق عشان نعرف وش يجيب مستخدمين */
   var vs = (q.match(/[?&]src=([a-z]{1,12})/) || [])[1];
   if (vs) document.querySelectorAll('a[href="app/"]').forEach(function (a) { a.href = 'app/?src=' + vs; });
+  if (vs) document.querySelectorAll('a[href="w/"]').forEach(function (a) { a.href = 'w/?src=' + vs; });
 
   var src = document.querySelector('[data-stores] .store') && document.querySelector('[data-stores]');
   document.querySelectorAll('[data-stores]').forEach(function (box) {

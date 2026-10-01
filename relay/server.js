@@ -179,7 +179,7 @@ async function push(to, data, urgent) {
 
 /* ─── المسارات ─── */
 const H = {};
-H['/api/health'] = async () => ({ ok: true, v: '8.8', push: !!SA, turn: !!TURN_SECRET });
+H['/api/health'] = async () => ({ ok: true, v: '8.9', push: !!SA, turn: !!TURN_SECRET });
 
 // v8.1: استرجاع الرقم المرتبط بهذا الجهاز
 H['/api/whoami'] = async (b, ip) => {
@@ -436,6 +436,26 @@ H['/api/ref/claim'] = async (b, ip) => {
   if (!refAttach(pin, r, ref, r.dh || null, ip)) return [400, { err: 'denied' }];
   refCheck(pin, r); return { ok: true };
 };
+/* ─── v8.9: قائمة الانتظار (ننبه الناس وقت نزول التطبيق في المتاجر) ─── */
+const WL_FILE = path.join(DATA, 'waitlist.json');
+let WL = []; try { WL = JSON.parse(fs.readFileSync(WL_FILE, 'utf8')); if (!Array.isArray(WL)) WL = []; } catch (e) { }
+let wlDirty = false; const saveWl = () => { wlDirty = true; };
+setInterval(() => { if (!wlDirty) return; wlDirty = false; try { fs.writeFileSync(WL_FILE + '.tmp', JSON.stringify(WL)); fs.renameSync(WL_FILE + '.tmp', WL_FILE); } catch (e) { log('wl write', e.message); } }, 3000).unref();
+function wlNorm(v) {
+  let c = String(v || '').trim().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).slice(0, 120);
+  const ph = c.replace(/[\s\-().]/g, '');
+  const m = /^(?:\+?966|00966|0)?(5\d{8})$/.exec(ph); if (m) return { c: '966' + m[1], t: 'phone' };
+  const e = c.toLowerCase(); if (/^[a-z0-9._%+-]{1,64}@[a-z0-9.-]{1,80}\.[a-z]{2,24}$/.test(e)) return { c: e, t: 'email' };
+  return null;
+}
+H['/api/waitlist'] = async (b, ip) => {
+  if (limited('wl:' + ipKey(ip), 6, 3600e3)) return [429, { err: 'slow' }];
+  const n = wlNorm(b.contact); if (!n) return [400, { err: 'contact' }];
+  if (WL.some(x => x.c === n.c)) return { ok: true, dup: true };
+  if (WL.length >= 200000) return [507, { err: 'full' }];
+  WL.push({ c: n.c, t: n.t, plat: ['android', 'ios'].includes(b.plat) ? b.plat : '', src: REF_SRC.includes(b.src) ? b.src : 'site', ts: Date.now() }); saveWl();
+  return { ok: true };
+};
 H['/api/turn'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
   if (!TURN_SECRET || !TURN_HOST) return { ok: true, servers: [] };
@@ -572,6 +592,17 @@ H['/api/admin/ref/reset'] = A(async b => {
   const pin = String(b.pin || '').toUpperCase(), r = REG[pin]; if (!r) return [404, { err: 'nf' }];
   r.pts = 0; r.refs = 0; saveReg(); audit(b._adm.u, 'ref-reset', pin); return { ok: true };
 }, MGR);
+H['/api/admin/waitlist'] = A(async () => {
+  const t = Date.now(), day = 864e5, plat = { android: 0, ios: 0, '': 0 }, src = {}, perDay = {};
+  for (let i = 13; i >= 0; i--) perDay[ksaDay(t - i * day)] = 0;
+  let today = 0, week = 0, phone = 0, email = 0;
+  for (const x of WL) { plat[x.plat || ''] = (plat[x.plat || ''] || 0) + 1; src[x.src] = (src[x.src] || 0) + 1; if (x.t === 'phone') phone++; else email++;
+    const d = ksaDay(x.ts); if (d in perDay) perDay[d]++; if (t - x.ts < day) today++; if (t - x.ts < 7 * day) week++; }
+  return { ok: true, total: WL.length, today, week, phone, email, plat, src, perDay: Object.entries(perDay).map(([d, n]) => ({ d, n })) };
+}, MGR);
+H['/api/admin/waitlist/export'] = A(async b => { audit(b._adm.u, 'wl-export', WL.length); return { ok: true, items: WL }; }, OWN);
+H['/api/admin/waitlist/del'] = A(async b => { const n = wlNorm(b.c) || { c: String(b.c || '') }; const i = WL.findIndex(x => x.c === n.c); if (i < 0) return [404, { err: 'nf' }];
+  WL.splice(i, 1); saveWl(); audit(b._adm.u, 'wl-del', n.c.replace(/^(.{4}).*(.{2})$/, '$1…$2')); return { ok: true }; }, OWN);
 H['/api/admin/sq'] = A(async b => {
   const f = b.filter === 'reported' ? p => (p.reports || []).length > 0 : b.filter === 'hidden' ? p => p.hidden : () => true;
   return { ok: true, items: SQ.filter(f).slice(0, 200).map(p => ({ id: p.id, pin: p.pin, n: p.n, text: p.text, tags: p.tags, img: !!p.img, ts: p.ts, likes: p.likes.length, reports: (p.reports || []).length, hidden: !!p.hidden })) };
@@ -656,5 +687,5 @@ const server = http.createServer((req, res) => {
   });
 });
 server.listen(PORT, HOST, () => log(`VibeMap relay on ${HOST}:${PORT} — push ${SA ? 'ON' : 'OFF'}`));
-const bye = () => { try { fs.writeFileSync(REG_FILE, JSON.stringify(REG)); fs.writeFileSync(SQ_FILE, JSON.stringify(SQ)); for (const pin of boxDirty) { const arr = BOX.get(pin) || []; const f = path.join(DATA, 'box', pin + '.json'); if (!arr.length) fs.rmSync(f, { force: true }); else fs.writeFileSync(f, JSON.stringify(arr)); } } catch (e) { } process.exit(0); };
+const bye = () => { try { fs.writeFileSync(REG_FILE, JSON.stringify(REG)); if (wlDirty) fs.writeFileSync(WL_FILE, JSON.stringify(WL)); fs.writeFileSync(SQ_FILE, JSON.stringify(SQ)); for (const pin of boxDirty) { const arr = BOX.get(pin) || []; const f = path.join(DATA, 'box', pin + '.json'); if (!arr.length) fs.rmSync(f, { force: true }); else fs.writeFileSync(f, JSON.stringify(arr)); } } catch (e) { } process.exit(0); };
 process.on('SIGTERM', bye); process.on('SIGINT', bye);

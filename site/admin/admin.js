@@ -1,4 +1,4 @@
-/* VibeMap — لوحة التحكم v8.8 */
+/* VibeMap — لوحة التحكم v8.9 */
 (() => {
   'use strict';
   const API = (document.querySelector('meta[name=vibemap-api]') || {}).content || '/relay/api/';
@@ -143,12 +143,37 @@
           </div>
         </div>
       </div>`;
-    el.insertAdjacentHTML('beforeend', '<div id="refBox"></div>');
+    el.insertAdjacentHTML('beforeend', '<div id="wlBox"></div><div id="refBox"></div>');
     drawChart($('#chart'), s.perDay);
-    loadRefs();
+    loadRefs(); if (can('owner', 'admin')) loadWl();
     const tv = $('#tview');
     tv.innerHTML = `<table class="tview"><thead><tr><th>اليوم</th><th>تسجيلات</th></tr></thead><tbody>${s.perDay.slice().reverse().map(x => `<tr><td>${esc(x.d)}</td><td>${N(x.n)}</td></tr>`).join('')}</tbody></table>`;
     $('#tvBtn').onclick = e => { const open = tv.hidden; tv.hidden = !open; e.target.textContent = open ? 'إخفاء الجدول' : 'عرض كجدول'; e.target.setAttribute('aria-expanded', open); };
+  }
+
+  /* v8.9: قائمة الانتظار */
+  async function loadWl() {
+    const box = $('#wlBox'); if (!box) return;
+    let j; try { j = await call('admin/waitlist'); } catch (e) { return; }
+    const ent = Object.entries(j.src).sort((a, b) => b[1] - a[1]), tot = Math.max(1, j.total);
+    const max = Math.max(1, ...j.perDay.map(x => x.n));
+    box.innerHTML = `<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap">
+        <div><h3>قائمة الانتظار 🔔</h3><div class="note">اللي سجلوا عشان ننبههم وقت نزول التطبيق في المتاجر · صفحة التسجيل: <span class="mono">vibemap.s7sai.cloud/w</span></div></div>
+        ${can('owner') ? '<button class="btn sm pri" id="wlExport">⬇️ تنزيل القائمة (Excel)</button>' : ''}</div>
+      <div class="health" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
+        <div>المجموع<b>${N(j.total)}</b></div><div>اليوم<b>${N(j.today)}</b></div><div>هالأسبوع<b>${N(j.week)}</b></div>
+        <div>أندرويد<b>${N(j.plat.android)}</b></div><div>آيفون<b>${N(j.plat.ios)}</b></div><div>جوال · إيميل<b>${N(j.phone)} · ${N(j.email)}</b></div></div>
+      <div class="grid two" style="margin-top:6px">
+        <div><div class="note" style="margin-top:10px">آخر 14 يوم</div><div style="display:flex;align-items:flex-end;gap:3px;height:90px;margin-top:8px" dir="ltr">${j.perDay.map(x => `<div title="${esc(x.d)}: ${x.n}" style="flex:1;max-width:24px;background:var(--bar);border-radius:4px 4px 0 0;height:${x.n ? Math.max(4, x.n / max * 100) : 0}%"></div>`).join('')}</div></div>
+        <div><div class="note" style="margin-top:10px">من وين جوا</div><div class="plat">${ent.length ? ent.map(([k, n]) => `<div class="row" style="grid-template-columns:84px 1fr 40px"><span>${esc(SRC[k] || k)}</span><div class="track"><div class="fill" style="width:${(n / tot * 100).toFixed(1)}%"></div></div><span class="n">${N(n)}</span></div>`).join('') : '<div class="note">ما فيه تسجيلات للحين</div>'}</div></div>
+      </div></div>`;
+    const ex = $('#wlExport'); if (ex) ex.onclick = async () => {
+      let r; try { r = await call('admin/waitlist/export'); } catch (e) { return toast(msg(e)); }
+      const rows = [['الجوال أو الإيميل', 'النوع', 'الجوال', 'المصدر', 'التاريخ']].concat(r.items.map(x => [x.t === 'phone' ? '+' + x.c : x.c, x.t === 'phone' ? 'جوال' : 'إيميل', x.plat === 'ios' ? 'آيفون' : x.plat === 'android' ? 'أندرويد' : '', SRC[x.src] || x.src, new Date(x.ts).toLocaleString('en-GB', { timeZone: 'Asia/Riyadh' })]));
+      const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = `vibemap-waitlist-${new Date().toISOString().slice(0, 10)}.csv`; document.body.appendChild(a); a.click(); a.remove();
+      toast(`انزلت القائمة (${N(r.items.length)})`);
+    };
   }
 
   /* v8.8: الدعوات ومصادر التسجيل */
@@ -399,7 +424,7 @@
 
   /* ═══ الإعدادات: حسابي + فريق الإدارة + السجل ═══ */
   const ACT = { password: 'غيّر كلمة السر', 'admin-save': 'حفظ حساب إدارة', 'admin-del': 'حذف حساب إدارة', 'user-ban': 'حظر مستخدم', 'user-unban': 'فك حظر', 'user-wipe': 'مسح محتوى مستخدم',
-    'user-info': 'عرض بيانات حساب', 'ref-reset': 'تصفير نقاط دعوات', 'post-hide': 'إخفاء منشور', 'post-show': 'إظهار منشور', 'post-del': 'حذف منشور', config: 'تغيير إعدادات التطبيق', broadcast: 'إشعار للكل' };
+    'user-info': 'عرض بيانات حساب', 'ref-reset': 'تصفير نقاط دعوات', 'wl-export': 'تنزيل قائمة الانتظار', 'wl-del': 'حذف من قائمة الانتظار', 'post-hide': 'إخفاء منشور', 'post-show': 'إظهار منشور', 'post-del': 'حذف منشور', config: 'تغيير إعدادات التطبيق', broadcast: 'إشعار للكل' };
   async function loadSettings() {
     const el = $('#t-settings');
     el.innerHTML = `<h2>الإعدادات</h2><p class="sub">حسابك وفريق الإدارة.</p><div class="stack">

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="vibemap-api" content="/relay/api/">
+<title>VibeMap — قريباً في المتاجر</title>
+<meta name="description" content="لاسلكي حقيقي بينك وبين مجتمعك. سجّل رقمك أو إيميلك ونبلغك أول ما ينزل VibeMap في Google Play و App Store.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="VibeMap — لاسلكي حقيقي بينك وبين مجتمعك">
+<meta property="og:description" content="سجّل ونبلغك أول ما ينزل التطبيق في المتاجر.">
+<meta property="og:image" content="https://vibemap.s7sai.cloud/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0A0A1C">
+<link rel="icon" href="../img/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A0A1C;--surface:#14142E;--surface2:#1B1B3A;--line:#2A2A52;--ink:#F2F2FF;--ink2:#B4B4D6;--ink3:#8080A8;--ok:#2BE4A0;--bad:#FF6B7A;
+  --grad:linear-gradient(100deg,#2DD4E8 0%,#7C5CFF 55%,#D24BF2 100%);color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.75 "Readex Pro",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-30% -30% auto;height:80vh;background:radial-gradient(closest-side,rgba(124,92,255,.35),transparent),radial-gradient(closest-side at 80% 40%,rgba(45,212,232,.22),transparent);pointer-events:none;z-index:0}
+main{position:relative;z-index:1;width:min(460px,100% - 32px);margin:0 auto;padding:28px 0 48px;display:flex;flex-direction:column;gap:22px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px}
+.brand img{width:40px;height:40px}
+.tag{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:6px 12px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.tag i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px rgba(43,228,160,.18)}
+h1{font-size:clamp(30px,8.5vw,40px);line-height:1.25;font-weight:700}
+h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--ink2);font-size:17px}
+.feats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.feats div{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:14px;color:var(--ink2)}
+.feats b{display:block;color:var(--ink);font-size:15px;font-weight:600}
+.card{background:var(--surface);border:1.5px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--grad) border-box;border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 60px -30px rgba(124,92,255,.5)}
+.card h2{font-size:20px;font-weight:700}
+.card p{color:var(--ink2);font-size:14px}
+.input{width:100%;height:56px;border-radius:14px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);font:inherit;font-size:18px;padding:0 16px;text-align:center}
+.input:focus{outline:2px solid #7C5CFF;outline-offset:1px}
+.plat{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.plat button{height:46px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--ink2);font:inherit;font-size:15px;cursor:pointer}
+.plat button[aria-pressed="true"]{border-color:#7C5CFF;color:var(--ink);background:rgba(124,92,255,.18)}
+.go{height:58px;border:0;border-radius:16px;background:var(--grad);color:#0A0A1C;font:inherit;font-size:19px;font-weight:700;cursor:pointer}
+.go[disabled]{opacity:.6}
+.err{color:var(--bad);font-size:14px;min-height:20px;text-align:center}
+.fine{font-size:12px;color:var(--ink3);text-align:center}
+.fine a{color:var(--ink2)}
+.done{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.done .big{font-size:54px;line-height:1}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:14px;text-decoration:none;font-weight:600;font-size:16px;width:100%}
+.btn.wa{background:#25D366;color:#06301a}
+.btn.o{border:1px solid var(--line);color:var(--ink)}
+.try{text-align:center;font-size:15px;color:var(--ink2)}
+.try a{color:#B9A8FF;font-weight:600}
+.shot{border-radius:28px;border:6px solid #1F1F3E;overflow:hidden;width:72%;align-self:center;box-shadow:0 30px 80px -30px rgba(45,212,232,.4)}
+.shot img{display:block;width:100%;height:auto}
+footer{text-align:center;font-size:12px;color:var(--ink3)}
+footer a{color:var(--ink2)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand"><img src="../img/logo.svg" alt="">VibeMap</div>
+  <span class="tag"><i></i>قريباً في Google Play و App Store</span>
+  <h1>لاسلكي حقيقي<br><span class="g">بينك وبين مجتمعك</span></h1>
+  <p class="lead">اضغط وتكلّم، وصوتك يوصل ربعك في نفس اللحظة. شوفهم على الرادار، وأرسل استغاثة بموقعك بلمسة وحدة.</p>
+  <div class="feats">
+    <div><b>🎙️ اضغط وتكلّم</b>بدون اتصال ولا انتظار</div>
+    <div><b>📍 رادار حي</b>وين ربعك وكم يبعدون</div>
+    <div><b>🆘 استغاثة</b>توصل أهلك فوراً</div>
+    <div><b>🔒 مشفّر</b>بين جوالاتكم بس</div>
+  </div>
+
+  <section class="card" id="formCard" aria-labelledby="ft">
+    <h2 id="ft">نبّهني أول ما ينزل 🔔</h2>
+    <p>اكتب جوالك أو إيميلك، ونرسل لك رسالة وحدة بس وقت نزوله.</p>
+    <form id="wl" novalidate>
+      <input class="input" id="contact" name="contact" inputmode="text" autocomplete="email" placeholder="05xxxxxxxx أو إيميلك" dir="ltr" aria-label="رقم الجوال أو الإيميل" required>
+      <div class="plat" role="group" aria-label="نوع جوالك" style="margin-top:10px">
+        <button type="button" data-plat="android" aria-pressed="false">🤖 أندرويد</button>
+        <button type="button" data-plat="ios" aria-pressed="false">📱 آيفون</button>
+      </div>
+      <div class="err" id="err" role="alert" style="margin-top:8px"></div>
+      <button class="go" id="go" type="submit" style="width:100%">نبّهني 🚀</button>
+    </form>
+    <p class="fine">ما نرسل غير رسالة النزول، وما نشارك بياناتك مع أحد. <a href="../privacy.html">الخصوصية</a></p>
+  </section>
+
+  <section class="card done" id="doneCard" hidden aria-live="polite">
+    <div class="big">✅</div>
+    <h2>تم! أنت في القائمة</h2>
+    <p>أول ما ينزل VibeMap في المتاجر بتوصلك رسالة. وقتها ادعُ ربعك تتكلمون مع بعض.</p>
+    <a class="btn wa" id="shareWa" href="#" target="_blank" rel="noopener">شارك ربعك على واتساب</a>
+  </section>
+
+  <p class="try">ما تبي تنتظر؟ <a id="tryNow" href="../app/">جرّبه الحين من المتصفح ←</a></p>
+  <div class="shot"><img src="../img/radar.webp" alt="شاشة الرادار في VibeMap" width="780" height="1688" loading="lazy"></div>
+  <footer>© <span id="y"></span> VibeMap — استوديو S7S.ai · <a href="../">الموقع</a></footer>
+</main>
+<script src="w.js"></script>
+</body>
+</html>
