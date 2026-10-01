@@ -456,6 +456,19 @@ H['/api/waitlist'] = async (b, ip) => {
   WL.push({ c: n.c, t: n.t, plat: ['android', 'ios'].includes(b.plat) ? b.plat : '', src: REF_SRC.includes(b.src) ? b.src : 'site', ts: Date.now() }); saveWl();
   return { ok: true };
 };
+/* v8.9.1: تقرير أرقام مجمّعة فقط (بدون أي بيانات شخصية) للمتابعة الآلية — بمفتاح سري */
+const PULSE_HASH = process.env.PULSE_HASH || '90c734e6f12610e0c86c8bdfb924bd1c3329e6fb47e1b181d8f9040db2c9120a';
+H['/api/pulse'] = async (b, ip) => {
+  if (limited('pulse:' + ipKey(ip), 30, 3600e3)) return [429, { err: 'slow' }];
+  if (!PULSE_HASH || !eq(sha(String(b.k || '')), PULSE_HASH)) return [401, { err: 'auth' }];
+  const t = Date.now(), day = 864e5, src7 = {}, wsrc = {}, wplat = { android: 0, ios: 0, other: 0 };
+  let users = 0, new1 = 0, new7 = 0, act1 = 0, clicks = 0, joined = 0, active = 0, w1 = 0;
+  for (const p in REG) { const r = REG[p]; if (r.dead) continue; users++;
+    if (t - (r.ts || 0) < day) new1++; if (t - (r.ts || 0) < 7 * day) { new7++; const k = r.src || 'direct'; src7[k] = (src7[k] || 0) + 1; }
+    if (t - (r.seen || 0) < day) act1++; clicks += r.refClicks || 0; if (r.refBy) { joined++; if (r.refOk > 0) active++; } }
+  for (const x of WL) { wsrc[x.src] = (wsrc[x.src] || 0) + 1; wplat[x.plat || 'other']++; if (t - x.ts < day) w1++; }
+  return { ok: true, ts: t, users, new24h: new1, new7d: new7, active24h: act1, regSrc7d: src7, waitlist: { total: WL.length, last24h: w1, src: wsrc, plat: wplat }, refs: { clicks, joined, active } };
+};
 H['/api/turn'] = async b => {
   const pin = auth(b); if (!pin) return [401, { err: 'auth' }];
   if (!TURN_SECRET || !TURN_HOST) return { ok: true, servers: [] };
